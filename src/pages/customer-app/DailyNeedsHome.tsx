@@ -48,9 +48,9 @@ export default function DailyNeedsHome() {
           .eq("status", "active")
           .limit(8),
         supabase.from("daily_needs_orders")
-          .select("id, store_id, total_xaf, status, created_at, daily_needs_stores(name, banner_url)")
+          .select("id, store_id, total_xaf, status, created_at, daily_needs_stores(name, banner_url, vertical)")
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
       ]);
       if (cancelled) return;
       setNearby(stores ?? []);
@@ -59,6 +59,15 @@ export default function DailyNeedsHome() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const ACTIVE = new Set(["received", "accepted", "preparing", "ready", "picked_up", "on_the_way", "arriving"]);
+  const activeFor = (vertical: "food" | "pharmacy") =>
+    recent.find((o) => o.daily_needs_stores?.vertical === vertical && ACTIVE.has(o.status));
+  const goVertical = (vertical: "food" | "pharmacy") => {
+    const active = activeFor(vertical);
+    if (active) navigate(`/app/daily-needs/orders/${active.id}/details`);
+    else navigate(`/app/daily-needs/${vertical}`);
+  };
 
   return (
     <div className="pb-10 animate-fade-in">
