@@ -254,13 +254,24 @@ export function ScreenshotGuard() {
     else document.documentElement.removeAttribute("data-kob-secure-hide");
   }, [active, hidden]);
 
-  if (!active) return null;
+  // Render consent prompt on protected routes when the user hasn't chosen.
+  if (!active) {
+    return (
+      <ScreenshotGuardConsentDialog
+        open={promptOpen}
+        onChoose={(v) => writeScreenshotGuardConsent(v)}
+      />
+    );
+  }
 
   return (
-    <Watermark
-      name={identity.name}
-      shortId={identity.shortId}
-    />
+    <>
+      <Watermark name={identity.name} shortId={identity.shortId} />
+      <ScreenshotGuardConsentDialog
+        open={false}
+        onChoose={(v) => writeScreenshotGuardConsent(v)}
+      />
+    </>
   );
 }
 
