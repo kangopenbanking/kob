@@ -15529,30 +15529,42 @@ export type Database = {
       }
       kyc_circuit_breaker_state: {
         Row: {
+          cooldown_seconds: number
           failure_count: number
+          failure_threshold: number
           last_failure_at: string | null
+          min_samples: number
           opened_at: string | null
           provider: string
           state: string
           updated_at: string
+          window_seconds: number
           window_started_at: string
         }
         Insert: {
+          cooldown_seconds?: number
           failure_count?: number
+          failure_threshold?: number
           last_failure_at?: string | null
+          min_samples?: number
           opened_at?: string | null
           provider: string
           state?: string
           updated_at?: string
+          window_seconds?: number
           window_started_at?: string
         }
         Update: {
+          cooldown_seconds?: number
           failure_count?: number
+          failure_threshold?: number
           last_failure_at?: string | null
+          min_samples?: number
           opened_at?: string | null
           provider?: string
           state?: string
           updated_at?: string
+          window_seconds?: number
           window_started_at?: string
         }
         Relationships: []
@@ -29082,29 +29094,41 @@ export type Database = {
         Row: {
           discrepancy: boolean
           event_id: string
+          event_timestamp: string | null
           event_type: string
           id: string
+          outcome: string | null
+          outcome_detail: string | null
           payload: Json
           processed_at: string
           signature: string | null
+          skew_seconds: number | null
         }
         Insert: {
           discrepancy?: boolean
           event_id: string
+          event_timestamp?: string | null
           event_type: string
           id?: string
+          outcome?: string | null
+          outcome_detail?: string | null
           payload: Json
           processed_at?: string
           signature?: string | null
+          skew_seconds?: number | null
         }
         Update: {
           discrepancy?: boolean
           event_id?: string
+          event_timestamp?: string | null
           event_type?: string
           id?: string
+          outcome?: string | null
+          outcome_detail?: string | null
           payload?: Json
           processed_at?: string
           signature?: string | null
+          skew_seconds?: number | null
         }
         Relationships: []
       }
