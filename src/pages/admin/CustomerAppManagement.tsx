@@ -2077,6 +2077,12 @@ export default function CustomerAppManagement() {
                   <TravelCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
 
+                {/* Daily Needs Card Tab */}
+                <TabsContent value="daily-needs-card">
+                  <DailyNeedsCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+
                 {/* Storefront Tab */}
                 <TabsContent value="storefront">
                   <AdminStorefrontSlider />
