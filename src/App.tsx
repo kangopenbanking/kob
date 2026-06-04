@@ -1690,6 +1690,7 @@ function App() {
                 <Route path="store/:id" element={<DailyNeedsStore />} />
                 <Route path="cart" element={<DailyNeedsCart />} />
                 <Route path="checkout" element={<DailyNeedsCheckout />} />
+                <Route path="orders/:id/details" element={<DailyNeedsOrderDetails />} />
                 <Route path="orders/:id" element={<DailyNeedsOrderTrack />} />
                 <Route path="orders" element={<DailyNeedsOrders />} />
                 <Route path="addresses" element={<DailyNeedsAddresses />} />
