@@ -24592,6 +24592,30 @@ export type Database = {
         }
         Relationships: []
       }
+      screenshot_guard_settings: {
+        Row: {
+          dark_opacity: number
+          id: string
+          light_opacity: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          dark_opacity?: number
+          id?: string
+          light_opacity?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          dark_opacity?: number
+          id?: string
+          light_opacity?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       security_audit_logs: {
         Row: {
           blocked: boolean | null

@@ -28,6 +28,7 @@ const ALLOWED_KINDS = new Set([
   "native:capture_detected",
   "native:secured",
   "native:unsecured",
+  "guard:render",
 ]);
 
 const ALLOWED_CONTEXTS = new Set(["consumer", "banking"]);

@@ -20,9 +20,20 @@ vi.mock("@/integrations/supabase/client", () => ({
       getUser: vi.fn(async () => ({ data: { user: { id: "abcd-1234-5678-90ef", user_metadata: { full_name: "Test Holder" } } } })),
       getSession: vi.fn(async () => ({ data: { session: null } })),
     },
-    from: () => ({
-      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { full_name: "Test Holder", phone_number: "+237600000412" } }) }) }),
-    }),
+    from: (table: string) => {
+      if (table === "screenshot_guard_settings") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: { light_opacity: 0.05, dark_opacity: 0.03 } }),
+            }),
+          }),
+        } as never;
+      }
+      return {
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { full_name: "Test Holder", phone_number: "+237600000412" } }) }) }),
+      } as never;
+    },
   },
 }));
 
@@ -72,11 +83,37 @@ describe("ScreenshotGuard", () => {
   });
 
   it("activates and renders the forensic watermark on a financial route", async () => {
-    renderAtPath("/app/home");
+    renderAtPath("/app/transfer");
     // Identity hook is async — wait a microtask for it to resolve.
     await act(async () => { await Promise.resolve(); });
     expect(screen.getByTestId("screenshot-watermark")).toBeInTheDocument();
     expect(document.documentElement.getAttribute("data-kob-secure")).toBe("1");
+  });
+
+  it("is DISABLED on /app/home (home is explicitly excluded)", () => {
+    renderAtPath("/app/home");
+    expect(screen.queryByTestId("screenshot-watermark")).not.toBeInTheDocument();
+    expect(document.documentElement.getAttribute("data-kob-secure")).toBeNull();
+  });
+
+  it.each([
+    ["/app/transfer"],
+    ["/app/cards"],
+    ["/app/cards/details/123"],
+    ["/app/piggybank"],
+    ["/app/savings-vault"],
+    ["/app/loans"],
+  ])("is ENABLED on protected route %s", (path) => {
+    renderAtPath(path);
+    expect(screen.getByTestId("screenshot-watermark")).toBeInTheDocument();
+  });
+
+  it("emits a guard:render audit event on mount of a protected route", async () => {
+    renderAtPath("/app/transfer");
+    await act(async () => { await Promise.resolve(); });
+    expect(recordCaptureEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "guard:render", pathname: "/app/transfer", appContext: "consumer" }),
+    );
   });
 
   it("respects SCREENSHOT_GUARD_OPT_OUT for help/support routes", () => {
@@ -85,7 +122,7 @@ describe("ScreenshotGuard", () => {
   });
 
   it("intercepts PrintScreen, warns the user, and logs an event", () => {
-    renderAtPath("/app/home");
+    renderAtPath("/app/transfer");
     const evt = new KeyboardEvent("keydown", { key: "PrintScreen", bubbles: true, cancelable: true });
     window.dispatchEvent(evt);
     expect(evt.defaultPrevented).toBe(true);
@@ -106,7 +143,7 @@ describe("ScreenshotGuard", () => {
   });
 
   it("blurs the body when the document visibility changes to hidden", async () => {
-    renderAtPath("/app/home");
+    renderAtPath("/app/transfer");
     await act(async () => { await Promise.resolve(); });
     await act(async () => {
       Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
