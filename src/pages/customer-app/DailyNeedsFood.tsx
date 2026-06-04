@@ -41,14 +41,48 @@ const CUISINE_FILTERS: CuisineFilter[] = [
   { key: "Desserts",  label: "Desserts",   icon: IceCream,        tint: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-200 dark:border-pink-900",         active: "bg-pink-600 text-white border-pink-600" },
 ];
 
+const LS_KEY = "kob:daily-needs:food-filters";
+
+type Persisted = { cuisines?: string[]; sort?: Sort };
+
+function readPersisted(): Persisted {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(LS_KEY);
+    return raw ? (JSON.parse(raw) as Persisted) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function DailyNeedsFood() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [stores, setStores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(params.get("q") ?? "");
-  const [cuisine, setCuisine] = useState<string>(params.get("c") ?? "All");
-  const [sort, setSort] = useState<Sort>((params.get("s") as Sort) ?? "rating");
+
+  // Multi-select cuisines. URL takes precedence, then localStorage, else ["All"].
+  const initialCuisines = (() => {
+    const fromUrl = params.get("c");
+    if (fromUrl) return fromUrl.split(",").filter(Boolean);
+    const stored = readPersisted().cuisines;
+    if (stored && stored.length) return stored;
+    return ["All"];
+  })();
+  const [cuisines, setCuisines] = useState<string[]>(initialCuisines);
+
+  const initialSort = ((params.get("s") as Sort) ?? readPersisted().sort ?? "rating") as Sort;
+  const [sort, setSort] = useState<Sort>(initialSort);
+
+  const toggleCuisine = (key: string) => {
+    setCuisines((prev) => {
+      if (key === "All") return ["All"];
+      const without = prev.filter((k) => k !== "All");
+      const next = without.includes(key) ? without.filter((k) => k !== key) : [...without, key];
+      return next.length === 0 ? ["All"] : next;
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -67,24 +101,34 @@ export default function DailyNeedsFood() {
     return () => { cancelled = true; };
   }, [sort]);
 
-  // Sync URL state for shareable filters
+  // Persist + sync URL state for shareable filters
   useEffect(() => {
     const next = new URLSearchParams();
     if (query) next.set("q", query);
-    if (cuisine && cuisine !== "All") next.set("c", cuisine);
+    if (cuisines.length && !(cuisines.length === 1 && cuisines[0] === "All")) {
+      next.set("c", cuisines.join(","));
+    }
     if (sort !== "rating") next.set("s", sort);
     setParams(next, { replace: true });
-  }, [query, cuisine, sort, setParams]);
+    try {
+      window.localStorage.setItem(LS_KEY, JSON.stringify({ cuisines, sort }));
+    } catch {
+      /* ignore */
+    }
+  }, [query, cuisines, sort, setParams]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const all = cuisines.includes("All");
     return stores.filter((s) => {
       const matchesQ = !q || s.name?.toLowerCase().includes(q);
-      // Cuisine filter applied client-side once tags are introduced; for now "All" passes everything.
-      const matchesC = cuisine === "All";
+      // Cuisine tags not yet on store rows — "All" passes everything; specific picks pass once tags exist.
+      const matchesC = all;
       return matchesQ && matchesC;
     });
-  }, [stores, query, cuisine]);
+  }, [stores, query, cuisines]);
+
+  const activeCount = cuisines.includes("All") ? 0 : cuisines.length;
 
   return (
     <div className="pb-28 animate-fade-in">
@@ -113,20 +157,60 @@ export default function DailyNeedsFood() {
       </div>
 
       <div className="px-4 mt-4 space-y-4">
+        {/* Sort + active filter summary — own row so it never overlaps the category pills */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-xs text-muted-foreground min-w-0 truncate">
+            {activeCount > 0 ? (
+              <span>
+                <span className="font-semibold text-foreground">{activeCount}</span>{" "}
+                {activeCount === 1 ? "filter" : "filters"} active
+                <button
+                  type="button"
+                  onClick={() => setCuisines(["All"])}
+                  className="ml-2 underline underline-offset-2 hover:text-foreground"
+                >
+                  Clear
+                </button>
+              </span>
+            ) : (
+              <span>Showing all categories</span>
+            )}
+          </div>
+          <div className="shrink-0 inline-flex items-center gap-1.5 text-xs">
+            <SlidersHorizontal className="size-3.5 text-muted-foreground" />
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as Sort)}
+              className="bg-transparent text-foreground font-medium focus:outline-none"
+              aria-label="Sort restaurants"
+            >
+              <option value="rating">Top rated</option>
+              <option value="fastest">Fastest</option>
+              <option value="name">A–Z</option>
+            </select>
+          </div>
+        </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
+        {/* Category pills:
+            - Mobile: horizontal touch-scroll, snap, generous tap target (h-10).
+            - sm+: wraps into a tidy grid so nothing clips behind sort. */}
+        <div
+          role="group"
+          aria-label="Filter by category"
+          className="-mx-4 px-4 flex gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-none sm:mx-0 sm:px-0 sm:overflow-visible sm:flex-wrap sm:snap-none"
+        >
           {CUISINE_FILTERS.map((c) => {
             const Icon = c.icon;
-            const isActive = cuisine === c.key;
+            const isActive = cuisines.includes(c.key);
             return (
               <button
                 key={c.key}
-                onClick={() => setCuisine(c.key)}
-                className={`shrink-0 inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
+                type="button"
+                onClick={() => toggleCuisine(c.key)}
+                className={`snap-start shrink-0 inline-flex items-center gap-1.5 h-10 pl-3 pr-3.5 rounded-full text-xs font-semibold border transition-all duration-200 active:scale-95 ${
                   isActive
-                    ? `${c.active} shadow-sm scale-[1.02]`
-                    : `${c.tint} hover:scale-[1.02] hover:shadow-sm`
+                    ? `${c.active} shadow-sm`
+                    : `${c.tint} hover:shadow-sm`
                 }`}
                 aria-pressed={isActive}
               >
@@ -137,33 +221,20 @@ export default function DailyNeedsFood() {
           })}
         </div>
 
-        <div className="shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground">
-          <SlidersHorizontal className="size-3.5" />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as Sort)}
-            className="bg-transparent text-foreground font-medium focus:outline-none"
-            aria-label="Sort restaurants"
-          >
-            <option value="rating">Top rated</option>
-            <option value="fastest">Fastest</option>
-            <option value="name">A–Z</option>
-          </select>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="grid gap-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}</div>
-      ) : visible.length === 0 ? (
-        <div className="py-16 text-center space-y-2">
-          <p className="text-sm text-muted-foreground">No restaurants match your search.</p>
-          {(query || cuisine !== "All") && (
-            <Button variant="outline" size="sm" onClick={() => { setQuery(""); setCuisine("All"); }}>Clear filters</Button>
-          )}
-        </div>
-      ) : (
-        <div className="grid gap-3">{visible.map((s) => <StoreCard key={s.id} store={s} />)}</div>
-      )}
+        {loading ? (
+          <div className="grid gap-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}</div>
+        ) : visible.length === 0 ? (
+          <div className="py-16 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">No restaurants match your search.</p>
+            {(query || activeCount > 0) && (
+              <Button variant="outline" size="sm" onClick={() => { setQuery(""); setCuisines(["All"]); }}>
+                Clear filters
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-3">{visible.map((s) => <StoreCard key={s.id} store={s} />)}</div>
+        )}
       </div>
     </div>
   );
