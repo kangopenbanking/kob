@@ -64,6 +64,52 @@ export default function DailyNeedsOrderDetails() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!order) return;
+    setCancelling(true);
+    const { error } = await supabase
+      .from("daily_needs_orders")
+      .update({ status: "cancelled" })
+      .eq("id", order.id)
+      .in("status", ["received", "accepted"]);
+    setCancelling(false);
+    setConfirmCancel(false);
+    if (error) {
+      toast({ title: "Couldn't cancel order", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Order cancelled" });
+      setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!order) return;
+    downloadOrderReceipt({
+      id: order.id,
+      status: order.status,
+      vertical: order.daily_needs_stores?.vertical ?? null,
+      store_name: order.daily_needs_stores?.name ?? null,
+      subtotal_xaf: order.subtotal_xaf,
+      delivery_fee_xaf: order.delivery_fee_xaf,
+      service_fee_xaf: order.service_fee_xaf,
+      total_xaf: order.total_xaf,
+      delivery_address: order.delivery_address,
+      delivery_phone: order.delivery_phone,
+      notes: order.notes,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      delivered_at: order.delivered_at,
+      items: items.map((it) => ({
+        name: it.name_snapshot,
+        quantity: it.quantity,
+        unit_price_xaf: it.unit_price_xaf,
+        total_xaf: it.total_xaf,
+      })),
+    });
+  };
 
   useEffect(() => {
     if (!id) return;
