@@ -18,7 +18,7 @@ const allQuickActions = [
   { key: 'qr_scan', label: 'Scan', icon: QrCode, color: 'bg-[hsl(255,50%,92%)]', iconColor: 'text-[hsl(255,50%,45%)]', featureKey: 'qr_scan' },
   { key: 'bills', label: 'Bills', icon: Receipt, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', featureKey: 'bills' },
   { key: 'cash_out', label: 'Cash Out', icon: Wallet, color: 'bg-[hsl(340,50%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'cash_out' },
-  { key: 'bank', label: 'Add', icon: Plus, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]' },
+  { key: 'bank', label: 'Accounts', icon: Building2, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]' },
   { key: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-[hsl(30,70%,90%)]', iconColor: 'text-[hsl(30,60%,40%)]' },
   { key: 'daily_needs', label: 'Daily Needs', icon: Store, color: 'bg-[hsl(160,60%,90%)]', iconColor: 'text-[hsl(160,50%,35%)]' },
   { key: 'driver_hub', label: 'Driver Hub', icon: Users, color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
