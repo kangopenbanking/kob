@@ -174,6 +174,45 @@ describe("ScreenshotGuard", () => {
   });
 });
 
+describe("ScreenshotGuard — user consent", () => {
+  it("fully suppresses watermark, html flags and shortcut blocking when consent is 'disabled'", () => {
+    localStorage.setItem("kob:screenshot-guard:consent", "disabled");
+    renderAtPath("/app/transfer");
+    // No watermark even on a protected route.
+    expect(screen.queryByTestId("screenshot-watermark")).not.toBeInTheDocument();
+    // No CSS hardening attribute.
+    expect(document.documentElement.getAttribute("data-kob-secure")).toBeNull();
+    // PrintScreen is NOT intercepted when the user has opted out.
+    const evt = new KeyboardEvent("keydown", { key: "PrintScreen", bubbles: true, cancelable: true });
+    window.dispatchEvent(evt);
+    expect(evt.defaultPrevented).toBe(false);
+    // No guard:render audit event either.
+    expect(recordCaptureEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "guard:render" }),
+    );
+  });
+
+  it("re-enables watermark and shortcut blocking when consent flips back to 'enabled'", async () => {
+    localStorage.setItem("kob:screenshot-guard:consent", "enabled");
+    renderAtPath("/app/cards");
+    await act(async () => { await Promise.resolve(); });
+    expect(screen.getByTestId("screenshot-watermark")).toBeInTheDocument();
+    expect(document.documentElement.getAttribute("data-kob-secure")).toBe("1");
+    const evt = new KeyboardEvent("keydown", { key: "PrintScreen", bubbles: true, cancelable: true });
+    window.dispatchEvent(evt);
+    expect(evt.defaultPrevented).toBe(true);
+  });
+
+  it("shows the consent prompt (no watermark yet) when no choice has been made", () => {
+    localStorage.removeItem("kob:screenshot-guard:consent");
+    renderAtPath("/app/transfer");
+    expect(screen.queryByTestId("screenshot-watermark")).not.toBeInTheDocument();
+    expect(document.documentElement.getAttribute("data-kob-secure")).toBeNull();
+  });
+});
+
+
+
 describe("SecureField", () => {
   it("renders mask when revealed=false", () => {
     render(
