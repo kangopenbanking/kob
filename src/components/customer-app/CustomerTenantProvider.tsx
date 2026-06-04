@@ -93,6 +93,7 @@ interface CustomerTenantBranding {
   typographyConfig: TypographyConfig;
   travelCardConfig: TravelCardConfig;
   dailyNeedsCardConfig: DailyNeedsCardConfig;
+  homeCarouselOrder: HomeCarouselSlide[];
 }
 
 const defaultFeatures: CustomerAppFeatures = {
