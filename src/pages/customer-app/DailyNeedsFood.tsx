@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, Search, SlidersHorizontal } from "lucide-react";
+import {
+  ChevronLeft,
+  Search,
+  SlidersHorizontal,
+  UtensilsCrossed,
+  Soup,
+  Pizza,
+  Coffee,
+  CupSoda,
+  Salad,
+  IceCream,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +21,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type Sort = "rating" | "fastest" | "name";
 
-const CUISINE_FILTERS = ["All", "Local", "Fast food", "Breakfast", "Drinks", "Healthy", "Desserts"] as const;
+type CuisineFilter = {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  // Tailwind classes for the inactive (tinted) state
+  tint: string;
+  // Tailwind classes for the active (filled) state
+  active: string;
+};
+
+const CUISINE_FILTERS: CuisineFilter[] = [
+  { key: "All",       label: "All",        icon: UtensilsCrossed, tint: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-200 dark:border-slate-700",   active: "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100" },
+  { key: "Local",     label: "Local",      icon: Soup,            tint: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900",   active: "bg-amber-600 text-white border-amber-600" },
+  { key: "Fast food", label: "Fast food",  icon: Pizza,           tint: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-900",               active: "bg-red-600 text-white border-red-600" },
+  { key: "Breakfast", label: "Breakfast",  icon: Coffee,          tint: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-200 dark:border-orange-900", active: "bg-orange-600 text-white border-orange-600" },
+  { key: "Drinks",    label: "Drinks",     icon: CupSoda,         tint: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:border-sky-900",               active: "bg-sky-600 text-white border-sky-600" },
+  { key: "Healthy",   label: "Healthy",    icon: Salad,           tint: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-900", active: "bg-emerald-600 text-white border-emerald-600" },
+  { key: "Desserts",  label: "Desserts",   icon: IceCream,        tint: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-200 dark:border-pink-900",         active: "bg-pink-600 text-white border-pink-600" },
+];
 
 export default function DailyNeedsFood() {
   const navigate = useNavigate();
