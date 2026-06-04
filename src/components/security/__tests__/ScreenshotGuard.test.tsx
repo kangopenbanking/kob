@@ -68,10 +68,16 @@ function renderAtPath(path: string) {
   );
 }
 
+beforeEach(() => {
+  // Default: user has consented. Individual tests can override.
+  try { localStorage.setItem("kob:screenshot-guard:consent", "enabled"); } catch { /* noop */ }
+});
+
 afterEach(() => {
   cleanup();
   document.documentElement.removeAttribute("data-kob-secure");
   document.documentElement.removeAttribute("data-kob-secure-hide");
+  try { localStorage.removeItem("kob:screenshot-guard:consent"); } catch { /* noop */ }
   vi.clearAllMocks();
 });
 
