@@ -1101,3 +1101,7 @@ verify_jwt = false
 
 [functions.daily-needs-shipping-webhook]
 verify_jwt = false
+
+[functions.screenshot-guard-settings]
+verify_jwt = false
+
