@@ -5154,6 +5154,7 @@ export type Database = {
           verification_status: string
           verified_at: string | null
           verified_by: string | null
+          youverify_session_id: string | null
         }
         Insert: {
           account_id?: string | null
@@ -5188,6 +5189,7 @@ export type Database = {
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
+          youverify_session_id?: string | null
         }
         Update: {
           account_id?: string | null
@@ -5222,6 +5224,7 @@ export type Database = {
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
+          youverify_session_id?: string | null
         }
         Relationships: [
           {
@@ -15524,6 +15527,129 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_circuit_breaker_state: {
+        Row: {
+          failure_count: number
+          last_failure_at: string | null
+          opened_at: string | null
+          provider: string
+          state: string
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          failure_count?: number
+          last_failure_at?: string | null
+          opened_at?: string | null
+          provider: string
+          state?: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          failure_count?: number
+          last_failure_at?: string | null
+          opened_at?: string | null
+          provider?: string
+          state?: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
+      kyc_feature_flags: {
+        Row: {
+          country_codes: string[]
+          created_at: string
+          description: string | null
+          flag_key: string
+          id: string
+          is_enabled: boolean
+          rollout_percentage: number
+          updated_at: string
+          user_whitelist: string[]
+        }
+        Insert: {
+          country_codes?: string[]
+          created_at?: string
+          description?: string | null
+          flag_key: string
+          id?: string
+          is_enabled?: boolean
+          rollout_percentage?: number
+          updated_at?: string
+          user_whitelist?: string[]
+        }
+        Update: {
+          country_codes?: string[]
+          created_at?: string
+          description?: string | null
+          flag_key?: string
+          id?: string
+          is_enabled?: boolean
+          rollout_percentage?: number
+          updated_at?: string
+          user_whitelist?: string[]
+        }
+        Relationships: []
+      }
+      kyc_verification_audit: {
+        Row: {
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          fallback_reason: string | null
+          fallback_triggered: boolean
+          id: string
+          provider_used: string
+          risk_score: number | null
+          self_hosted_response_time_ms: number | null
+          self_hosted_success: boolean | null
+          trace_id: string
+          user_id: string | null
+          verification_result: string | null
+          verification_type: string
+          youverify_response_time_ms: number | null
+          youverify_success: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          fallback_reason?: string | null
+          fallback_triggered?: boolean
+          id?: string
+          provider_used: string
+          risk_score?: number | null
+          self_hosted_response_time_ms?: number | null
+          self_hosted_success?: boolean | null
+          trace_id: string
+          user_id?: string | null
+          verification_result?: string | null
+          verification_type: string
+          youverify_response_time_ms?: number | null
+          youverify_success?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          fallback_reason?: string | null
+          fallback_triggered?: boolean
+          id?: string
+          provider_used?: string
+          risk_score?: number | null
+          self_hosted_response_time_ms?: number | null
+          self_hosted_success?: boolean | null
+          trace_id?: string
+          user_id?: string | null
+          verification_result?: string | null
+          verification_type?: string
+          youverify_response_time_ms?: number | null
+          youverify_success?: boolean | null
+        }
+        Relationships: []
+      }
       kyc_verifications: {
         Row: {
           created_at: string | null
@@ -15548,6 +15674,7 @@ export type Database = {
           verification_type: string
           verified_at: string | null
           verified_by: string | null
+          youverify_session_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -15572,6 +15699,7 @@ export type Database = {
           verification_type: string
           verified_at?: string | null
           verified_by?: string | null
+          youverify_session_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -15596,6 +15724,7 @@ export type Database = {
           verification_type?: string
           verified_at?: string | null
           verified_by?: string | null
+          youverify_session_id?: string | null
         }
         Relationships: [
           {
@@ -28906,6 +29035,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      youverify_webhook_events: {
+        Row: {
+          discrepancy: boolean
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          signature: string | null
+        }
+        Insert: {
+          discrepancy?: boolean
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed_at?: string
+          signature?: string | null
+        }
+        Update: {
+          discrepancy?: boolean
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          signature?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
