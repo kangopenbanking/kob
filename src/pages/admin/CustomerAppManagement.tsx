@@ -166,6 +166,7 @@ const defaultConfig: CustomerAppConfig = {
     sections: {},
   },
   travel_card_config: {
+    enabled: true,
     bg_image: '',
     overlay_opacity: 0.75,
     button_text: 'Book Now',
@@ -173,12 +174,14 @@ const defaultConfig: CustomerAppConfig = {
     button_size: 'md',
   },
   daily_needs_card_config: {
+    enabled: true,
     bg_image: '',
     overlay_opacity: 0.75,
     button_text: 'Order Now',
     button_bg_color: '#ffffff',
     button_size: 'md',
   },
+  home_carousel_order: ['travel', 'daily_needs'],
 };
 
 // ─── Hooks ───
