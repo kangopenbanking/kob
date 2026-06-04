@@ -233,6 +233,12 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
       const travelCardConfig: TravelCardConfig = { ...defaultTravelCardConfig, ...(customerConfig.travel_card_config || {}) };
       const dailyNeedsCardConfig: DailyNeedsCardConfig = { ...defaultDailyNeedsCardConfig, ...(customerConfig.daily_needs_card_config || {}) };
+      const rawOrder = Array.isArray(customerConfig.home_carousel_order) ? customerConfig.home_carousel_order : defaultHomeCarouselOrder;
+      const homeCarouselOrder: HomeCarouselSlide[] = rawOrder.filter((s: any): s is HomeCarouselSlide => s === 'travel' || s === 'daily_needs');
+      // Ensure both slides present (newly added slides default-append)
+      for (const slide of defaultHomeCarouselOrder) {
+        if (!homeCarouselOrder.includes(slide)) homeCarouselOrder.push(slide);
+      }
 
 
 
