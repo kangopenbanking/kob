@@ -181,7 +181,7 @@ export default function DailyNeedsHome() {
           ) : (
             <div className="space-y-2">
               {recent.map((o) => (
-                <Card key={o.id} onClick={() => navigate(`/app/daily-needs/orders/${o.id}`)} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors">
+                <Card key={o.id} onClick={() => navigate(`/app/daily-needs/orders/${o.id}/details`)} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors">
                   <div className="size-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                     {o.daily_needs_stores?.banner_url && <img src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
                   </div>
