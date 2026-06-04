@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, MapPin, Navigation, Package, Phone, Receipt, StickyNote } from "lucide-react";
+import { ChevronLeft, Download, MapPin, Navigation, Package, Phone, Receipt, StickyNote, X } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { OrderStatusTimeline } from "@/components/daily-needs/OrderStatusTimeline";
+import { downloadOrderReceipt } from "@/lib/daily-needs/orderReceipt";
+import { toast } from "@/hooks/use-toast";
+
+const CANCELLABLE = new Set(["received", "accepted"]);
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   received: "secondary",
@@ -56,6 +64,52 @@ export default function DailyNeedsOrderDetails() {
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!order) return;
+    setCancelling(true);
+    const { error } = await supabase
+      .from("daily_needs_orders")
+      .update({ status: "cancelled" })
+      .eq("id", order.id)
+      .in("status", ["received", "accepted"]);
+    setCancelling(false);
+    setConfirmCancel(false);
+    if (error) {
+      toast({ title: "Couldn't cancel order", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Order cancelled" });
+      setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!order) return;
+    downloadOrderReceipt({
+      id: order.id,
+      status: order.status,
+      vertical: order.daily_needs_stores?.vertical ?? null,
+      store_name: order.daily_needs_stores?.name ?? null,
+      subtotal_xaf: order.subtotal_xaf,
+      delivery_fee_xaf: order.delivery_fee_xaf,
+      service_fee_xaf: order.service_fee_xaf,
+      total_xaf: order.total_xaf,
+      delivery_address: order.delivery_address,
+      delivery_phone: order.delivery_phone,
+      notes: order.notes,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+      delivered_at: order.delivered_at,
+      items: items.map((it) => ({
+        name: it.name_snapshot,
+        quantity: it.quantity,
+        unit_price_xaf: it.unit_price_xaf,
+        total_xaf: it.total_xaf,
+      })),
+    });
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -120,6 +174,7 @@ export default function DailyNeedsOrderDetails() {
   }
 
   const isTrackable = TRACKABLE.has(order.status);
+  const canCancel = CANCELLABLE.has(order.status);
   const shortId = order.id.slice(0, 8).toUpperCase();
 
   return (
@@ -143,16 +198,37 @@ export default function DailyNeedsOrderDetails() {
         <OrderStatusTimeline status={order.status} />
       </Card>
 
-      {isTrackable && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {isTrackable && (
+          <Button
+            variant="secondary"
+            className="w-full gap-2"
+            onClick={() => navigate(`/app/daily-needs/orders/${order.id}`)}
+          >
+            <Navigation className="size-4" strokeWidth={2} />
+            Track live delivery
+          </Button>
+        )}
         <Button
-          variant="secondary"
+          variant="outline"
           className="w-full gap-2"
-          onClick={() => navigate(`/app/daily-needs/orders/${order.id}`)}
+          onClick={handleDownload}
         >
-          <Navigation className="size-4" strokeWidth={2} />
-          Track live delivery
+          <Download className="size-4" strokeWidth={2} />
+          Download receipt
         </Button>
-      )}
+        {canCancel && (
+          <Button
+            variant="outline"
+            className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive sm:col-span-2"
+            onClick={() => setConfirmCancel(true)}
+          >
+            <X className="size-4" strokeWidth={2} />
+            Cancel order
+          </Button>
+        )}
+      </div>
+
 
       <Card className="p-4 space-y-3">
         <div className="flex items-center gap-2">
@@ -222,6 +298,27 @@ export default function DailyNeedsOrderDetails() {
         <TimeRow label="Last updated" iso={order.updated_at} />
         {order.delivered_at && <TimeRow label="Delivered" iso={order.delivered_at} />}
       </Card>
+
+      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Order <span className="font-mono">{shortId}</span> will be cancelled. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Keep order</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelling}
+              onClick={(e) => { e.preventDefault(); handleCancel(); }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling ? "Cancelling…" : "Cancel order"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

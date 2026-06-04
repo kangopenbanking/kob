@@ -1,10 +1,10 @@
-import { Check, Circle } from "lucide-react";
+import { Check, Circle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { key: "received",   label: "Order received" },
+  { key: "received",   label: "Pending" },
   { key: "accepted",   label: "Accepted" },
-  { key: "preparing",  label: "Preparing" },
+  { key: "preparing",  label: "Processing" },
   { key: "ready",      label: "Ready" },
   { key: "picked_up",  label: "Picked up" },
   { key: "on_the_way", label: "On the way" },
@@ -12,7 +12,27 @@ const STEPS = [
   { key: "delivered",  label: "Delivered" },
 ];
 
+const CANCELLED_STATES = new Set(["cancelled", "canceled", "refunded"]);
+
 export function OrderStatusTimeline({ status }: { status: string }) {
+  if (CANCELLED_STATES.has(status)) {
+    return (
+      <ol className="space-y-3">
+        <li className="flex items-center gap-3">
+          <span className="flex size-7 items-center justify-center rounded-full border bg-destructive border-destructive text-destructive-foreground">
+            <X className="size-4" />
+          </span>
+          <span className="text-sm font-semibold text-foreground capitalize">
+            Order {status === "refunded" ? "refunded" : "canceled"}
+          </span>
+        </li>
+        <li className="text-xs text-muted-foreground pl-10">
+          This order will no longer be processed or delivered.
+        </li>
+      </ol>
+    );
+  }
+
   const currentIdx = STEPS.findIndex((s) => s.key === status);
   return (
     <ol className="space-y-3">
