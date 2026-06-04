@@ -49,9 +49,26 @@ export default function DailyNeedsOrders() {
   const verticalParam = params.get("vertical") ?? "all";
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState<OrderRow | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
-  // Fetch + realtime
-  useEffect(() => {
+  const handleCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    const { error } = await supabase
+      .from("daily_needs_orders")
+      .update({ status: "cancelled" })
+      .eq("id", cancelTarget.id)
+      .in("status", Array.from(CANCELLABLE));
+    setCancelling(false);
+    if (error) {
+      toast({ title: "Couldn't cancel order", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Order cancelled", description: `Order ${cancelTarget.id.slice(0, 8).toUpperCase()} was cancelled.` });
+      setOrders((prev) => prev.map((o) => o.id === cancelTarget.id ? { ...o, status: "cancelled" } : o));
+    }
+    setCancelTarget(null);
+  };
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
