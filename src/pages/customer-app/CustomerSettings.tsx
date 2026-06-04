@@ -392,6 +392,12 @@ const CustomerSettings: React.FC = () => {
                 description={tr('Review and revoke sign-ins')}
                 onClick={() => navigate('/app/settings/sessions')}
               />
+              <SettingRow
+                icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />}
+                label={tr('Screen Protection')}
+                description={tr('Watermark & screenshot blocking on financial pages')}
+                onClick={() => navigate('/app/settings/security')}
+              />
             </SettingCard>
 
             <div className="rounded-2xl border border-border bg-card p-4">

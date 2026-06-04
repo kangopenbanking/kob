@@ -24592,6 +24592,36 @@ export type Database = {
         }
         Relationships: []
       }
+      screenshot_guard_consents: {
+        Row: {
+          created_at: string
+          decided_at: string
+          decision: string
+          last_app_context: string | null
+          last_pathname: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string
+          decision: string
+          last_app_context?: string | null
+          last_pathname?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string
+          decision?: string
+          last_app_context?: string | null
+          last_pathname?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       screenshot_guard_settings: {
         Row: {
           dark_opacity: number

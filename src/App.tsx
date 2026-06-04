@@ -737,6 +737,7 @@ const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
 const CustomerSessions = lazy(() => import("./pages/customer-app/CustomerSessions"));
 const CustomerTwoFactor = lazy(() => import("./pages/customer-app/CustomerTwoFactor"));
+const CustomerSettingsSecurity = lazy(() => import("./pages/customer-app/CustomerSettingsSecurity"));
 const CustomerStatements = lazy(() => import("./pages/customer-app/CustomerStatements"));
 const CustomerKYCWizard = lazy(() => import("./pages/customer-app/CustomerKYCWizard"));
 const CustomerReferral = lazy(() => import("./pages/customer-app/CustomerReferral"));
@@ -1653,6 +1654,7 @@ function App() {
               <Route path="settings" element={<CustomerSettings />} />
               <Route path="settings/sessions" element={<CustomerSessions />} />
               <Route path="settings/two-factor" element={<CustomerTwoFactor />} />
+              <Route path="settings/security" element={<CustomerSettingsSecurity />} />
               <Route path="statements" element={<CustomerStatements />} />
               <Route path="kyc" element={<CustomerKYCWizard />} />
               <Route path="referral" element={<CustomerReferral />} />
