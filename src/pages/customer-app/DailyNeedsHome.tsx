@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,26 @@ import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import foodCardAsset from "@/assets/food_card.png.asset.json";
 import pharmacyCardAsset from "@/assets/pharmacy_card.png.asset.json";
+
+function CardImage({ src, alt, className, heightRatioClass }: { src: string; alt: string; className?: string; heightRatioClass?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const handleLoad = useCallback(() => setLoaded(true), []);
+  return (
+    <div className={`pointer-events-none absolute -right-3 bottom-0 w-auto overflow-hidden ${heightRatioClass ?? "h-[78%] sm:h-[82%]"}`}>
+      {!loaded && <Skeleton className="absolute inset-0 rounded-none bg-white/20" />}
+      <img
+        src={src}
+        alt={alt}
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
+        onLoad={handleLoad}
+        className={`h-full w-auto object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
+      />
+    </div>
+  );
+}
 
 export default function DailyNeedsHome() {
   const navigate = useNavigate();
