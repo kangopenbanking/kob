@@ -737,6 +737,7 @@ const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
 const CustomerSessions = lazy(() => import("./pages/customer-app/CustomerSessions"));
 const CustomerTwoFactor = lazy(() => import("./pages/customer-app/CustomerTwoFactor"));
+const CustomerSettingsSecurity = lazy(() => import("./pages/customer-app/CustomerSettingsSecurity"));
 const CustomerStatements = lazy(() => import("./pages/customer-app/CustomerStatements"));
 const CustomerKYCWizard = lazy(() => import("./pages/customer-app/CustomerKYCWizard"));
 const CustomerReferral = lazy(() => import("./pages/customer-app/CustomerReferral"));
