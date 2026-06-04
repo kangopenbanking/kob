@@ -69,6 +69,9 @@ export default function DailyNeedsOrders() {
     }
     setCancelTarget(null);
   };
+
+  // Fetch + realtime
+  useEffect(() => {
     let cancelled = false;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
