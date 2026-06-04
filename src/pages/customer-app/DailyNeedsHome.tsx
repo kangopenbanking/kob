@@ -16,8 +16,8 @@ function CardImage({ src, alt, className, heightRatioClass }: { src: string; alt
     if (node && node.complete && node.naturalWidth > 0) setLoaded(true);
   }, []);
   return (
-    <div className={`pointer-events-none absolute -right-3 bottom-0 h-full w-[55%] overflow-hidden ${heightRatioClass ?? ""}`}>
-      {!loaded && <Skeleton className="absolute inset-y-0 right-0 w-full rounded-none bg-white/20" />}
+    <div className={`pointer-events-none absolute -right-3 bottom-0 h-full w-[70%] ${heightRatioClass ?? ""}`}>
+      {!loaded && <Skeleton className="absolute inset-y-0 right-0 w-1/2 rounded-none bg-white/20" />}
       <img
         ref={imgRef}
         src={src}
