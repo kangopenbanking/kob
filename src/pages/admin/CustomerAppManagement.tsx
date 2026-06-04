@@ -95,6 +95,13 @@ interface CustomerAppConfig {
     button_bg_color: string;
     button_size: 'sm' | 'md' | 'lg';
   };
+  daily_needs_card_config: {
+    bg_image: string;
+    overlay_opacity: number;
+    button_text: string;
+    button_bg_color: string;
+    button_size: 'sm' | 'md' | 'lg';
+  };
 }
 
 interface SectionTypography {
