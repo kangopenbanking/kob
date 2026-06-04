@@ -116,21 +116,27 @@ export default function DailyNeedsFood() {
 
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 scrollbar-none">
-          {CUISINE_FILTERS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCuisine(c)}
-              className={`shrink-0 h-8 px-3 rounded-full text-xs font-medium border transition ${
-                cuisine === c
-                  ? "bg-foreground text-background border-foreground"
-                  : "bg-background text-foreground border-border hover:bg-muted"
-              }`}
-              aria-pressed={cuisine === c}
-            >
-              {c}
-            </button>
-          ))}
+          {CUISINE_FILTERS.map((c) => {
+            const Icon = c.icon;
+            const isActive = cuisine === c.key;
+            return (
+              <button
+                key={c.key}
+                onClick={() => setCuisine(c.key)}
+                className={`shrink-0 inline-flex items-center gap-1.5 h-9 pl-2.5 pr-3.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
+                  isActive
+                    ? `${c.active} shadow-sm scale-[1.02]`
+                    : `${c.tint} hover:scale-[1.02] hover:shadow-sm`
+                }`}
+                aria-pressed={isActive}
+              >
+                <Icon className="size-4" strokeWidth={1.75} />
+                {c.label}
+              </button>
+            );
+          })}
         </div>
+
         <div className="shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground">
           <SlidersHorizontal className="size-3.5" />
           <select
