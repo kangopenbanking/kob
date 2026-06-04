@@ -203,10 +203,10 @@ export function ScreenshotGuard() {
       html[data-kob-secure-hide="1"] body > * { filter: blur(18px) saturate(0.6); transition: filter 120ms ease; }
       .kob-screenshot-watermark {
         position: fixed; inset: 0; pointer-events: none; z-index: 2147483000;
-        opacity: 0.14; mix-blend-mode: multiply;
+        opacity: 0.05; mix-blend-mode: multiply;
       }
       @media (prefers-color-scheme: dark) {
-        .kob-screenshot-watermark { mix-blend-mode: screen; opacity: 0.10; }
+        .kob-screenshot-watermark { mix-blend-mode: screen; opacity: 0.03; }
       }
     `;
     document.head.appendChild(style);

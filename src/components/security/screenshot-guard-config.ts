@@ -14,8 +14,8 @@ export const FINANCIAL_ROUTE_PATTERNS: string[] = [
   // =============================================================
   // Consumer PWA (/app)
   // =============================================================
-  // Dashboard & money movement
-  "/app/home",
+  // Dashboard & money movement (home is intentionally excluded —
+  // the watermark remains on sub-pages with transactional detail)
   "/app/activity",
   "/app/transfer",
   "/app/request",
