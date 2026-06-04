@@ -143,7 +143,7 @@ describe("ScreenshotGuard", () => {
   });
 
   it("blurs the body when the document visibility changes to hidden", async () => {
-    renderAtPath("/app/home");
+    renderAtPath("/app/transfer");
     await act(async () => { await Promise.resolve(); });
     await act(async () => {
       Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
