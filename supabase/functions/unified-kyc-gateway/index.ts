@@ -341,7 +341,7 @@ async function runVerification(
       await breakerRecord(supabase, true);
       const resp = transformFromYouverify(req, raw);
       await writeAudit(supabase, {
-        trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+        trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
         provider_used: "youverify", fallback_triggered: false,
         youverify_success: true, youverify_response_time_ms: yvTime,
         verification_result: resp.result, risk_score: resp.risk_score ?? null,
@@ -357,7 +357,7 @@ async function runVerification(
         // Hard failure (validation/auth/etc.) — do NOT fallback per spec
         await breakerRecord(supabase, false); // still count auth/etc? auth_failed should alert ops
         await writeAudit(supabase, {
-          trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+          trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
           provider_used: "youverify", fallback_triggered: false,
           youverify_success: false, youverify_response_time_ms: yvTime,
           verification_result: "rejected",
@@ -381,7 +381,7 @@ async function runVerification(
     const resp = await callSelfHosted(supabase, authToken, req);
     const shTime = Date.now() - start;
     await writeAudit(supabase, {
-      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
       provider_used: "self_hosted",
       fallback_triggered: useYv || decision.route, // true if we attempted YV first
       fallback_reason: fallbackReason,
@@ -398,7 +398,7 @@ async function runVerification(
     const shTime = Date.now() - start;
     const msg = (err as Error).message;
     await writeAudit(supabase, {
-      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
       provider_used: "self_hosted", fallback_triggered: useYv || decision.route,
       fallback_reason: fallbackReason,
       youverify_success: yvSuccess, youverify_response_time_ms: yvTime,
@@ -448,10 +448,52 @@ Deno.serve(async (req) => {
     }
 
     if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-    const body = await req.json().catch(() => ({}));
+    const rawBody = await req.text();
+    let body: Record<string, unknown> = {};
+    try { body = rawBody ? JSON.parse(rawBody) : {}; } catch { body = {}; }
     const verification_type: VerificationType =
       path.includes("/kyb/") ? "business" :
       path.includes("/aml/") ? "aml" : "identity";
+    const endpoint = `POST ${verification_type}`;
+
+    // ── Idempotency: cache full responses for retries (24h TTL) ──
+    const idemKeyRaw = req.headers.get("idempotency-key") ?? req.headers.get("Idempotency-Key");
+    const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    let requestHash = "";
+    if (idemKeyRaw) {
+      if (!UUID_V4.test(idemKeyRaw) || idemKeyRaw.length > 255) {
+        return json({ error: "invalid_idempotency_key", message: "Idempotency-Key must be a UUID v4" }, 400);
+      }
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawBody));
+      requestHash = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+      const { data: cached } = await supabase
+        .from("kyc_gateway_idempotency")
+        .select("request_hash, response_status, response_body")
+        .eq("idempotency_key", idemKeyRaw)
+        .eq("user_id", user.id)
+        .eq("endpoint", endpoint)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+
+      if (cached) {
+        if (cached.request_hash !== requestHash) {
+          return new Response(JSON.stringify({
+            type: "https://api.kangopenbanking.com/errors/idempotency-key-reused",
+            title: "Idempotency Key Conflict",
+            status: 409,
+            detail: "The provided Idempotency-Key was previously used with a different request body.",
+          }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/problem+json", "X-Idempotency-Status": "conflict_rejected" },
+          });
+        }
+        return new Response(JSON.stringify(cached.response_body), {
+          status: cached.response_status,
+          headers: { ...corsHeaders, "Content-Type": "application/json", "X-Idempotency-Status": "replayed", "X-Idempotent-Replay": "true" },
+        });
+      }
+    }
 
     const trace_id = (body.trace_id as string) ?? crypto.randomUUID();
     const kycReq: KycRequest = {
@@ -462,9 +504,31 @@ Deno.serve(async (req) => {
       payload: body,
     };
     const resp = await runVerification(supabase, token, kycReq);
-    return json(resp, resp.error ? 422 : 200);
+    const status = resp.error ? 422 : 200;
+
+    if (idemKeyRaw) {
+      await supabase.from("kyc_gateway_idempotency").insert({
+        idempotency_key: idemKeyRaw,
+        user_id: user.id,
+        endpoint,
+        request_hash: requestHash,
+        response_status: status,
+        response_body: resp,
+        trace_id,
+      });
+    }
+
+    return new Response(JSON.stringify(resp), {
+      status,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+        ...(idemKeyRaw ? { "X-Idempotency-Status": "first_request", "X-Idempotent-Replay": "false" } : {}),
+      },
+    });
   } catch (err) {
     logKyc({ event: "gateway_error", error: (err as Error).message });
     return json({ error: "internal_error", message: "Verification service unavailable" }, 500);
   }
+
 });
