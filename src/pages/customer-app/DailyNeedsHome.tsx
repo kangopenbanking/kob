@@ -69,10 +69,20 @@ export default function DailyNeedsHome() {
             className="text-white hover:bg-white/15 hover:text-white -ml-2">
             <ChevronLeft />
           </Button>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold leading-tight">Daily Needs</h1>
             <p className="text-xs text-white/85">Food, pharmacy & essentials delivered</p>
           </div>
+          <Button
+            onClick={() => navigate("/app/daily-needs/orders")}
+            size="sm"
+            variant="secondary"
+            className="h-9 rounded-full bg-white/15 hover:bg-white/25 text-white border border-white/30 backdrop-blur-sm gap-1.5 px-3"
+            aria-label="My orders"
+          >
+            <Receipt className="size-4" strokeWidth={2} />
+            <span className="text-xs font-semibold">My orders</span>
+          </Button>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
