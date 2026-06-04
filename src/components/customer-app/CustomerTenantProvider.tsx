@@ -38,6 +38,7 @@ export interface HeroActionColors {
 }
 
 export interface TravelCardConfig {
+  enabled: boolean;
   bg_image: string;
   overlay_opacity: number;
   button_text: string;
@@ -46,12 +47,15 @@ export interface TravelCardConfig {
 }
 
 export interface DailyNeedsCardConfig {
+  enabled: boolean;
   bg_image: string;
   overlay_opacity: number;
   button_text: string;
   button_bg_color: string;
   button_size: 'sm' | 'md' | 'lg';
 }
+
+export type HomeCarouselSlide = 'travel' | 'daily_needs';
 
 export interface SectionTypography {
   font_size_multiplier: number;
