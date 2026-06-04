@@ -248,6 +248,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         heroActionOpacity,
         typographyConfig,
         travelCardConfig,
+        dailyNeedsCardConfig,
       });
     };
 
