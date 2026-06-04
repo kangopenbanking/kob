@@ -143,6 +143,14 @@ const defaultTravelCardConfig: TravelCardConfig = {
   button_size: 'md',
 };
 
+const defaultDailyNeedsCardConfig: DailyNeedsCardConfig = {
+  bg_image: '',
+  overlay_opacity: 0.75,
+  button_text: 'Order Now',
+  button_bg_color: '#ffffff',
+  button_size: 'md',
+};
+
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
   name: 'Kang',
