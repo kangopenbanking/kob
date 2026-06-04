@@ -7,6 +7,8 @@ import { ChevronLeft, Search, UtensilsCrossed, Pill, MapPin, History, Sparkles }
 import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import foodCardAsset from "@/assets/food_card.png.asset.json";
+import pharmacyCardAsset from "@/assets/pharmacy_card.png.asset.json";
 
 export default function DailyNeedsHome() {
   const navigate = useNavigate();
