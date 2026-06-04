@@ -1974,6 +1974,7 @@ export default function CustomerAppManagement() {
                   <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> {tr('Typography')}</TabsTrigger>
                   <TabsTrigger value="travel-card" className="gap-1.5"><Plane className="h-3.5 w-3.5" /> {tr('Travel Card')}</TabsTrigger>
                   <TabsTrigger value="daily-needs-card" className="gap-1.5"><UtensilsCrossed className="h-3.5 w-3.5" /> {tr('Daily Needs Card')}</TabsTrigger>
+                  <TabsTrigger value="carousel-order" className="gap-1.5"><GripVertical className="h-3.5 w-3.5" /> {tr('Carousel Order')}</TabsTrigger>
                   <TabsTrigger value="storefront" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {tr('Storefronts')}</TabsTrigger>
                 </TabsList>
 
