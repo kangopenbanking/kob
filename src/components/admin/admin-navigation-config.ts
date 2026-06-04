@@ -37,6 +37,7 @@ import {
   Plug,
   Lock,
   Code2,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
