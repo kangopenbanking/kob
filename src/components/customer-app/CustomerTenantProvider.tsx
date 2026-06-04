@@ -38,6 +38,7 @@ export interface HeroActionColors {
 }
 
 export interface TravelCardConfig {
+  enabled: boolean;
   bg_image: string;
   overlay_opacity: number;
   button_text: string;
@@ -46,12 +47,15 @@ export interface TravelCardConfig {
 }
 
 export interface DailyNeedsCardConfig {
+  enabled: boolean;
   bg_image: string;
   overlay_opacity: number;
   button_text: string;
   button_bg_color: string;
   button_size: 'sm' | 'md' | 'lg';
 }
+
+export type HomeCarouselSlide = 'travel' | 'daily_needs';
 
 export interface SectionTypography {
   font_size_multiplier: number;
@@ -89,6 +93,7 @@ interface CustomerTenantBranding {
   typographyConfig: TypographyConfig;
   travelCardConfig: TravelCardConfig;
   dailyNeedsCardConfig: DailyNeedsCardConfig;
+  homeCarouselOrder: HomeCarouselSlide[];
 }
 
 const defaultFeatures: CustomerAppFeatures = {
@@ -136,6 +141,7 @@ const defaultTypographyConfig: TypographyConfig = {
 };
 
 const defaultTravelCardConfig: TravelCardConfig = {
+  enabled: true,
   bg_image: '',
   overlay_opacity: 0.75,
   button_text: 'Book Now',
@@ -144,12 +150,15 @@ const defaultTravelCardConfig: TravelCardConfig = {
 };
 
 const defaultDailyNeedsCardConfig: DailyNeedsCardConfig = {
+  enabled: true,
   bg_image: '',
   overlay_opacity: 0.75,
   button_text: 'Order Now',
   button_bg_color: '#ffffff',
   button_size: 'md',
 };
+
+const defaultHomeCarouselOrder: HomeCarouselSlide[] = ['travel', 'daily_needs'];
 
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
@@ -174,6 +183,7 @@ const defaultBranding: CustomerTenantBranding = {
   typographyConfig: defaultTypographyConfig,
   travelCardConfig: defaultTravelCardConfig,
   dailyNeedsCardConfig: defaultDailyNeedsCardConfig,
+  homeCarouselOrder: defaultHomeCarouselOrder,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
@@ -223,6 +233,12 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
       const travelCardConfig: TravelCardConfig = { ...defaultTravelCardConfig, ...(customerConfig.travel_card_config || {}) };
       const dailyNeedsCardConfig: DailyNeedsCardConfig = { ...defaultDailyNeedsCardConfig, ...(customerConfig.daily_needs_card_config || {}) };
+      const rawOrder = Array.isArray(customerConfig.home_carousel_order) ? customerConfig.home_carousel_order : defaultHomeCarouselOrder;
+      const homeCarouselOrder: HomeCarouselSlide[] = rawOrder.filter((s: any): s is HomeCarouselSlide => s === 'travel' || s === 'daily_needs');
+      // Ensure both slides present (newly added slides default-append)
+      for (const slide of defaultHomeCarouselOrder) {
+        if (!homeCarouselOrder.includes(slide)) homeCarouselOrder.push(slide);
+      }
 
 
 
@@ -249,6 +265,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         typographyConfig,
         travelCardConfig,
         dailyNeedsCardConfig,
+        homeCarouselOrder,
       });
     };
 

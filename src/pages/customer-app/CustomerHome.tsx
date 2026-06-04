@@ -22,6 +22,7 @@ import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { SecureField } from '@/components/security/SecureField';
+import { supabase } from '@/integrations/supabase/client';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -163,6 +164,25 @@ const CustomerHome: React.FC = () => {
 
 
   const go = (path: string) => navigate(`/app/${path}`);
+
+  // Detect active Daily Needs order for smart routing
+  const ACTIVE_DN_STATUSES = ['received', 'accepted', 'preparing', 'ready', 'picked_up', 'on_the_way', 'arriving'] as const;
+  const goDailyNeeds = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return navigate('/app/daily-needs');
+      const { data } = await supabase
+        .from('daily_needs_orders')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .in('status', ACTIVE_DN_STATUSES)
+        .limit(1);
+      if (data && data.length > 0) navigate('/app/daily-needs/orders');
+      else navigate('/app/daily-needs');
+    } catch {
+      navigate('/app/daily-needs');
+    }
+  };
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
 
   const visibleMoney = moneyMovement.filter(isVisible);
@@ -599,7 +619,7 @@ const CustomerHome: React.FC = () => {
               onClick={() => go('travel')}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
-              <img src={travelBg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" />
+              <img src={travelBg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${tc.overlay_opacity})` }} />
               <div className="relative z-10 p-6">
                 <div className="absolute top-4 right-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
@@ -645,10 +665,10 @@ const CustomerHome: React.FC = () => {
             <motion.button
               key="daily-needs"
               whileTap={{ scale: 0.97 }}
-              onClick={() => go('daily-needs')}
+              onClick={goDailyNeeds}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
-              <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" />
+              <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dn.overlay_opacity})` }} />
               <div className="relative z-10 p-6">
                 <div className="absolute top-4 right-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(160,60%,55%)]">
@@ -689,10 +709,20 @@ const CustomerHome: React.FC = () => {
             </motion.button>
           );
 
+          const slides: Record<'travel' | 'daily_needs', () => JSX.Element> = {
+            travel: renderTravel,
+            daily_needs: renderDailyNeeds,
+          };
+          const enabledMap: Record<'travel' | 'daily_needs', boolean> = {
+            travel: tc.enabled !== false,
+            daily_needs: dn.enabled !== false,
+          };
+          const ordered = tenant.homeCarouselOrder.filter((k) => enabledMap[k]);
+          if (ordered.length === 0) return null;
+
           return (
             <div className="-mx-5 px-5 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth">
-              {renderTravel()}
-              {renderDailyNeeds()}
+              {ordered.map((k) => <React.Fragment key={k}>{slides[k]()}</React.Fragment>)}
             </div>
           );
         })()}

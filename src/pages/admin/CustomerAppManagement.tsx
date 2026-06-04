@@ -89,6 +89,7 @@ interface CustomerAppConfig {
   hero_action_opacity: number;
   typography_config: TypographyConfig;
   travel_card_config: {
+    enabled: boolean;
     bg_image: string;
     overlay_opacity: number;
     button_text: string;
@@ -96,12 +97,14 @@ interface CustomerAppConfig {
     button_size: 'sm' | 'md' | 'lg';
   };
   daily_needs_card_config: {
+    enabled: boolean;
     bg_image: string;
     overlay_opacity: number;
     button_text: string;
     button_bg_color: string;
     button_size: 'sm' | 'md' | 'lg';
   };
+  home_carousel_order: ('travel' | 'daily_needs')[];
 }
 
 interface SectionTypography {
@@ -163,6 +166,7 @@ const defaultConfig: CustomerAppConfig = {
     sections: {},
   },
   travel_card_config: {
+    enabled: true,
     bg_image: '',
     overlay_opacity: 0.75,
     button_text: 'Book Now',
@@ -170,12 +174,14 @@ const defaultConfig: CustomerAppConfig = {
     button_size: 'md',
   },
   daily_needs_card_config: {
+    enabled: true,
     bg_image: '',
     overlay_opacity: 0.75,
     button_text: 'Order Now',
     button_bg_color: '#ffffff',
     button_size: 'md',
   },
+  home_carousel_order: ['travel', 'daily_needs'],
 };
 
 // ─── Hooks ───
@@ -1376,6 +1382,133 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
   );
 }
 
+// ─── Card Previews (mirror customer home design) ───
+function TravelCardPreview({ config }: { config: CustomerAppConfig['travel_card_config'] }) {
+  const bg = config.bg_image || 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/travel-card/fallback.jpg';
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Live Preview</Label>
+      <div className="mt-2 mx-auto w-full max-w-[340px] aspect-[340/280] relative overflow-hidden rounded-3xl shadow-lg bg-muted">
+        <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+        <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${config.overlay_opacity})` }} />
+        <div className="relative z-10 p-5 text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
+          <h3 className="mt-1 text-lg font-extrabold">Travel & Tourism</h3>
+          <p className="mt-2 text-xs text-white/70 pr-12">Book buses, tours & more — all from your wallet.</p>
+          <div className="mt-4 inline-flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: config.button_bg_color || 'rgba(255,255,255,0.1)' }}>
+            <span className="text-xs font-bold text-white">{config.button_text || 'Book Now'}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-white/70" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DailyNeedsCardPreview({ config }: { config: CustomerAppConfig['daily_needs_card_config'] }) {
+  const bg = config.bg_image || 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/daily-needs-card/fallback.jpg';
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Live Preview</Label>
+      <div className="mt-2 mx-auto w-full max-w-[340px] aspect-[340/280] relative overflow-hidden rounded-3xl shadow-lg bg-muted">
+        <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+        <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${config.overlay_opacity})` }} />
+        <div className="relative z-10 p-5 text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Food & Essentials</p>
+          <h3 className="mt-1 text-lg font-extrabold">Daily Needs</h3>
+          <p className="mt-2 text-xs text-white/70 pr-12">Order food, pharmacy & groceries — delivered fast.</p>
+          <div className="mt-4 inline-flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: config.button_bg_color || 'rgba(255,255,255,0.1)' }}>
+            <span className="text-xs font-bold text-white">{config.button_text || 'Order Now'}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-white/70" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Carousel Order Panel ───
+function CarouselOrderPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
+  const queryClient = useQueryClient();
+  const [order, setOrder] = useState<('travel' | 'daily_needs')[]>(
+    Array.isArray(appConfig.home_carousel_order) && appConfig.home_carousel_order.length > 0
+      ? appConfig.home_carousel_order
+      : ['travel', 'daily_needs']
+  );
+
+  useEffect(() => {
+    setOrder(
+      Array.isArray(appConfig.home_carousel_order) && appConfig.home_carousel_order.length > 0
+        ? appConfig.home_carousel_order
+        : ['travel', 'daily_needs']
+    );
+  }, [appConfig]);
+
+  const labels: Record<'travel' | 'daily_needs', { name: string; icon: React.ElementType }> = {
+    travel: { name: 'Travel & Tourism', icon: Plane },
+    daily_needs: { name: 'Daily Needs', icon: UtensilsCrossed },
+  };
+
+  const move = (idx: number, delta: number) => {
+    const next = [...order];
+    const newIdx = idx + delta;
+    if (newIdx < 0 || newIdx >= next.length) return;
+    [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+    setOrder(next);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { data: inst } = await supabase.from('institutions').select('app_config').eq('id', institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const customerConfig = currentAppConfig.customer_app_config || {};
+      const { error } = await (supabase as any).from('institutions').update({
+        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, home_carousel_order: order } }
+      }).eq('id', institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-institutions-customer'] });
+      toast.success('Carousel order saved');
+    },
+    onError: () => toast.error('Failed to save carousel order'),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{tr('Home Carousel Order')}</CardTitle>
+        <CardDescription>{tr('Reorder the slides shown on the customer home page')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          {order.map((key, idx) => {
+            const Icon = labels[key].icon;
+            return (
+              <div key={key} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Icon className="h-4 w-4 text-primary" />
+                <span className="flex-1 text-sm font-medium">{idx + 1}. {labels[key].name}</span>
+                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(idx, -1)}>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === order.length - 1} onClick={() => move(idx, 1)}>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
+          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Carousel Order
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Travel Card Panel ───
 function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
   const tr = useHarvestedT('admin');
@@ -1404,20 +1537,28 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
     onError: () => toast.error("Failed to save travel card configuration"),
   });
 
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const ALLOWED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  const FALLBACK_BG = 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/travel-card/fallback.jpg';
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (!ALLOWED.includes(file.type)) { toast.error('Use PNG, JPG, WEBP or GIF'); return; }
+    if (file.size > MAX_BYTES) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `travel-card/${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true, contentType: file.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('homepage-hero').getPublicUrl(path);
       setConfig(prev => ({ ...prev, bg_image: urlData.publicUrl }));
       toast.success("Image uploaded");
     } catch {
-      toast.error("Upload failed");
+      toast.error("Upload failed — using fallback image");
+      setConfig(prev => ({ ...prev, bg_image: FALLBACK_BG }));
     } finally {
       setUploading(false);
     }
@@ -1430,6 +1571,15 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
         <CardDescription>{tr('Customize the travel card appearance on the customer home page')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div>
+            <Label className="text-sm font-medium">{tr('Show Travel card')}</Label>
+            <p className="text-xs text-muted-foreground">{tr('Disable to hide the slide for this tenant')}</p>
+          </div>
+          <Switch checked={config.enabled !== false} onCheckedChange={(v) => setConfig(prev => ({ ...prev, enabled: v }))} />
+        </div>
+
+        <TravelCardPreview config={config} />
         {/* Background Image */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">{tr('Background Image')}</Label>
@@ -1536,20 +1686,28 @@ function DailyNeedsCardPanel({ institutionId, appConfig }: { institutionId: stri
     onError: () => toast.error("Failed to save Daily Needs card configuration"),
   });
 
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const ALLOWED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  const FALLBACK_BG = 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/daily-needs-card/fallback.jpg';
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (!ALLOWED.includes(file.type)) { toast.error('Use PNG, JPG, WEBP or GIF'); return; }
+    if (file.size > MAX_BYTES) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `daily-needs-card/${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true, contentType: file.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('homepage-hero').getPublicUrl(path);
       setConfig(prev => ({ ...prev, bg_image: urlData.publicUrl }));
       toast.success("Image uploaded");
     } catch {
-      toast.error("Upload failed");
+      toast.error("Upload failed — using fallback image");
+      setConfig(prev => ({ ...prev, bg_image: FALLBACK_BG }));
     } finally {
       setUploading(false);
     }
@@ -1562,6 +1720,17 @@ function DailyNeedsCardPanel({ institutionId, appConfig }: { institutionId: stri
         <CardDescription>{tr('Customize the Daily Needs card appearance on the customer home page')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Enable toggle */}
+        <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div>
+            <Label className="text-sm font-medium">{tr('Show Daily Needs card')}</Label>
+            <p className="text-xs text-muted-foreground">{tr('Disable to hide the slide for this tenant')}</p>
+          </div>
+          <Switch checked={config.enabled !== false} onCheckedChange={(v) => setConfig(prev => ({ ...prev, enabled: v }))} />
+        </div>
+
+        {/* Live preview */}
+        <DailyNeedsCardPreview config={config} />
         <div className="space-y-2">
           <Label className="text-sm font-medium">{tr('Background Image')}</Label>
           {config.bg_image && (
@@ -1805,6 +1974,7 @@ export default function CustomerAppManagement() {
                   <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> {tr('Typography')}</TabsTrigger>
                   <TabsTrigger value="travel-card" className="gap-1.5"><Plane className="h-3.5 w-3.5" /> {tr('Travel Card')}</TabsTrigger>
                   <TabsTrigger value="daily-needs-card" className="gap-1.5"><UtensilsCrossed className="h-3.5 w-3.5" /> {tr('Daily Needs Card')}</TabsTrigger>
+                  <TabsTrigger value="carousel-order" className="gap-1.5"><GripVertical className="h-3.5 w-3.5" /> {tr('Carousel Order')}</TabsTrigger>
                   <TabsTrigger value="storefront" className="gap-1.5"><Store className="h-3.5 w-3.5" /> {tr('Storefronts')}</TabsTrigger>
                 </TabsList>
 
@@ -2081,6 +2251,13 @@ export default function CustomerAppManagement() {
                 <TabsContent value="daily-needs-card">
                   <DailyNeedsCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
+
+                {/* Carousel Order Tab */}
+                <TabsContent value="carousel-order">
+                  <CarouselOrderPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+
 
 
                 {/* Storefront Tab */}
