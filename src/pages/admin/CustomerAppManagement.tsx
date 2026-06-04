@@ -1410,20 +1410,28 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
     onError: () => toast.error("Failed to save travel card configuration"),
   });
 
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const ALLOWED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  const FALLBACK_BG = 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/travel-card/fallback.jpg';
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (!ALLOWED.includes(file.type)) { toast.error('Use PNG, JPG, WEBP or GIF'); return; }
+    if (file.size > MAX_BYTES) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `travel-card/${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true, contentType: file.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('homepage-hero').getPublicUrl(path);
       setConfig(prev => ({ ...prev, bg_image: urlData.publicUrl }));
       toast.success("Image uploaded");
     } catch {
-      toast.error("Upload failed");
+      toast.error("Upload failed — using fallback image");
+      setConfig(prev => ({ ...prev, bg_image: FALLBACK_BG }));
     } finally {
       setUploading(false);
     }
@@ -1436,6 +1444,15 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
         <CardDescription>{tr('Customize the travel card appearance on the customer home page')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div>
+            <Label className="text-sm font-medium">{tr('Show Travel card')}</Label>
+            <p className="text-xs text-muted-foreground">{tr('Disable to hide the slide for this tenant')}</p>
+          </div>
+          <Switch checked={config.enabled !== false} onCheckedChange={(v) => setConfig(prev => ({ ...prev, enabled: v }))} />
+        </div>
+
+        <TravelCardPreview config={config} />
         {/* Background Image */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">{tr('Background Image')}</Label>
