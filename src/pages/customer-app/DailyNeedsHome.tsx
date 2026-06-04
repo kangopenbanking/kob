@@ -91,12 +91,11 @@ export default function DailyNeedsHome() {
             onClick={() => navigate("/app/daily-needs/food")}
             className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(20,90%,55%)] text-white"
           >
-            <img
+            <CardImage
               src={foodCardAsset.url}
               alt=""
-              aria-hidden="true"
-              loading="lazy"
-              className="pointer-events-none absolute -right-3 bottom-0 h-[78%] w-auto object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] sm:-right-2 sm:h-[82%]"
+              heightRatioClass="h-[78%] sm:h-[82%]"
+              className="sm:-right-2"
             />
             <div className="relative size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
               <UtensilsCrossed className="size-5" strokeWidth={2} />
@@ -110,12 +109,11 @@ export default function DailyNeedsHome() {
             onClick={() => navigate("/app/daily-needs/pharmacy")}
             className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(160,65%,40%)] text-white"
           >
-            <img
+            <CardImage
               src={pharmacyCardAsset.url}
               alt=""
-              aria-hidden="true"
-              loading="lazy"
-              className="pointer-events-none absolute -right-3 bottom-0 h-[82%] w-auto object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] sm:-right-2 sm:h-[86%]"
+              heightRatioClass="h-[82%] sm:h-[86%]"
+              className="sm:-right-2"
             />
             <div className="relative size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
               <Pill className="size-5" strokeWidth={2} />
