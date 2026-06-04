@@ -59,7 +59,7 @@ export default function DailyNeedsOrders() {
       .from("daily_needs_orders")
       .update({ status: "cancelled" })
       .eq("id", cancelTarget.id)
-      .in("status", Array.from(CANCELLABLE));
+      .in("status", ["received", "accepted"]);
     setCancelling(false);
     if (error) {
       toast({ title: "Couldn't cancel order", description: error.message, variant: "destructive" });
