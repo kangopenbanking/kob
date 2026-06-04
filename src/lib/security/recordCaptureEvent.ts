@@ -19,7 +19,9 @@ export type CaptureKind =
   | "native:capture_detected"
   | "native:secured"
   | "native:unsecured"
-  | "guard:render";
+  | "guard:render"
+  | "guard:consent_enabled"
+  | "guard:consent_disabled";
 
 export interface CaptureEventInput {
   kind: CaptureKind;
