@@ -163,6 +163,25 @@ const CustomerHome: React.FC = () => {
 
 
   const go = (path: string) => navigate(`/app/${path}`);
+
+  // Detect active Daily Needs order for smart routing
+  const ACTIVE_DN_STATUSES = ['received', 'accepted', 'preparing', 'ready', 'out_for_delivery', 'in_transit'];
+  const goDailyNeeds = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return navigate('/app/daily-needs');
+      const { data } = await supabase
+        .from('daily_needs_orders')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .in('status', ACTIVE_DN_STATUSES)
+        .limit(1);
+      if (data && data.length > 0) navigate('/app/daily-needs/orders');
+      else navigate('/app/daily-needs');
+    } catch {
+      navigate('/app/daily-needs');
+    }
+  };
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
 
   const visibleMoney = moneyMovement.filter(isVisible);
