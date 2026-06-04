@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, MapPin, Navigation, Package, Phone, Receipt, StickyNote } from "lucide-react";
+import { ChevronLeft, Download, MapPin, Navigation, Package, Phone, Receipt, StickyNote, X } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { OrderStatusTimeline } from "@/components/daily-needs/OrderStatusTimeline";
+import { downloadOrderReceipt } from "@/lib/daily-needs/orderReceipt";
+import { toast } from "@/hooks/use-toast";
+
+const CANCELLABLE = new Set(["received", "accepted"]);
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   received: "secondary",
