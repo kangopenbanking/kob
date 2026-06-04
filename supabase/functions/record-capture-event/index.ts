@@ -29,6 +29,8 @@ const ALLOWED_KINDS = new Set([
   "native:secured",
   "native:unsecured",
   "guard:render",
+  "guard:consent_enabled",
+  "guard:consent_disabled",
 ]);
 
 const ALLOWED_CONTEXTS = new Set(["consumer", "banking"]);
