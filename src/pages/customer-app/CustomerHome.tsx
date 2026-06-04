@@ -709,10 +709,20 @@ const CustomerHome: React.FC = () => {
             </motion.button>
           );
 
+          const slides: Record<'travel' | 'daily_needs', () => JSX.Element> = {
+            travel: renderTravel,
+            daily_needs: renderDailyNeeds,
+          };
+          const enabledMap: Record<'travel' | 'daily_needs', boolean> = {
+            travel: tc.enabled !== false,
+            daily_needs: dn.enabled !== false,
+          };
+          const ordered = tenant.homeCarouselOrder.filter((k) => enabledMap[k]);
+          if (ordered.length === 0) return null;
+
           return (
             <div className="-mx-5 px-5 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth">
-              {renderTravel()}
-              {renderDailyNeeds()}
+              {ordered.map((k) => <React.Fragment key={k}>{slides[k]()}</React.Fragment>)}
             </div>
           );
         })()}
