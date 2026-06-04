@@ -7,6 +7,8 @@ import { ChevronLeft, Search, UtensilsCrossed, Pill, MapPin, History, Sparkles }
 import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import foodCardAsset from "@/assets/food_card.png.asset.json";
+import pharmacyCardAsset from "@/assets/pharmacy_card.png.asset.json";
 
 export default function DailyNeedsHome() {
   const navigate = useNavigate();
@@ -67,29 +69,44 @@ export default function DailyNeedsHome() {
         <section className="grid grid-cols-2 gap-3">
           <Card
             onClick={() => navigate("/app/daily-needs/food")}
-            className="cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(20,90%,55%)] text-white"
+            className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(20,90%,55%)] text-white"
           >
-            <div className="size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
+            <img
+              src={foodCardAsset.url}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="pointer-events-none absolute -right-3 bottom-0 h-[78%] w-auto object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] sm:-right-2 sm:h-[82%]"
+            />
+            <div className="relative size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
               <UtensilsCrossed className="size-5" strokeWidth={2} />
             </div>
-            <div>
+            <div className="relative">
               <h2 className="font-bold text-lg">Food</h2>
               <p className="text-xs text-white/85">Restaurants & meals</p>
             </div>
           </Card>
           <Card
             onClick={() => navigate("/app/daily-needs/pharmacy")}
-            className="cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(160,65%,40%)] text-white"
+            className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(160,65%,40%)] text-white"
           >
-            <div className="size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
+            <img
+              src={pharmacyCardAsset.url}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="pointer-events-none absolute -right-3 bottom-0 h-[82%] w-auto object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] sm:-right-2 sm:h-[86%]"
+            />
+            <div className="relative size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
               <Pill className="size-5" strokeWidth={2} />
             </div>
-            <div>
+            <div className="relative">
               <h2 className="font-bold text-lg">Pharmacy</h2>
               <p className="text-xs text-white/85">Medicine & wellness</p>
             </div>
           </Card>
         </section>
+
 
         <section className="space-y-3">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
