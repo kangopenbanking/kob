@@ -174,6 +174,7 @@ export default function DailyNeedsOrderDetails() {
   }
 
   const isTrackable = TRACKABLE.has(order.status);
+  const canCancel = CANCELLABLE.has(order.status);
   const shortId = order.id.slice(0, 8).toUpperCase();
 
   return (
