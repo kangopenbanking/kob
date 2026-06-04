@@ -169,6 +169,13 @@ const defaultConfig: CustomerAppConfig = {
     button_bg_color: '#ffffff',
     button_size: 'md',
   },
+  daily_needs_card_config: {
+    bg_image: '',
+    overlay_opacity: 0.75,
+    button_text: 'Order Now',
+    button_bg_color: '#ffffff',
+    button_size: 'md',
+  },
 };
 
 // ─── Hooks ───
