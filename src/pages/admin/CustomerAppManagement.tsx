@@ -1382,6 +1382,133 @@ function TypographyPanel({ institutionId, appConfig }: { institutionId: string; 
   );
 }
 
+// ─── Card Previews (mirror customer home design) ───
+function TravelCardPreview({ config }: { config: CustomerAppConfig['travel_card_config'] }) {
+  const bg = config.bg_image || 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/travel-card/fallback.jpg';
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Live Preview</Label>
+      <div className="mt-2 mx-auto w-full max-w-[340px] aspect-[340/280] relative overflow-hidden rounded-3xl shadow-lg bg-muted">
+        <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+        <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${config.overlay_opacity})` }} />
+        <div className="relative z-10 p-5 text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
+          <h3 className="mt-1 text-lg font-extrabold">Travel & Tourism</h3>
+          <p className="mt-2 text-xs text-white/70 pr-12">Book buses, tours & more — all from your wallet.</p>
+          <div className="mt-4 inline-flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: config.button_bg_color || 'rgba(255,255,255,0.1)' }}>
+            <span className="text-xs font-bold text-white">{config.button_text || 'Book Now'}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-white/70" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DailyNeedsCardPreview({ config }: { config: CustomerAppConfig['daily_needs_card_config'] }) {
+  const bg = config.bg_image || 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/daily-needs-card/fallback.jpg';
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Live Preview</Label>
+      <div className="mt-2 mx-auto w-full max-w-[340px] aspect-[340/280] relative overflow-hidden rounded-3xl shadow-lg bg-muted">
+        <img src={bg} alt="" className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+        <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${config.overlay_opacity})` }} />
+        <div className="relative z-10 p-5 text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Food & Essentials</p>
+          <h3 className="mt-1 text-lg font-extrabold">Daily Needs</h3>
+          <p className="mt-2 text-xs text-white/70 pr-12">Order food, pharmacy & groceries — delivered fast.</p>
+          <div className="mt-4 inline-flex items-center gap-3 rounded-2xl px-3 py-2" style={{ backgroundColor: config.button_bg_color || 'rgba(255,255,255,0.1)' }}>
+            <span className="text-xs font-bold text-white">{config.button_text || 'Order Now'}</span>
+            <ChevronRight className="h-3.5 w-3.5 text-white/70" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Carousel Order Panel ───
+function CarouselOrderPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const tr = useHarvestedT('admin');
+  const queryClient = useQueryClient();
+  const [order, setOrder] = useState<('travel' | 'daily_needs')[]>(
+    Array.isArray(appConfig.home_carousel_order) && appConfig.home_carousel_order.length > 0
+      ? appConfig.home_carousel_order
+      : ['travel', 'daily_needs']
+  );
+
+  useEffect(() => {
+    setOrder(
+      Array.isArray(appConfig.home_carousel_order) && appConfig.home_carousel_order.length > 0
+        ? appConfig.home_carousel_order
+        : ['travel', 'daily_needs']
+    );
+  }, [appConfig]);
+
+  const labels: Record<'travel' | 'daily_needs', { name: string; icon: React.ElementType }> = {
+    travel: { name: 'Travel & Tourism', icon: Plane },
+    daily_needs: { name: 'Daily Needs', icon: UtensilsCrossed },
+  };
+
+  const move = (idx: number, delta: number) => {
+    const next = [...order];
+    const newIdx = idx + delta;
+    if (newIdx < 0 || newIdx >= next.length) return;
+    [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+    setOrder(next);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { data: inst } = await supabase.from('institutions').select('app_config').eq('id', institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const customerConfig = currentAppConfig.customer_app_config || {};
+      const { error } = await (supabase as any).from('institutions').update({
+        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, home_carousel_order: order } }
+      }).eq('id', institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-institutions-customer'] });
+      toast.success('Carousel order saved');
+    },
+    onError: () => toast.error('Failed to save carousel order'),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{tr('Home Carousel Order')}</CardTitle>
+        <CardDescription>{tr('Reorder the slides shown on the customer home page')}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          {order.map((key, idx) => {
+            const Icon = labels[key].icon;
+            return (
+              <div key={key} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Icon className="h-4 w-4 text-primary" />
+                <span className="flex-1 text-sm font-medium">{idx + 1}. {labels[key].name}</span>
+                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === 0} onClick={() => move(idx, -1)}>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={idx === order.length - 1} onClick={() => move(idx, 1)}>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
+          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Carousel Order
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Travel Card Panel ───
 function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
   const tr = useHarvestedT('admin');
