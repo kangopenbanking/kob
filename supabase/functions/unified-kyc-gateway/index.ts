@@ -341,7 +341,7 @@ async function runVerification(
       await breakerRecord(supabase, true);
       const resp = transformFromYouverify(req, raw);
       await writeAudit(supabase, {
-        trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+        trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
         provider_used: "youverify", fallback_triggered: false,
         youverify_success: true, youverify_response_time_ms: yvTime,
         verification_result: resp.result, risk_score: resp.risk_score ?? null,
@@ -357,7 +357,7 @@ async function runVerification(
         // Hard failure (validation/auth/etc.) — do NOT fallback per spec
         await breakerRecord(supabase, false); // still count auth/etc? auth_failed should alert ops
         await writeAudit(supabase, {
-          trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+          trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
           provider_used: "youverify", fallback_triggered: false,
           youverify_success: false, youverify_response_time_ms: yvTime,
           verification_result: "rejected",
@@ -381,7 +381,7 @@ async function runVerification(
     const resp = await callSelfHosted(supabase, authToken, req);
     const shTime = Date.now() - start;
     await writeAudit(supabase, {
-      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
       provider_used: "self_hosted",
       fallback_triggered: useYv || decision.route, // true if we attempted YV first
       fallback_reason: fallbackReason,
@@ -398,7 +398,7 @@ async function runVerification(
     const shTime = Date.now() - start;
     const msg = (err as Error).message;
     await writeAudit(supabase, {
-      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type,
+      trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
       provider_used: "self_hosted", fallback_triggered: useYv || decision.route,
       fallback_reason: fallbackReason,
       youverify_success: yvSuccess, youverify_response_time_ms: yvTime,
