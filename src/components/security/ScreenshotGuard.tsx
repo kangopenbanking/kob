@@ -34,6 +34,11 @@ import { useScreenshotIdentity } from "./useScreenshotIdentity";
 import { useScreenshotGuardSettings } from "./useScreenshotGuardSettings";
 import { recordCaptureEvent, type CaptureKind } from "@/lib/security/recordCaptureEvent";
 import { SecureView, isNativeShell } from "@/lib/security/secureView";
+import {
+  ScreenshotGuardConsentDialog,
+  useScreenshotGuardConsent,
+  writeScreenshotGuardConsent,
+} from "./ScreenshotGuardConsent";
 
 const CAPTURE_KEY_COMBOS: Array<(e: KeyboardEvent) => boolean> = [
   (e) => e.key === "PrintScreen",
