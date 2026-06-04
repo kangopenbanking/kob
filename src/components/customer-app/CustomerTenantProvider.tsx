@@ -45,6 +45,14 @@ export interface TravelCardConfig {
   button_size: 'sm' | 'md' | 'lg';
 }
 
+export interface DailyNeedsCardConfig {
+  bg_image: string;
+  overlay_opacity: number;
+  button_text: string;
+  button_bg_color: string;
+  button_size: 'sm' | 'md' | 'lg';
+}
+
 export interface SectionTypography {
   font_size_multiplier: number;
   heading_color: string;
@@ -80,6 +88,7 @@ interface CustomerTenantBranding {
   heroActionOpacity: number;
   typographyConfig: TypographyConfig;
   travelCardConfig: TravelCardConfig;
+  dailyNeedsCardConfig: DailyNeedsCardConfig;
 }
 
 const defaultFeatures: CustomerAppFeatures = {
@@ -134,6 +143,14 @@ const defaultTravelCardConfig: TravelCardConfig = {
   button_size: 'md',
 };
 
+const defaultDailyNeedsCardConfig: DailyNeedsCardConfig = {
+  bg_image: '',
+  overlay_opacity: 0.75,
+  button_text: 'Order Now',
+  button_bg_color: '#ffffff',
+  button_size: 'md',
+};
+
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
   name: 'Kang',
@@ -156,6 +173,7 @@ const defaultBranding: CustomerTenantBranding = {
   heroActionOpacity: 0.8,
   typographyConfig: defaultTypographyConfig,
   travelCardConfig: defaultTravelCardConfig,
+  dailyNeedsCardConfig: defaultDailyNeedsCardConfig,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
@@ -204,6 +222,9 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const heroActionOpacity: number = customerConfig.hero_action_opacity ?? 0.8;
       const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
       const travelCardConfig: TravelCardConfig = { ...defaultTravelCardConfig, ...(customerConfig.travel_card_config || {}) };
+      const dailyNeedsCardConfig: DailyNeedsCardConfig = { ...defaultDailyNeedsCardConfig, ...(customerConfig.daily_needs_card_config || {}) };
+
+
 
       setBranding({
         id: inst.id,
@@ -227,6 +248,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         heroActionOpacity,
         typographyConfig,
         travelCardConfig,
+        dailyNeedsCardConfig,
       });
     };
 
