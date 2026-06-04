@@ -132,7 +132,7 @@ export default function DailyNeedsHome() {
             </div>
           </Card>
           <Card
-            onClick={() => navigate("/app/daily-needs/pharmacy")}
+            onClick={() => goVertical("pharmacy")}
             className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(160,65%,40%)] text-white"
           >
             <CardImage
@@ -147,6 +147,11 @@ export default function DailyNeedsHome() {
             <div className="relative">
               <h2 className="font-bold text-lg">Pharmacy</h2>
               <p className="text-xs text-white/85">Medicine & wellness</p>
+              {activeFor("pharmacy") && (
+                <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/95">
+                  <span className="size-1.5 rounded-full bg-white animate-pulse" /> Active order
+                </p>
+              )}
             </div>
           </Card>
         </section>
