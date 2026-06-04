@@ -34,6 +34,11 @@ import { useScreenshotIdentity } from "./useScreenshotIdentity";
 import { useScreenshotGuardSettings } from "./useScreenshotGuardSettings";
 import { recordCaptureEvent, type CaptureKind } from "@/lib/security/recordCaptureEvent";
 import { SecureView, isNativeShell } from "@/lib/security/secureView";
+import {
+  ScreenshotGuardConsentDialog,
+  useScreenshotGuardConsent,
+  writeScreenshotGuardConsent,
+} from "./ScreenshotGuardConsent";
 
 const CAPTURE_KEY_COMBOS: Array<(e: KeyboardEvent) => boolean> = [
   (e) => e.key === "PrintScreen",
@@ -71,7 +76,11 @@ function emitAttempt(kind: CaptureKind | string, pathname: string) {
 
 export function ScreenshotGuard() {
   const { pathname } = useLocation();
-  const active = useMemo(() => isFinancialRoute(pathname), [pathname]);
+  const consent = useScreenshotGuardConsent();
+  const onProtectedRoute = useMemo(() => isFinancialRoute(pathname), [pathname]);
+  const active = onProtectedRoute && consent === "enabled";
+  // Prompt only on protected routes when the user has not chosen yet.
+  const promptOpen = onProtectedRoute && consent === null;
   const identity = useScreenshotIdentity();
   const { lightOpacity, darkOpacity } = useScreenshotGuardSettings();
   const [hidden, setHidden] = useState(false);
@@ -245,13 +254,24 @@ export function ScreenshotGuard() {
     else document.documentElement.removeAttribute("data-kob-secure-hide");
   }, [active, hidden]);
 
-  if (!active) return null;
+  // Render consent prompt on protected routes when the user hasn't chosen.
+  if (!active) {
+    return (
+      <ScreenshotGuardConsentDialog
+        open={promptOpen}
+        onChoose={(v) => writeScreenshotGuardConsent(v)}
+      />
+    );
+  }
 
   return (
-    <Watermark
-      name={identity.name}
-      shortId={identity.shortId}
-    />
+    <>
+      <Watermark name={identity.name} shortId={identity.shortId} />
+      <ScreenshotGuardConsentDialog
+        open={false}
+        onChoose={(v) => writeScreenshotGuardConsent(v)}
+      />
+    </>
   );
 }
 
