@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Search, UtensilsCrossed, Pill, MapPin, History, Sparkles } from "lucide-react";
+import { ChevronLeft, Search, UtensilsCrossed, Pill, MapPin, History, Sparkles, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,19 +12,21 @@ import pharmacyCardAsset from "@/assets/pharmacy_card.png.asset.json";
 
 function CardImage({ src, alt, className, heightRatioClass }: { src: string; alt: string; className?: string; heightRatioClass?: string }) {
   const [loaded, setLoaded] = useState(false);
-  const handleLoad = useCallback(() => setLoaded(true), []);
+  const imgRef = useCallback((node: HTMLImageElement | null) => {
+    if (node && node.complete && node.naturalWidth > 0) setLoaded(true);
+  }, []);
   return (
-    <div className={`pointer-events-none absolute -right-3 bottom-0 w-auto overflow-hidden ${heightRatioClass ?? "h-[78%] sm:h-[82%]"}`}>
-      {!loaded && <Skeleton className="absolute inset-0 rounded-none bg-white/20" />}
+    <div className={`pointer-events-none absolute -right-3 bottom-0 h-full w-[55%] overflow-hidden ${heightRatioClass ?? ""}`}>
+      {!loaded && <Skeleton className="absolute inset-y-0 right-0 w-full rounded-none bg-white/20" />}
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         aria-hidden="true"
-        loading="lazy"
         decoding="async"
-        fetchPriority="low"
-        onLoad={handleLoad}
-        className={`h-full w-auto object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={`absolute right-0 bottom-0 h-[88%] w-auto max-w-none object-contain object-bottom drop-shadow-[0_8px_16px_rgba(0,0,0,0.25)] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
       />
     </div>
   );
