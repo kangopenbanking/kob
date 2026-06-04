@@ -1654,6 +1654,7 @@ function App() {
               <Route path="settings" element={<CustomerSettings />} />
               <Route path="settings/sessions" element={<CustomerSessions />} />
               <Route path="settings/two-factor" element={<CustomerTwoFactor />} />
+              <Route path="settings/security" element={<CustomerSettingsSecurity />} />
               <Route path="statements" element={<CustomerStatements />} />
               <Route path="kyc" element={<CustomerKYCWizard />} />
               <Route path="referral" element={<CustomerReferral />} />
