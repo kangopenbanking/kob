@@ -2252,6 +2252,13 @@ export default function CustomerAppManagement() {
                   <DailyNeedsCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
 
+                {/* Carousel Order Tab */}
+                <TabsContent value="carousel-order">
+                  <CarouselOrderPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+
+
 
                 {/* Storefront Tab */}
                 <TabsContent value="storefront">
