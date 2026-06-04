@@ -141,6 +141,7 @@ const defaultTypographyConfig: TypographyConfig = {
 };
 
 const defaultTravelCardConfig: TravelCardConfig = {
+  enabled: true,
   bg_image: '',
   overlay_opacity: 0.75,
   button_text: 'Book Now',
@@ -149,12 +150,15 @@ const defaultTravelCardConfig: TravelCardConfig = {
 };
 
 const defaultDailyNeedsCardConfig: DailyNeedsCardConfig = {
+  enabled: true,
   bg_image: '',
   overlay_opacity: 0.75,
   button_text: 'Order Now',
   button_bg_color: '#ffffff',
   button_size: 'md',
 };
+
+const defaultHomeCarouselOrder: HomeCarouselSlide[] = ['travel', 'daily_needs'];
 
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
@@ -179,6 +183,7 @@ const defaultBranding: CustomerTenantBranding = {
   typographyConfig: defaultTypographyConfig,
   travelCardConfig: defaultTravelCardConfig,
   dailyNeedsCardConfig: defaultDailyNeedsCardConfig,
+  homeCarouselOrder: defaultHomeCarouselOrder,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
