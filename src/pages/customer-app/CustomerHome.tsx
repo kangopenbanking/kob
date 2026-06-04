@@ -584,32 +584,29 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ─── Transport & Tourism ─── */}
+      {/* ─── Transport & Tourism + Daily Needs (swipeable slides) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.14 }}>
         {(() => {
           const tc = tenant.travelCardConfig;
-          const bgImg = tc.bg_image || travelCardBg;
-          const btnSizeClass = tc.button_size === 'sm' ? 'px-3 py-2 text-xs' : tc.button_size === 'lg' ? 'px-5 py-4 text-base' : 'px-4 py-3 text-sm';
-          return (
+          const dn = tenant.dailyNeedsCardConfig;
+          const travelBg = tc.bg_image || travelCardBg;
+          const dnBg = dn.bg_image || travelCardBg;
+
+          const renderTravel = () => (
             <motion.button
+              key="travel"
               whileTap={{ scale: 0.97 }}
               onClick={() => go('travel')}
-              className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
+              className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
-              {/* Cover image */}
-              <img src={bgImg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" />
-              {/* Dark overlay */}
+              <img src={travelBg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" />
               <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${tc.overlay_opacity})` }} />
-
               <div className="relative z-10 p-6">
-                {/* Top-right travel icon */}
                 <div className="absolute top-4 right-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
                   <Globe className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
                 </div>
-
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">{tr('Transport & Tourism')}</p>
                 <h3 className="mt-2 text-xl font-extrabold leading-tight text-white">{tr('Travel & Tourism')}</h3>
-
                 <div className="mt-3 space-y-3 pr-16">
                   <p className="text-xs leading-relaxed text-white/60">
                     {tr('Book buses, tours & more — all from your wallet.')}
@@ -631,8 +628,6 @@ const CustomerHome: React.FC = () => {
                     })}
                   </div>
                 </div>
-
-                {/* Book Now CTA */}
                 <div className="mt-5 inline-block">
                   <div
                     className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
@@ -645,8 +640,64 @@ const CustomerHome: React.FC = () => {
               </div>
             </motion.button>
           );
+
+          const renderDailyNeeds = () => (
+            <motion.button
+              key="daily-needs"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => go('daily-needs')}
+              className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
+            >
+              <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${dn.overlay_opacity})` }} />
+              <div className="relative z-10 p-6">
+                <div className="absolute top-4 right-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(160,60%,55%)]">
+                  <UtensilsCrossed className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">{tr('Food & Essentials')}</p>
+                <h3 className="mt-2 text-xl font-extrabold leading-tight text-white">{tr('Daily Needs')}</h3>
+                <div className="mt-3 space-y-3 pr-16">
+                  <p className="text-xs leading-relaxed text-white/60">
+                    {tr('Order food, pharmacy & groceries — delivered fast.')}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {[
+                      { icon: UtensilsCrossed, label: 'Food', color: 'hsl(25,90%,55%)' },
+                      { icon: ShoppingBag, label: 'Grocery', color: 'hsl(160,60%,55%)' },
+                      { icon: Receipt, label: 'Pharmacy', color: 'hsl(190,80%,55%)' },
+                    ].map((c) => {
+                      const Icon = c.icon;
+                      return (
+                        <span key={c.label} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
+                          <Icon className="h-3 w-3" style={{ color: c.color }} strokeWidth={2} />
+                          <span className="text-[10px] font-semibold text-white/80">{tr(c.label)}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-5 inline-block">
+                  <div
+                    className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
+                    style={{ backgroundColor: dn.button_bg_color || 'rgba(255,255,255,0.1)' }}
+                  >
+                    <span className="font-bold text-white">{dn.button_text}</span>
+                    <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+            </motion.button>
+          );
+
+          return (
+            <div className="-mx-5 px-5 flex gap-3 overflow-x-auto snap-x snap-mandatory scrollbar-hide scroll-smooth">
+              {renderTravel()}
+              {renderDailyNeeds()}
+            </div>
+          );
         })()}
       </motion.div>
+
 
       {/* Earnings & Spending cards hidden — data shown in hero section */}
 
