@@ -18,7 +18,8 @@ export type CaptureKind =
   | "blur"
   | "native:capture_detected"
   | "native:secured"
-  | "native:unsecured";
+  | "native:unsecured"
+  | "guard:render";
 
 export interface CaptureEventInput {
   kind: CaptureKind;

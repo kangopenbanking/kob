@@ -31,6 +31,7 @@ import {
   appContextForPath,
 } from "./screenshot-guard-config";
 import { useScreenshotIdentity } from "./useScreenshotIdentity";
+import { useScreenshotGuardSettings } from "./useScreenshotGuardSettings";
 import { recordCaptureEvent, type CaptureKind } from "@/lib/security/recordCaptureEvent";
 import { SecureView, isNativeShell } from "@/lib/security/secureView";
 
@@ -72,8 +73,20 @@ export function ScreenshotGuard() {
   const { pathname } = useLocation();
   const active = useMemo(() => isFinancialRoute(pathname), [pathname]);
   const identity = useScreenshotIdentity();
+  const { lightOpacity, darkOpacity } = useScreenshotGuardSettings();
   const [hidden, setHidden] = useState(false);
   const lastToast = useRef(0);
+
+  // ---- Render audit: one event per (route mount) ---------------------
+  useEffect(() => {
+    if (!active) return;
+    recordCaptureEvent({
+      kind: "guard:render",
+      pathname,
+      appContext: appContextForPath(pathname),
+      metadata: { light_opacity: lightOpacity, dark_opacity: darkOpacity },
+    });
+  }, [active, pathname, lightOpacity, darkOpacity]);
 
   // ---- Capture-shortcut interception ---------------------------------
   useEffect(() => {
@@ -203,10 +216,10 @@ export function ScreenshotGuard() {
       html[data-kob-secure-hide="1"] body > * { filter: blur(18px) saturate(0.6); transition: filter 120ms ease; }
       .kob-screenshot-watermark {
         position: fixed; inset: 0; pointer-events: none; z-index: 2147483000;
-        opacity: 0.05; mix-blend-mode: multiply;
+        opacity: ${lightOpacity}; mix-blend-mode: multiply;
       }
       @media (prefers-color-scheme: dark) {
-        .kob-screenshot-watermark { mix-blend-mode: screen; opacity: 0.03; }
+        .kob-screenshot-watermark { mix-blend-mode: screen; opacity: ${darkOpacity}; }
       }
     `;
     document.head.appendChild(style);
@@ -224,7 +237,7 @@ export function ScreenshotGuard() {
       document.documentElement.removeAttribute("data-kob-secure");
       document.documentElement.removeAttribute("data-kob-secure-hide");
     };
-  }, [active]);
+  }, [active, lightOpacity, darkOpacity]);
 
   useEffect(() => {
     if (!active) return;
