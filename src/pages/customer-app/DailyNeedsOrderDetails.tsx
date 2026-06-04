@@ -198,16 +198,37 @@ export default function DailyNeedsOrderDetails() {
         <OrderStatusTimeline status={order.status} />
       </Card>
 
-      {isTrackable && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {isTrackable && (
+          <Button
+            variant="secondary"
+            className="w-full gap-2"
+            onClick={() => navigate(`/app/daily-needs/orders/${order.id}`)}
+          >
+            <Navigation className="size-4" strokeWidth={2} />
+            Track live delivery
+          </Button>
+        )}
         <Button
-          variant="secondary"
+          variant="outline"
           className="w-full gap-2"
-          onClick={() => navigate(`/app/daily-needs/orders/${order.id}`)}
+          onClick={handleDownload}
         >
-          <Navigation className="size-4" strokeWidth={2} />
-          Track live delivery
+          <Download className="size-4" strokeWidth={2} />
+          Download receipt
         </Button>
-      )}
+        {canCancel && (
+          <Button
+            variant="outline"
+            className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive sm:col-span-2"
+            onClick={() => setConfirmCancel(true)}
+          >
+            <X className="size-4" strokeWidth={2} />
+            Cancel order
+          </Button>
+        )}
+      </div>
+
 
       <Card className="p-4 space-y-3">
         <div className="flex items-center gap-2">
