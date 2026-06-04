@@ -1542,20 +1542,28 @@ function DailyNeedsCardPanel({ institutionId, appConfig }: { institutionId: stri
     onError: () => toast.error("Failed to save Daily Needs card configuration"),
   });
 
+  const MAX_BYTES = 5 * 1024 * 1024;
+  const ALLOWED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+  const FALLBACK_BG = 'https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/homepage-hero/daily-needs-card/fallback.jpg';
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (!ALLOWED.includes(file.type)) { toast.error('Use PNG, JPG, WEBP or GIF'); return; }
+    if (file.size > MAX_BYTES) { toast.error('Image must be under 5MB'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `daily-needs-card/${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true, contentType: file.type });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('homepage-hero').getPublicUrl(path);
       setConfig(prev => ({ ...prev, bg_image: urlData.publicUrl }));
       toast.success("Image uploaded");
     } catch {
-      toast.error("Upload failed");
+      toast.error("Upload failed — using fallback image");
+      setConfig(prev => ({ ...prev, bg_image: FALLBACK_BG }));
     } finally {
       setUploading(false);
     }
