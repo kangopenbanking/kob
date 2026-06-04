@@ -166,7 +166,7 @@ const CustomerHome: React.FC = () => {
   const go = (path: string) => navigate(`/app/${path}`);
 
   // Detect active Daily Needs order for smart routing
-  const ACTIVE_DN_STATUSES = ['received', 'accepted', 'preparing', 'ready', 'out_for_delivery', 'in_transit'];
+  const ACTIVE_DN_STATUSES = ['received', 'accepted', 'preparing', 'ready', 'picked_up', 'on_the_way', 'arriving'] as const;
   const goDailyNeeds = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
