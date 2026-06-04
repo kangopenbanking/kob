@@ -173,6 +173,7 @@ const defaultBranding: CustomerTenantBranding = {
   heroActionOpacity: 0.8,
   typographyConfig: defaultTypographyConfig,
   travelCardConfig: defaultTravelCardConfig,
+  dailyNeedsCardConfig: defaultDailyNeedsCardConfig,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
