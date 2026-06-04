@@ -76,7 +76,11 @@ function emitAttempt(kind: CaptureKind | string, pathname: string) {
 
 export function ScreenshotGuard() {
   const { pathname } = useLocation();
-  const active = useMemo(() => isFinancialRoute(pathname), [pathname]);
+  const consent = useScreenshotGuardConsent();
+  const onProtectedRoute = useMemo(() => isFinancialRoute(pathname), [pathname]);
+  const active = onProtectedRoute && consent === "enabled";
+  // Prompt only on protected routes when the user has not chosen yet.
+  const promptOpen = onProtectedRoute && consent === null;
   const identity = useScreenshotIdentity();
   const { lightOpacity, darkOpacity } = useScreenshotGuardSettings();
   const [hidden, setHidden] = useState(false);
