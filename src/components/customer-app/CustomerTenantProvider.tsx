@@ -265,6 +265,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         typographyConfig,
         travelCardConfig,
         dailyNeedsCardConfig,
+        homeCarouselOrder,
       });
     };
 
