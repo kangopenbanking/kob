@@ -1576,6 +1576,17 @@ function DailyNeedsCardPanel({ institutionId, appConfig }: { institutionId: stri
         <CardDescription>{tr('Customize the Daily Needs card appearance on the customer home page')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Enable toggle */}
+        <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div>
+            <Label className="text-sm font-medium">{tr('Show Daily Needs card')}</Label>
+            <p className="text-xs text-muted-foreground">{tr('Disable to hide the slide for this tenant')}</p>
+          </div>
+          <Switch checked={config.enabled !== false} onCheckedChange={(v) => setConfig(prev => ({ ...prev, enabled: v }))} />
+        </div>
+
+        {/* Live preview */}
+        <DailyNeedsCardPreview config={config} />
         <div className="space-y-2">
           <Label className="text-sm font-medium">{tr('Background Image')}</Label>
           {config.bg_image && (
