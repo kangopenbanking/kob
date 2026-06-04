@@ -22,6 +22,7 @@ import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { SecureField } from '@/components/security/SecureField';
+import { supabase } from '@/integrations/supabase/client';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
