@@ -18,7 +18,7 @@ import {
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ScanLine, ChevronRight, BarChart3, Monitor, ExternalLink,
   Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
-  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock, Upload, ImageIcon, Plane, Store
+  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock, Upload, ImageIcon, Plane, Store, UtensilsCrossed
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
