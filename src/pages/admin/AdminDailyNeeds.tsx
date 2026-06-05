@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,7 +24,14 @@ export default function AdminDailyNeeds() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Daily Needs — Admin</h1>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <h1 className="text-2xl font-semibold">Daily Needs — Admin</h1>
+        <Button asChild variant="outline">
+          <Link to="/admin/daily-needs/how-it-works">
+            <ListChecks className="h-4 w-4 mr-2" /> Edit "How it works" guides
+          </Link>
+        </Button>
+      </div>
       <section className="space-y-3">
         <h2 className="font-semibold">Stores</h2>
         {loading ? <Skeleton className="h-40" /> : (

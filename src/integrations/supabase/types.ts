@@ -8407,6 +8407,45 @@ export type Database = {
           },
         ]
       }
+      daily_needs_how_it_works_steps: {
+        Row: {
+          bg_color: string
+          created_at: string
+          description: string
+          icon: string
+          icon_color: string
+          id: string
+          position: number
+          title: string
+          updated_at: string
+          vertical: string
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string
+          description: string
+          icon?: string
+          icon_color?: string
+          id?: string
+          position: number
+          title: string
+          updated_at?: string
+          vertical: string
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          icon_color?: string
+          id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          vertical?: string
+        }
+        Relationships: []
+      }
       daily_needs_issue_reports: {
         Row: {
           category: string

@@ -733,6 +733,7 @@ const MerchantCatalog = lazy(() => import("./pages/merchant/MerchantCatalog"));
 const MerchantSettings = lazy(() => import("./pages/merchant/MerchantSettings"));
 const MerchantHelp = lazy(() => import("./pages/merchant/MerchantHelp"));
 const AdminDailyNeeds = lazy(() => import("./pages/admin/AdminDailyNeeds"));
+const AdminDailyNeedsHowItWorks = lazy(() => import("./pages/admin/AdminDailyNeedsHowItWorks"));
 const AdminDDNDriverRules = lazy(() => import("./pages/admin/AdminDDNDriverRules"));
 const DailyNeedsMarketing = lazy(() => import("./pages/DailyNeedsMarketing"));
 const CustomerSettings = lazy(() => import("./pages/customer-app/CustomerSettings"));
@@ -1044,6 +1045,7 @@ function App() {
               <Route path="users" element={<UserManagement />} />
               <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
               <Route path="daily-needs" element={<AdminDailyNeeds />} />
+              <Route path="daily-needs/how-it-works" element={<AdminDailyNeedsHowItWorks />} />
               <Route path="daily-needs/driver-rules" element={<AdminDDNDriverRules />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="developer-management" element={<DeveloperManagement />} />
