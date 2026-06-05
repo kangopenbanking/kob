@@ -33,6 +33,7 @@ import {
   type NiumPopCode,
 } from "@/constants/nium-compliance";
 import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
+import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectionDialog";
 
 type Currency = "USD" | "EUR" | "GBP";
 
@@ -123,6 +124,9 @@ export default function GlobalReceivingAccount() {
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
   const [popCode, setPopCode] = useState<NiumPopCode>(DEFAULT_NIUM_POP_CODE);
   const [kycName, setKycName] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [pendingCorrection, setPendingCorrection] = useState(false);
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),
@@ -153,12 +157,20 @@ export default function GlobalReceivingAccount() {
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth?.user) return;
+      setUserId(auth.user.id);
       const { data: prof } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("id", auth.user.id)
         .maybeSingle();
       setKycName(prof?.full_name?.trim() || "");
+      const { data: openReq } = await supabase
+        .from("nium_name_correction_requests")
+        .select("id")
+        .eq("user_id", auth.user.id)
+        .eq("status", "pending")
+        .maybeSingle();
+      setPendingCorrection(!!openReq);
     })();
   }, []);
 
@@ -329,12 +341,33 @@ export default function GlobalReceivingAccount() {
               KYC name on this account exactly — otherwise the payment will be rejected by
               the sending bank.
               <div className="mt-2 rounded-md border border-amber-300/60 bg-background/60 px-3 py-2 text-foreground">
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Beneficiary
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Beneficiary
+                    </div>
+                    <div className="font-semibold tabular-nums truncate">
+                      {kycName || "Complete identity verification first"}
+                    </div>
+                  </div>
+                  {kycName && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 shrink-0 text-xs"
+                      onClick={() => setNameDialogOpen(true)}
+                      disabled={pendingCorrection}
+                    >
+                      {pendingCorrection ? "Review pending" : "Request correction"}
+                    </Button>
+                  )}
                 </div>
-                <div className="font-semibold tabular-nums">
-                  {kycName || "Complete identity verification first"}
-                </div>
+                {pendingCorrection && (
+                  <p className="mt-1.5 text-[11px] text-amber-900/80 dark:text-amber-200/80">
+                    A name correction is under compliance review.
+                  </p>
+                )}
               </div>
               <fieldset className="mt-3 space-y-1.5">
                 <legend className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -685,6 +718,14 @@ export default function GlobalReceivingAccount() {
           </section>
         )}
       </main>
+
+      <NameCorrectionDialog
+        open={nameDialogOpen}
+        onOpenChange={setNameDialogOpen}
+        userId={userId}
+        currentName={kycName}
+        onSubmitted={() => setPendingCorrection(true)}
+      />
     </div>
   );
 }
