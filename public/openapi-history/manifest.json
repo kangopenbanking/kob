@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.49.0",
+  "current": "4.50.0",
   "versions": [
+    {
+      "version": "4.50.0",
+      "released_at": "2026-06-05T11:15:00.000Z",
+      "type": "snapshot",
+      "file": "openapi-4.50.0.json",
+      "notes": "Nium-powered Global Virtual Accounts (USD/EUR/GBP). Additive endpoints under /v1/gateway/global-accounts that issue real receiving accounts, settle inbound funds in XAF via Nium FX + configurable spread, and route to Kang Wallet or Mobile Money (Flutterwave). Legacy /v1/gateway/virtual-accounts (NGN/Wema) unchanged."
+    },
     {
       "version": "4.49.0",
       "released_at": "2026-05-29T03:27:09.582Z",
