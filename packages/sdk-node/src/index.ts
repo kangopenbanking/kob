@@ -20,3 +20,17 @@ export {
   type WebhookDelivery,
 } from './phase3';
 export { qr, type QRDirectoryMerchant, type QRDirectoryFilters } from './qr';
+export {
+  GlobalAccountsResource,
+  type NiumGlobalAccount,
+  type NiumIncomingPayment,
+  type NiumPayoutPreferenceDefaults,
+  type ListGlobalAccountsResponse,
+  type CreateGlobalAccountRequest,
+  type CreateGlobalAccountResponse,
+  type UpdatePayoutPreferenceRequest,
+  type PayoutPreference,
+  type GlobalAccountCurrency,
+  type GlobalAccountStatus,
+  type NiumMode,
+} from './global-accounts';

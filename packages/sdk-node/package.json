@@ -1,6 +1,6 @@
 {
   "name": "@kangopenbanking/sdk",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Official Kang Open Banking (KOB) SDK for Node.js and TypeScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

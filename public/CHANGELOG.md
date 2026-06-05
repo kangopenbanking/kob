@@ -1,6 +1,6 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.49.0** · Last updated: **2026-06-05**
+Current API version: **4.50.0** · Last updated: **2026-06-05**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
@@ -23,6 +23,10 @@ Nium-powered Global Virtual Accounts. Additive endpoints under /v1/gateway/globa
 - Fee Management: 2 new transaction_types — `nium_fx_spread` (default 75 bps) and `nium_withdrawal` (1% + 100 XAF, min 200 XAF), both editable via Admin > Fee Management.
 - Stub mode: NIUM_MODE=stub (default) returns deterministic fake IBAN/USD/GBP details with reference XAF rates so the entire flow is testable without Nium credentials. Switch to `live` by setting NIUM_API_KEY, NIUM_CLIENT_ID, NIUM_BASE_URL, NIUM_WEBHOOK_SECRET.
 - Customer App: new page /app/global-accounts to generate accounts, copy bank details, and pick a cash-out preference per account.
+- Developer Portal: new guide at /developer/gateway/global-accounts with parameter tables, response schemas, and multi-language webhook verification snippets.
+- SDKs: new `GlobalAccountsResource` in Node (`@kangopenbanking/sdk@1.7.0`), Python (`kangopenbanking==1.7.0`), and PHP (`kangopenbanking/sdk:1.7.0`) — `create`, `list`, `updatePayoutPreference`, and a static `verifyWebhookSignature` helper.
+- Postman: collection v4.50.0 published at `/postman/Kang_Open_Banking_API_v4.50.0.postman_collection.json` (also exposed as `latest`) with a dedicated "Global Accounts (Nium)" folder covering all four operations.
+- OpenAPI: concrete `example` payloads added to NiumGlobalAccount, NiumIncomingPayment, NiumPayoutPreference and NiumWebhookEvent schemas; `examples` and explicit 200 response schemas added to the four new operations.
 
 ---
 

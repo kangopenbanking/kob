@@ -13,6 +13,7 @@ from .types import (
     Account, Balance, Transaction, Beneficiary,
     Charge, Refund, Payout, FeeEstimate,
 )
+from .global_accounts import GlobalAccountsResource
 
 DEFAULT_BASE_URL = "https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1"
 
@@ -76,6 +77,7 @@ class KangOpenBanking:
         self.payouts = _PayoutsResource(self)
         self.gateway = _GatewayResource(self)
         self.sandbox_tools = _SandboxResource(self)
+        self.global_accounts = GlobalAccountsResource(self)
 
     # --- Auth ---
 
