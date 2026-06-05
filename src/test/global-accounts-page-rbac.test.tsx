@@ -40,13 +40,13 @@ describe("GlobalReceivingAccount RBAC smoke", () => {
   beforeEach(() => vi.clearAllMocks());
 
   for (const persona of PERSONAS) {
-    it(`renders hero + empty state for ${persona}`, async () => {
+    it(`renders header + empty state for ${persona}`, async () => {
       (supabase.functions.invoke as any).mockResolvedValueOnce(okPayload());
       render(<GlobalReceivingAccount />);
       await waitFor(() =>
         expect(supabase.functions.invoke).toHaveBeenCalledWith("nium-list-global-accounts"),
       );
-      expect(await screen.findByText(/one wallet/i)).toBeInTheDocument();
+      expect(await screen.findByText(/Receive worldwide/i)).toBeInTheDocument();
       expect(await screen.findByText(/No global accounts yet/i)).toBeInTheDocument();
     });
   }
@@ -58,7 +58,7 @@ describe("GlobalReceivingAccount RBAC smoke", () => {
     });
     render(<GlobalReceivingAccount />);
     await waitFor(() => expect(supabase.functions.invoke).toHaveBeenCalled());
-    expect(await screen.findByText(/one wallet/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Receive worldwide/i)).toBeInTheDocument();
   });
 
   it("renders activity list with ARIA label and date-range filter when payments exist", async () => {
@@ -83,3 +83,4 @@ describe("GlobalReceivingAccount RBAC smoke", () => {
     ).toBeInTheDocument();
   });
 });
+
