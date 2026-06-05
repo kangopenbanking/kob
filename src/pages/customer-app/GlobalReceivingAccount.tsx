@@ -97,6 +97,14 @@ export default function GlobalReceivingAccount() {
   });
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
 
+  // Activity feed: date-range filter + pagination
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  });
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityPageSize, setActivityPageSize] = useState(10);
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase.functions.invoke("nium-list-global-accounts");
