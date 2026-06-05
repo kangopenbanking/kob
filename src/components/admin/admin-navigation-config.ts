@@ -74,6 +74,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "KYB Review Queue", path: "/admin/kyb-review-queue", icon: CheckCircle2 },
       { title: "Loan Review Queue", path: "/admin/loan-review-queue", icon: CheckCircle2 },
       { title: "Savings Anomaly Queue", path: "/admin/savings-anomaly-queue", icon: CheckCircle2 },
+      { title: "Name Correction Queue", path: "/admin/nium-name-corrections", icon: ShieldCheck },
       { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: Key },
       { title: "Onboarding Queue", path: "/admin/onboarding-management", icon: CheckCircle2 },
     ],
