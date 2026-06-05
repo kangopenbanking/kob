@@ -1,6 +1,6 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.50.0** · Last updated: **2026-06-05**
+Current API version: **4.49.0** · Last updated: **2026-06-05**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
@@ -10,111 +10,21 @@ Current API version: **4.50.0** · Last updated: **2026-06-05**
 
 ---
 
-## Nium-powered Global Virtual Accounts — 2026-06-05 <a id="v4-50-0"></a>
-**Version:** 4.50.0 · **Type:** minor · **Breaking changes:** none
+## 4.50.0 — 2026-06-05
+**Type:** minor · **Breaking changes:** none
 
-Influencers and creators in the CEMAC region can now receive payouts from
-YouTube, TikTok and any global payer via real USD/EUR/GBP bank accounts
-provisioned by **Nium**. Funds land at Nium, KOB applies the Nium FX rate
-plus a configurable spread (default **75 bps**), debits a withdrawal fee
-on Mobile Money cash-outs, credits the user's Kang Wallet in **XAF**, and
-optionally pushes the net amount to Mobile Money via the existing
-Flutterwave rails.
+Nium-powered Global Virtual Accounts. Additive endpoints under /v1/gateway/global-accounts that issue real USD/EUR/GBP receiving accounts, settle inbound funds in XAF via Nium FX + configurable spread, and route to either the Kang Wallet or Mobile Money (Flutterwave). Legacy /v1/gateway/virtual-accounts (NGN/Wema) unchanged in this release.
 
-### New endpoints (additive — Standing Order 4)
-
-- `POST  /v1/gateway/global-accounts` — provision a USD/EUR/GBP account (idempotent per currency).
-- `GET   /v1/gateway/global-accounts` — list accounts + recent incoming payments + user defaults.
-- `PATCH /v1/gateway/global-accounts/payout-preference` — set user default or per-account override.
-- `POST  /v1/gateway/global-accounts/webhook` — Nium incoming-payment webhook (HMAC-SHA256, header `x-nium-signature`).
-
-### Fee Management
-
-Two new `transaction_type` values (additive to the existing 67):
-
-| Type | Model | Default |
-|---|---|---|
-| `nium_fx_spread` | percentage | 75 bps |
-| `nium_withdrawal` | hybrid | 1% + 100 XAF, min 200 XAF |
-
-Both editable in **Admin → Fee Management** without a code change.
-
-### Stub mode (default)
-
-`NIUM_MODE=stub` returns deterministic fake IBAN / USD account / GBP details
-with reference XAF rates (USD 605, EUR 655.957, GBP 760), so the full flow
-— from account generation through webhook to Mobile Money payout — is
-testable without Nium credentials. Set `NIUM_MODE=live` and provide
-`NIUM_API_KEY`, `NIUM_CLIENT_ID`, `NIUM_BASE_URL`, `NIUM_WEBHOOK_SECRET`
-to go live.
-
-### Customer App
-
-New page at `/app/global-accounts` to generate accounts, copy bank
-details, view incoming payments, and pick a cash-out routing preference
-per account.
-
-### Legacy
-
-`/v1/gateway/virtual-accounts` (NGN / Wema / Flutterwave) is **unchanged
-in this release**. A deprecation header (`Sunset`) will be added in a
-follow-up minor. Removal requires a major version bump per Standing
-Order 1.
-
-## Security & signing keys — 2026-05-30 <a id="signing-keys"></a>
-**Type:** infrastructure · **Breaking changes:** none · **Action required for integrators verifying signatures:** review fingerprint below.
-
-We formalised the Ed25519 signing-key rotation contract used to sign every
-downloadable artifact (OpenAPI spec, Postman collections, SDK manifests,
-`SHA256SUMS.txt`). This is the **initial registration** of the current key
-plus the infrastructure that supports future zero-downtime rotations.
-
-### Key fingerprints
-
-| Status | Algorithm | Fingerprint (SHA-256 of SPKI DER) | Published at |
-| --- | --- | --- | --- |
-| Previous | n/a | (no prior published key — initial registration) | n/a |
-| **Current** | Ed25519 | `SHA256:Br2ie7Gjd6KQqMj/QCx7wKX1H7VpJC/R8dyZuxJQnpM` | `/artifact-signing-pubkey.pem` |
-| Staged next | Ed25519 | none yet — will appear in `/signing-key-updates.json` when scheduled | `/artifact-signing-pubkey-next.pem` |
-
-> The fingerprint above is the value published by the current build and is
-> echoed verbatim in `/signing-key-updates.json` and `/artifacts.json`.
-> Production deployments stamp the same value when
-> `KOB_ARTIFACT_SIGNING_KEY` is configured as a workspace build secret.
-
-### Integrator impact
-
-- **No code change required today** unless you previously pinned a
-  different key fingerprint (e.g. from an ephemeral preview build). If
-  you did, refetch `/artifact-signing-pubkey.pem` and update the pin.
-- **Going forward**, poll `/signing-key-updates.json` (default cadence:
-  6 hours) to detect upcoming rotations. When a `next` key appears,
-  pre-pin both fingerprints — see
-  [/docs/signing-key-rotation.md](./docs/signing-key-rotation.md) and
-  [/developer/openapi#rotation](https://kangopenbanking.com/developer/openapi#rotation).
-- **Automated verification**:
-  `curl -sSL https://kangopenbanking.com/scripts/kob-verify-keys.mjs | node - --pin <fingerprint>`
-  validates every published artifact against current (and staged next)
-  keys with the same logic the portal enforces in CI.
-
-### New surfaces
-
-- `GET /signing-key-updates.json` — small pollable endpoint with
-  `current`, `next`, `history[]`, and `pollIntervalSeconds`.
-- `GET /scripts/kob-verify-keys.mjs` — standalone CLI verifier.
-- `GET /docs/signing-key-rotation.md` — step-by-step integrator guide.
-- `/artifacts.json` now includes `signing.publicKeyFingerprint`,
-  per-artifact `signature.sigUrl` / `nextSigUrl`, `verifyInstructionsUrl`
-  and `rotationDocsUrl`.
-
-### Standards & citations
-- RFC 8032 — Edwards-Curve Digital Signature Algorithm (Ed25519)
-- NIST SP 800-57 Pt.1 Rev.5 §5.6 — Cryptoperiods and key rotation
-- Standing Orders P4 (Open Spec) and P7 (Changelog)
+### Highlights
+- POST /v1/gateway/global-accounts — provision USD/EUR/GBP virtual account; idempotent per (user, currency).
+- GET  /v1/gateway/global-accounts — list accounts, recent incoming payments, user payout defaults.
+- PATCH /v1/gateway/global-accounts/payout-preference — set user-level default or per-account override (KANG_WALLET | MOBILE_MONEY).
+- POST /v1/gateway/global-accounts/webhook — Nium → KOB incoming-payment webhook, HMAC-SHA256 signed (`x-nium-signature`), idempotent on `transactionId`.
+- Fee Management: 2 new transaction_types — `nium_fx_spread` (default 75 bps) and `nium_withdrawal` (1% + 100 XAF, min 200 XAF), both editable via Admin > Fee Management.
+- Stub mode: NIUM_MODE=stub (default) returns deterministic fake IBAN/USD/GBP details with reference XAF rates so the entire flow is testable without Nium credentials. Switch to `live` by setting NIUM_API_KEY, NIUM_CLIENT_ID, NIUM_BASE_URL, NIUM_WEBHOOK_SECRET.
+- Customer App: new page /app/global-accounts to generate accounts, copy bank details, and pick a cash-out preference per account.
 
 ---
-
-
 
 ## 4.49.0 — 2026-05-29
 **Type:** minor · **Breaking changes:** none
