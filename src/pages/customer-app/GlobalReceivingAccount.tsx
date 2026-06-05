@@ -155,13 +155,10 @@ export default function GlobalReceivingAccount() {
       if (!auth?.user) return;
       const { data: prof } = await supabase
         .from("profiles")
-        .select("full_name, first_name, last_name")
+        .select("full_name")
         .eq("id", auth.user.id)
         .maybeSingle();
-      const resolved =
-        prof?.full_name?.trim() ||
-        [prof?.first_name, prof?.last_name].filter(Boolean).join(" ").trim();
-      setKycName(resolved || "");
+      setKycName(prof?.full_name?.trim() || "");
     })();
   }, []);
 
