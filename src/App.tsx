@@ -584,6 +584,7 @@ const AdminRemittanceSecurity = lazy(() => import("./pages/admin/AdminRemittance
 const AdminTurnstileMonitor = lazy(() => import("./pages/admin/AdminTurnstileMonitor"));
 const AdminStatementFees = lazy(() => import("./pages/admin/AdminStatementFees"));
 const AdminNiumFeeSettings = lazy(() => import("./pages/admin/AdminNiumFeeSettings"));
+const AdminNiumNameCorrections = lazy(() => import("./pages/admin/AdminNiumNameCorrections"));
 
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
 const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAnomalyQueue"));
