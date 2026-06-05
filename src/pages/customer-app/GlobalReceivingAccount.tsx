@@ -501,20 +501,28 @@ function PreferenceTile({
   icon,
   title,
   subtitle,
+  ariaLabel,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
+  ariaLabel?: string;
 }) {
   return (
     <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      aria-label={ariaLabel ?? title}
       onClick={onClick}
       className={cn(
         "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "contrast-more:border-foreground",
         active
-          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+          ? "border-primary bg-primary/5 ring-2 ring-primary/20 contrast-more:bg-primary/20"
           : "border-border/60 hover:border-border",
       )}
     >
@@ -524,10 +532,13 @@ function PreferenceTile({
             "h-7 w-7 rounded-lg flex items-center justify-center",
             active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
           )}
+          aria-hidden="true"
         >
           {icon}
         </div>
-        {active && <CheckCircle2 className="h-4 w-4 text-primary ml-auto" />}
+        {active && (
+          <CheckCircle2 className="h-4 w-4 text-primary ml-auto" aria-hidden="true" />
+        )}
       </div>
       <div className="mt-2 text-sm font-semibold">{title}</div>
       <div className="text-[11px] text-muted-foreground">{subtitle}</div>
