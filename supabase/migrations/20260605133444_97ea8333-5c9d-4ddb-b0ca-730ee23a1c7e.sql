@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.is_tenant_connector_owner(uuid, public.tenant_connector_owner_type, uuid) FROM anon, public;
