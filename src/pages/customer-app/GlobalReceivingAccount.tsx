@@ -124,6 +124,9 @@ export default function GlobalReceivingAccount() {
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
   const [popCode, setPopCode] = useState<NiumPopCode>(DEFAULT_NIUM_POP_CODE);
   const [kycName, setKycName] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [pendingCorrection, setPendingCorrection] = useState(false);
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),
