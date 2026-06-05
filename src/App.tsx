@@ -239,6 +239,7 @@ const GatewaySplitPaymentsGuide = lazy(() => import("./pages/developer/GatewaySp
 const GatewayTokenizationGuide = lazy(() => import("./pages/developer/GatewayTokenizationGuide"));
 const GatewayChargeEventsGuide = lazy(() => import("./pages/developer/GatewayChargeEventsGuide"));
 const GatewayVirtualAccountsGuide = lazy(() => import("./pages/developer/GatewayVirtualAccountsGuide"));
+const GatewayGlobalAccountsGuide = lazy(() => import("./pages/developer/GatewayGlobalAccountsGuide"));
 const GatewayFundingGuide = lazy(() => import("./pages/developer/GatewayFundingGuide"));
 const FundingIntentsGuide = lazy(() => import("./pages/developer/FundingIntentsGuide"));
 const PayPalIntegrationGuide = lazy(() => import("./pages/developer/PayPalIntegrationGuide"));
@@ -1228,6 +1229,7 @@ function App() {
               <Route path="gateway/tokenization" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/charge-events" element={<GatewayChargeEventsGuide />} />
               <Route path="gateway/virtual-accounts" element={<GatewayVirtualAccountsGuide />} />
+              <Route path="gateway/global-accounts" element={<GatewayGlobalAccountsGuide />} />
               <Route path="gateway/merchant-wallet" element={<GatewayMerchantWalletGuide />} />
               <Route path="gateway/verification" element={<GatewayVerificationGuide />} />
               <Route path="gateway/funding" element={<GatewayFundingGuide />} />
