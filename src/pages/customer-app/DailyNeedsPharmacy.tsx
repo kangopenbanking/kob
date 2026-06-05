@@ -154,46 +154,8 @@ export default function DailyNeedsPharmacy() {
           </TabsContent>
         </Tabs>
 
-        <HowItWorksFlow
-          title="How Pharmacy works"
-          steps={[
-            {
-              icon: Pill,
-              title: "Choose a pharmacy",
-              description: "Browse nearby pharmacies, filter by OTC or Prescription, and pick one with good ratings and fast prep time.",
-              color: "hsl(160, 65%, 90%)",
-              iconColor: "hsl(160, 65%, 35%)",
-            },
-            {
-              icon: PackageCheck,
-              title: "Add items to your cart",
-              description: "OTC items can be added freely. Prescription items will be flagged with a badge and require approval.",
-              color: "hsl(160, 65%, 90%)",
-              iconColor: "hsl(160, 65%, 35%)",
-            },
-            {
-              icon: Camera,
-              title: "Upload your prescription",
-              description: "At checkout, upload a clear photo or PDF of a valid prescription (max 8 MB). One file covers all Rx items in the order.",
-              color: "hsl(160, 65%, 90%)",
-              iconColor: "hsl(160, 65%, 35%)",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Pharmacist review",
-              description: "A licensed pharmacist verifies your prescription. You'll be notified once it's approved — or contacted if anything is missing.",
-              color: "hsl(160, 65%, 90%)",
-              iconColor: "hsl(160, 65%, 35%)",
-            },
-            {
-              icon: Bike,
-              title: "Delivered to your door",
-              description: "After approval, your order is prepared and dispatched. Track the rider live and confirm delivery with your one-time code.",
-              color: "hsl(160, 65%, 90%)",
-              iconColor: "hsl(160, 65%, 35%)",
-            },
-          ]}
-        />
+        <PharmacyHowItWorks />
+
 
         <div className="rounded-xl bg-muted/60 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
           Safety first: never share your prescription with third parties. If you experience a medical
