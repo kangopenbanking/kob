@@ -718,6 +718,14 @@ export default function GlobalReceivingAccount() {
           </section>
         )}
       </main>
+
+      <NameCorrectionDialog
+        open={nameDialogOpen}
+        onOpenChange={setNameDialogOpen}
+        userId={userId}
+        currentName={kycName}
+        onSubmitted={() => setPendingCorrection(true)}
+      />
     </div>
   );
 }
