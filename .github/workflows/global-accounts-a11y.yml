@@ -1,0 +1,45 @@
+name: Global Accounts a11y audit
+
+# Runs an automated accessibility audit (axe-core via @axe-core/cli) against
+# the /app/global-accounts page on the published preview. Fails CI on any
+# serious/critical violation so keyboard, ARIA, focus order, and contrast
+# regressions are caught.
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/customer-app/GlobalReceivingAccount.tsx'
+      - 'src/test/global-accounts-**'
+      - '.github/workflows/global-accounts-a11y.yml'
+  schedule:
+    - cron: '0 6 * * 1' # Weekly Monday 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install axe CLI
+        run: npm install --no-save @axe-core/cli@4
+
+      - name: Run axe against /app/global-accounts
+        env:
+          TARGET_URL: ${{ vars.PUBLIC_PREVIEW_URL || 'https://kob.lovable.app' }}
+        run: |
+          set -e
+          npx axe "${TARGET_URL}/app/global-accounts" \
+            --exit \
+            --tags wcag2a,wcag2aa,wcag21a,wcag21aa \
+            --stdout \
+            --timeout 60 \
+            --chromedriver-path "$(which chromedriver || true)" || \
+          npx axe "${TARGET_URL}/app/global-accounts" \
+            --exit \
+            --tags wcag2a,wcag2aa,wcag21a,wcag21aa \
+            --stdout
