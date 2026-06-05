@@ -1,168 +1,81 @@
+# Nium Global Virtual Accounts — Implementation Plan
 
-# Daily Needs Delivery Network (DDN)
+## Audit findings
 
-A dedicated, independent on-demand delivery system for Food & Pharmacy only.
-**Zero coupling to Kang Transport** (no trips, routes, seats, coach tables). Shares only auth, wallet, KYC, and notifications.
+- **No existing edge function** serves the legacy `/v1/gateway/virtual-accounts` paths; only `gateway-query` exposes read-only `list-virtual-accounts` / `get-virtual-account` against an existing `gateway_virtual_accounts` table (NGN/Wema/Flutterwave model).
+- **Flutterwave payout rails** are already in place (`gateway-create-payout`, `flutterwave-bank-transfer`, `gateway-webhook-flutterwave`). I will reuse, not replace.
+- **Fee Management System** lives in `src/lib/fee-management` + the `fee_categories`/`fee_structures` tables with 49 category check-constraints. I will add 2 new categories (`nium_withdrawal`, `nium_fx_spread`) — additive only.
+- **Ledger**: existing double-entry engine (`gateway-fund-account`, escrow wallets, MOD-97 tracking). I will only write through existing helpers, never invent new ledger primitives.
+- **OpenAPI** at v4.49.0. Per Standing Orders, all changes are additive → **minor bump to v4.50.0**.
 
-## Scope guardrails
+## Build order (5 phases, each independently shippable)
 
-- New namespace: `ddn_*` tables and `ddn-*` edge functions. The existing `daily_needs_drivers` / `daily_needs_delivery_assignments` (created in Phase 7) are migrated into the DDN namespace and kept as the foundation — no Transport tables touched.
-- Three modes: **Merchant fleet**, **DDN fleet**, **Hybrid** (default — merchant first, DDN fallback in <5 s).
-- Driver UX surfaces inside the existing Customer PWA as a new section (`/app/driver`) — no separate app build.
+### Phase 1 — Database foundation (1 migration)
 
----
+New tables (all with GRANTs + RLS + `SECURITY DEFINER` helpers per DB Hardening order):
 
-## 1. Architecture (text diagram)
+- `nium_global_accounts` — user_id, nium_customer_hash_id, nium_account_id, currency (USD/EUR/GBP), iban, account_number, routing_code, bic, bank_name, beneficiary_name, status, payout_preference_override (nullable enum), payout_channel_override, created_at.
+- `nium_incoming_payments` — idempotency on `nium_transaction_id`, source_amount, source_currency, fx_rate_nium, fx_spread_bps, xaf_credited, xaf_fee, xaf_spread_revenue, routing (`KANG_WALLET`|`MOBILE_MONEY`), ledger_tx_ref, flutterwave_payout_id, status, raw_payload jsonb.
+- Add `payout_preference` (`KANG_WALLET` default) + `payout_channel` (nullable phone) to `profiles`.
+- New fee categories: `nium_withdrawal` (XAF flat + %), `nium_fx_spread` (bps markup).
 
-```text
-Customer PWA            Merchant Dashboard         Driver Surface (in Customer PWA)
-   │ place order            │ accept/prepare/ready      │ online/offline
-   ▼                        ▼                           ▼
-        ┌───────────────────────────────────────────────────┐
-        │   Edge Functions (ddn-*)                          │
-        │   order-transition → dispatcher → assignment      │
-        │   pickup/deliver/code-verify → settle → wallet    │
-        └───────────────────────────────────────────────────┘
-                 │ Postgres RPC (SECURITY DEFINER)
-                 ▼
-        ddn_drivers · ddn_driver_locations · ddn_assignments
-        ddn_assignment_offers · ddn_delivery_proofs · ddn_driver_wallets
-        ddn_merchant_delivery_settings · ddn_driver_earnings
-                 │
-                 ▼  Realtime → consumer track page + driver app + merchant board
-```
+### Phase 2 — Backend services (edge functions)
 
-Settlement plugs into the existing **escrow → merchant wallet** flow (Phase 6); driver share is split off at `delivered` and credited to `ddn_driver_wallets`.
+- `_shared/nium-client.ts` — typed client with `NIUM_MODE=stub|live` switch. Stub returns deterministic fake IBAN/USD account so the full flow is testable today. Live mode reads `NIUM_API_KEY`, `NIUM_CLIENT_ID`, `NIUM_BASE_URL`.
+- `nium-create-global-account` (POST) — auth required, creates Nium customer + account, persists mapping, returns IBAN/USD details.
+- `nium-list-global-accounts` (GET) — per-user.
+- `nium-update-payout-preference` (PATCH) — user-level default OR per-VA override.
+- `nium-webhook` — public, HMAC-SHA256 verified against `NIUM_WEBHOOK_SECRET`, idempotent on `nium_transaction_id`. On `payment_incoming`:
+  1. Look up VA → user.
+  2. Resolve effective routing (VA override → user default → KANG_WALLET).
+  3. Compute `xaf_gross = source_amount * nium_rate * (1 - spread_bps/10000)` and capture spread as revenue.
+  4. If KANG_WALLET → credit user XAF via existing ledger helper.
+  5. If MOBILE_MONEY → call `gateway-fee-estimate` for `nium_withdrawal`, deduct, then invoke existing `gateway-create-payout` (Flutterwave MoMo). Ledger entries: Dr Nium suspense / Cr User wallet / Cr fee revenue / Cr spread revenue, then Dr User / Cr MoMo float on payout success.
+  6. Always 200 to Nium after persistence; payout dispatch is async via existing retry worker.
 
----
+### Phase 3 — Frontend (Customer App)
 
-## 2. Database schema (new — all RLS + GRANT)
+- New page `src/pages/customer-app/GlobalReceivingAccount.tsx`:
+  - Empty state CTA "Generate Global Receiving Account".
+  - List of VAs with copy-to-clipboard IBAN/account/routing.
+  - Routing preference selector (radio: Kang Wallet / Mobile Money + phone field) — saves user default and per-VA override.
+  - Incoming payments history table from `nium_incoming_payments`.
+- Link from `CustomerHome` "Receive money internationally" card.
 
-| Table | Purpose |
-|---|---|
-| `ddn_drivers` | One row per driver. Mode = `merchant`/`platform`. KYC + approval status. |
-| `ddn_driver_locations` | Latest lat/lng + heading + updated_at per driver. Replaces ad-hoc cols. |
-| `ddn_driver_status_log` | Online/Offline/Busy/Delivering/Paused state transitions. |
-| `ddn_merchant_delivery_settings` | radius_km, base_fee, per_km_fee, prep_min, mode (`merchant`/`platform`/`hybrid`), auto_assign. |
-| `ddn_assignments` | One row per delivery (FK to `daily_needs_orders`). Driver, status, pickup/drop coords, ETA. |
-| `ddn_assignment_offers` | Offers sent to drivers with TTL. Accept/Decline/Timeout audit. |
-| `ddn_delivery_proofs` | Delivery code, photo URL, GPS, timestamp, customer confirmation. |
-| `ddn_driver_wallets` | available_xaf, pending_xaf per driver. |
-| `ddn_driver_earnings` | Per-delivery ledger: delivery_fee, platform_fee, driver_earnings. |
+### Phase 4 — Documentation & SDK
 
-Realtime publication: `ddn_assignments`, `ddn_driver_locations`, `ddn_assignment_offers`.
+- `public/openapi.json` + `openapi.yaml` + sandbox copies → add 4 new operations under `/v1/gateway/global-accounts`. Bump `info.version` to `4.50.0`. Cite FAPI 1.0 + RFC 8259. No removals → no allowlist change needed.
+- `public/CHANGELOG.md` + `public/changelog.json` → entry `v4.50.0 — Nium Global Virtual Accounts`, `breaking_changes: false`, list new ops + new fee categories + deprecation notice for legacy NGN endpoints (sunset date 90 days out per Standing Order 1).
+- New guide: `docs/developer-portal/payments/global-accounts.md` with cURL + Node.js + Python examples (Standing Order P9, P5 — runnable against stub sandbox).
+- New page: `src/pages/developer/GatewayGlobalAccountsGuide.tsx` mirroring `GatewayVirtualAccountsGuide` pattern.
+- SDK resources: add `GlobalAccountsResource` to `packages/sdk-node`, `sdk-python`, `sdk-php` (mirroring existing `PayoutsResource` shape). Bump SDK versions.
 
----
+### Phase 5 — Tests & gates
 
-## 3. Edge functions (new, additive)
+- Vitest: `nium-webhook.test.ts` — signature verify, idempotency, KANG_WALLET path, MOBILE_MONEY path, fee deduction math, spread revenue capture.
+- Direct-backend-guard, openapi-parity, no-double-v1, version-sync — all existing CI gates must still pass.
+- Postman collection regenerated for v4.50.0.
 
-| Function | Trigger | Responsibility |
-|---|---|---|
-| `ddn-driver-register` | Driver sign-up | Create `ddn_drivers` row in `pending_kyc`. |
-| `ddn-driver-status` | Driver toggles online/offline | Update status + heartbeat (PostgREST RLS-safe). |
-| `ddn-driver-location` | 15 s heartbeat | Upsert `ddn_driver_locations`. |
-| `ddn-dispatch` | Called by `daily-needs-order-transition` on `ready` | Run assignment engine. |
-| `ddn-offer-respond` | Driver accept/decline | Move assignment to next candidate on decline/timeout. |
-| `ddn-pickup-confirm` | Driver at merchant | Mark `picked_up`, record GPS. |
-| `ddn-deliver-verify` | Driver at customer | Verify 6-digit code → `delivered` → release escrow + credit driver wallet. |
-| `ddn-merchant-driver-manage` | Merchant CRUD on own drivers | Add/remove/activate/deactivate. |
-| `ddn-driver-payout` | Driver withdrawal | Move available → external payout (reuse `gateway_payouts`). |
+## Technical details
 
-The existing `daily-needs-assign-driver` becomes a thin wrapper that delegates to `ddn-dispatch`. The external-provider stub is removed (Mode A/B/C only, no Glovo/Uber Direct).
+- **Stub-first**: `NIUM_MODE` defaults to `stub`. Going live = setting 3 secrets + flipping the env var; no code change.
+- **Spread default**: 75 bps (configurable via `fee_structures` row, not hardcoded).
+- **Idempotency**: webhook uses `nium_transaction_id` as unique key + row-level `FOR UPDATE` lock per memory rules.
+- **Legacy `/v1/gateway/virtual-accounts`**: untouched in this release. Deprecation header (`Sunset:`) added in a follow-up minor; removal requires v5.0.0 per Standing Order 1.
+- **RLS**: `nium_global_accounts` — owner-only via `auth.uid() = user_id`; admin via `has_role(auth.uid(),'admin')`. `nium_incoming_payments` — same. Service role full access for the webhook + payout worker.
 
----
+## Out of scope (explicit)
 
-## 4. Assignment engine
+- KYC uplift for Nium customer creation (assumes existing KOB KYC tier is sufficient; will add a TODO + admin alert if Nium returns KYC_REQUIRED).
+- Multi-currency sub-balances (rejected — using "Nium FX + spread at credit time").
+- Removing or renaming legacy NGN VA endpoints (forbidden without v5 bump).
 
-Single SQL function `ddn_find_eligible_driver(order_id, radius_km)` that ranks by:
+## Deliverable order
 
-1. Mode policy (Merchant → DDN fallback for `hybrid`).
-2. Distance (Haversine).
-3. Coverage area contains pickup point.
-4. `status = 'online'`, not at concurrent-job cap.
-5. Vehicle type compatible with order weight class.
-6. Rating DESC, last-assignment-time ASC (fairness).
+1. Migration (Phase 1) — requires your approval before running.
+2. Edge functions + nium-client stub (Phase 2).
+3. Frontend page (Phase 3).
+4. OpenAPI + changelog + SDK + docs (Phase 4).
+5. Tests (Phase 5).
 
-Dispatcher loop (max 5 s wall time, async via Realtime offers):
-
-```text
-for candidate in top_n(8):
-  insert ddn_assignment_offers(driver, ttl=20s)
-  await accept | decline | timeout
-  if accepted -> assignment.driver_id, status='accepted'; break
-```
-
-If exhausted: notify merchant, mark `assignment_failed` so they can retry or manually assign.
-
----
-
-## 5. Customer tracking experience (Phase 8 polish)
-
-Single `DailyNeedsOrderTrack` page upgrade:
-
-- Hero status with friendly labels (Accepted → Preparing → Driver Assigned → On The Way → Arriving → Delivered).
-- Live Mapbox-style canvas using existing Google Maps connector (browser key already in env): driver marker, pickup pin, drop pin, animated polyline.
-- ETA chip computed from driver location + Google Routes API (via gateway).
-- Delivery code card (large, copy-to-clipboard).
-- Driver mini-card (photo, name, vehicle, call button — masked number via Edge Function).
-
-All updates via existing Supabase Realtime channel on `daily_needs_orders` + new `ddn_driver_locations` filtered by assigned driver.
-
----
-
-## 6. Driver surface (inside Customer PWA)
-
-Four screens only, mounted at `/app/driver/*`:
-
-- **Home** — Online toggle, today's earnings, next offer modal.
-- **Active Deliveries** — Current job stepper (Navigate to merchant → Pickup → Navigate to customer → Verify code).
-- **Earnings** — Wallet balance, history, payout button.
-- **Profile** — KYC status, vehicle, coverage area.
-
-Bottom nav swaps to driver-mode when `ddn_drivers.is_active = true` and user opts in.
-
----
-
-## 7. Merchant delivery settings
-
-New tab on `MerchantDailyNeedsOnboarding`: delivery radius, fee schedule, prep time, mode toggle, own-driver roster (Mode A CRUD).
-
----
-
-## 8. Risk assessment
-
-| Risk | Mitigation |
-|---|---|
-| Driver pool empty at launch | `hybrid` mode falls back to merchant fleet; merchant can still self-deliver. |
-| Concurrent offers to same driver | Unique partial index `(driver_id, status='offered')`. |
-| Code-verify replay | One-time hash + `delivered_at` immutable check. |
-| Location privacy | Driver location only visible while assignment is `accepted`–`delivered`; RLS scoped. |
-| Settlement double-credit | Reuses Phase 6 atomic escrow RPCs with `idempotency_key`. |
-| Confusion with Transport | Distinct `ddn_*` namespace, no FKs to `trips`/`vehicles`/`routes`. |
-
----
-
-## 9. Delivery plan (incremental, non-breaking)
-
-1. **DB foundation** — new `ddn_*` tables, GRANTs, RLS, realtime, RPCs. Phase 7 tables remain; new ones supersede in code.
-2. **Dispatch engine + edge functions** — `ddn-dispatch`, offers, accept/decline.
-3. **Driver surface** in Customer PWA (`/app/driver`).
-4. **Merchant delivery settings** + own-driver CRUD.
-5. **Customer live tracking** upgrade (Phase 8 deliverable: map + code card + driver card).
-6. **Driver wallet + earnings** (reuses payout rail).
-7. **Cutover**: `daily-needs-assign-driver` delegates to `ddn-dispatch`; remove external-provider stub.
-
-Each step ships behind no flag — purely additive routes/functions — so nothing in Transport, Travel, POS, or existing Daily Needs flows changes behaviour.
-
----
-
-## 10. Technical specifics
-
-- **Stack:** Postgres + RLS, Supabase Edge Functions (Deno), React + shadcn, Google Maps connector (already linked) for routing/ETA.
-- **Realtime channels:** `dn-order-{id}` (existing), `ddn-driver-{id}`, `ddn-merchant-{merchantId}`.
-- **Idempotency:** every state-changing function requires UUID v4 `idempotency_key`, row-level `FOR UPDATE` locks.
-- **No new secrets required** — Google Maps already configured; no third-party logistics provider.
-
----
-
-Confirm and I'll start with **Step 1 (DB foundation migration)** and then proceed step-by-step. Want me to also retire the Phase 7 external-shipping stub and secrets (`DN_SHIPPING_*`) as part of step 7, or keep them dormant?
+Approve and I'll start with the migration.
