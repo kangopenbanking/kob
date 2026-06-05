@@ -216,6 +216,162 @@ export default function KYCVerification() {
     return null;
   };
 
+  const navigate = useNavigate();
+  const isMobileApp = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const standalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true ||
+        document.referrer.includes("android-app://");
+      const fromApp =
+        window.location.pathname.startsWith("/app") ||
+        document.referrer.includes("/app/") ||
+        sessionStorage.getItem("kyc_return_to_app") === "1";
+      const narrow = window.innerWidth < 768;
+      return standalone || fromApp || narrow;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Remember return target when arriving from the customer PWA
+  useEffect(() => {
+    if (document.referrer.includes("/app/")) {
+      sessionStorage.setItem("kyc_return_to_app", "1");
+    }
+  }, []);
+
+  const body = (
+    <>
+      {renderStatusCard()}
+
+      {canSubmitNew && (
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-semibold">{latest?.status === "rejected" ? "Resubmit verification" : "Submit verification"}</CardTitle>
+            <CardDescription className="text-[12px]">
+              Provide your identification documents. Accepted formats: JPG, PNG, WebP, PDF (max 10 MB each).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 pt-2">
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="verification_type">Verification type</Label>
+                <Select value={formData.verification_type} onValueChange={(v) => setFormData({ ...formData, verification_type: v })}>
+                  <SelectTrigger id="verification_type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="identity">Identity verification</SelectItem>
+                    <SelectItem value="address">Address verification</SelectItem>
+                    <SelectItem value="business">Business verification</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="document_type">Document type</Label>
+                <Select value={formData.document_type} onValueChange={(v) => setFormData({ ...formData, document_type: v })} required>
+                  <SelectTrigger id="document_type"><SelectValue placeholder="Select document type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="passport">Passport</SelectItem>
+                    <SelectItem value="national_id">National ID card</SelectItem>
+                    <SelectItem value="drivers_license">Driver's license</SelectItem>
+                    <SelectItem value="utility_bill">Utility bill</SelectItem>
+                    <SelectItem value="bank_statement">Bank statement</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="document_number">Document number</Label>
+                <Input id="document_number" value={formData.document_number}
+                  onChange={(e) => setFormData({ ...formData, document_number: e.target.value })}
+                  placeholder="Enter document number" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="document_country">Country of issue</Label>
+                <Input id="document_country" value={formData.document_country}
+                  onChange={(e) => setFormData({ ...formData, document_country: e.target.value })}
+                  placeholder="e.g., Cameroon" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="document_expiry_date">Expiry date</Label>
+                <Input id="document_expiry_date" type="date" value={formData.document_expiry_date}
+                  onChange={(e) => setFormData({ ...formData, document_expiry_date: e.target.value })} required />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="document-front">Document front *</Label>
+                  <Input id="document-front" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
+                    capture="environment"
+                    onChange={(e) => onFilePick("front", e.target.files?.[0] || null)} />
+                  {files.front && <p className="text-sm text-muted-foreground">Selected: {files.front.name}</p>}
+                </div>
+
+                {formData.document_type !== "passport" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="document-back">Document back</Label>
+                    <Input id="document-back" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
+                      capture="environment"
+                      onChange={(e) => onFilePick("back", e.target.files?.[0] || null)} />
+                    {files.back && <p className="text-sm text-muted-foreground">Selected: {files.back.name}</p>}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="selfie">Selfie photo *</Label>
+                  <Input id="selfie" type="file" accept="image/jpeg,image/png,image/webp"
+                    capture="user"
+                    onChange={(e) => onFilePick("selfie", e.target.files?.[0] || null)} />
+                  {files.selfie && <p className="text-sm text-muted-foreground">Selected: {files.selfie.name}</p>}
+                </div>
+              </div>
+
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Ensure all details are clearly visible and your document is valid. Your data is encrypted and stored securely.
+                </AlertDescription>
+              </Alert>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Submitting…" : latest?.status === "rejected" ? "Resubmit for verification" : "Submit for verification"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+
+  if (isMobileApp) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
+        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) navigate(-1);
+              else navigate("/app/kyc");
+            }}
+            className="rounded-full p-2 hover:bg-muted"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Identity</p>
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground">Identity verification</h1>
+          </div>
+        </header>
+        <div className="flex-1 space-y-4 px-4 pb-24 pt-4">{body}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       <div className="mb-5">
@@ -230,7 +386,10 @@ export default function KYCVerification() {
         </p>
       </div>
 
-      {renderStatusCard()}
+      {body}
+    </div>
+  );
+}
 
       {canSubmitNew && (
         <Card className="rounded-2xl shadow-sm">
