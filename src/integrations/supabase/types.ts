@@ -17787,6 +17787,77 @@ export type Database = {
           },
         ]
       }
+      nium_name_correction_requests: {
+        Row: {
+          affected_account_ids: string[]
+          created_at: string
+          current_full_name: string
+          decision_note: string | null
+          document_back_url: string | null
+          document_front_url: string
+          document_number: string | null
+          document_type: string
+          id: string
+          kyc_verification_id: string | null
+          reason: string
+          requested_full_name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          affected_account_ids?: string[]
+          created_at?: string
+          current_full_name: string
+          decision_note?: string | null
+          document_back_url?: string | null
+          document_front_url: string
+          document_number?: string | null
+          document_type: string
+          id?: string
+          kyc_verification_id?: string | null
+          reason: string
+          requested_full_name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          affected_account_ids?: string[]
+          created_at?: string
+          current_full_name?: string
+          decision_note?: string | null
+          document_back_url?: string | null
+          document_front_url?: string
+          document_number?: string | null
+          document_type?: string
+          id?: string
+          kyc_verification_id?: string | null
+          reason?: string
+          requested_full_name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nium_name_correction_requests_kyc_verification_id_fkey"
+            columns: ["kyc_verification_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       njangi_contributions: {
         Row: {
           amount: number
