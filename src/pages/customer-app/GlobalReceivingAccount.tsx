@@ -366,51 +366,89 @@ export default function GlobalReceivingAccount() {
 
         {/* Activity */}
         {payments.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Recent activity
-            </h2>
+          <section className="space-y-3" aria-labelledby="activity-heading">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1">
+              <h2
+                id="activity-heading"
+                className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+              >
+                Recent activity
+              </h2>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-full sm:w-auto"
+              />
+            </div>
             <Card className="border-border/60 shadow-sm overflow-hidden">
-              <CardContent className="p-0 divide-y divide-border/60">
-                {payments.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 p-4">
-                    <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <ArrowDownLeft className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        +{p.source_amount.toLocaleString()} {p.source_currency}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        · {p.routing === "KANG_WALLET" ? "Wallet" : "Mobile Money"}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold">
-                        {p.xaf_net_credited.toLocaleString()} XAF
-                      </div>
-                      <Badge
-                        variant={
-                          p.status === "credited" || p.status === "payout_completed"
-                            ? "default"
-                            : "outline"
-                        }
-                        className="mt-0.5 text-[10px] h-4 px-1.5"
-                      >
-                        {p.status === "payout_completed" && (
-                          <CheckCircle2 className="h-3 w-3 mr-0.5" />
-                        )}
-                        {p.status}
-                      </Badge>
-                    </div>
+              <CardContent className="p-0">
+                {filteredPayments.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    No activity in the selected range.
                   </div>
-                ))}
+                ) : (
+                  <ul
+                    className="divide-y divide-border/60"
+                    aria-label="Incoming global account payments"
+                  >
+                    {pagedPayments.map((p) => (
+                      <li key={p.id} className="flex items-center gap-3 p-4">
+                        <div
+                          className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0"
+                          aria-hidden="true"
+                        >
+                          <ArrowDownLeft className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">
+                            +{p.source_amount.toLocaleString()} {p.source_currency}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <time dateTime={p.created_at}>
+                              {new Date(p.created_at).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </time>{" "}
+                            · {p.routing === "KANG_WALLET" ? "Wallet" : "Mobile Money"}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold">
+                            {p.xaf_net_credited.toLocaleString()} XAF
+                          </div>
+                          <Badge
+                            variant={
+                              p.status === "credited" || p.status === "payout_completed"
+                                ? "default"
+                                : "outline"
+                            }
+                            className="mt-0.5 text-[10px] h-4 px-1.5"
+                            aria-label={`Status: ${p.status}`}
+                          >
+                            {p.status === "payout_completed" && (
+                              <CheckCircle2 className="h-3 w-3 mr-0.5" aria-hidden="true" />
+                            )}
+                            {p.status}
+                          </Badge>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {filteredPayments.length > 0 && (
+                  <div className="border-t border-border/60">
+                    <DataTablePagination
+                      page={activityPage}
+                      pageSize={activityPageSize}
+                      totalCount={filteredPayments.length}
+                      onPageChange={setActivityPage}
+                      onPageSizeChange={setActivityPageSize}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
