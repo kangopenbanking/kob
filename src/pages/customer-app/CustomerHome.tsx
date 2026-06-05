@@ -23,6 +23,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { SecureField } from '@/components/security/SecureField';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Store, Briefcase } from 'lucide-react';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
