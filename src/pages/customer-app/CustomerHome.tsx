@@ -752,6 +752,82 @@ const CustomerHome: React.FC = () => {
         })()}
       </motion.div>
 
+      {/* ─── Start Selling: Daily Needs Dialog ─── */}
+      <Dialog open={sellDailyOpen} onOpenChange={setSellDailyOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(160,60%,55%)]">
+              <Store className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+            </div>
+            <DialogTitle>{tr('Start Selling on Daily Needs')}</DialogTitle>
+            <DialogDescription className="space-y-2 pt-2">
+              {tr('Turn your restaurant or pharmacy into an online storefront. Here is how it works:')}
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-foreground">
+            <li>{tr('Open your merchant or business account on the dashboard.')}</li>
+            <li>{tr('Choose Food (restaurants & cafés) or Pharmacy (OTC & prescriptions).')}</li>
+            <li>{tr('Add your menu or product catalogue, prices and opening hours.')}</li>
+            <li>{tr('Set delivery radius, preparation time and accept your first order.')}</li>
+          </ol>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setSellDailyOpen(false)}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              {tr('Cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSellDailyOpen(false); navigate('/merchant/daily-needs'); }}
+              className="rounded-xl bg-[hsl(160,60%,45%)] px-4 py-2 text-sm font-bold text-white hover:brightness-110"
+            >
+              {tr('Go to Merchant Dashboard')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Become a Partner: Travel Dialog ─── */}
+      <Dialog open={sellTravelOpen} onOpenChange={setSellTravelOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
+              <Briefcase className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+            </div>
+            <DialogTitle>{tr('Become a Travel & Tourism Partner')}</DialogTitle>
+            <DialogDescription className="space-y-2 pt-2">
+              {tr('Sell transport and tourism services directly to customers. Here is how it works:')}
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-2 text-sm text-foreground">
+            <li className="flex items-start gap-2"><Bus className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(48,90%,40%)]" strokeWidth={2} />{tr('Buses — list routes, schedules, seats and pricing.')}</li>
+            <li className="flex items-start gap-2"><Compass className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(187,100%,35%)]" strokeWidth={2} />{tr('Tours — publish guided tours, excursions and experiences.')}</li>
+            <li className="flex items-start gap-2"><Plane className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(0,65%,45%)]" strokeWidth={2} />{tr('Airline tickets — issue and manage flight bookings.')}</li>
+            <li className="flex items-start gap-2"><Train className="mt-0.5 h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />{tr('Train tickets — sell train journeys with live seat inventory.')}</li>
+          </ul>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setSellTravelOpen(false)}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              {tr('Cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSellTravelOpen(false); navigate('/merchant/travel-services'); }}
+              className="rounded-xl bg-[hsl(48,90%,45%)] px-4 py-2 text-sm font-bold text-[hsl(220,25%,14%)] hover:brightness-110"
+            >
+              {tr('Go to Merchant Dashboard')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
 
       {/* Earnings & Spending cards hidden — data shown in hero section */}
 
