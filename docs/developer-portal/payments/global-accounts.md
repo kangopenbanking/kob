@@ -6,6 +6,19 @@ are converted to **XAF** at the Nium FX rate (plus a configurable spread),
 then routed to the user's **Kang Wallet** or **Mobile Money** wallet
 via Flutterwave.
 
+> **Compliance — BEAC / COBAC.** All cross-border inflows must declare a
+> Purpose of Payment (PoP). KOB locks the PoP to two values only:
+> `"Software/Digital Services"` and `"Royalties"`. Generic values like
+> *Transfer* or *Consulting* are rejected. The beneficiary name is
+> **always** sourced from the verified KYC profile — free-text overrides
+> return HTTP 400 `beneficiary_name_override_forbidden`. The remitting
+> bank must see an exact match against the sender's payee field.
+
+> Replaces the NGN-only `/v1/gateway/virtual-accounts` rails for global
+> creator payouts. Legacy endpoints stay live until **2027-01-01**
+> (see Standing Order 1 + the `deprecated: true` / `x-sunset` markers in
+> the OpenAPI spec).
+
 > Replaces the NGN-only `/v1/gateway/virtual-accounts` rails for global
 > creator payouts. Legacy endpoints stay live until v5 (see Standing Order 1).
 
