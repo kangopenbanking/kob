@@ -16,11 +16,9 @@ import {
   Wallet,
   Smartphone,
   Loader2,
-  Sparkles,
   ArrowDownLeft,
   CheckCircle2,
   Building2,
-  ShieldCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -58,31 +56,10 @@ type UserDefaults = {
   payout_channel: string | null;
 };
 
-const CURRENCY_META: Record<
-  Currency,
-  { flag: string; label: string; region: string; gradient: string; ring: string }
-> = {
-  USD: {
-    flag: "🇺🇸",
-    label: "US Dollar",
-    region: "United States",
-    gradient: "from-emerald-500/90 via-emerald-600/80 to-teal-700/90",
-    ring: "ring-emerald-400/30",
-  },
-  EUR: {
-    flag: "🇪🇺",
-    label: "Euro",
-    region: "Eurozone (IBAN)",
-    gradient: "from-indigo-500/90 via-blue-600/80 to-violet-700/90",
-    ring: "ring-indigo-400/30",
-  },
-  GBP: {
-    flag: "🇬🇧",
-    label: "British Pound",
-    region: "United Kingdom",
-    gradient: "from-rose-500/90 via-pink-600/80 to-fuchsia-700/90",
-    ring: "ring-rose-400/30",
-  },
+const CURRENCY_META: Record<Currency, { flag: string; label: string; region: string }> = {
+  USD: { flag: "🇺🇸", label: "US Dollar", region: "United States" },
+  EUR: { flag: "🇪🇺", label: "Euro", region: "Eurozone" },
+  GBP: { flag: "🇬🇧", label: "British Pound", region: "United Kingdom" },
 };
 
 export default function GlobalReceivingAccount() {
@@ -97,7 +74,6 @@ export default function GlobalReceivingAccount() {
   });
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
 
-  // Activity feed: date-range filter + pagination
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),
     to: endOfDay(new Date()),
@@ -137,8 +113,7 @@ export default function GlobalReceivingAccount() {
         variant: "destructive",
       });
     toast({
-      title: data?.reused ? "Account already exists" : "Global account generated",
-      description: `${newCurrency} ready to receive`,
+      title: data?.reused ? "Account already exists" : `${newCurrency} account ready`,
     });
     load();
   };
@@ -153,7 +128,7 @@ export default function GlobalReceivingAccount() {
     if (error)
       return toast({ title: "Failed", description: error.message, variant: "destructive" });
     setDefaults({ payout_preference: pref, payout_channel: phone });
-    toast({ title: "Cash-out preference saved" });
+    toast({ title: "Saved" });
   };
 
   const copy = (txt: string | null, label: string) => {
@@ -186,90 +161,74 @@ export default function GlobalReceivingAccount() {
   }, [dateRange, activityPageSize]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
-      {/* Hero */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent pointer-events-none" />
-        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
-
-        <div className="relative container max-w-3xl pt-8 pb-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/60 backdrop-blur px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Powered by Nium · Real bank rails
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border/60 bg-card">
+        <div className="container max-w-3xl py-6">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Globe2 className="h-3.5 w-3.5" />
+            Global Accounts
           </div>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-            Your world,{" "}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              one wallet
-            </span>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+            Receive worldwide, one wallet
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">
-            Receive USD, EUR or GBP into real bank accounts. We convert and settle to your Kang
-            Wallet or Mobile Money in XAF — instantly.
+          <p className="mt-1 text-sm text-muted-foreground">
+            USD, EUR and GBP into real bank accounts. Settled to XAF instantly.
           </p>
 
-          {/* Stat strip */}
-          <div className="mt-6 grid grid-cols-3 gap-3">
-            <StatCard label="Accounts" value={String(accounts.length)} icon={<Globe2 className="h-4 w-4" />} />
-            <StatCard
-              label="Inflows"
-              value={String(payments.length)}
-              icon={<ArrowDownLeft className="h-4 w-4" />}
-            />
-            <StatCard
+          <div className="mt-5 grid grid-cols-3 gap-3">
+            <Stat label="Accounts" value={String(accounts.length)} />
+            <Stat label="Inflows" value={String(payments.length)} />
+            <Stat
               label="Received"
               value={`${(totalReceivedXAF / 1000).toFixed(1)}k XAF`}
-              icon={<Wallet className="h-4 w-4" />}
             />
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container max-w-3xl pb-12 space-y-6">
+      <main className="container max-w-3xl py-6 space-y-6">
         {/* Cash-out preference */}
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardContent className="p-5 space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  <h2 className="text-base font-semibold">Default cash-out</h2>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  How incoming funds settle by default. Each account can override.
-                </p>
-              </div>
+            <div>
+              <h2 className="text-base font-semibold">Cash-out</h2>
+              <p className="text-xs text-muted-foreground">
+                Where incoming funds land by default.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Default cash-out preference">
+            <div
+              className="grid grid-cols-2 gap-2"
+              role="radiogroup"
+              aria-label="Default cash-out preference"
+            >
               <PreferenceTile
                 active={defaults.payout_preference === "KANG_WALLET"}
                 onClick={() => saveUserDefaults("KANG_WALLET", null)}
                 icon={<Wallet className="h-4 w-4" aria-hidden="true" />}
                 title="Kang Wallet"
                 subtitle="XAF · instant"
-                ariaLabel="Cash out to Kang Wallet in XAF"
               />
               <PreferenceTile
                 active={defaults.payout_preference === "MOBILE_MONEY"}
                 onClick={() => {
                   const phone =
                     defaults.payout_channel ??
-                    prompt("Mobile Money phone number (e.g. 237677123456)") ??
+                    prompt("Mobile Money phone (e.g. 237677123456)") ??
                     "";
                   if (phone) saveUserDefaults("MOBILE_MONEY", phone);
                 }}
                 icon={<Smartphone className="h-4 w-4" aria-hidden="true" />}
                 title="Mobile Money"
                 subtitle="MTN · Orange"
-                ariaLabel="Cash out to Mobile Money (MTN or Orange)"
               />
             </div>
 
             {defaults.payout_preference === "MOBILE_MONEY" && (
               <div className="grid gap-2 pt-1">
                 <Label htmlFor="def-phone" className="text-xs">
-                  Mobile Money phone
+                  Phone
                 </Label>
                 <Input
                   id="def-phone"
@@ -285,13 +244,11 @@ export default function GlobalReceivingAccount() {
         </Card>
 
         {/* Generate */}
-        <Card className="border-border/60 shadow-sm">
+        <Card>
           <CardContent className="p-5 space-y-4">
             <div>
-              <h2 className="text-base font-semibold">Open a new global account</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Pick a currency. Real IBAN / routing details provisioned in seconds.
-              </p>
+              <h2 className="text-base font-semibold">New account</h2>
+              <p className="text-xs text-muted-foreground">Pick a currency.</p>
             </div>
 
             <div
@@ -310,11 +267,11 @@ export default function GlobalReceivingAccount() {
                     aria-label={`${CURRENCY_META[c].label} (${c})`}
                     onClick={() => setNewCurrency(c)}
                     className={cn(
-                      "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
+                      "rounded-xl border p-3 text-left transition-colors",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                       "contrast-more:border-foreground",
                       selected
-                        ? "border-primary bg-primary/5 ring-2 ring-primary/20 contrast-more:bg-primary/20"
+                        ? "border-primary bg-primary/5 contrast-more:bg-primary/20"
                         : "border-border/60 hover:border-border",
                     )}
                   >
@@ -334,23 +291,26 @@ export default function GlobalReceivingAccount() {
               onClick={createAccount}
               disabled={creating}
               size="lg"
-              className="w-full bg-gradient-to-r from-primary to-primary/90 shadow-lg shadow-primary/20"
+              className="w-full"
             >
               {creating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              <span className="ml-2">Generate {newCurrency} account</span>
+              <span className="ml-2">Generate {newCurrency}</span>
             </Button>
           </CardContent>
         </Card>
 
         {/* Accounts */}
-        <section className="space-y-3">
+        <section className="space-y-3" aria-labelledby="accounts-heading">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Your accounts
+            <h2
+              id="accounts-heading"
+              className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+            >
+              Accounts
             </h2>
             {accounts.length > 0 && (
               <span className="text-xs text-muted-foreground">{accounts.length} active</span>
@@ -359,8 +319,8 @@ export default function GlobalReceivingAccount() {
 
           {loading ? (
             <div className="space-y-3">
-              <Skeleton className="h-44 w-full rounded-2xl" />
-              <Skeleton className="h-44 w-full rounded-2xl" />
+              <Skeleton className="h-40 w-full rounded-2xl" />
+              <Skeleton className="h-40 w-full rounded-2xl" />
             </div>
           ) : accounts.length === 0 ? (
             <Card className="border-dashed">
@@ -368,7 +328,7 @@ export default function GlobalReceivingAccount() {
                 <Globe2 className="h-10 w-10 mx-auto text-muted-foreground/40" />
                 <p className="mt-3 text-sm font-medium">No global accounts yet</p>
                 <p className="text-xs text-muted-foreground">
-                  Generate your first one above to start receiving worldwide.
+                  Generate one above to start receiving.
                 </p>
               </CardContent>
             </Card>
@@ -389,7 +349,7 @@ export default function GlobalReceivingAccount() {
                 id="activity-heading"
                 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
               >
-                Recent activity
+                Activity
               </h2>
               <DateRangePicker
                 value={dateRange}
@@ -397,11 +357,11 @@ export default function GlobalReceivingAccount() {
                 className="w-full sm:w-auto"
               />
             </div>
-            <Card className="border-border/60 shadow-sm overflow-hidden">
+            <Card className="overflow-hidden">
               <CardContent className="p-0">
                 {filteredPayments.length === 0 ? (
                   <div className="p-6 text-center text-sm text-muted-foreground">
-                    No activity in the selected range.
+                    No activity in range.
                   </div>
                 ) : (
                   <ul
@@ -411,7 +371,7 @@ export default function GlobalReceivingAccount() {
                     {pagedPayments.map((p) => (
                       <li key={p.id} className="flex items-center gap-3 p-4">
                         <div
-                          className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0"
+                          className="h-9 w-9 rounded-full bg-muted text-foreground flex items-center justify-center shrink-0"
                           aria-hidden="true"
                         >
                           <ArrowDownLeft className="h-4 w-4" />
@@ -470,26 +430,15 @@ export default function GlobalReceivingAccount() {
             </Card>
           </section>
         )}
-      </div>
+      </main>
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-}) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background/60 backdrop-blur p-3">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-        {icon}
-        {label}
-      </div>
+    <div className="rounded-xl border border-border/60 bg-background p-3">
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-1 text-lg font-semibold tracking-tight">{value}</div>
     </div>
   );
@@ -501,28 +450,26 @@ function PreferenceTile({
   icon,
   title,
   subtitle,
-  ariaLabel,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
-  ariaLabel?: string;
 }) {
   return (
     <button
       type="button"
       role="radio"
       aria-checked={active}
-      aria-label={ariaLabel ?? title}
+      aria-label={title}
       onClick={onClick}
       className={cn(
-        "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
+        "rounded-xl border p-3 text-left transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "contrast-more:border-foreground",
         active
-          ? "border-primary bg-primary/5 ring-2 ring-primary/20 contrast-more:bg-primary/20"
+          ? "border-primary bg-primary/5 contrast-more:bg-primary/20"
           : "border-border/60 hover:border-border",
       )}
     >
@@ -555,45 +502,35 @@ function AccountCard({
 }) {
   const meta = CURRENCY_META[a.currency];
   return (
-    <Card
-      className={cn(
-        "overflow-hidden border-border/60 shadow-md transition-shadow hover:shadow-lg",
-      )}
-    >
-      {/* Gradient header — Apple-card style */}
-      <div
-        className={cn(
-          "relative p-5 text-white bg-gradient-to-br",
-          meta.gradient,
-        )}
-      >
-        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative flex items-start justify-between">
-          <div>
-            <div className="text-3xl leading-none">{meta.flag}</div>
-            <div className="mt-3 text-xs uppercase tracking-wider opacity-80">
-              {meta.label}
-            </div>
-            <div className="text-xl font-semibold">{a.currency}</div>
-          </div>
-          <Badge
-            variant="secondary"
-            className="bg-white/15 text-white border-white/20 backdrop-blur"
+    <Card className="border-border/60">
+      <div className="flex items-center justify-between border-b border-border/60 p-4">
+        <div className="flex items-center gap-3">
+          <div
+            className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xl"
+            aria-hidden="true"
           >
-            {a.mode}
-          </Badge>
+            {meta.flag}
+          </div>
+          <div>
+            <div className="text-sm font-semibold">
+              {a.currency} · {meta.label}
+            </div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <Building2 className="h-3 w-3" />
+              {a.bank_name}
+            </div>
+          </div>
         </div>
-        <div className="relative mt-4 text-xs opacity-90 flex items-center gap-1.5">
-          <Building2 className="h-3.5 w-3.5" />
-          {a.bank_name}
-        </div>
+        <Badge variant="outline">{a.mode}</Badge>
       </div>
 
       <CardContent className="p-4 space-y-3">
-        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-          Beneficiary
+        <div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Beneficiary
+          </div>
+          <div className="text-sm font-medium">{a.beneficiary_name}</div>
         </div>
-        <div className="text-sm font-medium -mt-2">{a.beneficiary_name}</div>
 
         <div className="h-px bg-border/60" />
 
@@ -609,7 +546,7 @@ function AccountCard({
           <DetailRow
             label="Routing / Sort code"
             value={a.routing_code}
-            onCopy={() => onCopy(a.routing_code, "Routing code")}
+            onCopy={() => onCopy(a.routing_code, "Routing")}
           />
         )}
         {a.bic && (
