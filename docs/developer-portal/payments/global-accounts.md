@@ -26,11 +26,15 @@ via Flutterwave.
 
 ## 1. Create a global account
 
+> The beneficiary name is taken from the verified KYC profile. Do **not**
+> pass `beneficiary_name` — it returns `400 beneficiary_name_override_forbidden`.
+> `pop_code` is optional; default `"Software/Digital Services"`.
+
 ```bash
 curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/nium-create-global-account \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"currency":"USD","beneficiary_name":"Jane Influencer"}'
+  -d '{"currency":"USD","pop_code":"Software/Digital Services"}'
 ```
 
 ```javascript
