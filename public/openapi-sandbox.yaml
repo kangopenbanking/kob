@@ -3384,7 +3384,7 @@ components:
           type: string
           nullable: true
           enum:
-            - 
+            - null
             - pay_by_bank_intent
             - funding_intent
             - gateway_charge
@@ -4733,7 +4733,7 @@ components:
           enum:
             - KANG_WALLET
             - MOBILE_MONEY
-            - 
+            - null
         payout_channel_override:
           type: string
           nullable: true
@@ -4743,10 +4743,10 @@ components:
             - stub
             - sandbox
             - live
-      example: &id001
+      example:
         id: f1d6f4a0-1d4e-4a3a-9e0a-1a2b3c4d5e6f
         currency: USD
-        iban:
+        iban: null
         account_number: '912345678'
         routing_code: '021000021'
         bic: CHASUS33
@@ -4754,8 +4754,8 @@ components:
         bank_address: 383 Madison Ave, New York, NY 10179
         beneficiary_name: Jane Influencer
         status: active
-        payout_preference_override:
-        payout_channel_override:
+        payout_preference_override: null
+        payout_channel_override: null
         mode: stub
     NiumIncomingPayment:
       type: object
@@ -4796,9 +4796,9 @@ components:
         created_at:
           type: string
           format: date-time
-      example: &id002
+      example:
         id: p_2026_03_001
-        source_amount: 250.0
+        source_amount: 250
         source_currency: USD
         fx_rate_nium: 612.45
         fx_spread_bps: 75
@@ -4851,11 +4851,11 @@ components:
           type: string
         reference:
           type: string
-      example: &id003
+      example:
         eventType: payment_incoming
         transactionId: NIUM_TX_001
         accountId: nium_acc_abc123
-        amount: 250.0
+        amount: 250
         currency: USD
         senderName: YouTube Adsense
         reference: Creator payout March 2026
@@ -57630,16 +57630,6 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 140
-            examples:
-              usd_account:
-                summary: USD account for a creator
-                value:
-                  currency: USD
-                  beneficiary_name: Jane Influencer
-              eur_minimal:
-                summary: EUR account (uses KYC name)
-                value:
-                  currency: EUR
       responses:
         '200':
           description: Existing active account returned (idempotent)
@@ -57647,24 +57637,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NiumGlobalAccount'
-              examples:
-                reused:
-                  summary: Existing account returned
-                  value:
-                    account: *id001
-                    reused: true
         '201':
           description: Account created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NiumGlobalAccount'
-              examples:
-                created:
-                  summary: New account provisioned
-                  value:
-                    account: *id001
-                    reused: false
         '400':
           description: Invalid request
         '401':
@@ -57696,17 +57674,6 @@ paths:
                       $ref: '#/components/schemas/NiumIncomingPayment'
                   user_defaults:
                     $ref: '#/components/schemas/NiumPayoutPreference'
-              examples:
-                default:
-                  summary: One USD account with one recent credit
-                  value:
-                    accounts:
-                      - *id001
-                    incoming_payments:
-                      - *id002
-                    user_defaults:
-                      payout_preference: KANG_WALLET
-                      payout_channel:
   /v1/gateway/global-accounts/payout-preference:
     patch:
       tags:
@@ -57756,61 +57723,13 @@ paths:
                       enum:
                         - KANG_WALLET
                         - MOBILE_MONEY
-                        - 
+                        - null
                     payout_channel_override:
                       type: string
                       nullable: true
-            examples:
-              user_default_momo:
-                summary: Set user-level default to Mobile Money
-                value:
-                  scope: user
-                  payout_preference: MOBILE_MONEY
-                  payout_channel: '237677123456'
-              user_default_wallet:
-                summary: Set user-level default to Kang Wallet
-                value:
-                  scope: user
-                  payout_preference: KANG_WALLET
-              account_override:
-                summary: Force one account to Kang Wallet
-                value:
-                  scope: account
-                  account_id: f1d6f4a0-1d4e-4a3a-9e0a-1a2b3c4d5e6f
-                  payout_preference_override: KANG_WALLET
-                  payout_channel_override:
-              account_clear_override:
-                summary: Clear the per-account override
-                value:
-                  scope: account
-                  account_id: f1d6f4a0-1d4e-4a3a-9e0a-1a2b3c4d5e6f
-                  payout_preference_override:
-                  payout_channel_override:
       responses:
         '200':
-          description: Preference updated
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - ok
-                  - scope
-                properties:
-                  ok:
-                    type: boolean
-                    enum:
-                      - true
-                  scope:
-                    type: string
-                    enum:
-                      - user
-                      - account
-              examples:
-                ok:
-                  value:
-                    ok: true
-                    scope: user
+          description: Updated
         '400':
           description: Invalid request
         '404':
@@ -57839,55 +57758,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NiumWebhookEvent'
-            examples:
-              incoming_usd:
-                summary: USD credit from YouTube
-                value: *id003
-              incoming_eur:
-                summary: EUR credit from a marketplace
-                value:
-                  eventType: payment_incoming
-                  transactionId: NIUM_TX_002
-                  accountId: nium_acc_abc123
-                  amount: 1200.5
-                  currency: EUR
-                  senderName: Shopify Payments EU
-                  reference: Creator payout March 2026
       responses:
         '200':
           description: Acknowledged
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - ok
-                properties:
-                  ok:
-                    type: boolean
-                    enum:
-                      - true
-                  status:
-                    type: string
-                    enum:
-                      - credited
-                      - payout_pending
-                      - payout_completed
-                      - received
-                  payment_id:
-                    type: string
-                  duplicate:
-                    type: boolean
-              examples:
-                credited:
-                  value:
-                    ok: true
-                    status: credited
-                    payment_id: p_2026_03_001
-                duplicate:
-                  value:
-                    ok: true
-                    duplicate: true
         '401':
           description: Invalid signature
         '404':
@@ -58162,44 +58035,44 @@ x-state-machine:
     - name: reversed
       terminal: true
   transitions:
-    -   - created
-        - processing
-    -   - created
-        - failed
-    -   - created
-        - cancelled
-    -   - processing
-        - pending
-    -   - processing
-        - authorized
-    -   - processing
-        - succeeded
-    -   - processing
-        - failed
-    -   - pending
-        - succeeded
-    -   - pending
-        - failed
-    -   - pending
-        - expired
-    -   - authorized
-        - captured
-    -   - authorized
-        - voided
-    -   - authorized
-        - expired
-    -   - succeeded
-        - refunded
-    -   - captured
-        - refunded
-    -   - succeeded
-        - reversed
-    -   - succeeded
-        - disputed
-    -   - disputed
-        - reversed
-    -   - disputed
-        - succeeded
+    - - created
+      - processing
+    - - created
+      - failed
+    - - created
+      - cancelled
+    - - processing
+      - pending
+    - - processing
+      - authorized
+    - - processing
+      - succeeded
+    - - processing
+      - failed
+    - - pending
+      - succeeded
+    - - pending
+      - failed
+    - - pending
+      - expired
+    - - authorized
+      - captured
+    - - authorized
+      - voided
+    - - authorized
+      - expired
+    - - succeeded
+      - refunded
+    - - captured
+      - refunded
+    - - succeeded
+      - reversed
+    - - succeeded
+      - disputed
+    - - disputed
+      - reversed
+    - - disputed
+      - succeeded
 x-audit-export-bucket:
   name: audit-exports
   description: >-
