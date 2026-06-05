@@ -447,6 +447,11 @@ export default function GlobalReceivingAccount() {
               </div>
             </CardContent>
           </Card>
+
+          <TransactionPreview
+            currency={newCurrency}
+            defaultRouting={defaults.payout_preference}
+          />
         </section>
 
         {/* Cash-out */}
