@@ -699,10 +699,10 @@ const CustomerHome: React.FC = () => {
                 <div className="mt-5 inline-block">
                   <div
                     className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
-                    style={{ backgroundColor: dn.button_bg_color || 'hsl(25,90%,55%)' }}
+                    style={{ backgroundColor: dn.button_bg_color && dn.button_bg_color !== '#ffffff' && dn.button_bg_color.toLowerCase() !== 'white' ? dn.button_bg_color : 'hsl(25, 90%, 55%)' }}
                   >
                     <span className="font-bold text-white">{dn.button_text}</span>
-                    <ChevronRight className="h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                    <ChevronRight className="h-4 w-4 text-white/90 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
                   </div>
                 </div>
               </div>
