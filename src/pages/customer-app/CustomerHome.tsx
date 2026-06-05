@@ -23,6 +23,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 import { SecureField } from '@/components/security/SecureField';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Store, Briefcase } from 'lucide-react';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -109,6 +111,8 @@ const CustomerHome: React.FC = () => {
   // visibility to reduce shoulder-surfing and casual screenshot risk.
   const [balanceVisible, setBalanceVisible] = useState(false);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
+  const [sellDailyOpen, setSellDailyOpen] = useState(false);
+  const [sellTravelOpen, setSellTravelOpen] = useState(false);
   const tr = useHarvestedT('customer');
 
   const isViewOnly = user?.isViewOnly ?? false;
@@ -613,10 +617,9 @@ const CustomerHome: React.FC = () => {
           const dnBg = dn.bg_image || travelCardBg;
 
           const renderTravel = () => (
-            <motion.button
+            <motion.div
               key="travel"
-              whileTap={{ scale: 0.97 }}
-              onClick={() => go('travel')}
+              whileTap={{ scale: 0.99 }}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               <img src={travelBg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
@@ -648,24 +651,34 @@ const CustomerHome: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="mt-5 inline-block">
-                  <div
-                    className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => go('travel')}
+                    className="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors hover:brightness-110"
                     style={{ backgroundColor: tc.button_bg_color || 'rgba(255,255,255,0.1)' }}
                   >
                     <span className="font-bold text-white">{tc.button_text}</span>
-                    <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
-                  </div>
+                    <ChevronRight className="h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellTravelOpen(true)}
+                    className="flex items-center gap-2 rounded-2xl bg-[hsl(48,90%,52%)] px-3 py-2 text-xs text-[hsl(220,25%,14%)] transition-colors hover:brightness-110"
+                  >
+                    <Briefcase className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    <span className="font-bold">{tr('Become a Partner')}</span>
+                  </button>
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
           );
 
+
           const renderDailyNeeds = () => (
-            <motion.button
+            <motion.div
               key="daily-needs"
-              whileTap={{ scale: 0.97 }}
-              onClick={goDailyNeeds}
+              whileTap={{ scale: 0.99 }}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
@@ -696,18 +709,29 @@ const CustomerHome: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="mt-5 inline-block">
-                  <div
-                    className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={goDailyNeeds}
+                    className="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors hover:brightness-110"
                     style={{ backgroundColor: dn.button_bg_color && dn.button_bg_color !== '#ffffff' && dn.button_bg_color.toLowerCase() !== 'white' ? dn.button_bg_color : 'hsl(25, 90%, 55%)' }}
                   >
                     <span className="font-bold text-white">{dn.button_text}</span>
                     <ChevronRight className="h-4 w-4 text-white/90 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
-                  </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellDailyOpen(true)}
+                    className="flex items-center gap-2 rounded-2xl bg-[hsl(160,60%,55%)] px-3 py-2 text-xs text-[hsl(220,25%,14%)] transition-colors hover:brightness-110"
+                  >
+                    <Store className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    <span className="font-bold">{tr('Start Selling')}</span>
+                  </button>
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
           );
+
 
           const slides: Record<'travel' | 'daily_needs', () => JSX.Element> = {
             travel: renderTravel,
@@ -727,6 +751,82 @@ const CustomerHome: React.FC = () => {
           );
         })()}
       </motion.div>
+
+      {/* ─── Start Selling: Daily Needs Dialog ─── */}
+      <Dialog open={sellDailyOpen} onOpenChange={setSellDailyOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(160,60%,55%)]">
+              <Store className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+            </div>
+            <DialogTitle>{tr('Start Selling on Daily Needs')}</DialogTitle>
+            <DialogDescription className="space-y-2 pt-2">
+              {tr('Turn your restaurant or pharmacy into an online storefront. Here is how it works:')}
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-foreground">
+            <li>{tr('Open your merchant or business account on the dashboard.')}</li>
+            <li>{tr('Choose Food (restaurants & cafés) or Pharmacy (OTC & prescriptions).')}</li>
+            <li>{tr('Add your menu or product catalogue, prices and opening hours.')}</li>
+            <li>{tr('Set delivery radius, preparation time and accept your first order.')}</li>
+          </ol>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setSellDailyOpen(false)}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              {tr('Cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSellDailyOpen(false); navigate('/merchant/daily-needs'); }}
+              className="rounded-xl bg-[hsl(160,60%,45%)] px-4 py-2 text-sm font-bold text-white hover:brightness-110"
+            >
+              {tr('Go to Merchant Dashboard')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Become a Partner: Travel Dialog ─── */}
+      <Dialog open={sellTravelOpen} onOpenChange={setSellTravelOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
+              <Briefcase className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+            </div>
+            <DialogTitle>{tr('Become a Travel & Tourism Partner')}</DialogTitle>
+            <DialogDescription className="space-y-2 pt-2">
+              {tr('Sell transport and tourism services directly to customers. Here is how it works:')}
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-2 text-sm text-foreground">
+            <li className="flex items-start gap-2"><Bus className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(48,90%,40%)]" strokeWidth={2} />{tr('Buses — list routes, schedules, seats and pricing.')}</li>
+            <li className="flex items-start gap-2"><Compass className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(187,100%,35%)]" strokeWidth={2} />{tr('Tours — publish guided tours, excursions and experiences.')}</li>
+            <li className="flex items-start gap-2"><Plane className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(0,65%,45%)]" strokeWidth={2} />{tr('Airline tickets — issue and manage flight bookings.')}</li>
+            <li className="flex items-start gap-2"><Train className="mt-0.5 h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />{tr('Train tickets — sell train journeys with live seat inventory.')}</li>
+          </ul>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setSellTravelOpen(false)}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              {tr('Cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSellTravelOpen(false); navigate('/merchant/travel-services'); }}
+              className="rounded-xl bg-[hsl(48,90%,45%)] px-4 py-2 text-sm font-bold text-[hsl(220,25%,14%)] hover:brightness-110"
+            >
+              {tr('Go to Merchant Dashboard')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
 
 
       {/* Earnings & Spending cards hidden — data shown in hero section */}
