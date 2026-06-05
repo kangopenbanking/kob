@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
+import { useHowItWorksSteps } from "@/hooks/useHowItWorksSteps";
 
 type Sort = "rating" | "fastest" | "name";
 
