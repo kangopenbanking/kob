@@ -17799,6 +17799,10 @@ export type Database = {
           document_type: string
           id: string
           kyc_verification_id: string | null
+          maker_at: string | null
+          maker_decision: string | null
+          maker_id: string | null
+          maker_note: string | null
           reason: string
           requested_full_name: string
           reviewed_at: string | null
@@ -17819,6 +17823,10 @@ export type Database = {
           document_type: string
           id?: string
           kyc_verification_id?: string | null
+          maker_at?: string | null
+          maker_decision?: string | null
+          maker_id?: string | null
+          maker_note?: string | null
           reason: string
           requested_full_name: string
           reviewed_at?: string | null
@@ -17839,6 +17847,10 @@ export type Database = {
           document_type?: string
           id?: string
           kyc_verification_id?: string | null
+          maker_at?: string | null
+          maker_decision?: string | null
+          maker_id?: string | null
+          maker_note?: string | null
           reason?: string
           requested_full_name?: string
           reviewed_at?: string | null
