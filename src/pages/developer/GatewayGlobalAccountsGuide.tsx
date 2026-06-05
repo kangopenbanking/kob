@@ -15,6 +15,7 @@ export default function GatewayGlobalAccountsGuide() {
       level="Intermediate"
       toc={[
         { id: "overview", label: "Overview" },
+        { id: "access", label: "Accessing Global Accounts" },
         { id: "create", label: "Create account" },
         { id: "list", label: "List accounts" },
         { id: "preference", label: "Cash-out preference" },
