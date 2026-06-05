@@ -111,6 +111,8 @@ const CustomerHome: React.FC = () => {
   // visibility to reduce shoulder-surfing and casual screenshot risk.
   const [balanceVisible, setBalanceVisible] = useState(false);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
+  const [sellDailyOpen, setSellDailyOpen] = useState(false);
+  const [sellTravelOpen, setSellTravelOpen] = useState(false);
   const tr = useHarvestedT('customer');
 
   const isViewOnly = user?.isViewOnly ?? false;
