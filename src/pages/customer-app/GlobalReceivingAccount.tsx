@@ -294,25 +294,40 @@ export default function GlobalReceivingAccount() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {(Object.keys(CURRENCY_META) as Currency[]).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setNewCurrency(c)}
-                  className={cn(
-                    "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
-                    newCurrency === c
-                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                      : "border-border/60 hover:border-border",
-                  )}
-                >
-                  <div className="text-xl leading-none">{CURRENCY_META[c].flag}</div>
-                  <div className="mt-2 text-sm font-semibold">{c}</div>
-                  <div className="text-[10px] text-muted-foreground leading-tight">
-                    {CURRENCY_META[c].region}
-                  </div>
-                </button>
-              ))}
+            <div
+              className="grid grid-cols-3 gap-2"
+              role="radiogroup"
+              aria-label="New global account currency"
+            >
+              {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
+                const selected = newCurrency === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={`${CURRENCY_META[c].label} (${c})`}
+                    onClick={() => setNewCurrency(c)}
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "contrast-more:border-foreground",
+                      selected
+                        ? "border-primary bg-primary/5 ring-2 ring-primary/20 contrast-more:bg-primary/20"
+                        : "border-border/60 hover:border-border",
+                    )}
+                  >
+                    <div className="text-xl leading-none" aria-hidden="true">
+                      {CURRENCY_META[c].flag}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold">{c}</div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">
+                      {CURRENCY_META[c].region}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             <Button
