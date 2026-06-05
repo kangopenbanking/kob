@@ -1,0 +1,28 @@
+name: Global Accounts Link Audit
+on:
+  pull_request:
+    paths:
+      - "src/App.tsx"
+      - "src/components/developer/**"
+      - "src/pages/customer-app/**"
+      - "src/pages/developer/GatewayGlobalAccountsGuide.tsx"
+      - "public/sitemap.xml"
+      - "scripts/check-global-accounts-nav-links.mjs"
+      - ".github/workflows/global-accounts-link-audit.yml"
+  push:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Validate Global Accounts navigation links
+        run: node scripts/check-global-accounts-nav-links.mjs
+      - name: Run Global Accounts vitest suites
+        run: |
+          npm ci --no-audit --no-fund
+          npx vitest run src/test/global-accounts-navigation.test.ts \
+                         src/test/global-accounts-rbac-navigation.test.tsx \
+                         src/test/global-accounts-capacitor-deeplink.test.ts

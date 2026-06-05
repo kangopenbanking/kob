@@ -76,12 +76,25 @@ export default function GatewayGlobalAccountsGuide() {
               <em> Linked Accounts &rarr; Global Receiving Accounts</em>.
             </div>
             <div>
-              <strong className="text-foreground">Deep link (web + Capacitor):</strong>
-              <ul className="list-disc list-inside mt-1 space-y-1">
-                <li><code>https://kob.lovable.app/global-accounts</code> &rarr; redirects to <code>/app/global-accounts</code></li>
-                <li><code>https://kob.lovable.app/app/global-accounts</code> (canonical consumer route)</li>
-                <li><code>https://kob.lovable.app/developer/global-accounts</code> &rarr; redirects to the developer guide</li>
-              </ul>
+              <strong className="text-foreground">All Global Accounts deep links (web + mobile / Capacitor):</strong>
+              <table className="mt-2 w-full text-xs border border-border rounded" data-testid="global-accounts-deeplinks">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="text-left p-2">Surface</th>
+                    <th className="text-left p-2">URL</th>
+                    <th className="text-left p-2">Resolves to</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-border"><td className="p-2">Web shortcut</td><td className="p-2"><code>/global-accounts</code></td><td className="p-2"><code>/app/global-accounts</code></td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Consumer canonical</td><td className="p-2"><code>/app/global-accounts</code></td><td className="p-2">GlobalReceivingAccount</td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Developer shortcut</td><td className="p-2"><code>/developer/global-accounts</code></td><td className="p-2"><code>/developer/gateway/global-accounts</code></td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Developer canonical</td><td className="p-2"><code>/developer/gateway/global-accounts</code></td><td className="p-2">This guide</td></tr>
+                  <tr className="border-t border-border"><td className="p-2">iOS / Android (Capacitor)</td><td className="p-2"><code>app.lovable.342820e7280a44d388ce2854c6d907ed://global-accounts</code></td><td className="p-2"><code>/app/global-accounts</code> via WebView</td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Universal link</td><td className="p-2"><code>https://kob.lovable.app/global-accounts</code></td><td className="p-2"><code>/app/global-accounts</code></td></tr>
+                </tbody>
+              </table>
+              <p className="mt-2 text-xs">A CI link validator (<code>scripts/check-global-accounts-nav-links.mjs</code>) compares this table, sidebar entries, and mobile menu items against the <code>App.tsx</code> route table and <code>public/sitemap.xml</code> on every PR.</p>
             </div>
             <div>
               <strong className="text-foreground">Required permissions / scopes</strong>
