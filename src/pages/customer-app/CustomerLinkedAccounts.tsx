@@ -990,6 +990,22 @@ const CustomerLinkedAccounts: React.FC = () => {
         </div>
       </motion.div>
 
+      <motion.button
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        onClick={() => navigate('/app/global-accounts')}
+        className="flex items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-sm"
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
+          <Globe className="h-5 w-5 text-primary" strokeWidth={1.5} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-foreground">{tr('Global Receiving Accounts')}</p>
+          <p className="text-[11px] text-muted-foreground">{tr('Receive USD, EUR, or GBP payouts and settle in XAF.')}</p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+      </motion.button>
+
       {/* Open Banking — Connected Banks (AISP) */}
       <ConnectedBanksPanel />
 
