@@ -23,6 +23,7 @@ const PWA_ALLOWED_PREFIXES = [
   '/credit-score',
   '/pending-approval',
   '/auth',
+  '/kyc-verification',
 ] as const;
 
 /**
