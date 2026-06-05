@@ -64,6 +64,7 @@ export const DOC_NAV_ORDER: DocNavEntry[] = [
   { title: "Subscriptions", path: "/developer/gateway/subscriptions" },
   { title: "Payment Links", path: "/developer/gateway/payment-links" },
   { title: "Virtual Accounts", path: "/developer/gateway/virtual-accounts" },
+  { title: "Global Accounts (Nium)", path: "/developer/gateway/global-accounts" },
   { title: "Tokenisation", path: "/developer/gateway/tokenization" },
   { title: "Disputes", path: "/developer/gateway/disputes" },
   { title: "Settlements", path: "/developer/gateway/settlements" },
