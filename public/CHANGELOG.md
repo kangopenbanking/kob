@@ -1,6 +1,6 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.49.0** · Last updated: **2026-05-30**
+Current API version: **4.50.0** · Last updated: **2026-06-05**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
@@ -9,6 +9,57 @@ Current API version: **4.49.0** · Last updated: **2026-05-30**
 - Browse online: <https://kangopenbanking.com/developer/changelog>
 
 ---
+
+## Nium-powered Global Virtual Accounts — 2026-06-05 <a id="v4-50-0"></a>
+**Version:** 4.50.0 · **Type:** minor · **Breaking changes:** none
+
+Influencers and creators in the CEMAC region can now receive payouts from
+YouTube, TikTok and any global payer via real USD/EUR/GBP bank accounts
+provisioned by **Nium**. Funds land at Nium, KOB applies the Nium FX rate
+plus a configurable spread (default **75 bps**), debits a withdrawal fee
+on Mobile Money cash-outs, credits the user's Kang Wallet in **XAF**, and
+optionally pushes the net amount to Mobile Money via the existing
+Flutterwave rails.
+
+### New endpoints (additive — Standing Order 4)
+
+- `POST  /v1/gateway/global-accounts` — provision a USD/EUR/GBP account (idempotent per currency).
+- `GET   /v1/gateway/global-accounts` — list accounts + recent incoming payments + user defaults.
+- `PATCH /v1/gateway/global-accounts/payout-preference` — set user default or per-account override.
+- `POST  /v1/gateway/global-accounts/webhook` — Nium incoming-payment webhook (HMAC-SHA256, header `x-nium-signature`).
+
+### Fee Management
+
+Two new `transaction_type` values (additive to the existing 67):
+
+| Type | Model | Default |
+|---|---|---|
+| `nium_fx_spread` | percentage | 75 bps |
+| `nium_withdrawal` | hybrid | 1% + 100 XAF, min 200 XAF |
+
+Both editable in **Admin → Fee Management** without a code change.
+
+### Stub mode (default)
+
+`NIUM_MODE=stub` returns deterministic fake IBAN / USD account / GBP details
+with reference XAF rates (USD 605, EUR 655.957, GBP 760), so the full flow
+— from account generation through webhook to Mobile Money payout — is
+testable without Nium credentials. Set `NIUM_MODE=live` and provide
+`NIUM_API_KEY`, `NIUM_CLIENT_ID`, `NIUM_BASE_URL`, `NIUM_WEBHOOK_SECRET`
+to go live.
+
+### Customer App
+
+New page at `/app/global-accounts` to generate accounts, copy bank
+details, view incoming payments, and pick a cash-out routing preference
+per account.
+
+### Legacy
+
+`/v1/gateway/virtual-accounts` (NGN / Wema / Flutterwave) is **unchanged
+in this release**. A deprecation header (`Sunset`) will be added in a
+follow-up minor. Removal requires a major version bump per Standing
+Order 1.
 
 ## Security & signing keys — 2026-05-30 <a id="signing-keys"></a>
 **Type:** infrastructure · **Breaking changes:** none · **Action required for integrators verifying signatures:** review fingerprint below.

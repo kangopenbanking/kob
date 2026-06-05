@@ -17638,6 +17638,149 @@ export type Database = {
           },
         ]
       }
+      nium_global_accounts: {
+        Row: {
+          account_number: string | null
+          bank_address: string | null
+          bank_name: string | null
+          beneficiary_name: string
+          bic: string | null
+          created_at: string
+          currency: string
+          iban: string | null
+          id: string
+          mode: string
+          nium_account_id: string
+          nium_customer_hash_id: string | null
+          payout_channel_override: string | null
+          payout_preference_override: string | null
+          routing_code: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number?: string | null
+          bank_address?: string | null
+          bank_name?: string | null
+          beneficiary_name: string
+          bic?: string | null
+          created_at?: string
+          currency: string
+          iban?: string | null
+          id?: string
+          mode?: string
+          nium_account_id: string
+          nium_customer_hash_id?: string | null
+          payout_channel_override?: string | null
+          payout_preference_override?: string | null
+          routing_code?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string | null
+          bank_address?: string | null
+          bank_name?: string | null
+          beneficiary_name?: string
+          bic?: string | null
+          created_at?: string
+          currency?: string
+          iban?: string | null
+          id?: string
+          mode?: string
+          nium_account_id?: string
+          nium_customer_hash_id?: string | null
+          payout_channel_override?: string | null
+          payout_preference_override?: string | null
+          routing_code?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nium_incoming_payments: {
+        Row: {
+          created_at: string
+          failure_reason: string | null
+          flutterwave_payout_id: string | null
+          fx_rate_nium: number
+          fx_spread_bps: number
+          global_account_id: string
+          id: string
+          ledger_tx_ref: string | null
+          nium_transaction_id: string
+          payout_channel: string | null
+          raw_payload: Json
+          routing: string
+          source_amount: number
+          source_currency: string
+          status: string
+          updated_at: string
+          user_id: string
+          xaf_gross: number
+          xaf_net_credited: number
+          xaf_spread_revenue: number
+          xaf_withdrawal_fee: number
+        }
+        Insert: {
+          created_at?: string
+          failure_reason?: string | null
+          flutterwave_payout_id?: string | null
+          fx_rate_nium: number
+          fx_spread_bps?: number
+          global_account_id: string
+          id?: string
+          ledger_tx_ref?: string | null
+          nium_transaction_id: string
+          payout_channel?: string | null
+          raw_payload: Json
+          routing: string
+          source_amount: number
+          source_currency: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          xaf_gross: number
+          xaf_net_credited: number
+          xaf_spread_revenue?: number
+          xaf_withdrawal_fee?: number
+        }
+        Update: {
+          created_at?: string
+          failure_reason?: string | null
+          flutterwave_payout_id?: string | null
+          fx_rate_nium?: number
+          fx_spread_bps?: number
+          global_account_id?: string
+          id?: string
+          ledger_tx_ref?: string | null
+          nium_transaction_id?: string
+          payout_channel?: string | null
+          raw_payload?: Json
+          routing?: string
+          source_amount?: number
+          source_currency?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          xaf_gross?: number
+          xaf_net_credited?: number
+          xaf_spread_revenue?: number
+          xaf_withdrawal_fee?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nium_incoming_payments_global_account_id_fkey"
+            columns: ["global_account_id"]
+            isOneToOne: false
+            referencedRelation: "nium_global_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       njangi_contributions: {
         Row: {
           amount: number
@@ -21047,6 +21190,8 @@ export type Database = {
           migration_grace_period_ends: string | null
           migration_required: boolean | null
           occupation: string | null
+          payout_channel: string | null
+          payout_preference: string
           phone_number: string | null
           phone_verified: boolean | null
           phone_verified_at: string | null
@@ -21081,6 +21226,8 @@ export type Database = {
           migration_grace_period_ends?: string | null
           migration_required?: boolean | null
           occupation?: string | null
+          payout_channel?: string | null
+          payout_preference?: string
           phone_number?: string | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
@@ -21115,6 +21262,8 @@ export type Database = {
           migration_grace_period_ends?: string | null
           migration_required?: boolean | null
           occupation?: string | null
+          payout_channel?: string | null
+          payout_preference?: string
           phone_number?: string | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
@@ -30014,6 +30163,13 @@ export type Database = {
           grace_until: string
           key_version: number
           status: string
+        }[]
+      }
+      resolve_nium_routing: {
+        Args: { _account_id: string }
+        Returns: {
+          channel: string
+          routing: string
         }[]
       }
       resolve_statement_fee: {
