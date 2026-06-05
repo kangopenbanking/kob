@@ -8,7 +8,6 @@ import {
   Camera,
   PackageCheck,
   Bike,
-  Info,
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
 
 type TabKey = "all" | "otc" | "rx";
 
