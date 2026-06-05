@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, AlertCircle, Clock, XCircle, Info } from "lucide-react";
+import { ArrowLeft, CheckCircle, AlertCircle, Clock, XCircle, Info } from "lucide-react";
 
 type KycStatus = "pending" | "approved" | "rejected" | "info_requested" | null;
 
@@ -215,20 +216,34 @@ export default function KYCVerification() {
     return null;
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6 max-w-2xl">
-      <div className="mb-5">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Identity
-        </p>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-          Identity verification
-        </h1>
-        <p className="mt-1 text-[12px] text-muted-foreground">
-          Complete your verification to unlock full account access.
-        </p>
-      </div>
+  const navigate = useNavigate();
+  const isMobileApp = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const standalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true ||
+        document.referrer.includes("android-app://");
+      const fromApp =
+        window.location.pathname.startsWith("/app") ||
+        document.referrer.includes("/app/") ||
+        sessionStorage.getItem("kyc_return_to_app") === "1";
+      const narrow = window.innerWidth < 768;
+      return standalone || fromApp || narrow;
+    } catch {
+      return false;
+    }
+  }, []);
 
+  // Remember return target when arriving from the customer PWA
+  useEffect(() => {
+    if (document.referrer.includes("/app/")) {
+      sessionStorage.setItem("kyc_return_to_app", "1");
+    }
+  }, []);
+
+  const body = (
+    <>
       {renderStatusCard()}
 
       {canSubmitNew && (
@@ -292,6 +307,7 @@ export default function KYCVerification() {
                 <div className="space-y-2">
                   <Label htmlFor="document-front">Document front *</Label>
                   <Input id="document-front" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
+                    capture="environment"
                     onChange={(e) => onFilePick("front", e.target.files?.[0] || null)} />
                   {files.front && <p className="text-sm text-muted-foreground">Selected: {files.front.name}</p>}
                 </div>
@@ -300,6 +316,7 @@ export default function KYCVerification() {
                   <div className="space-y-2">
                     <Label htmlFor="document-back">Document back</Label>
                     <Input id="document-back" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
+                      capture="environment"
                       onChange={(e) => onFilePick("back", e.target.files?.[0] || null)} />
                     {files.back && <p className="text-sm text-muted-foreground">Selected: {files.back.name}</p>}
                   </div>
@@ -308,6 +325,7 @@ export default function KYCVerification() {
                 <div className="space-y-2">
                   <Label htmlFor="selfie">Selfie photo *</Label>
                   <Input id="selfie" type="file" accept="image/jpeg,image/png,image/webp"
+                    capture="user"
                     onChange={(e) => onFilePick("selfie", e.target.files?.[0] || null)} />
                   {files.selfie && <p className="text-sm text-muted-foreground">Selected: {files.selfie.name}</p>}
                 </div>
@@ -327,6 +345,49 @@ export default function KYCVerification() {
           </CardContent>
         </Card>
       )}
+    </>
+  );
+
+  if (isMobileApp) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
+        <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) navigate(-1);
+              else navigate("/app/kyc");
+            }}
+            className="rounded-full p-2 hover:bg-muted"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Identity</p>
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground">Identity verification</h1>
+          </div>
+        </header>
+        <div className="flex-1 space-y-4 px-4 pb-24 pt-4">{body}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="mb-5">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Identity
+        </p>
+        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+          Identity verification
+        </h1>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          Complete your verification to unlock full account access.
+        </p>
+      </div>
+
+      {body}
     </div>
   );
 }
+
