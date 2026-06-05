@@ -25,6 +25,14 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ShieldAlert } from "lucide-react";
+import {
+  ALLOWED_NIUM_POP_CODES,
+  DEFAULT_NIUM_POP_CODE,
+  type NiumPopCode,
+} from "@/constants/nium-compliance";
+import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
 
 type Currency = "USD" | "EUR" | "GBP";
 
@@ -113,6 +121,8 @@ export default function GlobalReceivingAccount() {
     payout_channel: null,
   });
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
+  const [popCode, setPopCode] = useState<NiumPopCode>(DEFAULT_NIUM_POP_CODE);
+  const [kycName, setKycName] = useState<string>("");
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),
@@ -139,12 +149,27 @@ export default function GlobalReceivingAccount() {
 
   useEffect(() => {
     load();
+    // Resolve the verified KYC name once for the exact-name banner.
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, first_name, last_name")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      const resolved =
+        prof?.full_name?.trim() ||
+        [prof?.first_name, prof?.last_name].filter(Boolean).join(" ").trim();
+      setKycName(resolved || "");
+    })();
   }, []);
 
   const createAccount = async () => {
     setCreating(true);
+    // COMPLIANCE CHECK: do NOT send beneficiary_name (server pulls from KYC).
     const { data, error } = await supabase.functions.invoke("nium-create-global-account", {
-      body: { currency: newCurrency },
+      body: { currency: newCurrency, pop_code: popCode },
     });
     setCreating(false);
     if (error)
