@@ -1,5 +1,10 @@
 // nium-request-name-correction
-// Submits a beneficiary-name correction request (user) OR decides it (admin).
+// Submits a beneficiary-name correction request (user) OR decides it (admin)
+// with maker-checker validation: two different admins must act (propose +
+// confirm) before profiles.full_name is updated and affected global accounts
+// are closed for re-issue. Customer in-app notifications are emitted on
+// submit, maker-proposal, approval, and rejection.
+//
 // COMPLIANCE CHECK: name updates only land in profiles.full_name AFTER admin
 // approval — never from free-text on the client. Affected Nium global accounts
 // are marked `closed_pending_reissue` so the user can regenerate them with the
@@ -26,6 +31,9 @@ const SubmitSchema = z.object({
 const DecideSchema = z.object({
   action: z.literal('decide'),
   request_id: z.string().uuid(),
+  // 'maker' records the proposed decision; 'checker' finalises it.
+  // COMPLIANCE CHECK: checker MUST differ from maker (DB trigger + app check).
+  stage: z.enum(['maker', 'checker']).default('checker'),
   decision: z.enum(['approved', 'rejected']),
   decision_note: z.string().trim().max(500).optional(),
 });
@@ -37,6 +45,29 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
+}
+
+async function notify(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  title: string,
+  message: string,
+  metadata: Record<string, unknown>,
+  idempotencyKey: string,
+) {
+  try {
+    await admin.from('app_notifications').insert({
+      user_id: userId,
+      type: 'kyc',
+      icon: 'kyc',
+      title,
+      message,
+      metadata,
+      idempotency_key: idempotencyKey,
+    });
+  } catch (_e) {
+    // best-effort: never block the workflow on a notification failure
+  }
 }
 
 Deno.serve(async (req) => {
@@ -81,7 +112,6 @@ Deno.serve(async (req) => {
       return json({ error: 'name_unchanged' }, 400);
     }
 
-    // Block duplicate open requests (also enforced by unique partial index)
     const { data: openReq } = await admin
       .from('nium_name_correction_requests')
       .select('id')
@@ -115,6 +145,15 @@ Deno.serve(async (req) => {
       .single();
     if (insErr) return json({ error: 'insert_failed', message: insErr.message }, 500);
 
+    await notify(
+      admin,
+      user.id,
+      'Name correction submitted',
+      'We received your beneficiary name correction request and your documents are now under review. We will notify you once a decision is made.',
+      { request_id: inserted.id, kind: 'nium_name_correction', stage: 'submitted' },
+      `nium-name-correction-submitted-${inserted.id}`,
+    );
+
     return json({ ok: true, request: inserted }, 201);
   }
 
@@ -134,6 +173,48 @@ Deno.serve(async (req) => {
   if (fetchErr || !reqRow) return json({ error: 'request_not_found' }, 404);
   if (reqRow.status !== 'pending') return json({ error: 'request_not_pending' }, 409);
 
+  // ── MAKER STAGE: record proposal, no state change yet ──────────────────────
+  if (d.stage === 'maker') {
+    if (reqRow.maker_id) {
+      return json({ error: 'maker_already_recorded', maker_id: reqRow.maker_id }, 409);
+    }
+    const { error: makerErr } = await admin
+      .from('nium_name_correction_requests')
+      .update({
+        maker_id: user.id,
+        maker_at: new Date().toISOString(),
+        maker_decision: d.decision,
+        maker_note: d.decision_note ?? null,
+      })
+      .eq('id', d.request_id);
+    if (makerErr) return json({ error: 'maker_update_failed', message: makerErr.message }, 500);
+
+    await notify(
+      admin,
+      reqRow.user_id,
+      'Name correction under review',
+      `A compliance reviewer has assessed your request and proposed: ${d.decision}. A second reviewer will confirm shortly.`,
+      { request_id: reqRow.id, kind: 'nium_name_correction', stage: 'maker', proposed: d.decision },
+      `nium-name-correction-maker-${reqRow.id}`,
+    );
+    return json({ ok: true, status: 'pending', stage: 'maker_recorded', proposed: d.decision });
+  }
+
+  // ── CHECKER STAGE: enforce maker-checker, then finalise ───────────────────
+  if (!reqRow.maker_id) {
+    return json({ error: 'maker_required_first' }, 409);
+  }
+  if (reqRow.maker_id === user.id) {
+    // COMPLIANCE CHECK: checker must differ from maker
+    return json({ error: 'maker_checker_violation' }, 403);
+  }
+  if (reqRow.maker_decision && reqRow.maker_decision !== d.decision) {
+    return json(
+      { error: 'maker_checker_disagreement', maker_decision: reqRow.maker_decision },
+      409,
+    );
+  }
+
   if (d.decision === 'rejected') {
     const { error: updErr } = await admin
       .from('nium_name_correction_requests')
@@ -144,17 +225,24 @@ Deno.serve(async (req) => {
         decision_note: d.decision_note ?? null,
       })
       .eq('id', d.request_id);
-    if (updErr) return json({ error: 'update_failed' }, 500);
+    if (updErr) return json({ error: 'update_failed', message: updErr.message }, 500);
+
+    await notify(
+      admin,
+      reqRow.user_id,
+      'Name correction rejected',
+      d.decision_note
+        ? `Your request was not approved. Reviewer note: ${d.decision_note}`
+        : 'Your name correction request was not approved. Please submit a new request with clearer government-issued documents.',
+      { request_id: reqRow.id, kind: 'nium_name_correction', stage: 'rejected' },
+      `nium-name-correction-rejected-${reqRow.id}`,
+    );
     return json({ ok: true, status: 'rejected' });
   }
 
-  // APPROVAL flow:
-  // 1) write a fresh approved kyc_verifications row with the corrected name
-  // 2) update profiles.full_name
-  // 3) close affected nium_global_accounts so the user re-issues with the new name
+  // APPROVAL flow
   const newName = reqRow.requested_full_name as string;
 
-  // Close older active KYC rows so the unique-active-per-user index stays clean
   await admin
     .from('kyc_verifications')
     .update({ status: 'superseded', updated_at: new Date().toISOString() })
@@ -179,6 +267,8 @@ Deno.serve(async (req) => {
         previous_full_name: reqRow.current_full_name,
         new_full_name: newName,
         correction_request_id: reqRow.id,
+        maker_id: reqRow.maker_id,
+        checker_id: user.id,
       },
     })
     .select('id')
@@ -209,6 +299,21 @@ Deno.serve(async (req) => {
       kyc_verification_id: kycRow.id,
     })
     .eq('id', d.request_id);
+
+  await notify(
+    admin,
+    reqRow.user_id,
+    'Name correction approved',
+    `Your beneficiary name was updated to "${newName}". Affected global receiving accounts have been closed for re-issue with the corrected verified name.`,
+    {
+      request_id: reqRow.id,
+      kind: 'nium_name_correction',
+      stage: 'approved',
+      new_full_name: newName,
+      closed_account_ids: affected,
+    },
+    `nium-name-correction-approved-${reqRow.id}`,
+  );
 
   return json({
     ok: true,
