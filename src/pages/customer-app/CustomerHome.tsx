@@ -617,10 +617,9 @@ const CustomerHome: React.FC = () => {
           const dnBg = dn.bg_image || travelCardBg;
 
           const renderTravel = () => (
-            <motion.button
+            <motion.div
               key="travel"
-              whileTap={{ scale: 0.97 }}
-              onClick={() => go('travel')}
+              whileTap={{ scale: 0.99 }}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               <img src={travelBg} alt={tr('Travel')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
@@ -652,18 +651,29 @@ const CustomerHome: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="mt-5 inline-block">
-                  <div
-                    className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => go('travel')}
+                    className="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors hover:brightness-110"
                     style={{ backgroundColor: tc.button_bg_color || 'rgba(255,255,255,0.1)' }}
                   >
                     <span className="font-bold text-white">{tc.button_text}</span>
-                    <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
-                  </div>
+                    <ChevronRight className="h-4 w-4 text-white/80 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellTravelOpen(true)}
+                    className="flex items-center gap-2 rounded-2xl bg-[hsl(48,90%,52%)] px-3 py-2 text-xs text-[hsl(220,25%,14%)] transition-colors hover:brightness-110"
+                  >
+                    <Briefcase className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    <span className="font-bold">{tr('Become a Partner')}</span>
+                  </button>
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
           );
+
 
           const renderDailyNeeds = () => (
             <motion.button
