@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.is_tenant_connector_owner(uuid, public.tenant_connector_owner_type, uuid) TO authenticated, anon, service_role;
