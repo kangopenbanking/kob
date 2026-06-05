@@ -241,13 +241,14 @@ export default function GlobalReceivingAccount() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Default cash-out preference">
               <PreferenceTile
                 active={defaults.payout_preference === "KANG_WALLET"}
                 onClick={() => saveUserDefaults("KANG_WALLET", null)}
-                icon={<Wallet className="h-4 w-4" />}
+                icon={<Wallet className="h-4 w-4" aria-hidden="true" />}
                 title="Kang Wallet"
                 subtitle="XAF · instant"
+                ariaLabel="Cash out to Kang Wallet in XAF"
               />
               <PreferenceTile
                 active={defaults.payout_preference === "MOBILE_MONEY"}
@@ -258,9 +259,10 @@ export default function GlobalReceivingAccount() {
                     "";
                   if (phone) saveUserDefaults("MOBILE_MONEY", phone);
                 }}
-                icon={<Smartphone className="h-4 w-4" />}
+                icon={<Smartphone className="h-4 w-4" aria-hidden="true" />}
                 title="Mobile Money"
                 subtitle="MTN · Orange"
+                ariaLabel="Cash out to Mobile Money (MTN or Orange)"
               />
             </div>
 
