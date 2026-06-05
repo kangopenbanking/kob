@@ -47,7 +47,7 @@ describe("GlobalReceivingAccount RBAC smoke", () => {
         expect(supabase.functions.invoke).toHaveBeenCalledWith("nium-list-global-accounts"),
       );
       expect(await screen.findByText(/Receive worldwide/i)).toBeInTheDocument();
-      expect(await screen.findByText(/No global accounts yet/i)).toBeInTheDocument();
+      expect(await screen.findByText(/No accounts yet/i)).toBeInTheDocument();
     });
   }
 
