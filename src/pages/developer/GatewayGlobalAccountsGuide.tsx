@@ -15,6 +15,7 @@ export default function GatewayGlobalAccountsGuide() {
       level="Intermediate"
       toc={[
         { id: "overview", label: "Overview" },
+        { id: "access", label: "Accessing Global Accounts" },
         { id: "create", label: "Create account" },
         { id: "list", label: "List accounts" },
         { id: "preference", label: "Cash-out preference" },
@@ -51,6 +52,51 @@ export default function GatewayGlobalAccountsGuide() {
               </a>{" "}
               (paths <code>/v1/gateway/global-accounts*</code>).
             </p>
+          </CardContent>
+        </Card>
+      </GuideSectionBlock>
+
+      <GuideSectionBlock id="access" title="Accessing Global Accounts">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Where to find it</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-3">
+            <div>
+              <strong className="text-foreground">Developer Portal:</strong> sidebar &rarr;
+              {" "}<em>Payment Gateway &rarr; Global Accounts (Nium)</em>, or open{" "}
+              <a className="text-primary underline" href="/developer/gateway/global-accounts">
+                /developer/gateway/global-accounts
+              </a>{" "}(public — no login required, per Order P1).
+            </div>
+            <div>
+              <strong className="text-foreground">Consumer mobile app:</strong>{" "}
+              <em>More &rarr; Quick Actions &rarr; Global Accounts</em>, or
+              <em> More &rarr; Utilities &rarr; Global Accounts</em>, or
+              <em> Linked Accounts &rarr; Global Receiving Accounts</em>.
+            </div>
+            <div>
+              <strong className="text-foreground">Deep link (web + Capacitor):</strong>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li><code>https://kob.lovable.app/global-accounts</code> &rarr; redirects to <code>/app/global-accounts</code></li>
+                <li><code>https://kob.lovable.app/app/global-accounts</code> (canonical consumer route)</li>
+                <li><code>https://kob.lovable.app/developer/global-accounts</code> &rarr; redirects to the developer guide</li>
+              </ul>
+            </div>
+            <div>
+              <strong className="text-foreground">Required permissions / scopes</strong>
+              <table className="mt-2 w-full text-xs border border-border rounded">
+                <thead className="bg-muted">
+                  <tr><th className="text-left p-2">Action</th><th className="text-left p-2">Audience</th><th className="text-left p-2">OAuth scope</th><th className="text-left p-2">Auth</th></tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-border"><td className="p-2">View docs</td><td className="p-2">Anyone</td><td className="p-2">—</td><td className="p-2">None</td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Create / list account</td><td className="p-2">Consumer</td><td className="p-2"><code>global_accounts:write</code></td><td className="p-2">Bearer access token</td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Update payout preference</td><td className="p-2">Consumer (account owner)</td><td className="p-2"><code>global_accounts:write</code></td><td className="p-2">Bearer + PIN (financial gate)</td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Webhook ingestion</td><td className="p-2">Nium → KOB</td><td className="p-2">—</td><td className="p-2">HMAC-SHA256 (<code>x-nium-signature</code>)</td></tr>
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </GuideSectionBlock>

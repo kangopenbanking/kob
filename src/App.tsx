@@ -1595,6 +1595,9 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
             <Route path="/banking-app/*" element={<Navigate to="/apps" replace />} />
+            {/* Deep link: /global-accounts → consumer app Global Accounts page (web + mobile/Capacitor). */}
+            <Route path="/global-accounts" element={<Navigate to="/app/global-accounts" replace />} />
+            <Route path="/developer/global-accounts" element={<Navigate to="/developer/gateway/global-accounts" replace />} />
             {/* Banking App PWA Routes */}
             <Route path="/bank/:institutionId" element={<BankSplash />} />
             <Route path="/bank/:institutionId/auth" element={<BankAuth />} />
