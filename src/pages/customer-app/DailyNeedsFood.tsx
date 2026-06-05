@@ -238,7 +238,48 @@ export default function DailyNeedsFood() {
             )}
           </div>
         ) : (
-          <div className="grid gap-3">{visible.map((s) => <StoreCard key={s.id} store={s} />)}</div>
+        <div className="grid gap-3">{visible.map((s) => <StoreCard key={s.id} store={s} />)}</div>
+
+        <HowItWorksFlow
+          title="How Food ordering works"
+          steps={[
+            {
+              icon: Star,
+              title: "Pick a restaurant",
+              description: "Browse nearby restaurants, filter by cuisine, rating, or delivery time. Check reviews and pick your favourite.",
+              color: "hsl(25, 90%, 93%)",
+              iconColor: "hsl(25, 90%, 45%)",
+            },
+            {
+              icon: Soup,
+              title: "Browse the menu",
+              description: "Explore dishes, read descriptions, and add items to your cart. Customise portions or extras when available.",
+              color: "hsl(25, 90%, 93%)",
+              iconColor: "hsl(25, 90%, 45%)",
+            },
+            {
+              icon: ShoppingCart,
+              title: "Review your cart",
+              description: "Double-check your order, apply any vouchers, and see the total with delivery fee before confirming.",
+              color: "hsl(25, 90%, 93%)",
+              iconColor: "hsl(25, 90%, 45%)",
+            },
+            {
+              icon: CreditCard,
+              title: "Pay securely",
+              description: "Pay with your KOB wallet, linked card, or mobile money. All transactions are encrypted and instant.",
+              color: "hsl(25, 90%, 93%)",
+              iconColor: "hsl(25, 90%, 45%)",
+            },
+            {
+              icon: Bike,
+              title: "Track & receive",
+              description: "Follow your order from kitchen prep to doorstep. Confirm delivery with your one-time code and enjoy your meal.",
+              color: "hsl(25, 90%, 93%)",
+              iconColor: "hsl(25, 90%, 45%)",
+            },
+          ]}
+        />
         )}
       </div>
     </div>
