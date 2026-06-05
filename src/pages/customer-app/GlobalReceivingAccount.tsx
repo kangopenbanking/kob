@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { DateRangePicker, type DateRange } from "@/components/ui/date-range-picker";
+import { subDays, startOfDay, endOfDay } from "date-fns";
 import {
   Globe2,
   Copy,
@@ -95,6 +97,14 @@ export default function GlobalReceivingAccount() {
   });
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
 
+  // Activity feed: date-range filter + pagination
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  });
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityPageSize, setActivityPageSize] = useState(10);
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase.functions.invoke("nium-list-global-accounts");
@@ -157,6 +167,24 @@ export default function GlobalReceivingAccount() {
     [payments],
   );
 
+  const filteredPayments = useMemo(() => {
+    const from = dateRange.from.getTime();
+    const to = dateRange.to.getTime();
+    return payments.filter((p) => {
+      const t = new Date(p.created_at).getTime();
+      return t >= from && t <= to;
+    });
+  }, [payments, dateRange]);
+
+  const pagedPayments = useMemo(() => {
+    const start = (activityPage - 1) * activityPageSize;
+    return filteredPayments.slice(start, start + activityPageSize);
+  }, [filteredPayments, activityPage, activityPageSize]);
+
+  useEffect(() => {
+    setActivityPage(1);
+  }, [dateRange, activityPageSize]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
       {/* Hero */}
@@ -213,13 +241,14 @@ export default function GlobalReceivingAccount() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Default cash-out preference">
               <PreferenceTile
                 active={defaults.payout_preference === "KANG_WALLET"}
                 onClick={() => saveUserDefaults("KANG_WALLET", null)}
-                icon={<Wallet className="h-4 w-4" />}
+                icon={<Wallet className="h-4 w-4" aria-hidden="true" />}
                 title="Kang Wallet"
                 subtitle="XAF · instant"
+                ariaLabel="Cash out to Kang Wallet in XAF"
               />
               <PreferenceTile
                 active={defaults.payout_preference === "MOBILE_MONEY"}
@@ -230,9 +259,10 @@ export default function GlobalReceivingAccount() {
                     "";
                   if (phone) saveUserDefaults("MOBILE_MONEY", phone);
                 }}
-                icon={<Smartphone className="h-4 w-4" />}
+                icon={<Smartphone className="h-4 w-4" aria-hidden="true" />}
                 title="Mobile Money"
                 subtitle="MTN · Orange"
+                ariaLabel="Cash out to Mobile Money (MTN or Orange)"
               />
             </div>
 
@@ -264,25 +294,40 @@ export default function GlobalReceivingAccount() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {(Object.keys(CURRENCY_META) as Currency[]).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setNewCurrency(c)}
-                  className={cn(
-                    "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
-                    newCurrency === c
-                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                      : "border-border/60 hover:border-border",
-                  )}
-                >
-                  <div className="text-xl leading-none">{CURRENCY_META[c].flag}</div>
-                  <div className="mt-2 text-sm font-semibold">{c}</div>
-                  <div className="text-[10px] text-muted-foreground leading-tight">
-                    {CURRENCY_META[c].region}
-                  </div>
-                </button>
-              ))}
+            <div
+              className="grid grid-cols-3 gap-2"
+              role="radiogroup"
+              aria-label="New global account currency"
+            >
+              {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
+                const selected = newCurrency === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    aria-label={`${CURRENCY_META[c].label} (${c})`}
+                    onClick={() => setNewCurrency(c)}
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                      "contrast-more:border-foreground",
+                      selected
+                        ? "border-primary bg-primary/5 ring-2 ring-primary/20 contrast-more:bg-primary/20"
+                        : "border-border/60 hover:border-border",
+                    )}
+                  >
+                    <div className="text-xl leading-none" aria-hidden="true">
+                      {CURRENCY_META[c].flag}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold">{c}</div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">
+                      {CURRENCY_META[c].region}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             <Button
@@ -338,51 +383,89 @@ export default function GlobalReceivingAccount() {
 
         {/* Activity */}
         {payments.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Recent activity
-            </h2>
+          <section className="space-y-3" aria-labelledby="activity-heading">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1">
+              <h2
+                id="activity-heading"
+                className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+              >
+                Recent activity
+              </h2>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-full sm:w-auto"
+              />
+            </div>
             <Card className="border-border/60 shadow-sm overflow-hidden">
-              <CardContent className="p-0 divide-y divide-border/60">
-                {payments.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 p-4">
-                    <div className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <ArrowDownLeft className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
-                        +{p.source_amount.toLocaleString()} {p.source_currency}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        · {p.routing === "KANG_WALLET" ? "Wallet" : "Mobile Money"}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold">
-                        {p.xaf_net_credited.toLocaleString()} XAF
-                      </div>
-                      <Badge
-                        variant={
-                          p.status === "credited" || p.status === "payout_completed"
-                            ? "default"
-                            : "outline"
-                        }
-                        className="mt-0.5 text-[10px] h-4 px-1.5"
-                      >
-                        {p.status === "payout_completed" && (
-                          <CheckCircle2 className="h-3 w-3 mr-0.5" />
-                        )}
-                        {p.status}
-                      </Badge>
-                    </div>
+              <CardContent className="p-0">
+                {filteredPayments.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    No activity in the selected range.
                   </div>
-                ))}
+                ) : (
+                  <ul
+                    className="divide-y divide-border/60"
+                    aria-label="Incoming global account payments"
+                  >
+                    {pagedPayments.map((p) => (
+                      <li key={p.id} className="flex items-center gap-3 p-4">
+                        <div
+                          className="h-9 w-9 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0"
+                          aria-hidden="true"
+                        >
+                          <ArrowDownLeft className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">
+                            +{p.source_amount.toLocaleString()} {p.source_currency}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <time dateTime={p.created_at}>
+                              {new Date(p.created_at).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </time>{" "}
+                            · {p.routing === "KANG_WALLET" ? "Wallet" : "Mobile Money"}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold">
+                            {p.xaf_net_credited.toLocaleString()} XAF
+                          </div>
+                          <Badge
+                            variant={
+                              p.status === "credited" || p.status === "payout_completed"
+                                ? "default"
+                                : "outline"
+                            }
+                            className="mt-0.5 text-[10px] h-4 px-1.5"
+                            aria-label={`Status: ${p.status}`}
+                          >
+                            {p.status === "payout_completed" && (
+                              <CheckCircle2 className="h-3 w-3 mr-0.5" aria-hidden="true" />
+                            )}
+                            {p.status}
+                          </Badge>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {filteredPayments.length > 0 && (
+                  <div className="border-t border-border/60">
+                    <DataTablePagination
+                      page={activityPage}
+                      pageSize={activityPageSize}
+                      totalCount={filteredPayments.length}
+                      onPageChange={setActivityPage}
+                      onPageSizeChange={setActivityPageSize}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
@@ -418,20 +501,28 @@ function PreferenceTile({
   icon,
   title,
   subtitle,
+  ariaLabel,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
+  ariaLabel?: string;
 }) {
   return (
     <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      aria-label={ariaLabel ?? title}
       onClick={onClick}
       className={cn(
         "rounded-xl border p-3 text-left transition-all active:scale-[0.98]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "contrast-more:border-foreground",
         active
-          ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+          ? "border-primary bg-primary/5 ring-2 ring-primary/20 contrast-more:bg-primary/20"
           : "border-border/60 hover:border-border",
       )}
     >
@@ -441,10 +532,13 @@ function PreferenceTile({
             "h-7 w-7 rounded-lg flex items-center justify-center",
             active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
           )}
+          aria-hidden="true"
         >
           {icon}
         </div>
-        {active && <CheckCircle2 className="h-4 w-4 text-primary ml-auto" />}
+        {active && (
+          <CheckCircle2 className="h-4 w-4 text-primary ml-auto" aria-hidden="true" />
+        )}
       </div>
       <div className="mt-2 text-sm font-semibold">{title}</div>
       <div className="text-[11px] text-muted-foreground">{subtitle}</div>
@@ -542,8 +636,13 @@ function DetailRow({
 }) {
   return (
     <button
+      type="button"
       onClick={onCopy}
-      className="w-full flex items-center justify-between gap-2 -mx-1 px-1 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left group"
+      aria-label={`Copy ${label}: ${value}`}
+      className={cn(
+        "w-full flex items-center justify-between gap-2 -mx-1 px-1 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left group",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+      )}
     >
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -551,7 +650,10 @@ function DetailRow({
         </div>
         <div className="font-mono text-sm truncate">{value}</div>
       </div>
-      <div className="h-7 w-7 rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors shrink-0">
+      <div
+        className="h-7 w-7 rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors shrink-0"
+        aria-hidden="true"
+      >
         <Copy className="h-3.5 w-3.5" />
       </div>
     </button>
