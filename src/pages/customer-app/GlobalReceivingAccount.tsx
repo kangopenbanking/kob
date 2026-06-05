@@ -157,12 +157,20 @@ export default function GlobalReceivingAccount() {
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth?.user) return;
+      setUserId(auth.user.id);
       const { data: prof } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("id", auth.user.id)
         .maybeSingle();
       setKycName(prof?.full_name?.trim() || "");
+      const { data: openReq } = await supabase
+        .from("nium_name_correction_requests")
+        .select("id")
+        .eq("user_id", auth.user.id)
+        .eq("status", "pending")
+        .maybeSingle();
+      setPendingCorrection(!!openReq);
     })();
   }, []);
 
