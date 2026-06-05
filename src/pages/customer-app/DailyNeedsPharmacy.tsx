@@ -153,71 +153,52 @@ export default function DailyNeedsPharmacy() {
           </TabsContent>
         </Tabs>
 
-        {/* How the Pharmacy module works — guide */}
-        <section
-          aria-labelledby="pharmacy-guide-title"
-          className="mt-6 rounded-2xl border bg-card p-4 shadow-sm"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="size-8 rounded-xl bg-[hsl(160,65%,40%)]/10 text-[hsl(160,65%,40%)] flex items-center justify-center">
-              <Info className="size-4" strokeWidth={2} />
-            </div>
-            <h2 id="pharmacy-guide-title" className="text-sm font-bold">
-              How the Pharmacy module works
-            </h2>
-          </div>
+        <HowItWorksFlow
+          title="How Pharmacy works"
+          steps={[
+            {
+              icon: Pill,
+              title: "Choose a pharmacy",
+              description: "Browse nearby pharmacies, filter by OTC or Prescription, and pick one with good ratings and fast prep time.",
+              color: "hsl(160, 65%, 90%)",
+              iconColor: "hsl(160, 65%, 35%)",
+            },
+            {
+              icon: PackageCheck,
+              title: "Add items to your cart",
+              description: "OTC items can be added freely. Prescription items will be flagged with a badge and require approval.",
+              color: "hsl(160, 65%, 90%)",
+              iconColor: "hsl(160, 65%, 35%)",
+            },
+            {
+              icon: Camera,
+              title: "Upload your prescription",
+              description: "At checkout, upload a clear photo or PDF of a valid prescription (max 8 MB). One file covers all Rx items in the order.",
+              color: "hsl(160, 65%, 90%)",
+              iconColor: "hsl(160, 65%, 35%)",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Pharmacist review",
+              description: "A licensed pharmacist verifies your prescription. You'll be notified once it's approved — or contacted if anything is missing.",
+              color: "hsl(160, 65%, 90%)",
+              iconColor: "hsl(160, 65%, 35%)",
+            },
+            {
+              icon: Bike,
+              title: "Delivered to your door",
+              description: "After approval, your order is prepared and dispatched. Track the rider live and confirm delivery with your one-time code.",
+              color: "hsl(160, 65%, 90%)",
+              iconColor: "hsl(160, 65%, 35%)",
+            },
+          ]}
+        />
 
-          <ol className="space-y-3">
-            {[
-              {
-                icon: Pill,
-                title: "1. Choose a pharmacy",
-                desc: "Browse nearby pharmacies, filter by OTC or Prescription, and pick one with good ratings and fast prep time.",
-              },
-              {
-                icon: PackageCheck,
-                title: "2. Add items to your cart",
-                desc: "OTC items can be added freely. Prescription items will be flagged with a badge and require approval.",
-              },
-              {
-                icon: Camera,
-                title: "3. Upload your prescription",
-                desc: "At checkout, upload a clear photo or PDF of a valid prescription (max 8 MB). One file covers all Rx items in the order.",
-              },
-              {
-                icon: ShieldCheck,
-                title: "4. Pharmacist review",
-                desc: "A licensed pharmacist verifies your prescription. You'll be notified once it's approved — or contacted if anything is missing.",
-              },
-              {
-                icon: Bike,
-                title: "5. Delivered to your door",
-                desc: "After approval, your order is prepared and dispatched. Track the rider live and confirm delivery with your one-time code.",
-              },
-            ].map((step) => {
-              const Icon = step.icon;
-              return (
-                <li key={step.title} className="flex gap-3">
-                  <div className="size-9 rounded-xl bg-muted text-foreground/80 flex items-center justify-center shrink-0">
-                    <Icon className="size-4" strokeWidth={2} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold leading-tight">{step.title}</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
-                      {step.desc}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-
-          <div className="mt-4 rounded-xl bg-muted/60 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
-            Safety first: never share your prescription with third parties. If you experience a medical
-            emergency, call your local emergency services immediately — this service is not a substitute
-            for professional medical advice.
-          </div>
-        </section>
+        <div className="rounded-xl bg-muted/60 px-3 py-2.5 text-[11px] text-muted-foreground leading-relaxed">
+          Safety first: never share your prescription with third parties. If you experience a medical
+          emergency, call your local emergency services immediately — this service is not a substitute
+          for professional medical advice.
+        </div>
       </div>
     </div>
   );
