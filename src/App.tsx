@@ -1098,6 +1098,7 @@ function App() {
               <Route path="turnstile-monitor" element={<AdminTurnstileMonitor />} />
               <Route path="statement-fees" element={<AdminStatementFees />} />
               <Route path="nium-fee-settings" element={<AdminNiumFeeSettings />} />
+              <Route path="nium-name-corrections" element={<AdminNiumNameCorrections />} />
 
               <Route path="institution-api-keys" element={<AdminInstitutionApiKeys />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
