@@ -59,11 +59,9 @@ Deno.serve(async (req) => {
 
   // Resolve beneficiary name from the verified KYC profile ONLY.
   const { data: profile } = await svc.from("profiles")
-    .select("full_name, first_name, last_name, kyc_status")
+    .select("full_name, kyc_status")
     .eq("id", userId).maybeSingle();
-  const beneficiary = (profile?.full_name
-    ?? [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim()
-    ?? "").trim();
+  const beneficiary = (profile?.full_name ?? "").trim();
   if (!beneficiary) {
     return json({
       error: "kyc_name_required",
