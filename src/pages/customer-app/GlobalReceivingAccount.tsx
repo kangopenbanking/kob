@@ -167,6 +167,24 @@ export default function GlobalReceivingAccount() {
     [payments],
   );
 
+  const filteredPayments = useMemo(() => {
+    const from = dateRange.from.getTime();
+    const to = dateRange.to.getTime();
+    return payments.filter((p) => {
+      const t = new Date(p.created_at).getTime();
+      return t >= from && t <= to;
+    });
+  }, [payments, dateRange]);
+
+  const pagedPayments = useMemo(() => {
+    const start = (activityPage - 1) * activityPageSize;
+    return filteredPayments.slice(start, start + activityPageSize);
+  }, [filteredPayments, activityPage, activityPageSize]);
+
+  useEffect(() => {
+    setActivityPage(1);
+  }, [dateRange, activityPageSize]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
       {/* Hero */}
