@@ -1,10 +1,10 @@
 {
   "info": {
     "_postman_id": "kob-api-v4.50.0",
-    "name": "Kang Open Banking API v4.49.0",
+    "name": "Kang Open Banking API v4.50.0",
     "description": "Auto-generated from OpenAPI 4.50.0.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.\n\nIncludes Nium-powered global virtual accounts (USD/EUR/GBP) — see the 'Global Accounts (Nium)' folder.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "4.49.0"
+    "version": "4.50.0"
   },
   "item": [
     {

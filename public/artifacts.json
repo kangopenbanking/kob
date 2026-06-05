@@ -1,6 +1,6 @@
 {
   "ssot": {
-    "apiVersion": "4.49.0",
+    "apiVersion": "4.50.0",
     "sdkVersions": {
       "node": "1.6.1",
       "python": "1.6.1",

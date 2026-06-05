@@ -79,6 +79,7 @@ const navSections = [
       { title: "Refunds & Reversals", path: "/developer/gateway/refunds" },
       { title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" },
       { title: "Virtual Accounts", path: "/developer/gateway/virtual-accounts" },
+      { title: "Global Accounts (Nium)", path: "/developer/gateway/global-accounts" },
     ],
   },
   {
