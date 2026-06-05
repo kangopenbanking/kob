@@ -33,6 +33,7 @@ import {
   type NiumPopCode,
 } from "@/constants/nium-compliance";
 import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
+import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectionDialog";
 
 type Currency = "USD" | "EUR" | "GBP";
 
