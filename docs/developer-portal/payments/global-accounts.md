@@ -181,3 +181,51 @@ No code change is required to switch — only environment variables.
 - Changelog: [v4.50.0](../../changelog.md#v4-50-0)
 - Fee Management: [docs](/admin/fee-management)
 - Mobile Money payouts (Flutterwave): [Payouts](./payouts.md)
+
+---
+
+## 5. Transaction preview — double-spread FX transparency
+
+Before flipping a user's `payout_preference` to `MOBILE_MONEY`, fetch an
+indicative XAF quote so the user sees gross → Nium FX → KOB spread → MoMo fee
+→ Net XAF before confirming.
+
+```bash
+curl -X POST https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/nium-quote-payout \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"source_amount":100,"source_currency":"USD","routing":"MOBILE_MONEY"}'
+```
+
+```javascript
+const { data } = await fetch(`${KOB_BASE}/nium-quote-payout`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  body: JSON.stringify({ source_amount: 100, source_currency: 'USD', routing: 'MOBILE_MONEY' }),
+}).then(r => r.json());
+console.log('Net XAF:', data.xaf_net_credited);
+```
+
+```python
+r = requests.post(
+    f"{KOB_BASE}/nium-quote-payout",
+    headers={"Authorization": f"Bearer {token}"},
+    json={"source_amount": 100, "source_currency": "USD", "routing": "MOBILE_MONEY"},
+)
+print("Net XAF:", r.json()["xaf_net_credited"])
+```
+
+### Response
+
+| Field | Meaning |
+|---|---|
+| `fx_rate_nium` | Live Nium FX rate (USD/EUR/GBP → XAF). |
+| `fx_spread_bps` | KOB platform spread in basis points (default 75 = 0.75%). |
+| `xaf_gross` | `source_amount × fx_rate_nium`. |
+| `xaf_spread_revenue` | Platform revenue from the FX spread. |
+| `xaf_withdrawal_fee` | Mobile Money fee (0 when `routing=KANG_WALLET`). |
+| `xaf_net_credited` | What the user actually receives. |
+| `expires_at` | Quote validity (60 s — indicative only). |
+
+The same math is executed by `nium-webhook` on every real settlement, so the
+preview is byte-for-byte parity with what the user will receive.
