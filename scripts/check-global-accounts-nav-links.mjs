@@ -93,11 +93,14 @@ function resolves(p) {
   return false;
 }
 
+// Scope to the Global-Accounts feature surface (and its sibling transfer
+// surfaces explicitly named alongside Global Accounts in the sidebars).
+const SCOPE = /(global-accounts|payouts|beneficiaries|gateway\/global|transfers?\b)/i;
 const broken = [];
 for (const c of candidates) {
-  // Skip external schemes / fragments / non-path tokens
   if (!c.startsWith("/")) continue;
   if (c === "/" || c.length < 2) continue;
+  if (!SCOPE.test(c)) continue;
   if (!resolves(c)) broken.push(c);
 }
 
