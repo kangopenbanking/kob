@@ -688,6 +688,7 @@ const CustomerPiggyBank = lazy(() => import("./pages/customer-app/CustomerPiggyB
 const CustomerNjangi = lazy(() => import("./pages/customer-app/CustomerNjangi"));
 const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRentReporting"));
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
+const GlobalReceivingAccount = lazy(() => import("./pages/customer-app/GlobalReceivingAccount"));
 // Daily Needs (Food + Pharmacy)
 const DailyNeedsLayout = lazy(() => import("./pages/customer-app/DailyNeedsLayout"));
 const DailyNeedsHome = lazy(() => import("./pages/customer-app/DailyNeedsHome"));
@@ -1665,6 +1666,7 @@ function App() {
               <Route path="help" element={<CustomerHelp />} />
               <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />
               <Route path="fund" element={<CustomerFundWallet />} />
+              <Route path="global-accounts" element={<GlobalReceivingAccount />} />
               <Route path="travel" element={<CustomerTravelCategories />} />
               <Route path="travel/:category" element={<CustomerTravelAgencies />} />
               <Route path="travel/:category/:serviceId" element={<CustomerTravelTrips />} />
