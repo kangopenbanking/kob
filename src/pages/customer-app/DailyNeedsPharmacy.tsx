@@ -18,6 +18,7 @@ import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
+import { useHowItWorksSteps } from "@/hooks/useHowItWorksSteps";
 
 type TabKey = "all" | "otc" | "rx";
 
