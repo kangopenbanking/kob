@@ -9,8 +9,15 @@ from .types import (
 )
 from .phase3 import MerchantOps
 from .qr import qr
+from .global_accounts import (
+    GlobalAccountsResource,
+    NiumGlobalAccount,
+    NiumIncomingPayment,
+    PayoutPreference,
+    GlobalAccountCurrency,
+)
 
-__version__ = "1.6.2"
+__version__ = "1.7.0"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",
@@ -19,4 +26,6 @@ __all__ = [
     "ChargeChannel", "ChargeStatus",
     "MerchantOps",
     "qr",
+    "GlobalAccountsResource", "NiumGlobalAccount", "NiumIncomingPayment",
+    "PayoutPreference", "GlobalAccountCurrency",
 ]
