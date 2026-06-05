@@ -676,10 +676,9 @@ const CustomerHome: React.FC = () => {
 
 
           const renderDailyNeeds = () => (
-            <motion.button
+            <motion.div
               key="daily-needs"
-              whileTap={{ scale: 0.97 }}
-              onClick={goDailyNeeds}
+              whileTap={{ scale: 0.99 }}
               className="group relative w-[88%] sm:w-[90%] flex-shrink-0 snap-center min-h-[280px] overflow-hidden rounded-3xl text-left shadow-lg"
             >
               <img src={dnBg} alt={tr('Daily Needs')} className="absolute inset-0 h-full w-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = travelCardBg; }} />
@@ -710,18 +709,29 @@ const CustomerHome: React.FC = () => {
                     })}
                   </div>
                 </div>
-                <div className="mt-5 inline-block">
-                  <div
-                    className="flex items-center gap-4 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors"
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={goDailyNeeds}
+                    className="flex items-center gap-2 rounded-2xl px-3 py-2 text-xs backdrop-blur-sm transition-colors hover:brightness-110"
                     style={{ backgroundColor: dn.button_bg_color && dn.button_bg_color !== '#ffffff' && dn.button_bg_color.toLowerCase() !== 'white' ? dn.button_bg_color : 'hsl(25, 90%, 55%)' }}
                   >
                     <span className="font-bold text-white">{dn.button_text}</span>
                     <ChevronRight className="h-4 w-4 text-white/90 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
-                  </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSellDailyOpen(true)}
+                    className="flex items-center gap-2 rounded-2xl bg-[hsl(160,60%,55%)] px-3 py-2 text-xs text-[hsl(220,25%,14%)] transition-colors hover:brightness-110"
+                  >
+                    <Store className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    <span className="font-bold">{tr('Start Selling')}</span>
+                  </button>
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
           );
+
 
           const slides: Record<'travel' | 'daily_needs', () => JSX.Element> = {
             travel: renderTravel,
