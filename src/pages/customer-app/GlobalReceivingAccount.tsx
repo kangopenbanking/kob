@@ -636,8 +636,13 @@ function DetailRow({
 }) {
   return (
     <button
+      type="button"
       onClick={onCopy}
-      className="w-full flex items-center justify-between gap-2 -mx-1 px-1 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left group"
+      aria-label={`Copy ${label}: ${value}`}
+      className={cn(
+        "w-full flex items-center justify-between gap-2 -mx-1 px-1 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left group",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+      )}
     >
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
@@ -645,7 +650,10 @@ function DetailRow({
         </div>
         <div className="font-mono text-sm truncate">{value}</div>
       </div>
-      <div className="h-7 w-7 rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors shrink-0">
+      <div
+        className="h-7 w-7 rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors shrink-0"
+        aria-hidden="true"
+      >
         <Copy className="h-3.5 w-3.5" />
       </div>
     </button>
