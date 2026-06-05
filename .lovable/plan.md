@@ -1,81 +1,73 @@
-# Nium Global Virtual Accounts — Implementation Plan
+# Nium Global Accounts — Compliance & Transparency Hardening
 
-## Audit findings
+## Phase 1 — Audit Findings
 
-- **No existing edge function** serves the legacy `/v1/gateway/virtual-accounts` paths; only `gateway-query` exposes read-only `list-virtual-accounts` / `get-virtual-account` against an existing `gateway_virtual_accounts` table (NGN/Wema/Flutterwave model).
-- **Flutterwave payout rails** are already in place (`gateway-create-payout`, `flutterwave-bank-transfer`, `gateway-webhook-flutterwave`). I will reuse, not replace.
-- **Fee Management System** lives in `src/lib/fee-management` + the `fee_categories`/`fee_structures` tables with 49 category check-constraints. I will add 2 new categories (`nium_withdrawal`, `nium_fx_spread`) — additive only.
-- **Ledger**: existing double-entry engine (`gateway-fund-account`, escrow wallets, MOD-97 tracking). I will only write through existing helpers, never invent new ledger primitives.
-- **OpenAPI** at v4.49.0. Per Standing Orders, all changes are additive → **minor bump to v4.50.0**.
+Already in place (no rebuild needed):
+- Edge functions: `nium-create-global-account`, `nium-list-global-accounts`, `nium-update-payout-preference`, `nium-webhook`.
+- DB: `nium_global_accounts`, `nium_incoming_payments` with FX, spread, fee, routing columns; `profiles.payout_preference` + `payout_channel` (cascade default).
+- Webhook computes Nium FX rate + `nium_fx_spread` (bps) + `nium_withdrawal` fee, credits XAF, triggers Flutterwave MoMo when routed.
+- Legacy `/v1/gateway/virtual-accounts` (Wema/NGN) is untouched.
+- SDKs (node/python/php) + `docs/developer-portal/payments/global-accounts.md` already shipped against OpenAPI v4.50.0.
 
-## Build order (5 phases, each independently shippable)
+Gaps vs. directive:
+1. No hardcoded BEAC PoP constants; `beneficiary_name` accepts free-text override in create endpoint.
+2. No KYC-name enforcement — should be pulled from verified `profiles.full_name` / `kyc_verifications`, free-text rejected.
+3. Webhook returns net XAF in payload but the UI has no pre-cashout "Transaction Preview" (gross → Nium FX → KOB spread → MoMo fee → net XAF) endpoint or modal.
+4. Legacy endpoint is live but not marked `deprecated: true` with `sunset` in `public/openapi.json`.
+5. Frontend onboarding does not capture `default_payout_method`; account create UI lacks the non-dismissible exact-name warning.
+6. CHANGELOG + developer guide need a v4.50.1 entry covering PoP lock, KYC name lock, FX preview, legacy deprecation.
 
-### Phase 1 — Database foundation (1 migration)
+## Phase 2 — Implementation Plan
 
-New tables (all with GRANTs + RLS + `SECURITY DEFINER` helpers per DB Hardening order):
+### 2.1 Constants (additive, no breaking change)
+- New file `src/constants/nium-compliance.ts`:
+  - `NIUM_POP_CODES = { SOFTWARE_DIGITAL_SERVICES: "Software/Digital Services", ROYALTIES: "Royalties" } as const`
+  - `NiumPopCode` union type, `ALLOWED_NIUM_POP_CODES` array, helper `assertAllowedPopCode()`.
+- Mirror in edge runtime: `supabase/functions/_shared/nium-compliance.ts` (Deno-safe copy) imported by `nium-create-global-account` and `nium-webhook`.
 
-- `nium_global_accounts` — user_id, nium_customer_hash_id, nium_account_id, currency (USD/EUR/GBP), iban, account_number, routing_code, bic, bank_name, beneficiary_name, status, payout_preference_override (nullable enum), payout_channel_override, created_at.
-- `nium_incoming_payments` — idempotency on `nium_transaction_id`, source_amount, source_currency, fx_rate_nium, fx_spread_bps, xaf_credited, xaf_fee, xaf_spread_revenue, routing (`KANG_WALLET`|`MOBILE_MONEY`), ledger_tx_ref, flutterwave_payout_id, status, raw_payload jsonb.
-- Add `payout_preference` (`KANG_WALLET` default) + `payout_channel` (nullable phone) to `profiles`.
-- New fee categories: `nium_withdrawal` (XAF flat + %), `nium_fx_spread` (bps markup).
+### 2.2 Database (additive only — Standing Order 4)
+Single migration:
+- `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS default_payout_method text` with CHECK in (`KANG_WALLET`,`MOBILE_MONEY`) and backfill from existing `payout_preference`. Keep `payout_preference` for backward compat (no rename — Standing Order 1).
+- `ALTER TABLE public.nium_global_accounts ADD COLUMN IF NOT EXISTS pop_code text NOT NULL DEFAULT 'Software/Digital Services'` with CHECK in the two allowed values.
+- `ALTER TABLE public.nium_incoming_payments ADD COLUMN IF NOT EXISTS pop_code text`.
+- No new public tables → no new GRANT block required.
 
-### Phase 2 — Backend services (edge functions)
+### 2.3 Edge functions
+- `nium-create-global-account/index.ts`:
+  - Reject any `beneficiary_name` in the request body (return 400 `beneficiary_name_override_forbidden`). // COMPLIANCE CHECK: strict name matching.
+  - Resolve beneficiary from `profiles.full_name` (fallback `kyc_verifications.full_name` where `status='approved'`); 409 if KYC not approved.
+  - Accept optional `pop_code` (default `Software/Digital Services`); validate against `ALLOWED_NIUM_POP_CODES`. // COMPLIANCE CHECK: BEAC PoP.
+  - Persist `pop_code`; forward to Nium adapter call.
+- `nium-webhook/index.ts`:
+  - Carry account's `pop_code` onto each `nium_incoming_payments` row.
+  - No behaviour change to FX math (already correct); add `xaf_net_credited` and `fx_rate_effective` to the webhook response payload that the preview endpoint will reuse.
+- New function `nium-quote-payout` (GET): given `{ source_amount, source_currency, route?: KANG_WALLET|MOBILE_MONEY, msisdn? }`, returns `{ fx_rate_nium, spread_bps, xaf_gross, xaf_spread_revenue, xaf_withdrawal_fee, xaf_net_credited, expires_at }`. Shares FX/fee helpers with the webhook (extract into `_shared/nium-fx.ts`).
 
-- `_shared/nium-client.ts` — typed client with `NIUM_MODE=stub|live` switch. Stub returns deterministic fake IBAN/USD account so the full flow is testable today. Live mode reads `NIUM_API_KEY`, `NIUM_CLIENT_ID`, `NIUM_BASE_URL`.
-- `nium-create-global-account` (POST) — auth required, creates Nium customer + account, persists mapping, returns IBAN/USD details.
-- `nium-list-global-accounts` (GET) — per-user.
-- `nium-update-payout-preference` (PATCH) — user-level default OR per-VA override.
-- `nium-webhook` — public, HMAC-SHA256 verified against `NIUM_WEBHOOK_SECRET`, idempotent on `nium_transaction_id`. On `payment_incoming`:
-  1. Look up VA → user.
-  2. Resolve effective routing (VA override → user default → KANG_WALLET).
-  3. Compute `xaf_gross = source_amount * nium_rate * (1 - spread_bps/10000)` and capture spread as revenue.
-  4. If KANG_WALLET → credit user XAF via existing ledger helper.
-  5. If MOBILE_MONEY → call `gateway-fee-estimate` for `nium_withdrawal`, deduct, then invoke existing `gateway-create-payout` (Flutterwave MoMo). Ledger entries: Dr Nium suspense / Cr User wallet / Cr fee revenue / Cr spread revenue, then Dr User / Cr MoMo float on payout success.
-  6. Always 200 to Nium after persistence; payout dispatch is async via existing retry worker.
+### 2.4 Frontend (`src/pages/customer-app/GlobalReceivingAccount.tsx` + onboarding)
+- Generate-account flow: remove the (currently hidden) name input; show read-only `Beneficiary: {profile.full_name}` plus a persistent `Alert` banner (non-dismissible) — copy: *"Your YouTube/TikTok/Adsense profile must match this exact name or the payment will be rejected."*
+- Add `PopCodeSelect` (two options only). Default `Software/Digital Services`.
+- New `TransactionPreview` modal triggered before any cash-out: calls `nium-quote-payout`, renders gross → Nium FX → KOB spread → MoMo fee → **Net XAF** with disclosure tooltip; Confirm button disabled until preview loads.
+- Onboarding (search for existing payout-preference step under `src/pages/customer-app/onboarding*` / `OnboardingPayoutPreference`): add `default_payout_method` selector wired to `nium-update-payout-preference` with `scope: 'user'`.
 
-### Phase 3 — Frontend (Customer App)
+### 2.5 OpenAPI / docs (Standing Orders 1, 2, 6, 7; P7, P10)
+- `public/openapi.json` + `.yaml`:
+  - Add `deprecated: true` and `x-sunset: 2027-01-01` on all `/v1/gateway/virtual-accounts*` operations. Leave operationIds untouched.
+  - Add `pop_code` enum + `default_payout_method` to relevant schemas; add new `/v1/gateway/global-accounts/quote` operation.
+  - Bump `info.version` to **4.50.1**; mirror in `src/config/version.ts` (`KOB_API_VERSION`, `KOB_POSTMAN_VERSION`, `KOB_SPEC_DATE`) and `public/changelog.json`.
+- `docs/developer-portal/payments/global-accounts.md`: add PoP-code section, exact-name notice, `/quote` example in cURL/Node/Python (Order P9).
+- `public/sdk-downloads/CHANGELOG-{node,python,php}.md` + root `CHANGELOG.md`: v4.50.1 entry — BEAC PoP lock, KYC name lock, FX preview, legacy VA deprecated. Cite **BEAC Règlement 02/18/CEMAC/UMAC/CM** in audit trail comment (Standing Order 3).
 
-- New page `src/pages/customer-app/GlobalReceivingAccount.tsx`:
-  - Empty state CTA "Generate Global Receiving Account".
-  - List of VAs with copy-to-clipboard IBAN/account/routing.
-  - Routing preference selector (radio: Kang Wallet / Mobile Money + phone field) — saves user default and per-VA override.
-  - Incoming payments history table from `nium_incoming_payments`.
-- Link from `CustomerHome` "Receive money internationally" card.
+### 2.6 Tests
+- Vitest: reject free-text `beneficiary_name`; reject unknown PoP; quote endpoint math parity with webhook.
+- Playwright (`e2e/authenticated/global-accounts.spec.ts` already exists): add preview-modal flow and exact-name warning visibility.
 
-### Phase 4 — Documentation & SDK
+## Technical Notes
+- No renames, no removals (Standing Orders 1 & 4). All schema/spec changes are additive; legacy NGN endpoints keep working.
+- Patch bump 4.50.0 → 4.50.1 (Standing Order 6 — additive + deprecation flag only).
+- Shared FX helper extracted so quote and webhook can never drift.
+- RLS unchanged (no new tables).
 
-- `public/openapi.json` + `openapi.yaml` + sandbox copies → add 4 new operations under `/v1/gateway/global-accounts`. Bump `info.version` to `4.50.0`. Cite FAPI 1.0 + RFC 8259. No removals → no allowlist change needed.
-- `public/CHANGELOG.md` + `public/changelog.json` → entry `v4.50.0 — Nium Global Virtual Accounts`, `breaking_changes: false`, list new ops + new fee categories + deprecation notice for legacy NGN endpoints (sunset date 90 days out per Standing Order 1).
-- New guide: `docs/developer-portal/payments/global-accounts.md` with cURL + Node.js + Python examples (Standing Order P9, P5 — runnable against stub sandbox).
-- New page: `src/pages/developer/GatewayGlobalAccountsGuide.tsx` mirroring `GatewayVirtualAccountsGuide` pattern.
-- SDK resources: add `GlobalAccountsResource` to `packages/sdk-node`, `sdk-python`, `sdk-php` (mirroring existing `PayoutsResource` shape). Bump SDK versions.
-
-### Phase 5 — Tests & gates
-
-- Vitest: `nium-webhook.test.ts` — signature verify, idempotency, KANG_WALLET path, MOBILE_MONEY path, fee deduction math, spread revenue capture.
-- Direct-backend-guard, openapi-parity, no-double-v1, version-sync — all existing CI gates must still pass.
-- Postman collection regenerated for v4.50.0.
-
-## Technical details
-
-- **Stub-first**: `NIUM_MODE` defaults to `stub`. Going live = setting 3 secrets + flipping the env var; no code change.
-- **Spread default**: 75 bps (configurable via `fee_structures` row, not hardcoded).
-- **Idempotency**: webhook uses `nium_transaction_id` as unique key + row-level `FOR UPDATE` lock per memory rules.
-- **Legacy `/v1/gateway/virtual-accounts`**: untouched in this release. Deprecation header (`Sunset:`) added in a follow-up minor; removal requires v5.0.0 per Standing Order 1.
-- **RLS**: `nium_global_accounts` — owner-only via `auth.uid() = user_id`; admin via `has_role(auth.uid(),'admin')`. `nium_incoming_payments` — same. Service role full access for the webhook + payout worker.
-
-## Out of scope (explicit)
-
-- KYC uplift for Nium customer creation (assumes existing KOB KYC tier is sufficient; will add a TODO + admin alert if Nium returns KYC_REQUIRED).
-- Multi-currency sub-balances (rejected — using "Nium FX + spread at credit time").
-- Removing or renaming legacy NGN VA endpoints (forbidden without v5 bump).
-
-## Deliverable order
-
-1. Migration (Phase 1) — requires your approval before running.
-2. Edge functions + nium-client stub (Phase 2).
-3. Frontend page (Phase 3).
-4. OpenAPI + changelog + SDK + docs (Phase 4).
-5. Tests (Phase 5).
-
-Approve and I'll start with the migration.
+## Files Touched
+- New: `src/constants/nium-compliance.ts`, `supabase/functions/_shared/nium-compliance.ts`, `supabase/functions/_shared/nium-fx.ts`, `supabase/functions/nium-quote-payout/index.ts`, `src/components/global-accounts/TransactionPreview.tsx`, `src/components/global-accounts/PopCodeSelect.tsx`.
+- Edited: `supabase/functions/nium-create-global-account/index.ts`, `supabase/functions/nium-webhook/index.ts`, `src/pages/customer-app/GlobalReceivingAccount.tsx`, onboarding payout step, `public/openapi.{json,yaml}`, `public/changelog.json`, `src/config/version.ts`, `docs/developer-portal/payments/global-accounts.md`, `CHANGELOG.md`, SDK changelogs, vitest + Playwright specs.
+- Migration: single additive ALTER for `profiles`, `nium_global_accounts`, `nium_incoming_payments`.

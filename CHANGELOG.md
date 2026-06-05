@@ -1,6 +1,6 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.50.0** · Last updated: **2026-06-05**
+Current API version: **4.50.1** · Last updated: **2026-06-05**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
@@ -10,8 +10,39 @@ Current API version: **4.50.0** · Last updated: **2026-06-05**
 
 ---
 
+## 4.50.1 — 2026-06-05
+**Type:** patch · **Breaking changes:** none
+
+BEAC / COBAC compliance hardening on Nium Global Accounts. Additive: hardcoded Purpose-of-Payment whitelist, strict KYC name matching on account creation, double-spread FX transparency endpoint, exact-name UI warning. Legacy `/v1/gateway/virtual-accounts` (NGN/Wema) is now flagged `deprecated: true` (sunset 2027-01-01). No operationIds renamed or removed (Standing Order 1).
+
+### Highlights
+- `POST /v1/gateway/global-accounts` now **rejects** free-text `beneficiary_name` (HTTP 400 `beneficiary_name_override_forbidden`). The beneficiary is pulled from the verified KYC profile only.
+- New optional `pop_code` enum on account creation, locked to `"Software/Digital Services"` or `"Royalties"` (BEAC Règlement 02/18/CEMAC/UMAC/CM).
+- New `POST /v1/gateway/global-accounts/quote` — returns gross → Nium FX → KOB spread → MoMo fee → Net XAF for any (currency, amount, route). Shares math with the live webhook.
+- `profiles.default_payout_method` (KANG_WALLET | MOBILE_MONEY) backfilled from existing `payout_preference`; cascade resolution (account override > user default > KANG_WALLET) unchanged.
+- Customer App `/app/global-accounts`: non-dismissible exact-name warning, BEAC PoP picker, live Transaction Preview component.
+- Legacy `/v1/gateway/virtual-accounts*` operations marked `deprecated: true` + `x-sunset: 2027-01-01`. Endpoints continue to function unchanged until then.
+
+### Standards
+- BEAC Règlement 02/18/CEMAC/UMAC/CM
+- FAPI 1.0 Advanced §5.2.2
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+
+---
+
 ## 4.50.0 — 2026-06-05
 **Type:** minor · **Breaking changes:** none
+
+Nium-powered Global Virtual Accounts. Additive endpoints under /v1/gateway/global-accounts that issue real USD/EUR/GBP receiving accounts, settle inbound funds in XAF via Nium FX + configurable spread, and route to either the Kang Wallet or Mobile Money (Flutterwave). Legacy /v1/gateway/virtual-accounts (NGN/Wema) unchanged in this release.
+
+### Highlights
+- POST /v1/gateway/global-accounts — provision USD/EUR/GBP virtual account; idempotent per (user, currency).
+- GET  /v1/gateway/global-accounts — list accounts, recent incoming payments, user payout defaults.
+- PATCH /v1/gateway/global-accounts/payout-preference — set user-level default or per-account override (KANG_WALLET | MOBILE_MONEY).
+- POST /v1/gateway/global-accounts/webhook — Nium → KOB incoming-payment webhook, HMAC-SHA256 signed (`x-nium-signature`), idempotent on `transactionId`.
+- Fee Management: 2 new transaction_types — `nium_fx_spread` (default 75 bps) and `nium_withdrawal` (1% + 100 XAF, min 200 XAF), both editable via Admin > Fee Management.
+- Stub mode: NIUM_MODE=stub (default) returns deterministic fake IBAN/USD/GBP details with reference XAF rates so the entire flow is testable without Nium credentials. Switch to `live` by setting NIUM_API_KEY, NIUM_CLIENT_ID, NIUM_BASE_URL, NIUM_WEBHOOK_SECRET.
+- Customer App: new page /app/global-accounts to generate accounts, copy bank details, and pick a cash-out preference per account.
 
 Nium-powered Global Virtual Accounts. Additive endpoints under /v1/gateway/global-accounts that issue real USD/EUR/GBP receiving accounts, settle inbound funds in XAF via Nium FX + configurable spread, and route to either the Kang Wallet or Mobile Money (Flutterwave). Legacy /v1/gateway/virtual-accounts (NGN/Wema) unchanged in this release.
 

@@ -17654,6 +17654,7 @@ export type Database = {
           nium_customer_hash_id: string | null
           payout_channel_override: string | null
           payout_preference_override: string | null
+          pop_code: string
           routing_code: string | null
           status: string
           updated_at: string
@@ -17674,6 +17675,7 @@ export type Database = {
           nium_customer_hash_id?: string | null
           payout_channel_override?: string | null
           payout_preference_override?: string | null
+          pop_code?: string
           routing_code?: string | null
           status?: string
           updated_at?: string
@@ -17694,6 +17696,7 @@ export type Database = {
           nium_customer_hash_id?: string | null
           payout_channel_override?: string | null
           payout_preference_override?: string | null
+          pop_code?: string
           routing_code?: string | null
           status?: string
           updated_at?: string
@@ -17713,6 +17716,7 @@ export type Database = {
           ledger_tx_ref: string | null
           nium_transaction_id: string
           payout_channel: string | null
+          pop_code: string | null
           raw_payload: Json
           routing: string
           source_amount: number
@@ -17736,6 +17740,7 @@ export type Database = {
           ledger_tx_ref?: string | null
           nium_transaction_id: string
           payout_channel?: string | null
+          pop_code?: string | null
           raw_payload: Json
           routing: string
           source_amount: number
@@ -17759,6 +17764,7 @@ export type Database = {
           ledger_tx_ref?: string | null
           nium_transaction_id?: string
           payout_channel?: string | null
+          pop_code?: string | null
           raw_payload?: Json
           routing?: string
           source_amount?: number
@@ -21178,6 +21184,7 @@ export type Database = {
           country_code: string | null
           created_at: string
           date_of_birth: string | null
+          default_payout_method: string
           email: string | null
           full_name: string | null
           gender: string | null
@@ -21214,6 +21221,7 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           date_of_birth?: string | null
+          default_payout_method?: string
           email?: string | null
           full_name?: string | null
           gender?: string | null
@@ -21250,6 +21258,7 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           date_of_birth?: string | null
+          default_payout_method?: string
           email?: string | null
           full_name?: string | null
           gender?: string | null

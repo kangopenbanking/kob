@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
     routing,
     payout_channel: routing === "MOBILE_MONEY" ? channel : null,
     status: initialStatus,
+    pop_code: ga.pop_code ?? null, // COMPLIANCE CHECK: carry BEAC PoP onto each settlement
     raw_payload: payload,
   }).select().single();
 

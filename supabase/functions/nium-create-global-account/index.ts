@@ -1,8 +1,13 @@
 // POST /functions/v1/nium-create-global-account
-// Auth: required. Body: { currency: "USD"|"EUR"|"GBP", beneficiary_name?: string }
+// Auth: required. Body: { currency: "USD"|"EUR"|"GBP", pop_code?: NiumPopCode }
 // Returns the persisted Nium global virtual account (IBAN/USD/GBP details).
+//
+// COMPLIANCE CHECK (Strict KYC name matching): beneficiary_name is ALWAYS
+// pulled from the verified KYC profile. Free-text overrides are FORBIDDEN.
+// COMPLIANCE CHECK (BEAC PoP): pop_code is locked to ALLOWED_NIUM_POP_CODES.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createGlobalAccount, NIUM_MODE, type NiumCurrency } from "../_shared/nium-client.ts";
+import { DEFAULT_NIUM_POP_CODE, isAllowedNiumPopCode } from "../_shared/nium-compliance.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,22 +30,44 @@ Deno.serve(async (req) => {
   if (claimsErr || !claims?.claims?.sub) return json({ error: "unauthorized" }, 401);
   const userId = claims.claims.sub as string;
 
-  let body: { currency?: NiumCurrency; beneficiary_name?: string };
+  let body: { currency?: NiumCurrency; pop_code?: string; beneficiary_name?: string };
   try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
+
+  // COMPLIANCE CHECK: reject ANY free-text beneficiary override.
+  if (body.beneficiary_name !== undefined) {
+    return json({
+      error: "beneficiary_name_override_forbidden",
+      message: "beneficiary_name is sourced from the verified KYC profile and cannot be overridden.",
+    }, 400);
+  }
+
   const currency = body.currency;
   if (!currency || !["USD", "EUR", "GBP"].includes(currency)) {
     return json({ error: "invalid_currency", message: "currency must be USD, EUR, or GBP" }, 400);
   }
 
+  // COMPLIANCE CHECK: BEAC Purpose-of-Payment whitelist.
+  const popCode = body.pop_code ?? DEFAULT_NIUM_POP_CODE;
+  if (!isAllowedNiumPopCode(popCode)) {
+    return json({
+      error: "pop_code_forbidden",
+      message: 'pop_code must be "Software/Digital Services" or "Royalties".',
+    }, 400);
+  }
+
   const svc = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  // Look up profile for beneficiary name
-  const { data: profile } = await svc.from("profiles").select("full_name, first_name, last_name, email").eq("id", userId).maybeSingle();
-  const beneficiary = body.beneficiary_name
-    ?? profile?.full_name
-    ?? [profile?.first_name, profile?.last_name].filter(Boolean).join(" ")
-    ?? profile?.email
-    ?? "KOB Account Holder";
+  // Resolve beneficiary name from the verified KYC profile ONLY.
+  const { data: profile } = await svc.from("profiles")
+    .select("full_name, kyc_status")
+    .eq("id", userId).maybeSingle();
+  const beneficiary = (profile?.full_name ?? "").trim();
+  if (!beneficiary) {
+    return json({
+      error: "kyc_name_required",
+      message: "Complete identity verification before generating a global account.",
+    }, 409);
+  }
 
   // Idempotency: if user already has an account in this currency, return it.
   const { data: existing } = await svc.from("nium_global_accounts").select("*")
@@ -67,6 +94,7 @@ Deno.serve(async (req) => {
     bank_name: nium.bank_name,
     bank_address: nium.bank_address,
     beneficiary_name: nium.beneficiary_name,
+    pop_code: popCode,
     mode: NIUM_MODE,
     status: "active",
   }).select().single();

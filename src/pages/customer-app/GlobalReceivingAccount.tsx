@@ -25,6 +25,14 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ShieldAlert } from "lucide-react";
+import {
+  ALLOWED_NIUM_POP_CODES,
+  DEFAULT_NIUM_POP_CODE,
+  type NiumPopCode,
+} from "@/constants/nium-compliance";
+import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
 
 type Currency = "USD" | "EUR" | "GBP";
 
@@ -113,6 +121,8 @@ export default function GlobalReceivingAccount() {
     payout_channel: null,
   });
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
+  const [popCode, setPopCode] = useState<NiumPopCode>(DEFAULT_NIUM_POP_CODE);
+  const [kycName, setKycName] = useState<string>("");
 
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subDays(new Date(), 29)),
@@ -139,12 +149,24 @@ export default function GlobalReceivingAccount() {
 
   useEffect(() => {
     load();
+    // Resolve the verified KYC name once for the exact-name banner.
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", auth.user.id)
+        .maybeSingle();
+      setKycName(prof?.full_name?.trim() || "");
+    })();
   }, []);
 
   const createAccount = async () => {
     setCreating(true);
+    // COMPLIANCE CHECK: do NOT send beneficiary_name (server pulls from KYC).
     const { data, error } = await supabase.functions.invoke("nium-create-global-account", {
-      body: { currency: newCurrency },
+      body: { currency: newCurrency, pop_code: popCode },
     });
     setCreating(false);
     if (error)
@@ -295,6 +317,55 @@ export default function GlobalReceivingAccount() {
         {/* New account — list style */}
         <section className="space-y-4" aria-labelledby="new-heading">
           <SectionTitle id="new-heading" title="New account" />
+
+          {/* COMPLIANCE CHECK: non-dismissible exact-name warning + BEAC PoP picker */}
+          <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/30">
+            <ShieldAlert className="h-4 w-4 text-amber-700 dark:text-amber-400" />
+            <AlertTitle className="text-amber-900 dark:text-amber-200">
+              Exact name required
+            </AlertTitle>
+            <AlertDescription className="text-amber-900/90 dark:text-amber-200/90">
+              Your YouTube, TikTok, Adsense or marketplace profile must match the verified
+              KYC name on this account exactly — otherwise the payment will be rejected by
+              the sending bank.
+              <div className="mt-2 rounded-md border border-amber-300/60 bg-background/60 px-3 py-2 text-foreground">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Beneficiary
+                </div>
+                <div className="font-semibold tabular-nums">
+                  {kycName || "Complete identity verification first"}
+                </div>
+              </div>
+              <fieldset className="mt-3 space-y-1.5">
+                <legend className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Purpose of payment (BEAC)
+                </legend>
+                <div className="grid grid-cols-2 gap-2">
+                  {ALLOWED_NIUM_POP_CODES.map((code) => (
+                    <label
+                      key={code}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-xs",
+                        popCode === code
+                          ? "border-foreground bg-background"
+                          : "border-amber-300/60 bg-background/60 hover:bg-background",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="account-pop"
+                        className="sr-only"
+                        checked={popCode === code}
+                        onChange={() => setPopCode(code)}
+                      />
+                      <span className="font-medium text-foreground">{code}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </AlertDescription>
+          </Alert>
+
           <Card className="border-border/60">
             <CardContent className="p-2 sm:p-3">
               <ul
@@ -376,6 +447,11 @@ export default function GlobalReceivingAccount() {
               </div>
             </CardContent>
           </Card>
+
+          <TransactionPreview
+            currency={newCurrency}
+            defaultRouting={defaults.payout_preference}
+          />
         </section>
 
         {/* Cash-out */}
