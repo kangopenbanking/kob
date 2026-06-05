@@ -19,6 +19,7 @@ import {
   ArrowDownLeft,
   CheckCircle2,
   Building2,
+  ChevronRight,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -56,10 +57,10 @@ type UserDefaults = {
   payout_channel: string | null;
 };
 
-const CURRENCY_META: Record<Currency, { flag: string; label: string; region: string }> = {
-  USD: { flag: "🇺🇸", label: "US Dollar", region: "United States" },
-  EUR: { flag: "🇪🇺", label: "Euro", region: "Eurozone" },
-  GBP: { flag: "🇬🇧", label: "British Pound", region: "United Kingdom" },
+const CURRENCY_META: Record<Currency, { symbol: string; label: string; region: string }> = {
+  USD: { symbol: "$", label: "US Dollar", region: "United States" },
+  EUR: { symbol: "€", label: "Euro", region: "Eurozone" },
+  GBP: { symbol: "£", label: "British Pound", region: "United Kingdom" },
 };
 
 export default function GlobalReceivingAccount() {
@@ -161,174 +162,192 @@ export default function GlobalReceivingAccount() {
   }, [dateRange, activityPageSize]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/60 bg-card">
-        <div className="container max-w-3xl py-6">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Globe2 className="h-3.5 w-3.5" />
+    <div className="min-h-screen bg-background antialiased">
+      {/* Header — Apple-style: tight kerning, generous space, single eyebrow */}
+      <header className="border-b border-border/60 bg-card/50 backdrop-blur">
+        <div className="container max-w-3xl py-10 sm:py-14">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            <Globe2 className="h-3 w-3" aria-hidden="true" />
             Global Accounts
           </div>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            Receive worldwide, one wallet
+          <h1 className="mt-3 text-4xl sm:text-5xl font-semibold tracking-[-0.022em] text-foreground">
+            Receive worldwide.
+            <br />
+            <span className="text-muted-foreground">Settle in XAF.</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            USD, EUR and GBP into real bank accounts. Settled to XAF instantly.
+          <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
+            Real bank accounts in USD, EUR and GBP. Funds arrive in your wallet
+            instantly.
           </p>
 
-          <div className="mt-5 grid grid-cols-3 gap-3">
+          <dl className="mt-10 grid grid-cols-3 divide-x divide-border/60 rounded-2xl border border-border/60 bg-background overflow-hidden">
             <Stat label="Accounts" value={String(accounts.length)} />
             <Stat label="Inflows" value={String(payments.length)} />
             <Stat
               label="Received"
-              value={`${(totalReceivedXAF / 1000).toFixed(1)}k XAF`}
+              value={`${(totalReceivedXAF / 1000).toFixed(1)}k`}
+              unit="XAF"
             />
-          </div>
+          </dl>
         </div>
       </header>
 
-      <main className="container max-w-3xl py-6 space-y-6">
-        {/* Cash-out preference */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">Cash-out</h2>
-              <p className="text-xs text-muted-foreground">
-                Where incoming funds land by default.
-              </p>
-            </div>
+      <main className="container max-w-3xl py-10 space-y-10">
+        {/* New account */}
+        <section className="space-y-4" aria-labelledby="new-heading">
+          <SectionTitle id="new-heading" title="New account" />
+          <Card className="border-border/60">
+            <CardContent className="p-6 space-y-5">
+              <div
+                className="grid grid-cols-3 gap-2"
+                role="radiogroup"
+                aria-label="New global account currency"
+              >
+                {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
+                  const selected = newCurrency === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${CURRENCY_META[c].label} (${c})`}
+                      onClick={() => setNewCurrency(c)}
+                      className={cn(
+                        "group rounded-2xl border p-4 text-left transition-all",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                        "contrast-more:border-foreground",
+                        selected
+                          ? "border-foreground bg-foreground/[0.04] contrast-more:bg-primary/20"
+                          : "border-border/60 hover:border-foreground/40",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-full font-semibold text-base transition-colors",
+                          selected
+                            ? "bg-foreground text-background"
+                            : "bg-muted text-foreground",
+                        )}
+                        aria-hidden="true"
+                      >
+                        {CURRENCY_META[c].symbol}
+                      </div>
+                      <div className="mt-3 text-base font-semibold tracking-tight">
+                        {c}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground leading-tight">
+                        {CURRENCY_META[c].region}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
 
-            <div
-              className="grid grid-cols-2 gap-2"
-              role="radiogroup"
-              aria-label="Default cash-out preference"
-            >
-              <PreferenceTile
-                active={defaults.payout_preference === "KANG_WALLET"}
-                onClick={() => saveUserDefaults("KANG_WALLET", null)}
-                icon={<Wallet className="h-4 w-4" aria-hidden="true" />}
-                title="Kang Wallet"
-                subtitle="XAF · instant"
-              />
-              <PreferenceTile
-                active={defaults.payout_preference === "MOBILE_MONEY"}
-                onClick={() => {
-                  const phone =
-                    defaults.payout_channel ??
-                    prompt("Mobile Money phone (e.g. 237677123456)") ??
-                    "";
-                  if (phone) saveUserDefaults("MOBILE_MONEY", phone);
-                }}
-                icon={<Smartphone className="h-4 w-4" aria-hidden="true" />}
-                title="Mobile Money"
-                subtitle="MTN · Orange"
-              />
-            </div>
+              <Button
+                onClick={createAccount}
+                disabled={creating}
+                size="lg"
+                className="w-full h-12 rounded-full text-[15px] font-medium"
+              >
+                {creating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                <span className="ml-2">Generate {newCurrency} account</span>
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
 
-            {defaults.payout_preference === "MOBILE_MONEY" && (
-              <div className="grid gap-2 pt-1">
-                <Label htmlFor="def-phone" className="text-xs">
-                  Phone
-                </Label>
-                <Input
-                  id="def-phone"
-                  placeholder="237677123456"
-                  defaultValue={defaults.payout_channel ?? ""}
-                  onBlur={(e) =>
-                    e.target.value && saveUserDefaults("MOBILE_MONEY", e.target.value)
-                  }
+        {/* Cash-out */}
+        <section className="space-y-4" aria-labelledby="cashout-heading">
+          <SectionTitle
+            id="cashout-heading"
+            title="Cash-out"
+            hint="Where incoming funds land."
+          />
+          <Card className="border-border/60">
+            <CardContent className="p-6 space-y-4">
+              <div
+                className="grid grid-cols-2 gap-2"
+                role="radiogroup"
+                aria-label="Default cash-out preference"
+              >
+                <PreferenceTile
+                  active={defaults.payout_preference === "KANG_WALLET"}
+                  onClick={() => saveUserDefaults("KANG_WALLET", null)}
+                  icon={<Wallet className="h-4 w-4" aria-hidden="true" />}
+                  title="Kang Wallet"
+                  subtitle="XAF · instant"
+                />
+                <PreferenceTile
+                  active={defaults.payout_preference === "MOBILE_MONEY"}
+                  onClick={() => {
+                    const phone =
+                      defaults.payout_channel ??
+                      prompt("Mobile Money phone (e.g. 237677123456)") ??
+                      "";
+                    if (phone) saveUserDefaults("MOBILE_MONEY", phone);
+                  }}
+                  icon={<Smartphone className="h-4 w-4" aria-hidden="true" />}
+                  title="Mobile Money"
+                  subtitle="MTN · Orange"
                 />
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Generate */}
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold">New account</h2>
-              <p className="text-xs text-muted-foreground">Pick a currency.</p>
-            </div>
-
-            <div
-              className="grid grid-cols-3 gap-2"
-              role="radiogroup"
-              aria-label="New global account currency"
-            >
-              {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
-                const selected = newCurrency === c;
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    aria-label={`${CURRENCY_META[c].label} (${c})`}
-                    onClick={() => setNewCurrency(c)}
-                    className={cn(
-                      "rounded-xl border p-3 text-left transition-colors",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                      "contrast-more:border-foreground",
-                      selected
-                        ? "border-primary bg-primary/5 contrast-more:bg-primary/20"
-                        : "border-border/60 hover:border-border",
-                    )}
-                  >
-                    <div className="text-xl leading-none" aria-hidden="true">
-                      {CURRENCY_META[c].flag}
-                    </div>
-                    <div className="mt-2 text-sm font-semibold">{c}</div>
-                    <div className="text-[10px] text-muted-foreground leading-tight">
-                      {CURRENCY_META[c].region}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <Button
-              onClick={createAccount}
-              disabled={creating}
-              size="lg"
-              className="w-full"
-            >
-              {creating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
+              {defaults.payout_preference === "MOBILE_MONEY" && (
+                <div className="grid gap-2 pt-1">
+                  <Label htmlFor="def-phone" className="text-xs">
+                    Phone
+                  </Label>
+                  <Input
+                    id="def-phone"
+                    placeholder="237677123456"
+                    defaultValue={defaults.payout_channel ?? ""}
+                    onBlur={(e) =>
+                      e.target.value && saveUserDefaults("MOBILE_MONEY", e.target.value)
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               )}
-              <span className="ml-2">Generate {newCurrency}</span>
-            </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Accounts */}
-        <section className="space-y-3" aria-labelledby="accounts-heading">
-          <div className="flex items-center justify-between px-1">
-            <h2
-              id="accounts-heading"
-              className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
-            >
-              Accounts
-            </h2>
-            {accounts.length > 0 && (
-              <span className="text-xs text-muted-foreground">{accounts.length} active</span>
-            )}
-          </div>
+        <section className="space-y-4" aria-labelledby="accounts-heading">
+          <SectionTitle
+            id="accounts-heading"
+            title="Your accounts"
+            trailing={
+              accounts.length > 0 ? (
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {accounts.length} active
+                </span>
+              ) : null
+            }
+          />
 
           {loading ? (
             <div className="space-y-3">
-              <Skeleton className="h-40 w-full rounded-2xl" />
-              <Skeleton className="h-40 w-full rounded-2xl" />
+              <Skeleton className="h-48 w-full rounded-2xl" />
+              <Skeleton className="h-48 w-full rounded-2xl" />
             </div>
           ) : accounts.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-10 text-center">
-                <Globe2 className="h-10 w-10 mx-auto text-muted-foreground/40" />
-                <p className="mt-3 text-sm font-medium">No global accounts yet</p>
-                <p className="text-xs text-muted-foreground">
-                  Generate one above to start receiving.
+            <Card className="border-dashed border-border/60">
+              <CardContent className="py-14 text-center">
+                <div
+                  className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
+                  aria-hidden="true"
+                >
+                  <Globe2 className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="mt-4 text-[15px] font-medium">No accounts yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Generate one to start receiving.
                 </p>
               </CardContent>
             </Card>
@@ -343,24 +362,19 @@ export default function GlobalReceivingAccount() {
 
         {/* Activity */}
         {payments.length > 0 && (
-          <section className="space-y-3" aria-labelledby="activity-heading">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1">
-              <h2
-                id="activity-heading"
-                className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
-              >
-                Activity
-              </h2>
+          <section className="space-y-4" aria-labelledby="activity-heading">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <SectionTitle id="activity-heading" title="Activity" />
               <DateRangePicker
                 value={dateRange}
                 onChange={setDateRange}
                 className="w-full sm:w-auto"
               />
             </div>
-            <Card className="overflow-hidden">
+            <Card className="border-border/60 overflow-hidden">
               <CardContent className="p-0">
                 {filteredPayments.length === 0 ? (
-                  <div className="p-6 text-center text-sm text-muted-foreground">
+                  <div className="p-8 text-center text-sm text-muted-foreground">
                     No activity in range.
                   </div>
                 ) : (
@@ -369,18 +383,21 @@ export default function GlobalReceivingAccount() {
                     aria-label="Incoming global account payments"
                   >
                     {pagedPayments.map((p) => (
-                      <li key={p.id} className="flex items-center gap-3 p-4">
+                      <li
+                        key={p.id}
+                        className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/40"
+                      >
                         <div
-                          className="h-9 w-9 rounded-full bg-muted text-foreground flex items-center justify-center shrink-0"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted"
                           aria-hidden="true"
                         >
                           <ArrowDownLeft className="h-4 w-4" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[15px] font-medium tracking-tight truncate">
                             +{p.source_amount.toLocaleString()} {p.source_currency}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="mt-0.5 text-xs text-muted-foreground">
                             <time dateTime={p.created_at}>
                               {new Date(p.created_at).toLocaleDateString(undefined, {
                                 month: "short",
@@ -393,7 +410,7 @@ export default function GlobalReceivingAccount() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold">
+                          <div className="text-[15px] font-semibold tabular-nums tracking-tight">
                             {p.xaf_net_credited.toLocaleString()} XAF
                           </div>
                           <Badge
@@ -402,11 +419,11 @@ export default function GlobalReceivingAccount() {
                                 ? "default"
                                 : "outline"
                             }
-                            className="mt-0.5 text-[10px] h-4 px-1.5"
+                            className="mt-1 h-4 px-1.5 text-[10px] font-medium"
                             aria-label={`Status: ${p.status}`}
                           >
                             {p.status === "payout_completed" && (
-                              <CheckCircle2 className="h-3 w-3 mr-0.5" aria-hidden="true" />
+                              <CheckCircle2 className="mr-0.5 h-3 w-3" aria-hidden="true" />
                             )}
                             {p.status}
                           </Badge>
@@ -435,11 +452,50 @@ export default function GlobalReceivingAccount() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function SectionTitle({
+  id,
+  title,
+  hint,
+  trailing,
+}: {
+  id?: string;
+  title: string;
+  hint?: string;
+  trailing?: React.ReactNode;
+}) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background p-3">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-semibold tracking-tight">{value}</div>
+    <div className="flex items-end justify-between gap-3 px-1">
+      <div>
+        <h2 id={id} className="text-xl font-semibold tracking-tight">
+          {title}
+        </h2>
+        {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
+      </div>
+      {trailing}
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  unit,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+}) {
+  return (
+    <div className="px-4 py-4">
+      <dt className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-1.5 flex items-baseline gap-1 text-2xl font-semibold tabular-nums tracking-tight">
+        {value}
+        {unit && (
+          <span className="text-[11px] font-medium text-muted-foreground">{unit}</span>
+        )}
+      </dd>
     </div>
   );
 }
@@ -465,29 +521,29 @@ function PreferenceTile({
       aria-label={title}
       onClick={onClick}
       className={cn(
-        "rounded-xl border p-3 text-left transition-colors",
+        "rounded-2xl border p-4 text-left transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "contrast-more:border-foreground",
         active
-          ? "border-primary bg-primary/5 contrast-more:bg-primary/20"
-          : "border-border/60 hover:border-border",
+          ? "border-foreground bg-foreground/[0.04] contrast-more:bg-primary/20"
+          : "border-border/60 hover:border-foreground/40",
       )}
     >
       <div className="flex items-center gap-2">
         <div
           className={cn(
-            "h-7 w-7 rounded-lg flex items-center justify-center",
-            active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+            "flex h-8 w-8 items-center justify-center rounded-full",
+            active ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
           )}
           aria-hidden="true"
         >
           {icon}
         </div>
         {active && (
-          <CheckCircle2 className="h-4 w-4 text-primary ml-auto" aria-hidden="true" />
+          <CheckCircle2 className="ml-auto h-4 w-4 text-foreground" aria-hidden="true" />
         )}
       </div>
-      <div className="mt-2 text-sm font-semibold">{title}</div>
+      <div className="mt-3 text-[15px] font-semibold tracking-tight">{title}</div>
       <div className="text-[11px] text-muted-foreground">{subtitle}</div>
     </button>
   );
@@ -502,58 +558,61 @@ function AccountCard({
 }) {
   const meta = CURRENCY_META[a.currency];
   return (
-    <Card className="border-border/60">
-      <div className="flex items-center justify-between border-b border-border/60 p-4">
-        <div className="flex items-center gap-3">
+    <Card className="border-border/60 transition-shadow hover:shadow-md">
+      <div className="flex items-center justify-between border-b border-border/60 p-5">
+        <div className="flex items-center gap-3.5">
           <div
-            className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xl"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-foreground text-background text-lg font-semibold"
             aria-hidden="true"
           >
-            {meta.flag}
+            {meta.symbol}
           </div>
           <div>
-            <div className="text-sm font-semibold">
+            <div className="text-[15px] font-semibold tracking-tight">
               {a.currency} · {meta.label}
             </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-              <Building2 className="h-3 w-3" />
+            <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+              <Building2 className="h-3 w-3" aria-hidden="true" />
               {a.bank_name}
             </div>
           </div>
         </div>
-        <Badge variant="outline">{a.mode}</Badge>
+        <Badge variant="outline" className="text-[10px] font-medium uppercase tracking-wider">
+          {a.mode}
+        </Badge>
       </div>
 
-      <CardContent className="p-4 space-y-3">
-        <div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+      <CardContent className="p-5 space-y-1">
+        <div className="pb-3">
+          <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
             Beneficiary
           </div>
-          <div className="text-sm font-medium">{a.beneficiary_name}</div>
+          <div className="mt-1 text-sm font-medium">{a.beneficiary_name}</div>
         </div>
 
-        <div className="h-px bg-border/60" />
+        <div className="-mx-2 divide-y divide-border/60">
+          {a.iban && <DetailRow label="IBAN" value={a.iban} onCopy={() => onCopy(a.iban, "IBAN")} />}
+          {a.account_number && (
+            <DetailRow
+              label="Account number"
+              value={a.account_number}
+              onCopy={() => onCopy(a.account_number, "Account")}
+            />
+          )}
+          {a.routing_code && (
+            <DetailRow
+              label="Routing / Sort code"
+              value={a.routing_code}
+              onCopy={() => onCopy(a.routing_code, "Routing")}
+            />
+          )}
+          {a.bic && (
+            <DetailRow label="BIC / SWIFT" value={a.bic} onCopy={() => onCopy(a.bic, "BIC")} />
+          )}
+        </div>
 
-        {a.iban && <DetailRow label="IBAN" value={a.iban} onCopy={() => onCopy(a.iban, "IBAN")} />}
-        {a.account_number && (
-          <DetailRow
-            label="Account number"
-            value={a.account_number}
-            onCopy={() => onCopy(a.account_number, "Account")}
-          />
-        )}
-        {a.routing_code && (
-          <DetailRow
-            label="Routing / Sort code"
-            value={a.routing_code}
-            onCopy={() => onCopy(a.routing_code, "Routing")}
-          />
-        )}
-        {a.bic && (
-          <DetailRow label="BIC / SWIFT" value={a.bic} onCopy={() => onCopy(a.bic, "BIC")} />
-        )}
         {a.bank_address && (
-          <p className="text-[11px] text-muted-foreground pt-1 leading-relaxed">
+          <p className="pt-3 text-[11px] leading-relaxed text-muted-foreground">
             {a.bank_address}
           </p>
         )}
@@ -577,18 +636,18 @@ function DetailRow({
       onClick={onCopy}
       aria-label={`Copy ${label}: ${value}`}
       className={cn(
-        "w-full flex items-center justify-between gap-2 -mx-1 px-1 py-1.5 rounded-lg hover:bg-muted/60 transition-colors text-left group",
+        "group flex w-full items-center justify-between gap-3 px-2 py-3 text-left transition-colors hover:bg-muted/50",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
       )}
     >
       <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
           {label}
         </div>
-        <div className="font-mono text-sm truncate">{value}</div>
+        <div className="mt-0.5 truncate font-mono text-sm">{value}</div>
       </div>
       <div
-        className="h-7 w-7 rounded-md bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary flex items-center justify-center transition-colors shrink-0"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors group-hover:bg-foreground group-hover:text-background"
         aria-hidden="true"
       >
         <Copy className="h-3.5 w-3.5" />
