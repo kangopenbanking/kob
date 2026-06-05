@@ -11,6 +11,10 @@ import {
   CupSoda,
   Salad,
   IceCream,
+  ShoppingCart,
+  CreditCard,
+  Bike,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
 
 type Sort = "rating" | "fastest" | "name";
 
