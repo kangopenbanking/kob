@@ -99,9 +99,21 @@ export default function AdminNiumNameCorrections() {
   };
 
   const sameAsMaker = !!(active && currentUserId && active.maker_id === currentUserId);
+  // COMPLIANCE CHECK: client-side RBAC mirrors server checks in
+  // `nium-request-name-correction`. Server is the source of truth.
+  const stageAllowed = stage === "maker" ? roles.canMaker : roles.canChecker;
 
   const submit = async () => {
     if (!active) return;
+    if (!stageAllowed) {
+      toast.error("Not authorised", {
+        description:
+          stage === "checker"
+            ? "Only admin checkers can approve or reject this request."
+            : "Only compliance officers or admins can record a maker proposal.",
+      });
+      return;
+    }
     if (stage === "checker" && sameAsMaker) {
       toast.error("Maker-checker violation", {
         description: "A different admin must perform the checker step.",
