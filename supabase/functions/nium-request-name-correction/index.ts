@@ -12,6 +12,22 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
+import { sendManagedEmail, getUserName, getUserEmail } from '../_shared/send-managed-email.ts';
+
+// Helpers: build the audit-friendly variable bundle for the lifecycle emails.
+async function resolveInstitutionName(admin: ReturnType<typeof createClient>, userId: string): Promise<string> {
+  try {
+    const { data: p } = await admin.from('profiles').select('institution_id').eq('id', userId).maybeSingle();
+    const iid = (p as any)?.institution_id;
+    if (!iid) return 'Kang Open Banking';
+    const { data: inst } = await admin.from('institutions').select('name').eq('id', iid).maybeSingle();
+    return (inst as any)?.name || 'Kang Open Banking';
+  } catch { return 'Kang Open Banking'; }
+}
+
+function shortId(uuid: string): string {
+  return uuid.slice(0, 8).toUpperCase();
+}
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -154,6 +170,25 @@ Deno.serve(async (req) => {
       `nium-name-correction-submitted-${inserted.id}`,
     );
 
+    // Managed-pipeline email (branded, queued, retried, suppression-aware).
+    const customerName = await getUserName(admin, user.id);
+    const institutionName = await resolveInstitutionName(admin, user.id);
+    await sendManagedEmail(admin, {
+      email_key: 'nium_name_correction_submitted',
+      recipient_user_id: user.id,
+      variables: {
+        customer_name: customerName,
+        request_id: inserted.id,
+        request_id_short: shortId(inserted.id),
+        submitted_at: new Date(inserted.created_at as string).toISOString(),
+        current_full_name: currentName || '—',
+        requested_full_name: p.requested_full_name,
+        document_type: p.document_type,
+        institution_name: institutionName,
+      },
+    });
+
+
     return json({ ok: true, request: inserted }, 201);
   }
 
@@ -244,11 +279,37 @@ Deno.serve(async (req) => {
       d.decision_note
         ? `Your request was not approved. Reviewer note: ${d.decision_note}`
         : 'Your name correction request was not approved. Please submit a new request with clearer government-issued documents.',
-      { request_id: reqRow.id, kind: 'nium_name_correction', stage: 'rejected' },
+      { request_id: reqRow.id, kind: 'nium_name_correction', stage: 'rejected', decision_note: d.decision_note ?? null },
       `nium-name-correction-rejected-${reqRow.id}`,
     );
+
+    const reviewedAt = new Date().toISOString();
+    const [customerName, makerName, checkerName, institutionName] = await Promise.all([
+      getUserName(admin, reqRow.user_id),
+      reqRow.maker_id ? getUserName(admin, reqRow.maker_id) : Promise.resolve('—'),
+      getUserName(admin, user.id),
+      resolveInstitutionName(admin, reqRow.user_id),
+    ]);
+    await sendManagedEmail(admin, {
+      email_key: 'nium_name_correction_rejected',
+      recipient_user_id: reqRow.user_id,
+      variables: {
+        customer_name: customerName,
+        request_id: reqRow.id,
+        request_id_short: shortId(reqRow.id),
+        submitted_at: new Date(reqRow.created_at).toISOString(),
+        maker_name: makerName,
+        maker_at: reqRow.maker_at ? new Date(reqRow.maker_at).toISOString() : '—',
+        checker_name: checkerName,
+        reviewed_at: reviewedAt,
+        institution_name: institutionName,
+        requested_full_name: reqRow.requested_full_name,
+        decision_note: d.decision_note ?? '(no note provided)',
+      },
+    });
     return json({ ok: true, status: 'rejected' });
   }
+
 
   // APPROVAL flow
   const newName = reqRow.requested_full_name as string;
@@ -324,6 +385,37 @@ Deno.serve(async (req) => {
     },
     `nium-name-correction-approved-${reqRow.id}`,
   );
+
+  const reviewedAt = new Date().toISOString();
+  const [customerName2, makerName2, checkerName2, institutionName2] = await Promise.all([
+    getUserName(admin, reqRow.user_id),
+    reqRow.maker_id ? getUserName(admin, reqRow.maker_id) : Promise.resolve('—'),
+    getUserName(admin, user.id),
+    resolveInstitutionName(admin, reqRow.user_id),
+  ]);
+  const closedNote = affected.length
+    ? `${affected.length} affected global receiving account(s) have been closed for re-issue in your new verified name.`
+    : 'No active global receiving accounts needed to be closed.';
+  await sendManagedEmail(admin, {
+    email_key: 'nium_name_correction_approved',
+    recipient_user_id: reqRow.user_id,
+    variables: {
+      customer_name: customerName2,
+      request_id: reqRow.id,
+      request_id_short: shortId(reqRow.id),
+      submitted_at: new Date(reqRow.created_at).toISOString(),
+      maker_name: makerName2,
+      maker_at: reqRow.maker_at ? new Date(reqRow.maker_at).toISOString() : '—',
+      checker_name: checkerName2,
+      reviewed_at: reviewedAt,
+      institution_name: institutionName2,
+      previous_full_name: reqRow.current_full_name || '—',
+      new_full_name: newName,
+      closed_accounts_note: closedNote,
+      closed_account_count: affected.length,
+    },
+  });
+
 
   return json({
     ok: true,
