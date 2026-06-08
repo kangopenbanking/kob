@@ -170,6 +170,25 @@ Deno.serve(async (req) => {
       `nium-name-correction-submitted-${inserted.id}`,
     );
 
+    // Managed-pipeline email (branded, queued, retried, suppression-aware).
+    const customerName = await getUserName(admin, user.id);
+    const institutionName = await resolveInstitutionName(admin, user.id);
+    await sendManagedEmail(admin, {
+      email_key: 'nium_name_correction_submitted',
+      recipient_user_id: user.id,
+      variables: {
+        customer_name: customerName,
+        request_id: inserted.id,
+        request_id_short: shortId(inserted.id),
+        submitted_at: new Date(inserted.created_at as string).toISOString(),
+        current_full_name: currentName || '—',
+        requested_full_name: p.requested_full_name,
+        document_type: p.document_type,
+        institution_name: institutionName,
+      },
+    });
+
+
     return json({ ok: true, request: inserted }, 201);
   }
 
