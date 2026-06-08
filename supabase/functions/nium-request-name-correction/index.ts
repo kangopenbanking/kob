@@ -279,11 +279,37 @@ Deno.serve(async (req) => {
       d.decision_note
         ? `Your request was not approved. Reviewer note: ${d.decision_note}`
         : 'Your name correction request was not approved. Please submit a new request with clearer government-issued documents.',
-      { request_id: reqRow.id, kind: 'nium_name_correction', stage: 'rejected' },
+      { request_id: reqRow.id, kind: 'nium_name_correction', stage: 'rejected', decision_note: d.decision_note ?? null },
       `nium-name-correction-rejected-${reqRow.id}`,
     );
+
+    const reviewedAt = new Date().toISOString();
+    const [customerName, makerName, checkerName, institutionName] = await Promise.all([
+      getUserName(admin, reqRow.user_id),
+      reqRow.maker_id ? getUserName(admin, reqRow.maker_id) : Promise.resolve('—'),
+      getUserName(admin, user.id),
+      resolveInstitutionName(admin, reqRow.user_id),
+    ]);
+    await sendManagedEmail(admin, {
+      email_key: 'nium_name_correction_rejected',
+      recipient_user_id: reqRow.user_id,
+      variables: {
+        customer_name: customerName,
+        request_id: reqRow.id,
+        request_id_short: shortId(reqRow.id),
+        submitted_at: new Date(reqRow.created_at).toISOString(),
+        maker_name: makerName,
+        maker_at: reqRow.maker_at ? new Date(reqRow.maker_at).toISOString() : '—',
+        checker_name: checkerName,
+        reviewed_at: reviewedAt,
+        institution_name: institutionName,
+        requested_full_name: reqRow.requested_full_name,
+        decision_note: d.decision_note ?? '(no note provided)',
+      },
+    });
     return json({ ok: true, status: 'rejected' });
   }
+
 
   // APPROVAL flow
   const newName = reqRow.requested_full_name as string;
