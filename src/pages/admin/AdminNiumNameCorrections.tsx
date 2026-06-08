@@ -17,9 +17,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ShieldCheck, CheckCircle2, XCircle, FileText, ExternalLink, UserCheck } from "lucide-react";
+import { Loader2, ShieldCheck, CheckCircle2, XCircle, FileText, ExternalLink, UserCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { useNameCorrectionRoles } from "@/hooks/useNameCorrectionRoles";
 
 interface CorrectionRequest {
   id: string;
