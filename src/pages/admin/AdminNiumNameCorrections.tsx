@@ -55,7 +55,8 @@ const STATUS_VARIANT: Record<string, { label: string; className: string }> = {
 export default function AdminNiumNameCorrections() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<CorrectionRequest[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const roles = useNameCorrectionRoles();
+  const currentUserId = roles.userId;
   const [tab, setTab] = useState<"pending" | "all">("pending");
   const [active, setActive] = useState<CorrectionRequest | null>(null);
   const [stage, setStage] = useState<"maker" | "checker">("maker");
