@@ -81,7 +81,6 @@ export default function AdminNiumNameCorrections() {
   };
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
     load();
   }, []);
 
