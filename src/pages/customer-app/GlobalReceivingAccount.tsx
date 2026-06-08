@@ -34,6 +34,7 @@ import {
 } from "@/constants/nium-compliance";
 import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
 import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectionDialog";
+import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
 
 type Currency = "USD" | "EUR" | "GBP";
 
