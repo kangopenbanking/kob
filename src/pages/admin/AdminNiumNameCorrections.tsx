@@ -253,38 +253,47 @@ export default function AdminNiumNameCorrections() {
                         </div>
                       )}
 
-                      {r.status === "pending" && (
-                        <div className="flex gap-2 pt-1">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              openReview(r);
-                              setDecision("approved");
-                            }}
-                            disabled={youAreMaker && !!r.maker_id}
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            {r.maker_id ? "Confirm (Checker)" : "Approve (Maker)"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              openReview(r);
-                              setDecision("rejected");
-                            }}
-                            disabled={youAreMaker && !!r.maker_id}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                          {youAreMaker && (
-                            <span className="text-xs text-muted-foreground self-center">
-                              Waiting for a second admin to confirm
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      {r.status === "pending" && (() => {
+                        const isCheckerStage = !!r.maker_id;
+                        const allowed = isCheckerStage ? roles.canChecker : roles.canMaker;
+                        const blockedByMakerLock = youAreMaker && isCheckerStage;
+                        const disabled = !allowed || blockedByMakerLock;
+                        return (
+                          <div className="flex gap-2 pt-1 flex-wrap items-center">
+                            <Button
+                              size="sm"
+                              onClick={() => { openReview(r); setDecision("approved"); }}
+                              disabled={disabled}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              {isCheckerStage ? "Confirm (Checker)" : "Approve (Maker)"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => { openReview(r); setDecision("rejected"); }}
+                              disabled={disabled}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                            {blockedByMakerLock && (
+                              <span className="text-xs text-muted-foreground">
+                                Waiting for a second admin to confirm
+                              </span>
+                            )}
+                            {!allowed && !roles.loading && (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                <Lock className="h-3 w-3" />
+                                {isCheckerStage
+                                  ? "Admin role required to confirm"
+                                  : "Compliance officer or admin role required"}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+
 
                       {r.status !== "pending" && r.decision_note && (
                         <div className="text-xs text-muted-foreground">
