@@ -344,6 +344,18 @@ export default function AdminNiumNameCorrections() {
                 </div>
               )}
 
+              {!stageAllowed && !roles.loading && (
+                <div className="text-xs rounded-md border border-rose-300 bg-rose-50 text-rose-900 p-2 flex items-start gap-2">
+                  <Lock className="h-3.5 w-3.5 mt-0.5" />
+                  <span>
+                    You do not have the required role for this step.{" "}
+                    {stage === "checker"
+                      ? "Only users with the admin role can finalize approve/reject."
+                      : "Only users with the compliance_officer or admin role can record a maker proposal."}
+                  </span>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   size="sm"
