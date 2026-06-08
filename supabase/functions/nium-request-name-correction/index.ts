@@ -157,14 +157,23 @@ Deno.serve(async (req) => {
     return json({ ok: true, request: inserted }, 201);
   }
 
-  // ── DECIDE (admin only) ───────────────────────────────────────────────────
-  const { data: isAdmin } = await admin.rpc('has_role', {
-    _user_id: user.id,
-    _role: 'admin',
-  });
-  if (!isAdmin) return json({ error: 'forbidden' }, 403);
-
+  // ── DECIDE (RBAC-gated) ───────────────────────────────────────────────────
+  // COMPLIANCE CHECK: strict RBAC — only `compliance_officer` (or admin) may
+  // act as MAKER; only `admin` may act as CHECKER (approve/reject).
   const d = parsed.data;
+  const [{ data: isAdmin }, { data: isCompliance }] = await Promise.all([
+    admin.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+    admin.rpc('has_role', { _user_id: user.id, _role: 'compliance_officer' }),
+  ]);
+
+  if (d.stage === 'maker' && !isAdmin && !isCompliance) {
+    return json({ error: 'forbidden_maker_role_required' }, 403);
+  }
+  if (d.stage === 'checker' && !isAdmin) {
+    // COMPLIANCE CHECK: only admin checkers can finalize approve/reject
+    return json({ error: 'forbidden_checker_admin_only' }, 403);
+  }
+
   const { data: reqRow, error: fetchErr } = await admin
     .from('nium_name_correction_requests')
     .select('*')
@@ -172,6 +181,7 @@ Deno.serve(async (req) => {
     .single();
   if (fetchErr || !reqRow) return json({ error: 'request_not_found' }, 404);
   if (reqRow.status !== 'pending') return json({ error: 'request_not_pending' }, 409);
+
 
   // ── MAKER STAGE: record proposal, no state change yet ──────────────────────
   if (d.stage === 'maker') {

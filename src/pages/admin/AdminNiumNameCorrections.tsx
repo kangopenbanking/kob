@@ -17,9 +17,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ShieldCheck, CheckCircle2, XCircle, FileText, ExternalLink, UserCheck } from "lucide-react";
+import { Loader2, ShieldCheck, CheckCircle2, XCircle, FileText, ExternalLink, UserCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { useNameCorrectionRoles } from "@/hooks/useNameCorrectionRoles";
 
 interface CorrectionRequest {
   id: string;
@@ -54,7 +55,8 @@ const STATUS_VARIANT: Record<string, { label: string; className: string }> = {
 export default function AdminNiumNameCorrections() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<CorrectionRequest[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const roles = useNameCorrectionRoles();
+  const currentUserId = roles.userId;
   const [tab, setTab] = useState<"pending" | "all">("pending");
   const [active, setActive] = useState<CorrectionRequest | null>(null);
   const [stage, setStage] = useState<"maker" | "checker">("maker");
@@ -79,7 +81,6 @@ export default function AdminNiumNameCorrections() {
   };
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
     load();
   }, []);
 
@@ -98,9 +99,21 @@ export default function AdminNiumNameCorrections() {
   };
 
   const sameAsMaker = !!(active && currentUserId && active.maker_id === currentUserId);
+  // COMPLIANCE CHECK: client-side RBAC mirrors server checks in
+  // `nium-request-name-correction`. Server is the source of truth.
+  const stageAllowed = stage === "maker" ? roles.canMaker : roles.canChecker;
 
   const submit = async () => {
     if (!active) return;
+    if (!stageAllowed) {
+      toast.error("Not authorised", {
+        description:
+          stage === "checker"
+            ? "Only admin checkers can approve or reject this request."
+            : "Only compliance officers or admins can record a maker proposal.",
+      });
+      return;
+    }
     if (stage === "checker" && sameAsMaker) {
       toast.error("Maker-checker violation", {
         description: "A different admin must perform the checker step.",
@@ -240,38 +253,47 @@ export default function AdminNiumNameCorrections() {
                         </div>
                       )}
 
-                      {r.status === "pending" && (
-                        <div className="flex gap-2 pt-1">
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              openReview(r);
-                              setDecision("approved");
-                            }}
-                            disabled={youAreMaker && !!r.maker_id}
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            {r.maker_id ? "Confirm (Checker)" : "Approve (Maker)"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              openReview(r);
-                              setDecision("rejected");
-                            }}
-                            disabled={youAreMaker && !!r.maker_id}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                          {youAreMaker && (
-                            <span className="text-xs text-muted-foreground self-center">
-                              Waiting for a second admin to confirm
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      {r.status === "pending" && (() => {
+                        const isCheckerStage = !!r.maker_id;
+                        const allowed = isCheckerStage ? roles.canChecker : roles.canMaker;
+                        const blockedByMakerLock = youAreMaker && isCheckerStage;
+                        const disabled = !allowed || blockedByMakerLock;
+                        return (
+                          <div className="flex gap-2 pt-1 flex-wrap items-center">
+                            <Button
+                              size="sm"
+                              onClick={() => { openReview(r); setDecision("approved"); }}
+                              disabled={disabled}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              {isCheckerStage ? "Confirm (Checker)" : "Approve (Maker)"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => { openReview(r); setDecision("rejected"); }}
+                              disabled={disabled}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                            {blockedByMakerLock && (
+                              <span className="text-xs text-muted-foreground">
+                                Waiting for a second admin to confirm
+                              </span>
+                            )}
+                            {!allowed && !roles.loading && (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                <Lock className="h-3 w-3" />
+                                {isCheckerStage
+                                  ? "Admin role required to confirm"
+                                  : "Compliance officer or admin role required"}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+
 
                       {r.status !== "pending" && r.decision_note && (
                         <div className="text-xs text-muted-foreground">
@@ -322,6 +344,18 @@ export default function AdminNiumNameCorrections() {
                 </div>
               )}
 
+              {!stageAllowed && !roles.loading && (
+                <div className="text-xs rounded-md border border-rose-300 bg-rose-50 text-rose-900 p-2 flex items-start gap-2">
+                  <Lock className="h-3.5 w-3.5 mt-0.5" />
+                  <span>
+                    You do not have the required role for this step.{" "}
+                    {stage === "checker"
+                      ? "Only users with the admin role can finalize approve/reject."
+                      : "Only users with the compliance_officer or admin role can record a maker proposal."}
+                  </span>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -358,10 +392,14 @@ export default function AdminNiumNameCorrections() {
             </Button>
             <Button
               onClick={submit}
-              disabled={submitting || (stage === "checker" && sameAsMaker)}
+              disabled={submitting || !stageAllowed || (stage === "checker" && sameAsMaker)}
             >
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {stage === "maker" ? "Record proposal" : `Confirm ${decision}`}
+              {!stageAllowed
+                ? "Not authorised"
+                : stage === "maker"
+                  ? "Record proposal"
+                  : `Confirm ${decision}`}
             </Button>
           </DialogFooter>
         </DialogContent>
