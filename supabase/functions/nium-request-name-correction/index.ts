@@ -12,6 +12,22 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
+import { sendManagedEmail, getUserName, getUserEmail } from '../_shared/send-managed-email.ts';
+
+// Helpers: build the audit-friendly variable bundle for the lifecycle emails.
+async function resolveInstitutionName(admin: ReturnType<typeof createClient>, userId: string): Promise<string> {
+  try {
+    const { data: p } = await admin.from('profiles').select('institution_id').eq('id', userId).maybeSingle();
+    const iid = (p as any)?.institution_id;
+    if (!iid) return 'Kang Open Banking';
+    const { data: inst } = await admin.from('institutions').select('name').eq('id', iid).maybeSingle();
+    return (inst as any)?.name || 'Kang Open Banking';
+  } catch { return 'Kang Open Banking'; }
+}
+
+function shortId(uuid: string): string {
+  return uuid.slice(0, 8).toUpperCase();
+}
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
