@@ -380,10 +380,14 @@ export default function AdminNiumNameCorrections() {
             </Button>
             <Button
               onClick={submit}
-              disabled={submitting || (stage === "checker" && sameAsMaker)}
+              disabled={submitting || !stageAllowed || (stage === "checker" && sameAsMaker)}
             >
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {stage === "maker" ? "Record proposal" : `Confirm ${decision}`}
+              {!stageAllowed
+                ? "Not authorised"
+                : stage === "maker"
+                  ? "Record proposal"
+                  : `Confirm ${decision}`}
             </Button>
           </DialogFooter>
         </DialogContent>
