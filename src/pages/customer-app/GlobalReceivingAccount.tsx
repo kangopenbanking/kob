@@ -718,6 +718,9 @@ export default function GlobalReceivingAccount() {
             </Card>
           </section>
         )}
+        <section className="mt-6">
+          <NameCorrectionUpdates userId={userId} />
+        </section>
       </main>
 
       <NameCorrectionDialog
