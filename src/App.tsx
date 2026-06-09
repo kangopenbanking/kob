@@ -79,6 +79,8 @@ const Register = lazy(() => import("./pages/Register"));
 const IntegrationWorkflow = lazy(() => import("./pages/IntegrationWorkflow"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Auth = lazy(() => import("./pages/Auth"));
+const EmailAuth = lazy(() => import("./pages/EmailAuth"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const OTPHealthCheck = lazy(() => import("./pages/OTPHealthCheck"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -1589,6 +1591,8 @@ function App() {
             <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="/auth/email" element={<Layout showFooter={false}><EmailAuth /></Layout>} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/otp-health" element={<Layout showFooter={false}><OTPHealthCheck /></Layout>} />
             <Route path="/staff-login" element={<StaffLogin />} />
             {/* Public Live Support — no account required */}
