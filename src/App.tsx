@@ -373,6 +373,8 @@ const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring")
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
 const AuditLogExplorer = lazy(() => import("./pages/admin/AuditLogExplorer"));
 const WebhookHealthDashboard = lazy(() => import("./pages/admin/WebhookHealthDashboard"));
+const RegistrationReviewQueue = lazy(() => import("./pages/admin/RegistrationReviewQueue"));
+const RegistrationFlowsDocs = lazy(() => import("./pages/developer/RegistrationFlowsDocs"));
 const DashboardRoutingAudit = lazy(() => import("./pages/admin/DashboardRoutingAudit"));
 const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
 const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
