@@ -739,6 +739,7 @@ export default function KYCVerificationReview() {
 
       {/* Document Preview Lightbox */}
       <DocumentPreviewLightbox url={previewUrl} label={previewLabel} onClose={() => setPreviewUrl(null)} />
+      <StepUpChallengeDialog {...stepUpDialogProps} />
     </div>
   );
 }
