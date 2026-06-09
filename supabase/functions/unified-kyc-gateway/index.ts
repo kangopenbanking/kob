@@ -246,13 +246,23 @@ function transformToYouverify(req: KycRequest): { path: string; body: Record<str
   }
 }
 
+// Known Youverify statuses. Any value outside this set is mapped to
+// `manual_review` and logged as `unmapped_yv_status` so admins can triage.
+const YV_APPROVED = new Set(["found", "approved", "verified", "successful", "success"]);
+const YV_REJECTED = new Set(["not_found", "rejected", "failed"]);
+const YV_PENDING = new Set(["pending", "in_progress"]);
+
 function transformFromYouverify(req: KycRequest, raw: Record<string, unknown>): KycResponse {
   const data = (raw.data ?? raw) as Record<string, unknown>;
   const status = String(data.status ?? raw.statusCode ?? "").toLowerCase();
-  let result: VerificationResult = "manual_review";
-  if (["found", "approved", "verified", "successful", "success"].includes(status)) result = "approved";
-  else if (["not_found", "rejected", "failed"].includes(status)) result = "rejected";
-  else if (["pending", "in_progress"].includes(status)) result = "pending";
+  let result: VerificationResult;
+  if (YV_APPROVED.has(status)) result = "approved";
+  else if (YV_REJECTED.has(status)) result = "rejected";
+  else if (YV_PENDING.has(status)) result = "pending";
+  else {
+    result = "manual_review";
+    logKyc({ event: "unmapped_yv_status", trace_id: req.trace_id, raw_status: status || "(empty)" });
+  }
   const risk = typeof data.riskScore === "number" ? data.riskScore as number : undefined;
   return {
     trace_id: req.trace_id,
