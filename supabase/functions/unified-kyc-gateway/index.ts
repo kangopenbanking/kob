@@ -315,6 +315,78 @@ async function writeAudit(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Persist Youverify session_id on kyc_verifications so async webhook can match
+// ─────────────────────────────────────────────────────────────────────────────
+function mapResultToStatus(r: VerificationResult): string {
+  if (r === "approved") return "approved";
+  if (r === "rejected") return "rejected";
+  // pending + manual_review both await an external decision
+  return "pending";
+}
+
+async function persistYouverifySession(
+  supabase: ReturnType<typeof createClient>,
+  req: KycRequest,
+  resp: KycResponse,
+): Promise<void> {
+  try {
+    const p = req.payload as Record<string, unknown>;
+    const status = mapResultToStatus(resp.result);
+    // Look for the most-recent row for this user we can update (pending or
+    // freshly-created). If none exists, insert a new one. The
+    // one_active_per_user partial unique index permits at most one
+    // pending/approved row, so we update in place when possible.
+    const { data: existing } = await supabase
+      .from("kyc_verifications")
+      .select("id, status")
+      .eq("user_id", req.user_id)
+      .in("status", ["pending"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("kyc_verifications")
+        .update({
+          youverify_session_id: resp.session_id!,
+          status,
+          verification_method: "youverify",
+          document_type: (p.document_type as string) ?? null,
+          document_number: (p.document_number as string) ?? null,
+          document_country: ((p.document_country ?? req.country) as string) ?? null,
+          verified_at: status === "approved" ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      return;
+    }
+
+    await supabase.from("kyc_verifications").insert({
+      user_id: req.user_id,
+      verification_type: "identity",
+      status,
+      verification_method: "youverify",
+      document_type: (p.document_type as string) ?? null,
+      document_number: (p.document_number as string) ?? null,
+      document_country: ((p.document_country ?? req.country) as string) ?? null,
+      document_front_url: (p.document_front_url as string) ?? null,
+      document_back_url: (p.document_back_url as string) ?? null,
+      selfie_url: (p.selfie_url as string) ?? null,
+      youverify_session_id: resp.session_id!,
+      verified_at: status === "approved" ? new Date().toISOString() : null,
+      source_app: (p.source_app as string) ?? "customer_app",
+      metadata: { trace_id: req.trace_id, provider: "youverify" },
+    });
+  } catch (err) {
+    // Persistence failure must not break the verification flow; webhook
+    // will simply have no row to match. The audit row still captures the
+    // attempt, and ops can backfill from the trace_id.
+    logKyc({ event: "persist_yv_session_failed", trace_id: req.trace_id, error: (err as Error).message });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Gateway orchestrator
 // ─────────────────────────────────────────────────────────────────────────────
 async function runVerification(
