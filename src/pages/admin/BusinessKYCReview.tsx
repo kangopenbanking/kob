@@ -140,9 +140,10 @@ export default function BusinessKYCReview() {
           institutionId = inst?.id || null;
         }
         const action = status === "approved" ? "approve" : "reject";
-        const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
+        const { data, error } = await runWithStepUp(() => supabase.functions.invoke("admin-kyb-verify", {
           body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
-        });
+        }));
+
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
       }
