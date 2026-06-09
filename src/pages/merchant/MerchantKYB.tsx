@@ -139,19 +139,71 @@ export default function MerchantKYB() {
     finally { setSubmitting(false); }
   };
 
+  // Build server-validated documents[] payload from the uploaded storage
+  // paths. The backend's validateKybDocuments() requires {type, url,
+  // mime_type, size_bytes} per entry; without this the submission is
+  // rejected as `invalid_documents`. We pull size + mime from Storage
+  // metadata so the client doesn't have to track it after upload.
+  const buildDocumentsPayload = async () => {
+    const entries: Array<[string, string]> = [
+      ["registration_certificate", docs.registration_certificate],
+      ["tax_certificate", docs.tax_certificate],
+      ["proof_of_address", docs.proof_of_address],
+      ["director_id_document", docs.director_id_document],
+      ["bank_statement", docs.bank_statement],
+      ["articles_of_association", docs.articles_of_association],
+    ].filter(([, path]) => !!path) as Array<[string, string]>;
+
+    const guessMime = (path: string): string => {
+      const ext = path.split(".").pop()?.toLowerCase() ?? "";
+      if (ext === "pdf") return "application/pdf";
+      if (ext === "png") return "image/png";
+      if (ext === "webp") return "image/webp";
+      if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+      return "application/octet-stream";
+    };
+
+    const out: Array<{ type: string; url: string; mime_type: string; size_bytes: number }> = [];
+    for (const [type, path] of entries) {
+      let size = 0;
+      let mime = guessMime(path);
+      try {
+        const folder = path.includes("/") ? path.substring(0, path.lastIndexOf("/")) : "";
+        const name = path.split("/").pop()!;
+        const { data: list } = await supabase.storage.from("kyc-documents").list(folder, { search: name, limit: 1 });
+        const meta = list?.[0]?.metadata as { size?: number; mimetype?: string } | undefined;
+        if (meta?.size) size = Number(meta.size);
+        if (meta?.mimetype) mime = String(meta.mimetype);
+      } catch {
+        // fall back to guessed mime / zero size — backend will reject if size==0
+      }
+      out.push({ type, url: path, mime_type: mime, size_bytes: size });
+    }
+    return out;
+  };
+
   const handleSubmitKYB = async () => {
     if (!merchant) return;
     if (!form.registration_number || !form.business_address) {
       toast.error("Registration number and business address are required");
       return;
     }
+    if (!docs.registration_certificate || !docs.proof_of_address) {
+      toast.error("Registration Certificate and Proof of Address are required");
+      return;
+    }
     setSubmitting(true);
     try {
+      const documents = await buildDocumentsPayload();
+      const missingSize = documents.find((d) => !d.size_bytes);
+      if (missingSize) {
+        throw new Error(`Could not read file metadata for ${missingSize.type}. Please re-upload it.`);
+      }
       const res = await supabase.functions.invoke("gateway-merchant-kyb", {
         body: {
           merchant_id: merchant.id,
           action: 'submit',
-          documents: [],
+          documents,
           ...form,
           registration_certificate_url: docs.registration_certificate || null,
           articles_of_association_url: docs.articles_of_association || null,
