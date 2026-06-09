@@ -18,6 +18,7 @@ import { DocumentUploader } from "@/components/kyc/DocumentUploader";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { buildDocumentsPayload as buildKybDocs, type KybBuildAuditEvent } from '@/lib/kyb-documents';
 
 const statusConfig: Record<string, { icon: any; color: string; label: string; description: string }> = {
   not_submitted: { icon: Clock, color: "text-muted-foreground", label: "Not Submitted", description: "Submit your business documents to begin verification" },
