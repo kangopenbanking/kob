@@ -330,7 +330,9 @@ async function writeAudit(
 function mapResultToStatus(r: VerificationResult): string {
   if (r === "approved") return "approved";
   if (r === "rejected") return "rejected";
-  // pending + manual_review both await an external decision
+  // `manual_review` is explicit: surfaces in admin queues distinct from
+  // `pending` (which means "awaiting external provider callback").
+  if (r === "manual_review") return "manual_review";
   return "pending";
 }
 
