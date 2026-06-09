@@ -33,6 +33,8 @@ import {
 import { format } from "date-fns";
 import { API_CONFIG } from "@/config/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useStepUp } from "@/lib/step-up-client";
+import { StepUpChallengeDialog } from "@/components/admin/StepUpChallengeDialog";
 
 interface Institution {
   id: string;
@@ -73,8 +75,10 @@ interface KYBSubmission {
 export default function InstitutionVerification() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { runWithStepUp, dialogProps: stepUpDialogProps } = useStepUp();
   const [branchDialogOpen, setBranchDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
   const [requestingKYB, setRequestingKYB] = useState<string | null>(null);
