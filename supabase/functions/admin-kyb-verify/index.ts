@@ -48,9 +48,22 @@ Deno.serve(async (req) => {
       throw new Error('Forbidden: Admin access required');
     }
 
+    // Step-up MFA gate.
+    const stepUp = checkStepUp(token);
+    if (!stepUp.ok) {
+      await recordStepUpDenied(supabaseAdmin, {
+        user_id: user.id,
+        action_type: 'admin_kyb_verify.step_up_denied',
+        entity_type: 'business_kyc',
+        reason: stepUp.reason ?? 'unknown',
+        metadata: { aal: stepUp.aal, age_seconds: stepUp.age_seconds, methods: stepUp.methods },
+      });
+      return stepUpDeniedResponse(stepUp);
+    }
+
     const { kyb_id, institution_id, action, rejection_reason } = await req.json() as KYBVerifyRequest;
 
-    console.log(`Admin ${user.id} performing ${action} on KYB ${kyb_id} for institution ${institution_id}`);
+    console.log(`Admin ${user.id} performing ${action} on KYB ${kyb_id} for institution ${institution_id} (step_up aal=${stepUp.aal} age=${stepUp.age_seconds}s)`);
 
     if (action === 'approve') {
       // Update KYB status
