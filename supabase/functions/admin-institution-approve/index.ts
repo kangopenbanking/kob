@@ -45,6 +45,19 @@ serve(async (req) => {
       throw new Error('Forbidden: Admin access required');
     }
 
+    // Step-up MFA: final institution approval is a high-impact action.
+    const stepUp = checkStepUp(token);
+    if (!stepUp.ok) {
+      await recordStepUpDenied(supabaseAdmin, {
+        user_id: user.id,
+        action_type: 'admin_institution_approve.step_up_denied',
+        entity_type: 'institution',
+        reason: stepUp.reason ?? 'unknown',
+        metadata: { aal: stepUp.aal, age_seconds: stepUp.age_seconds, methods: stepUp.methods },
+      });
+      return stepUpDeniedResponse(stepUp);
+    }
+
     const { institution_id } = await req.json() as ApprovalRequest;
 
     console.log(`Admin ${user.id} approving institution ${institution_id}`);
