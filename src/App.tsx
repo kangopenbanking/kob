@@ -81,6 +81,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Auth = lazy(() => import("./pages/Auth"));
 const EmailAuth = lazy(() => import("./pages/EmailAuth"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const AdminMagicLink = lazy(() => import("./pages/AdminMagicLink"));
 const OTPHealthCheck = lazy(() => import("./pages/OTPHealthCheck"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -1593,6 +1594,7 @@ function App() {
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="/auth/email" element={<Layout showFooter={false}><EmailAuth /></Layout>} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/admin-magic" element={<Layout showFooter={false}><AdminMagicLink /></Layout>} />
             <Route path="/auth/otp-health" element={<Layout showFooter={false}><OTPHealthCheck /></Layout>} />
             <Route path="/staff-login" element={<StaffLogin />} />
             {/* Public Live Support — no account required */}

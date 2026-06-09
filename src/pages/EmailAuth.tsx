@@ -9,95 +9,96 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { Loader2, Mail, CheckCircle2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Loader2, Mail, CheckCircle2, ArrowLeft, RefreshCw, Clock } from 'lucide-react';
 
 type AccountType = 'user' | 'institution';
+type Action = 'signup' | 'magic' | 'resend';
 
 export default function EmailAuth() {
   const [accountType, setAccountType] = useState<AccountType>('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [orgName, setOrgName] = useState('');
+  const [externalProvider, setExternalProvider] = useState('');
+  const [externalId, setExternalId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState<null | 'verify' | 'magic'>(null);
+  const [sent, setSent] = useState<null | { type: 'verify' | 'magic'; expiresAt: string; expiresInSeconds: number }>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const emailRedirectTo = `${window.location.origin}/auth/callback`;
 
-  const startCooldown = () => {
-    setResendCooldown(30);
+  const startCooldown = (seconds = 30) => {
+    setResendCooldown(seconds);
     const iv = setInterval(() => {
-      setResendCooldown((s) => {
-        if (s <= 1) { clearInterval(iv); return 0; }
-        return s - 1;
-      });
+      setResendCooldown((s) => { if (s <= 1) { clearInterval(iv); return 0; } return s - 1; });
     }, 1000);
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
-    if (accountType === 'institution' && !orgName.trim()) {
-      toast.error('Please enter your institution name');
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo,
-        data: {
-          account_type: accountType,
-          ...(accountType === 'institution' ? { organization_name: orgName.trim() } : {}),
-        },
+  const call = async (action: Action) => {
+    const { data, error } = await supabase.functions.invoke('email-auth-request', {
+      body: {
+        action,
+        email: email.trim().toLowerCase(),
+        password: action === 'signup' ? password : undefined,
+        accountType,
+        organizationName: accountType === 'institution' ? orgName.trim() : undefined,
+        externalProvider: externalProvider.trim() || undefined,
+        externalId: externalId.trim() || undefined,
+        redirectTo: emailRedirectTo,
       },
     });
-    setLoading(false);
-    if (error) { toast.error(error.message); return; }
-    setSent('verify');
-    startCooldown();
-    toast.success('Verification email sent. Check your inbox.');
+    if (error || (data as any)?.error) {
+      const code = (data as any)?.error ?? error?.message ?? 'send_failed';
+      const retry = (data as any)?.retry_after_seconds;
+      if (code === 'rate_limited' || code === 'blocked') {
+        toast.error(`Too many requests. Try again in ${Math.ceil((retry ?? 1800) / 60)} min.`);
+        startCooldown(Math.min(retry ?? 60, 300));
+      } else if (code === 'invalid_email') {
+        toast.error('Enter a valid email.');
+      } else if (code === 'invalid_password') {
+        toast.error('Password must be 8+ characters.');
+      } else {
+        toast.error((data as any)?.message ?? 'Could not send email.');
+      }
+      return null;
+    }
+    return data as { expires_at: string; expires_in_seconds: number };
   };
 
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo,
-        shouldCreateUser: true,
-        data: { account_type: accountType },
-      },
-    });
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true);
+    const res = await call('signup');
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
-    setSent('magic');
+    if (!res) return;
+    setSent({ type: 'verify', expiresAt: res.expires_at, expiresInSeconds: res.expires_in_seconds });
     startCooldown();
-    toast.success('Magic link sent. Check your inbox.');
+    toast.success('Verification email sent.');
+  };
+
+  const handleMagic = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true);
+    const res = await call('magic');
+    setLoading(false);
+    if (!res) return;
+    setSent({ type: 'magic', expiresAt: res.expires_at, expiresInSeconds: res.expires_in_seconds });
+    startCooldown();
+    toast.success('Magic link sent.');
   };
 
   const handleResend = async () => {
-    if (resendCooldown > 0 || !email) return;
+    if (resendCooldown > 0 || !sent) return;
     setLoading(true);
-    let error;
-    if (sent === 'verify') {
-      ({ error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo } }));
-    } else {
-      ({ error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo, shouldCreateUser: true, data: { account_type: accountType } },
-      }));
-    }
+    const res = await call(sent.type === 'verify' ? 'resend' : 'magic');
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (!res) return;
+    setSent({ ...sent, expiresAt: res.expires_at, expiresInSeconds: res.expires_in_seconds });
     startCooldown();
     toast.success('Email resent.');
   };
 
   if (sent) {
+    const expiresStr = new Date(sent.expiresAt).toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
+    const minutes = Math.round(sent.expiresInSeconds / 60);
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
@@ -107,24 +108,27 @@ export default function EmailAuth() {
             </div>
             <CardTitle>Check your inbox</CardTitle>
             <CardDescription>
-              {sent === 'verify'
-                ? 'We sent a verification link to'
-                : 'We sent a passwordless sign-in link to'}
-              <br />
+              We sent a {sent.type === 'verify' ? 'verification' : 'sign-in'} link to<br />
               <span className="font-medium text-foreground">{email}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleResend}
-              disabled={loading || resendCooldown > 0}
-            >
+            <div className="rounded-md border bg-muted/50 p-3 text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                <Clock className="h-4 w-4" /> Link expires in {minutes} minutes
+              </div>
+              <p className="text-muted-foreground mt-1">Valid until {expiresStr}. After that you'll need a fresh link.</p>
+            </div>
+            <ol className="text-sm text-muted-foreground space-y-1 list-decimal pl-5">
+              <li>Open the email and click the secure link.</li>
+              <li>You'll return to the app and be signed in automatically.</li>
+              <li>If you don't see it, check spam or use Resend below.</li>
+            </ol>
+            <Button variant="outline" className="w-full" onClick={handleResend} disabled={loading || resendCooldown > 0}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
               {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend email'}
             </Button>
-            <Button variant="ghost" className="w-full" onClick={() => { setSent(null); }}>
+            <Button variant="ghost" className="w-full" onClick={() => setSent(null)}>
               <ArrowLeft className="h-4 w-4 mr-2" /> Use a different email
             </Button>
           </CardContent>
@@ -143,11 +147,7 @@ export default function EmailAuth() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Account type</Label>
-            <RadioGroup
-              value={accountType}
-              onValueChange={(v) => setAccountType(v as AccountType)}
-              className="grid grid-cols-2 gap-2"
-            >
+            <RadioGroup value={accountType} onValueChange={(v) => setAccountType(v as AccountType)} className="grid grid-cols-2 gap-2">
               <Label className="flex items-center gap-2 border rounded-md p-3 cursor-pointer hover:bg-accent">
                 <RadioGroupItem value="user" /> User
               </Label>
@@ -179,6 +179,14 @@ export default function EmailAuth() {
                   <Label htmlFor="signup-pwd">Password</Label>
                   <Input id="signup-pwd" type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-muted-foreground">Optional: link an SSO identifier</summary>
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <Input placeholder="Provider (okta, azure_ad…)" value={externalProvider} onChange={(e) => setExternalProvider(e.target.value)} />
+                    <Input placeholder="External ID" value={externalId} onChange={(e) => setExternalId(e.target.value)} />
+                  </div>
+                  <p className="text-xs text-muted-foreground pt-1">Saved after you confirm your email so future SSO integrations can match this account.</p>
+                </details>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
                   Send verification email
@@ -187,7 +195,7 @@ export default function EmailAuth() {
             </TabsContent>
 
             <TabsContent value="magic">
-              <form onSubmit={handleMagicLink} className="space-y-3 pt-3">
+              <form onSubmit={handleMagic} className="space-y-3 pt-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="magic-email">Email</Label>
                   <Input id="magic-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -196,13 +204,15 @@ export default function EmailAuth() {
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
                   Send magic link
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">No password needed — we'll email you a one-click sign-in link.</p>
+                <p className="text-xs text-muted-foreground text-center">Magic links expire 15 minutes after we send them.</p>
               </form>
             </TabsContent>
           </Tabs>
 
-          <div className="text-center text-sm">
-            <Link to="/auth" className="text-muted-foreground hover:text-foreground">Back to all sign-in options</Link>
+          <div className="text-center text-sm space-x-3">
+            <Link to="/auth" className="text-muted-foreground hover:text-foreground">All sign-in options</Link>
+            <span className="text-muted-foreground">·</span>
+            <Link to="/auth/admin-magic" className="text-muted-foreground hover:text-foreground">Admin magic link</Link>
           </div>
         </CardContent>
       </Card>
