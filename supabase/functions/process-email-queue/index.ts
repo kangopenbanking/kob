@@ -1,5 +1,5 @@
+import { sendLovableEmail } from 'npm:@lovable.dev/email-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { loadProviderSettings, sendEmailWithFallback, resolveFromAddress } from '../_shared/email-sender.ts'
 
 const MAX_RETRIES = 5
 const DEFAULT_BATCH_SIZE = 10
@@ -17,8 +17,8 @@ function isRateLimited(error: unknown): boolean {
   return error instanceof Error && error.message.includes('429')
 }
 
-// Check if an error is a forbidden (403) response, which means emails are
-// disabled for this project. Retrying won't help — move straight to DLQ.
+// Check if an error is a forbidden (403) response. Retrying won't help.
+// Move straight to DLQ.
 function isForbidden(error: unknown): boolean {
   if (error && typeof error === 'object' && 'status' in error) {
     return (error as { status: number }).status === 403
@@ -110,9 +110,8 @@ Deno.serve(async (req) => {
       { status: 403, headers: { 'Content-Type': 'application/json' } }
     )
   }
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-  const providerSettings = await loadProviderSettings(supabase)
 
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
   // 1. Check rate-limit cooldown and read queue config
   const { data: state } = await supabase
@@ -250,14 +249,11 @@ Deno.serve(async (req) => {
       }
 
       try {
-        // Override the From with provider settings when sending via Resend.
-        // Lovable Email path uses the original payload.from / sender_domain.
-        const resendFrom = resolveFromAddress(providerSettings, payload.from)
-        const result = await sendEmailWithFallback(
+        await sendLovableEmail(
           {
             run_id: payload.run_id,
             to: payload.to,
-            from: providerSettings.primary_provider === 'resend' ? resendFrom : payload.from,
+            from: payload.from,
             sender_domain: payload.sender_domain,
             subject: payload.subject,
             html: payload.html,
@@ -268,33 +264,18 @@ Deno.serve(async (req) => {
             unsubscribe_token: payload.unsubscribe_token,
             message_id: payload.message_id,
           },
-          providerSettings,
+          // sendUrl is optional — when LOVABLE_SEND_URL is not set, the library
+          // falls back to the default Lovable API endpoint (https://api.lovable.dev).
+          // Set LOVABLE_SEND_URL as a Supabase secret to override (e.g. for local dev).
+          { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
         )
 
-        if (!result.ok) {
-          const primary = result.primary
-          const fb = result.fallback
-          // Rate limit on primary (no fallback attempted) → propagate to queue cooldown
-          if (primary.rateLimited) {
-            throw Object.assign(new Error(primary.error || 'rate_limited'), {
-              status: 429, retryAfterSeconds: primary.retryAfterSeconds ?? 60,
-            })
-          }
-          if (primary.forbidden) {
-            throw Object.assign(new Error(primary.error || 'forbidden'), { status: 403 })
-          }
-          const combined = `primary(${primary.provider}):${primary.error || primary.status}` +
-            (fb ? ` | fallback(${fb.provider}):${fb.error || fb.status}` : '')
-          throw new Error(combined)
-        }
-
-        // Log success with the actual provider used
+        // Log success
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
-          metadata: { provider: result.finalProvider, fallback_used: !!result.fallback },
         })
 
         // Delete from queue
@@ -343,12 +324,12 @@ Deno.serve(async (req) => {
           )
         }
 
-        // 403 means emails are disabled for this project — retrying won't help.
-        // Move straight to DLQ and stop processing the rest of the batch.
+        // 403s are permanent configuration or authorization failures for this
+        // message, so move straight to DLQ and stop processing the rest of the batch.
         if (isForbidden(error)) {
-          await moveToDlq(supabase, queue, msg, 'Emails disabled for this project')
+          await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
           return new Response(
-            JSON.stringify({ processed: totalProcessed, stopped: 'emails_disabled' }),
+            JSON.stringify({ processed: totalProcessed, stopped: 'forbidden' }),
             { headers: { 'Content-Type': 'application/json' } }
           )
         }
