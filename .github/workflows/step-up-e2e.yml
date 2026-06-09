@@ -1,0 +1,64 @@
+name: Step-up MFA E2E (Playwright)
+
+# Runs the STEP_UP_REQUIRED parity suite for the three admin review pages
+# (kyc-review, kyb-verify, institution-approve). Skips on forks without the
+# E2E_PASSWORD secret.
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/admin/StepUpChallengeDialog.tsx'
+      - 'src/lib/step-up-client.ts'
+      - 'src/pages/admin/KYCVerificationReview.tsx'
+      - 'src/pages/admin/BusinessKYCReview.tsx'
+      - 'src/pages/admin/InstitutionVerification.tsx'
+      - 'supabase/functions/_shared/step-up.ts'
+      - 'supabase/functions/admin-kyc-review/**'
+      - 'supabase/functions/admin-kyb-verify/**'
+      - 'supabase/functions/admin-institution-approve/**'
+      - 'e2e/authenticated/step-up-*.spec.ts'
+      - '.github/workflows/step-up-e2e.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  step-up-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL || 'https://kob.lovable.app' }}
+      RUN_AUTHENTICATED_E2E: '1'
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip on fork
+        if: ${{ env.E2E_PASSWORD == '' }}
+        run: |
+          echo "::notice::E2E_PASSWORD not configured — step-up E2E skipped."
+          exit 0
+      - uses: actions/setup-node@v4
+        if: ${{ env.E2E_PASSWORD != '' }}
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npx playwright install --with-deps chromium
+      - name: Run step-up specs
+        if: ${{ env.E2E_PASSWORD != '' }}
+        run: npx playwright test e2e/authenticated/step-up-kyc-review.spec.ts e2e/authenticated/step-up-kyb-verify.spec.ts e2e/authenticated/step-up-institution-approve.spec.ts --reporter=github,list
+      - name: Upload report
+        if: ${{ always() && env.E2E_PASSWORD != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-up-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
