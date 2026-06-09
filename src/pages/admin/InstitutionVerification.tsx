@@ -871,6 +871,7 @@ export default function InstitutionVerification() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <StepUpChallengeDialog {...stepUpDialogProps} />
       </div>
     </>
   );
