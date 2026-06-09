@@ -63,6 +63,8 @@ export default function BusinessKYCReview() {
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { runWithStepUp, dialogProps: stepUpDialogProps } = useStepUp();
+
 
   // ─── Data Fetching ───
   const { data: kybSubmissions, isLoading, isRefetching } = useQuery({
