@@ -55,6 +55,19 @@ serve(async (req) => {
       );
     }
 
+    // Step-up MFA: KYC approvals/rejections are sensitive — require a fresh AAL2 assertion.
+    const stepUp = checkStepUp(token);
+    if (!stepUp.ok) {
+      await recordStepUpDenied(supabaseAdmin, {
+        user_id: user.id,
+        action_type: 'admin_kyc_review.step_up_denied',
+        entity_type: 'kyc_verification',
+        reason: stepUp.reason ?? 'unknown',
+        metadata: { aal: stepUp.aal, age_seconds: stepUp.age_seconds, methods: stepUp.methods },
+      });
+      return stepUpDeniedResponse(stepUp);
+    }
+
     const { kyc_id, action, rejection_reason, info_request_message } = await req.json();
 
     if (!kyc_id || !['approved', 'rejected', 'info_requested'].includes(action)) {
