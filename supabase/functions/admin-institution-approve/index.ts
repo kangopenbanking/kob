@@ -144,9 +144,10 @@ serve(async (req) => {
         entity_type: 'institution',
         entity_id: institution_id,
         performed_by: user.id,
-        details: { 
+        details: {
           institution_name: institution.institution_name,
-          institution_type: institution.institution_type
+          institution_type: institution.institution_type,
+          step_up: { aal: stepUp.aal, methods: stepUp.methods, age_seconds: stepUp.age_seconds },
         }
       });
 
