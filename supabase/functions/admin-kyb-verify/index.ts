@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
           entity_type: 'business_kyc',
           entity_id: kyb_id,
           performed_by: user.id,
-          details: { institution_id, action: 'approved' }
+          details: { institution_id, action: 'approved', step_up: { aal: stepUp.aal, methods: stepUp.methods, age_seconds: stepUp.age_seconds } }
         });
 
       // Get institution info for notifications
