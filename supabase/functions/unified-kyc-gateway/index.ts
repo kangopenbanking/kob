@@ -555,9 +555,9 @@ Deno.serve(async (req) => {
         if (!isAdmin) return json({ error: "forbidden" }, 403);
       }
       const { data } = await supabase
-        .from("kyc_verifications").select("verification_status, verified_at, youverify_session_id, document_type")
+        .from("kyc_verifications").select("status, verified_at, youverify_session_id, document_type")
         .eq("user_id", targetUserId).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      return json({ user_id: targetUserId, status: data?.verification_status ?? "not_started", details: data });
+      return json({ user_id: targetUserId, status: data?.status ?? "not_started", details: data });
     }
 
     if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
