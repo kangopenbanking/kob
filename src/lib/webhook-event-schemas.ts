@@ -19,7 +19,7 @@ export type JsonSchema = {
 };
 
 const ENVELOPE: Record<string, JsonSchema> = {
-  id: { type: "string", pattern: "^evt_[a-zA-Z0-9_]+$" },
+  id: { type: "string", pattern: "^evt_[a-zA-Z0-9_-]+$" },
   type: { type: "string" },
   created: { type: "integer" },
   data: { type: "object" },
@@ -39,6 +39,34 @@ function envelope(eventType: string, dataSchema: JsonSchema): JsonSchema {
 
 const MONEY_AMOUNT: JsonSchema = { type: "string", pattern: "^[0-9]{1,15}$" };
 const CURRENCY: JsonSchema = { type: "string", enum: ["XAF", "XOF", "USD", "EUR", "GBP", "NGN"] };
+
+const ACCOUNT_TYPE: JsonSchema = { type: "string", enum: ["personal", "business", "institution", "developer"] };
+const REGISTRATION_STATUS: JsonSchema = {
+  type: "string",
+  enum: ["pending", "under_review", "approved", "rejected", "info_requested"],
+};
+
+function registrationEvent(eventType: string, status: string): JsonSchema {
+  return envelope(eventType, {
+    type: "object",
+    required: ["object"],
+    properties: {
+      object: {
+        type: "object",
+        required: ["id", "account_type", "entity_id", "status", "occurred_at"],
+        properties: {
+          id: { type: "string" },
+          account_type: ACCOUNT_TYPE,
+          entity_id: { type: "string" },
+          status: { type: "string", enum: [status] },
+          reason: { type: "string" },
+          reviewer_id: { type: "string" },
+          occurred_at: { type: "string", format: "date-time" },
+        },
+      },
+    },
+  });
+}
 
 export const WEBHOOK_EVENT_SCHEMAS: Record<string, JsonSchema> = {
   "charge.succeeded": envelope("charge.succeeded", {
@@ -125,6 +153,11 @@ export const WEBHOOK_EVENT_SCHEMAS: Record<string, JsonSchema> = {
       },
     },
   }),
+  // Registration lifecycle events (additive — Order 4 Surgeon Rule).
+  "registration.pending": registrationEvent("registration.pending", "pending"),
+  "registration.under_review": registrationEvent("registration.under_review", "under_review"),
+  "registration.approved": registrationEvent("registration.approved", "approved"),
+  "registration.rejected": registrationEvent("registration.rejected", "rejected"),
 };
 
 export interface ValidationError {
