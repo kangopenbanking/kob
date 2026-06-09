@@ -377,14 +377,15 @@ export default function InstitutionVerification() {
         throw new Error('No KYB submission found for this institution');
       }
 
-      const { data, error } = await supabase.functions.invoke('admin-kyb-verify', {
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke('admin-kyb-verify', {
         body: {
           kyb_id: kyb.id,
           institution_id: selectedInstitution.id,
           action: 'reject',
           rejection_reason: rejectionReason
         }
-      });
+      }));
+
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -413,9 +414,10 @@ export default function InstitutionVerification() {
 
   const handleFinalApproval = async (institution: Institution) => {
     try {
-      const { data, error } = await supabase.functions.invoke('admin-institution-approve', {
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke('admin-institution-approve', {
         body: { institution_id: institution.id }
-      });
+      }));
+
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
