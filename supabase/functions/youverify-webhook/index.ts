@@ -156,28 +156,46 @@ Deno.serve(async (req) => {
   }
 
   const yvStatus = String(data.status ?? "").toLowerCase();
-  const newStatus =
-    ["found", "approved", "successful", "verified", "success"].includes(yvStatus) ? "approved" :
-    ["not_found", "rejected", "failed"].includes(yvStatus) ? "rejected" :
-    "pending";
+  const APPROVED = ["found", "approved", "successful", "verified", "success"];
+  const REJECTED = ["not_found", "rejected", "failed"];
+  const PENDING = ["pending", "in_progress"];
+  let newStatus: "approved" | "rejected" | "pending" | "manual_review";
+  let unmapped = false;
+  if (APPROVED.includes(yvStatus)) newStatus = "approved";
+  else if (REJECTED.includes(yvStatus)) newStatus = "rejected";
+  else if (PENDING.includes(yvStatus)) newStatus = "pending";
+  else {
+    newStatus = "manual_review";
+    unmapped = true;
+    console.log(JSON.stringify({
+      scope: "yv-webhook", event: "unmapped_status",
+      raw_status: yvStatus || "(empty)", event_id: eventId, session_id: sessionId,
+    }));
+  }
 
   let outcome = "session_not_found";
-  let detail: string | null = null;
+  let detail: string | null = unmapped ? `unmapped_status=${yvStatus || "(empty)"}` : null;
 
+  // NOTE: kyc_verifications uses column `status` (not `verification_status`).
+  // business_kyc uses `verification_status`.
   const { data: existing } = await client
-    .from("kyc_verifications").select("id, verification_status").eq("youverify_session_id", sessionId).maybeSingle();
+    .from("kyc_verifications").select("id, status").eq("youverify_session_id", sessionId).maybeSingle();
 
   if (existing) {
-    const decided = existing.verification_status === "approved" || existing.verification_status === "rejected";
-    if (decided && existing.verification_status !== newStatus) {
+    const decided = existing.status === "approved" || existing.status === "rejected";
+    if (decided && existing.status !== newStatus) {
       outcome = "discrepancy";
-      detail = `existing=${existing.verification_status} incoming=${newStatus}`;
+      detail = `existing=${existing.status} incoming=${newStatus}`;
     } else if (!decided) {
       await client.from("kyc_verifications")
-        .update({ verification_status: newStatus, verified_at: new Date().toISOString() })
+        .update({
+          status: newStatus,
+          verified_at: newStatus === "approved" ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", existing.id);
       outcome = "applied";
-      detail = `status=${newStatus}`;
+      detail = [`status=${newStatus}`, unmapped ? `raw=${yvStatus}` : null].filter(Boolean).join(" ");
     } else {
       outcome = "already_decided";
     }
@@ -191,15 +209,24 @@ Deno.serve(async (req) => {
         detail = `existing=${biz.verification_status} incoming=${newStatus}`;
       } else if (!decided) {
         await client.from("business_kyc")
-          .update({ verification_status: newStatus, verified_at: new Date().toISOString() })
+          .update({
+            verification_status: newStatus,
+            verified_at: newStatus === "approved" ? new Date().toISOString() : null,
+          })
           .eq("id", biz.id);
         outcome = "applied";
-        detail = `business status=${newStatus}`;
+        detail = [`business status=${newStatus}`, unmapped ? `raw=${yvStatus}` : null].filter(Boolean).join(" ");
       } else {
         outcome = "already_decided";
       }
     }
   }
+
+  console.log(JSON.stringify({
+    scope: "yv-webhook", event: "correlation",
+    event_id: eventId, session_id: sessionId,
+    outcome, mapped_status: newStatus, raw_status: yvStatus, unmapped,
+  }));
 
   await recordAudit(client, {
     event_id: eventId, event_type: eventType, payload, signature,

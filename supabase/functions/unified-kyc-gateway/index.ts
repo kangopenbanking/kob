@@ -246,13 +246,23 @@ function transformToYouverify(req: KycRequest): { path: string; body: Record<str
   }
 }
 
+// Known Youverify statuses. Any value outside this set is mapped to
+// `manual_review` and logged as `unmapped_yv_status` so admins can triage.
+const YV_APPROVED = new Set(["found", "approved", "verified", "successful", "success"]);
+const YV_REJECTED = new Set(["not_found", "rejected", "failed"]);
+const YV_PENDING = new Set(["pending", "in_progress"]);
+
 function transformFromYouverify(req: KycRequest, raw: Record<string, unknown>): KycResponse {
   const data = (raw.data ?? raw) as Record<string, unknown>;
   const status = String(data.status ?? raw.statusCode ?? "").toLowerCase();
-  let result: VerificationResult = "manual_review";
-  if (["found", "approved", "verified", "successful", "success"].includes(status)) result = "approved";
-  else if (["not_found", "rejected", "failed"].includes(status)) result = "rejected";
-  else if (["pending", "in_progress"].includes(status)) result = "pending";
+  let result: VerificationResult;
+  if (YV_APPROVED.has(status)) result = "approved";
+  else if (YV_REJECTED.has(status)) result = "rejected";
+  else if (YV_PENDING.has(status)) result = "pending";
+  else {
+    result = "manual_review";
+    logKyc({ event: "unmapped_yv_status", trace_id: req.trace_id, raw_status: status || "(empty)" });
+  }
   const risk = typeof data.riskScore === "number" ? data.riskScore as number : undefined;
   return {
     trace_id: req.trace_id,
@@ -320,7 +330,9 @@ async function writeAudit(
 function mapResultToStatus(r: VerificationResult): string {
   if (r === "approved") return "approved";
   if (r === "rejected") return "rejected";
-  // pending + manual_review both await an external decision
+  // `manual_review` is explicit: surfaces in admin queues distinct from
+  // `pending` (which means "awaiting external provider callback").
+  if (r === "manual_review") return "manual_review";
   return "pending";
 }
 
@@ -346,7 +358,7 @@ async function persistYouverifySession(
       .maybeSingle();
 
     if (existing) {
-      await supabase
+      const { error: updErr } = await supabase
         .from("kyc_verifications")
         .update({
           youverify_session_id: resp.session_id!,
@@ -359,24 +371,48 @@ async function persistYouverifySession(
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id);
+      logKyc({
+        event: "persist_yv_session",
+        mode: "update",
+        trace_id: req.trace_id,
+        kyc_id: existing.id,
+        session_id: resp.session_id,
+        status,
+        success: !updErr,
+        error: updErr?.message,
+      });
       return;
     }
 
-    await supabase.from("kyc_verifications").insert({
-      user_id: req.user_id,
-      verification_type: "identity",
+    const { data: inserted, error: insErr } = await supabase
+      .from("kyc_verifications")
+      .insert({
+        user_id: req.user_id,
+        verification_type: "identity",
+        status,
+        verification_method: "youverify",
+        document_type: (p.document_type as string) ?? null,
+        document_number: (p.document_number as string) ?? null,
+        document_country: ((p.document_country ?? req.country) as string) ?? null,
+        document_front_url: (p.document_front_url as string) ?? null,
+        document_back_url: (p.document_back_url as string) ?? null,
+        selfie_url: (p.selfie_url as string) ?? null,
+        youverify_session_id: resp.session_id!,
+        verified_at: status === "approved" ? new Date().toISOString() : null,
+        source_app: (p.source_app as string) ?? "customer_app",
+        metadata: { trace_id: req.trace_id, provider: "youverify" },
+      })
+      .select("id")
+      .maybeSingle();
+    logKyc({
+      event: "persist_yv_session",
+      mode: "insert",
+      trace_id: req.trace_id,
+      kyc_id: inserted?.id ?? null,
+      session_id: resp.session_id,
       status,
-      verification_method: "youverify",
-      document_type: (p.document_type as string) ?? null,
-      document_number: (p.document_number as string) ?? null,
-      document_country: ((p.document_country ?? req.country) as string) ?? null,
-      document_front_url: (p.document_front_url as string) ?? null,
-      document_back_url: (p.document_back_url as string) ?? null,
-      selfie_url: (p.selfie_url as string) ?? null,
-      youverify_session_id: resp.session_id!,
-      verified_at: status === "approved" ? new Date().toISOString() : null,
-      source_app: (p.source_app as string) ?? "customer_app",
-      metadata: { trace_id: req.trace_id, provider: "youverify" },
+      success: !insErr,
+      error: insErr?.message,
     });
   } catch (err) {
     // Persistence failure must not break the verification flow; webhook
@@ -519,9 +555,9 @@ Deno.serve(async (req) => {
         if (!isAdmin) return json({ error: "forbidden" }, 403);
       }
       const { data } = await supabase
-        .from("kyc_verifications").select("verification_status, verified_at, youverify_session_id, document_type")
+        .from("kyc_verifications").select("status, verified_at, youverify_session_id, document_type")
         .eq("user_id", targetUserId).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      return json({ user_id: targetUserId, status: data?.verification_status ?? "not_started", details: data });
+      return json({ user_id: targetUserId, status: data?.status ?? "not_started", details: data });
     }
 
     if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
