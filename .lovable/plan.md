@@ -1,73 +1,75 @@
-# Nium Global Accounts — Compliance & Transparency Hardening
+# Admin MFA Step-Up, Audit Viewer & Webhook Health
 
-## Phase 1 — Audit Findings
+Four interlocking workstreams to close out audit items from the KYC/KYB hardening pass.
 
-Already in place (no rebuild needed):
-- Edge functions: `nium-create-global-account`, `nium-list-global-accounts`, `nium-update-payout-preference`, `nium-webhook`.
-- DB: `nium_global_accounts`, `nium_incoming_payments` with FX, spread, fee, routing columns; `profiles.payout_preference` + `payout_channel` (cascade default).
-- Webhook computes Nium FX rate + `nium_fx_spread` (bps) + `nium_withdrawal` fee, credits XAF, triggers Flutterwave MoMo when routed.
-- Legacy `/v1/gateway/virtual-accounts` (Wema/NGN) is untouched.
-- SDKs (node/python/php) + `docs/developer-portal/payments/global-accounts.md` already shipped against OpenAPI v4.50.0.
+## 1. Step-Up MFA Challenge Flow (Admin Reviews)
 
-Gaps vs. directive:
-1. No hardcoded BEAC PoP constants; `beneficiary_name` accepts free-text override in create endpoint.
-2. No KYC-name enforcement — should be pulled from verified `profiles.full_name` / `kyc_verifications`, free-text rejected.
-3. Webhook returns net XAF in payload but the UI has no pre-cashout "Transaction Preview" (gross → Nium FX → KOB spread → MoMo fee → net XAF) endpoint or modal.
-4. Legacy endpoint is live but not marked `deprecated: true` with `sunset` in `public/openapi.json`.
-5. Frontend onboarding does not capture `default_payout_method`; account create UI lacks the non-dismissible exact-name warning.
-6. CHANGELOG + developer guide need a v4.50.1 entry covering PoP lock, KYC name lock, FX preview, legacy deprecation.
+**Goal:** When `admin-kyc-review`, `admin-kyb-verify`, or `admin-institution-approve` return `401 STEP_UP_REQUIRED`, the reviewer is prompted to complete MFA in-place and the original action is re-tried automatically.
 
-## Phase 2 — Implementation Plan
+- New `src/components/admin/StepUpChallengeDialog.tsx`:
+  - Detects available factors via `supabase.auth.mfa.listFactors()`.
+  - Calls `mfa.challenge({ factorId })`, prompts TOTP via shadcn `InputOTP`.
+  - Calls `mfa.verify()` to elevate session to `aal2`.
+  - On success, invokes a caller-supplied `onResolved()` to re-run the original mutation.
+  - Handles "no factor enrolled" → links to `/security/mfa` enrolment page.
+- New helper `src/lib/step-up-client.ts` exporting `withStepUp(fn)` — wraps an async action; if the response/exception matches `STEP_UP_REQUIRED`, opens the dialog and retries once on success.
+- Wire into the three admin pages:
+  - `src/pages/admin/KYCVerificationReview.tsx`
+  - `src/pages/admin/BusinessKYCReview.tsx`
+  - `src/pages/admin/InstitutionVerification.tsx` (+ `InstitutionDetailsDialog.tsx`)
+- Surface a clear inline error if the user has no MFA factors and cannot escalate.
 
-### 2.1 Constants (additive, no breaking change)
-- New file `src/constants/nium-compliance.ts`:
-  - `NIUM_POP_CODES = { SOFTWARE_DIGITAL_SERVICES: "Software/Digital Services", ROYALTIES: "Royalties" } as const`
-  - `NiumPopCode` union type, `ALLOWED_NIUM_POP_CODES` array, helper `assertAllowedPopCode()`.
-- Mirror in edge runtime: `supabase/functions/_shared/nium-compliance.ts` (Deno-safe copy) imported by `nium-create-global-account` and `nium-webhook`.
+## 2. E2E Tests for STEP_UP_REQUIRED
 
-### 2.2 Database (additive only — Standing Order 4)
-Single migration:
-- `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS default_payout_method text` with CHECK in (`KANG_WALLET`,`MOBILE_MONEY`) and backfill from existing `payout_preference`. Keep `payout_preference` for backward compat (no rename — Standing Order 1).
-- `ALTER TABLE public.nium_global_accounts ADD COLUMN IF NOT EXISTS pop_code text NOT NULL DEFAULT 'Software/Digital Services'` with CHECK in the two allowed values.
-- `ALTER TABLE public.nium_incoming_payments ADD COLUMN IF NOT EXISTS pop_code text`.
-- No new public tables → no new GRANT block required.
+New Playwright specs under `e2e/authenticated/`:
+- `step-up-kyc-review.spec.ts` — admin without `aal2` clicks Approve, sees challenge dialog, cancel = no state change; success path stubbed via test-only factor.
+- `step-up-kyb-verify.spec.ts` — same shape against `/admin/business-kyc`.
+- `step-up-institution-approve.spec.ts` — same against `/admin/institution-verification`.
+- Each spec asserts:
+  - 401 surfaced as dialog (not a toast/redirect).
+  - Cancel returns reviewer to queue with row unchanged.
+  - Successful step-up triggers retry and produces `step_up` metadata in `audit_logs` (verified via supabase read).
+- Add a new GitHub workflow `.github/workflows/step-up-e2e.yml` mirroring the existing kyc/kyb workflows (gated on `E2E_PASSWORD`).
 
-### 2.3 Edge functions
-- `nium-create-global-account/index.ts`:
-  - Reject any `beneficiary_name` in the request body (return 400 `beneficiary_name_override_forbidden`). // COMPLIANCE CHECK: strict name matching.
-  - Resolve beneficiary from `profiles.full_name` (fallback `kyc_verifications.full_name` where `status='approved'`); 409 if KYC not approved.
-  - Accept optional `pop_code` (default `Software/Digital Services`); validate against `ALLOWED_NIUM_POP_CODES`. // COMPLIANCE CHECK: BEAC PoP.
-  - Persist `pop_code`; forward to Nium adapter call.
-- `nium-webhook/index.ts`:
-  - Carry account's `pop_code` onto each `nium_incoming_payments` row.
-  - No behaviour change to FX math (already correct); add `xaf_net_credited` and `fx_rate_effective` to the webhook response payload that the preview endpoint will reuse.
-- New function `nium-quote-payout` (GET): given `{ source_amount, source_currency, route?: KANG_WALLET|MOBILE_MONEY, msisdn? }`, returns `{ fx_rate_nium, spread_bps, xaf_gross, xaf_spread_revenue, xaf_withdrawal_fee, xaf_net_credited, expires_at }`. Shares FX/fee helpers with the webhook (extract into `_shared/nium-fx.ts`).
+## 3. Admin Audit Log Viewer
 
-### 2.4 Frontend (`src/pages/customer-app/GlobalReceivingAccount.tsx` + onboarding)
-- Generate-account flow: remove the (currently hidden) name input; show read-only `Beneficiary: {profile.full_name}` plus a persistent `Alert` banner (non-dismissible) — copy: *"Your YouTube/TikTok/Adsense profile must match this exact name or the payment will be rejected."*
-- Add `PopCodeSelect` (two options only). Default `Software/Digital Services`.
-- New `TransactionPreview` modal triggered before any cash-out: calls `nium-quote-payout`, renders gross → Nium FX → KOB spread → MoMo fee → **Net XAF** with disclosure tooltip; Confirm button disabled until preview loads.
-- Onboarding (search for existing payout-preference step under `src/pages/customer-app/onboarding*` / `OnboardingPayoutPreference`): add `default_payout_method` selector wired to `nium-update-payout-preference` with `scope: 'user'`.
+New route `/admin/audit-logs` (admin-only):
+- `src/pages/admin/AuditLogsViewer.tsx` reading from `public.audit_logs`.
+- Filters:
+  - Event type quick-chips: `step_up_denied`, `manual_review`, `webhook_correlation_*`, `persist_yv_session`.
+  - Free-text search across `institution_id`, `kyc_id`, `metadata->>'session_id'`, `metadata->>'verification_id'`.
+  - Date range (last 24h / 7d / 30d / custom).
+- Table columns: timestamp, actor, event, target ID, AAL/step-up badge, metadata JSON drawer.
+- CSV export.
+- Route registered in `src/App.tsx`, gated by `useUserRole('admin')`.
+- Add link from existing admin sidebar.
 
-### 2.5 OpenAPI / docs (Standing Orders 1, 2, 6, 7; P7, P10)
-- `public/openapi.json` + `.yaml`:
-  - Add `deprecated: true` and `x-sunset: 2027-01-01` on all `/v1/gateway/virtual-accounts*` operations. Leave operationIds untouched.
-  - Add `pop_code` enum + `default_payout_method` to relevant schemas; add new `/v1/gateway/global-accounts/quote` operation.
-  - Bump `info.version` to **4.50.1**; mirror in `src/config/version.ts` (`KOB_API_VERSION`, `KOB_POSTMAN_VERSION`, `KOB_SPEC_DATE`) and `public/changelog.json`.
-- `docs/developer-portal/payments/global-accounts.md`: add PoP-code section, exact-name notice, `/quote` example in cURL/Node/Python (Order P9).
-- `public/sdk-downloads/CHANGELOG-{node,python,php}.md` + root `CHANGELOG.md`: v4.50.1 entry — BEAC PoP lock, KYC name lock, FX preview, legacy VA deprecated. Cite **BEAC Règlement 02/18/CEMAC/UMAC/CM** in audit trail comment (Standing Order 3).
+## 4. Webhook Health Alerts & Dashboard
 
-### 2.6 Tests
-- Vitest: reject free-text `beneficiary_name`; reject unknown PoP; quote endpoint math parity with webhook.
-- Playwright (`e2e/authenticated/global-accounts.spec.ts` already exists): add preview-modal flow and exact-name warning visibility.
+**Schema (one migration):**
+- `webhook_health_snapshots` (rollup table, 1-min buckets): `bucket_start`, `source`, `total`, `success`, `manual_review`, `dedup_skipped`, `failed`.
+- `admin_alert_rules` extension row for `step_up_denied_spike` + `webhook_manual_review_spike` thresholds (default: >10 in 15min).
 
-## Technical Notes
-- No renames, no removals (Standing Orders 1 & 4). All schema/spec changes are additive; legacy NGN endpoints keep working.
-- Patch bump 4.50.0 → 4.50.1 (Standing Order 6 — additive + deprecation flag only).
-- Shared FX helper extracted so quote and webhook can never drift.
-- RLS unchanged (no new tables).
+**Edge functions:**
+- `webhook-health-rollup` (cron, every minute) — aggregates `youverify_webhook_events` + `audit_logs` into snapshots, fires `admin_alerts` rows when thresholds exceeded.
+- Cron via `pg_cron` insert (per cron-jobs-setup guide).
 
-## Files Touched
-- New: `src/constants/nium-compliance.ts`, `supabase/functions/_shared/nium-compliance.ts`, `supabase/functions/_shared/nium-fx.ts`, `supabase/functions/nium-quote-payout/index.ts`, `src/components/global-accounts/TransactionPreview.tsx`, `src/components/global-accounts/PopCodeSelect.tsx`.
-- Edited: `supabase/functions/nium-create-global-account/index.ts`, `supabase/functions/nium-webhook/index.ts`, `src/pages/customer-app/GlobalReceivingAccount.tsx`, onboarding payout step, `public/openapi.{json,yaml}`, `public/changelog.json`, `src/config/version.ts`, `docs/developer-portal/payments/global-accounts.md`, `CHANGELOG.md`, SDK changelogs, vitest + Playwright specs.
-- Migration: single additive ALTER for `profiles`, `nium_global_accounts`, `nium_incoming_payments`.
+**UI:**
+- `src/pages/admin/WebhookHealthDashboard.tsx` at `/admin/webhook-health`:
+  - KPI cards: last-hour ingestion, success %, manual review %, dedupe %, p95 lag.
+  - Sparkline (recharts) of last 24h buckets per source.
+  - Active alerts list (from `admin_alerts` filtered to webhook rule types).
+  - Idempotency stats from `kyc_gateway_idempotency` (hits, conflicts, oldest pending).
+
+## Technical Details
+
+- **Step-up retry contract**: edge functions already return `{ error: 'STEP_UP_REQUIRED', code: 'STEP_UP_REQUIRED' }` with 401. Client checks both `response.error?.code` and parsed body to detect.
+- **Audit viewer perf**: index `audit_logs(event_type, created_at desc)` already exists; add partial index `WHERE event_type IN ('step_up_denied','manual_review')` if migration shows missing.
+- **Alerts**: reuse existing `admin_alerts` table + existing notification fanout (no new email infra).
+- **No backend behaviour changes** to the three admin functions — they already emit the right audit rows; this work consumes them.
+
+## Out of Scope
+
+- Re-enrolling MFA factors (link out to existing `/security/mfa`).
+- Push/SMS step-up — TOTP only for v1.
+- Backfilling historical webhook health buckets.
