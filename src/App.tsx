@@ -373,6 +373,8 @@ const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring")
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
 const AuditLogExplorer = lazy(() => import("./pages/admin/AuditLogExplorer"));
 const WebhookHealthDashboard = lazy(() => import("./pages/admin/WebhookHealthDashboard"));
+const RegistrationReviewQueue = lazy(() => import("./pages/admin/RegistrationReviewQueue"));
+const RegistrationFlowsDocs = lazy(() => import("./pages/developer/RegistrationFlowsDocs"));
 const DashboardRoutingAudit = lazy(() => import("./pages/admin/DashboardRoutingAudit"));
 const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
 const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
@@ -1065,6 +1067,7 @@ function App() {
               <Route path="audit-logs" element={<AuditLogs />} />
               <Route path="audit-log-explorer" element={<AuditLogExplorer />} />
               <Route path="webhook-health" element={<WebhookHealthDashboard />} />
+              <Route path="registration-queue" element={<RegistrationReviewQueue />} />
               <Route path="gateway-audit" element={<GatewayAuditLogs />} />
 
               <Route path="system-config" element={<SystemConfig />} />
@@ -1210,6 +1213,8 @@ function App() {
               <Route path="rate-limits" element={<DeveloperRateLimits />} />
               <Route path="snippets" element={<DeveloperClientSnippets />} />
               <Route path="standards" element={<InternationalStandards />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6) */}
+              <Route path="registration-flows" element={<RegistrationFlowsDocs />} />
               <Route path="sandbox/webhook-tester" element={<SandboxWebhookTester />} />
               <Route path="forum" element={<DeveloperForum />} />
               <Route path="api/aisp" element={<AispReference />} />

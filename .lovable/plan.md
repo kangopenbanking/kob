@@ -1,75 +1,106 @@
-# Admin MFA Step-Up, Audit Viewer & Webhook Health
+# Registration Hardening — 5 Workstreams
 
-Four interlocking workstreams to close out audit items from the KYC/KYB hardening pass.
+Scoped, additive changes only. No renames of existing endpoints (Guardian Standing Order 1). No removal of passing fields (Order 2). All new routes documented (Order P1, P10).
 
-## 1. Step-Up MFA Challenge Flow (Admin Reviews)
+---
 
-**Goal:** When `admin-kyc-review`, `admin-kyb-verify`, or `admin-institution-approve` return `401 STEP_UP_REQUIRED`, the reviewer is prompted to complete MFA in-place and the original action is re-tried automatically.
+## 1. Dedicated DCR endpoint with SSA/JWT validation
 
-- New `src/components/admin/StepUpChallengeDialog.tsx`:
-  - Detects available factors via `supabase.auth.mfa.listFactors()`.
-  - Calls `mfa.challenge({ factorId })`, prompts TOTP via shadcn `InputOTP`.
-  - Calls `mfa.verify()` to elevate session to `aal2`.
-  - On success, invokes a caller-supplied `onResolved()` to re-run the original mutation.
-  - Handles "no factor enrolled" → links to `/security/mfa` enrolment page.
-- New helper `src/lib/step-up-client.ts` exporting `withStepUp(fn)` — wraps an async action; if the response/exception matches `STEP_UP_REQUIRED`, opens the dialog and retries once on success.
-- Wire into the three admin pages:
-  - `src/pages/admin/KYCVerificationReview.tsx`
-  - `src/pages/admin/BusinessKYCReview.tsx`
-  - `src/pages/admin/InstitutionVerification.tsx` (+ `InstitutionDetailsDialog.tsx`)
-- Surface a clear inline error if the user has no MFA factors and cannot escalate.
+**New edge function**: `supabase/functions/dcr-register-v1/index.ts`
+- POST `/v1/dcr/register` (RFC 7591 compliant).
+- Validates `software_statement` JWT: signature (RS256/ES256 via JWKS), `iss`, `exp`, `iat`, `software_id`, `redirect_uris` match request.
+- Validates `redirect_uris` (HTTPS only, no fragments), `grant_types` (subset of `client_credentials`, `authorization_code`, `refresh_token`), `scope` (allowed list), `token_endpoint_auth_method`.
+- Returns RFC 7591 error responses: `invalid_software_statement`, `invalid_redirect_uri`, `invalid_client_metadata` with `error_description`.
+- On success: inserts into `tpp_registrations`, returns `{client_id, client_secret, client_id_issued_at, client_secret_expires_at:0, registration_access_token}`. Secret shown once.
+- Audit log entry per attempt (success + failure with reason).
 
-## 2. E2E Tests for STEP_UP_REQUIRED
+**UI wire-up**: `src/pages/tpp/TppRegister.tsx` — call new endpoint, render structured error messages by `error` code, copy-once secret panel.
 
-New Playwright specs under `e2e/authenticated/`:
-- `step-up-kyc-review.spec.ts` — admin without `aal2` clicks Approve, sees challenge dialog, cancel = no state change; success path stubbed via test-only factor.
-- `step-up-kyb-verify.spec.ts` — same shape against `/admin/business-kyc`.
-- `step-up-institution-approve.spec.ts` — same against `/admin/institution-verification`.
-- Each spec asserts:
-  - 401 surfaced as dialog (not a toast/redirect).
-  - Cancel returns reviewer to queue with row unchanged.
-  - Successful step-up triggers retry and produces `step_up` metadata in `audit_logs` (verified via supabase read).
-- Add a new GitHub workflow `.github/workflows/step-up-e2e.yml` mirroring the existing kyc/kyb workflows (gated on `E2E_PASSWORD`).
+**Tests**: `supabase/functions/dcr-register-v1/index_test.ts` — valid SSA, expired SSA, bad signature, missing redirect_uris, mismatched redirect_uris, disallowed scope.
 
-## 3. Admin Audit Log Viewer
+---
 
-New route `/admin/audit-logs` (admin-only):
-- `src/pages/admin/AuditLogsViewer.tsx` reading from `public.audit_logs`.
-- Filters:
-  - Event type quick-chips: `step_up_denied`, `manual_review`, `webhook_correlation_*`, `persist_yv_session`.
-  - Free-text search across `institution_id`, `kyc_id`, `metadata->>'session_id'`, `metadata->>'verification_id'`.
-  - Date range (last 24h / 7d / 30d / custom).
-- Table columns: timestamp, actor, event, target ID, AAL/step-up badge, metadata JSON drawer.
-- CSV export.
-- Route registered in `src/App.tsx`, gated by `useUserRole('admin')`.
-- Add link from existing admin sidebar.
+## 2. Side-by-side registration documentation page
 
-## 4. Webhook Health Alerts & Dashboard
+**New route**: `/developer/registration-flows` (public — Order P1/P4).
+- File: `src/pages/developer/RegistrationFlowsDocs.tsx`.
+- Four-column responsive layout (collapses to tabs on mobile): Personal | Business | Institution | Developer.
+- Each column shows: entry route, auth method, required fields table, state machine, MermaidDiagram of the flow, downloadable JSON of required-fields schema.
+- Uses existing `MermaidDiagram` component.
+- Linked from `/developer` sidebar under "Onboarding".
+- Includes a unified state-transition diagram across all four account types.
 
-**Schema (one migration):**
-- `webhook_health_snapshots` (rollup table, 1-min buckets): `bucket_start`, `source`, `total`, `success`, `manual_review`, `dedup_skipped`, `failed`.
-- `admin_alert_rules` extension row for `step_up_denied_spike` + `webhook_manual_review_spike` thresholds (default: >10 in 15min).
+---
 
-**Edge functions:**
-- `webhook-health-rollup` (cron, every minute) — aggregates `youverify_webhook_events` + `audit_logs` into snapshots, fires `admin_alerts` rows when thresholds exceeded.
-- Cron via `pg_cron` insert (per cron-jobs-setup guide).
+## 3. Registration lifecycle webhook events
 
-**UI:**
-- `src/pages/admin/WebhookHealthDashboard.tsx` at `/admin/webhook-health`:
-  - KPI cards: last-hour ingestion, success %, manual review %, dedupe %, p95 lag.
-  - Sparkline (recharts) of last 24h buckets per source.
-  - Active alerts list (from `admin_alerts` filtered to webhook rule types).
-  - Idempotency stats from `kyc_gateway_idempotency` (hits, conflicts, oldest pending).
+**New event types** (additive to `WEBHOOK_EVENT_SCHEMAS`):
+- `registration.pending`
+- `registration.under_review`
+- `registration.approved`
+- `registration.rejected`
 
-## Technical Details
+Each `data.object`: `{id, account_type: 'personal'|'business'|'institution'|'developer', entity_id, status, reason?, reviewer_id?, occurred_at}`.
 
-- **Step-up retry contract**: edge functions already return `{ error: 'STEP_UP_REQUIRED', code: 'STEP_UP_REQUIRED' }` with 401. Client checks both `response.error?.code` and parsed body to detect.
-- **Audit viewer perf**: index `audit_logs(event_type, created_at desc)` already exists; add partial index `WHERE event_type IN ('step_up_denied','manual_review')` if migration shows missing.
-- **Alerts**: reuse existing `admin_alerts` table + existing notification fanout (no new email infra).
-- **No backend behaviour changes** to the three admin functions — they already emit the right audit rows; this work consumes them.
+**Schemas**: extend `src/lib/webhook-event-schemas.ts` + matching `components.schemas` in `public/openapi.json` (Order 4 — additive only).
 
-## Out of Scope
+**Emission points** (edge functions, append after status change, behind existing webhook dispatcher):
+- `customer-register`, `merchant-register`, `institution-register`, `dcr-register-v1` → emit `pending`.
+- `unified-kyc-gateway` when moved to `under_review` → emit `under_review`.
+- `admin-kyc-review`, `admin-kyb-verify`, `admin-institution-approve` → emit `approved` or `rejected` (already step-up gated).
 
-- Re-enrolling MFA factors (link out to existing `/security/mfa`).
-- Push/SMS step-up — TOTP only for v1.
-- Backfilling historical webhook health buckets.
+**Tests**: extend `src/test/webhook-event-schemas.test.ts` with positive + negative cases per new event.
+
+---
+
+## 4. KYB requirements checklist UI
+
+**New shared component**: `src/components/kyb/KybRequirementsChecklist.tsx`.
+- Props: `requirements: {key, label, description, accept, required, maxBytes}[]`, `files: Record<key, File|StoragePath|null>`, `onChange`.
+- Per-row indicator: ✓ uploaded & readable, ⚠ unreadable/over-size, ✗ missing.
+- Calls `buildDocumentsPayload`'s metadata read (extracted helper from `src/lib/kyb-documents.ts`) on each file to verify mime+size pre-submit.
+- Exposes `isComplete()` and `getBlockingReasons()`; parent disables submit when not complete.
+
+**Wired into**:
+- `src/pages/merchant/MerchantKYB.tsx` — replace ad-hoc file rows.
+- `src/pages/biz/BizRegister.tsx` (Business PWA) — same component.
+- `src/pages/Register.tsx` (Institution) — institution KYB doc step.
+
+**Tests**: `src/test/kyb-requirements-checklist.test.tsx` (vitest + RTL) — blocks submit when any required missing, when any file unreadable.
+
+---
+
+## 5. Admin review queue page
+
+**New route**: `/admin/registration-queue` (admin-only).
+- File: `src/pages/admin/RegistrationReviewQueue.tsx`.
+- Unified table over: pending consumers (`kyc_verifications`), merchants (`business_kyc`), institutions (`institutions`), TPPs (`tpp_registrations`).
+- Filters: account type (multi), institution, status (`pending|under_review|approved|rejected|info_requested`), correlation status (matched/unmatched/manual_review — joined from `audit_logs`), step-up denial reasons (from `audit_logs` event=`step_up_denied`).
+- Free-text search by entity id / institution name / submitter email.
+- Row click → existing review pages (`/admin/kyc-review`, `/admin/business-kyc`, `/admin/institution-verification`).
+- Server-side pagination via `useInfiniteQuery`.
+- Linked from admin nav; visible only to `has_role(uid,'admin')`.
+
+---
+
+## Technical notes
+
+- **No DB schema changes required** — webhook events use existing `webhook_inbox`/`gateway_webhook_events`; queue page reads existing tables.
+- **No edge function renames** — `dcr-register-v1` is additive; old `dcr-register` (if present) stays as a thin alias.
+- **Public routes**: `/developer/registration-flows` and `/openapi.json` continue to be unauthenticated. PERMANENT PUBLIC ROUTES comment preserved.
+- **Audit + step-up**: all admin approve/reject paths already emit `audit_logs` with `step_up` metadata — webhook emission piggy-backs after that exists.
+
+## Out of scope
+
+- Re-skinning existing review pages.
+- Backfilling historical webhook events for already-approved entities.
+- Localizing the new docs page (English only in this pass).
+- Mobile push notifications for registration events.
+
+## Suggested execution order
+
+1. Webhook schemas + emission (foundation other features rely on).
+2. DCR endpoint + tests.
+3. KYB checklist component + wire into 3 pages.
+4. Admin review queue.
+5. Side-by-side docs page (last, references everything above).
