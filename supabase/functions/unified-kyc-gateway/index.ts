@@ -358,7 +358,7 @@ async function persistYouverifySession(
       .maybeSingle();
 
     if (existing) {
-      await supabase
+      const { error: updErr } = await supabase
         .from("kyc_verifications")
         .update({
           youverify_session_id: resp.session_id!,
@@ -371,24 +371,48 @@ async function persistYouverifySession(
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id);
+      logKyc({
+        event: "persist_yv_session",
+        mode: "update",
+        trace_id: req.trace_id,
+        kyc_id: existing.id,
+        session_id: resp.session_id,
+        status,
+        success: !updErr,
+        error: updErr?.message,
+      });
       return;
     }
 
-    await supabase.from("kyc_verifications").insert({
-      user_id: req.user_id,
-      verification_type: "identity",
+    const { data: inserted, error: insErr } = await supabase
+      .from("kyc_verifications")
+      .insert({
+        user_id: req.user_id,
+        verification_type: "identity",
+        status,
+        verification_method: "youverify",
+        document_type: (p.document_type as string) ?? null,
+        document_number: (p.document_number as string) ?? null,
+        document_country: ((p.document_country ?? req.country) as string) ?? null,
+        document_front_url: (p.document_front_url as string) ?? null,
+        document_back_url: (p.document_back_url as string) ?? null,
+        selfie_url: (p.selfie_url as string) ?? null,
+        youverify_session_id: resp.session_id!,
+        verified_at: status === "approved" ? new Date().toISOString() : null,
+        source_app: (p.source_app as string) ?? "customer_app",
+        metadata: { trace_id: req.trace_id, provider: "youverify" },
+      })
+      .select("id")
+      .maybeSingle();
+    logKyc({
+      event: "persist_yv_session",
+      mode: "insert",
+      trace_id: req.trace_id,
+      kyc_id: inserted?.id ?? null,
+      session_id: resp.session_id,
       status,
-      verification_method: "youverify",
-      document_type: (p.document_type as string) ?? null,
-      document_number: (p.document_number as string) ?? null,
-      document_country: ((p.document_country ?? req.country) as string) ?? null,
-      document_front_url: (p.document_front_url as string) ?? null,
-      document_back_url: (p.document_back_url as string) ?? null,
-      selfie_url: (p.selfie_url as string) ?? null,
-      youverify_session_id: resp.session_id!,
-      verified_at: status === "approved" ? new Date().toISOString() : null,
-      source_app: (p.source_app as string) ?? "customer_app",
-      metadata: { trace_id: req.trace_id, provider: "youverify" },
+      success: !insErr,
+      error: insErr?.message,
     });
   } catch (err) {
     // Persistence failure must not break the verification flow; webhook
