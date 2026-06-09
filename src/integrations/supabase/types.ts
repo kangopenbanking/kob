@@ -10241,6 +10241,90 @@ export type Database = {
         }
         Relationships: []
       }
+      email_auth_audit: {
+        Row: {
+          account_type: string | null
+          action: string
+          created_at: string
+          email: string
+          email_hash: string | null
+          id: string
+          institution_id: string | null
+          ip_address: unknown
+          metadata: Json
+          outcome: string
+          reason: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_type?: string | null
+          action: string
+          created_at?: string
+          email: string
+          email_hash?: string | null
+          id?: string
+          institution_id?: string | null
+          ip_address?: unknown
+          metadata?: Json
+          outcome: string
+          reason?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_type?: string | null
+          action?: string
+          created_at?: string
+          email?: string
+          email_hash?: string | null
+          id?: string
+          institution_id?: string | null
+          ip_address?: unknown
+          metadata?: Json
+          outcome?: string
+          reason?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_auth_rate_state: {
+        Row: {
+          action: string
+          attempts: number
+          blocked_until: string | null
+          failures: number
+          id: string
+          key: string
+          last_at: string
+          scope: string
+          window_start: string
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          blocked_until?: string | null
+          failures?: number
+          id?: string
+          key: string
+          last_at?: string
+          scope: string
+          window_start?: string
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          blocked_until?: string | null
+          failures?: number
+          id?: string
+          key?: string
+          last_at?: string
+          scope?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       email_dlq_redeliveries: {
         Row: {
           created_at: string
@@ -28112,6 +28196,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_external_identifiers: {
+        Row: {
+          created_at: string
+          email: string | null
+          external_id: string
+          id: string
+          institution_id: string | null
+          metadata: Json
+          provider: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          external_id: string
+          id?: string
+          institution_id?: string | null
+          metadata?: Json
+          provider: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          external_id?: string
+          id?: string
+          institution_id?: string | null
+          metadata?: Json
+          provider?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       user_permission_overrides: {
         Row: {
           actions: Database["public"]["Enums"]["permission_action"][]
@@ -29682,6 +29805,18 @@ export type Database = {
         Returns: boolean
       }
       check_api_key_expiration: { Args: never; Returns: undefined }
+      check_email_auth_limit: {
+        Args: {
+          _action: string
+          _block_minutes: number
+          _key: string
+          _max_attempts: number
+          _max_failures: number
+          _scope: string
+          _window_seconds: number
+        }
+        Returns: Json
+      }
       check_ledger_integrity: { Args: never; Returns: Json }
       check_postiq_rate_limit: { Args: { p_user_id: string }; Returns: boolean }
       check_rate_limit: {
@@ -30212,6 +30347,16 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_email_auth_failure: {
+        Args: {
+          _action: string
+          _block_minutes: number
+          _key: string
+          _max_failures: number
+          _scope: string
+        }
+        Returns: undefined
       }
       record_otp_request: {
         Args: {
