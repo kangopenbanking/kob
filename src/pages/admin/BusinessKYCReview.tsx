@@ -31,6 +31,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useStepUp } from "@/lib/step-up-client";
+import { StepUpChallengeDialog } from "@/components/admin/StepUpChallengeDialog";
+
 
 const DOCS = [
   { key: "registration_certificate_url", label: "Registration Certificate", icon: FileText },
