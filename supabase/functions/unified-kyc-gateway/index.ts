@@ -340,13 +340,18 @@ async function runVerification(
       yvSuccess = true;
       await breakerRecord(supabase, true);
       const resp = transformFromYouverify(req, raw);
+      // Persist Youverify session linkage so the async webhook can match
+      // it back to a row when verification completes.
+      if (req.verification_type === "identity" && resp.session_id) {
+        await persistYouverifySession(supabase, req, resp);
+      }
       await writeAudit(supabase, {
         trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
         provider_used: "youverify", fallback_triggered: false,
         youverify_success: true, youverify_response_time_ms: yvTime,
         verification_result: resp.result, risk_score: resp.risk_score ?? null,
       });
-      logKyc({ event: "yv_success", trace_id: req.trace_id, ms: yvTime, result: resp.result });
+      logKyc({ event: "yv_success", trace_id: req.trace_id, ms: yvTime, result: resp.result, session_id: resp.session_id });
       return resp;
     } catch (err) {
       yvTime = Date.now() - start;
