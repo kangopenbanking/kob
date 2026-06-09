@@ -33,6 +33,8 @@ import {
 import { format } from "date-fns";
 import { API_CONFIG } from "@/config/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useStepUp } from "@/lib/step-up-client";
+import { StepUpChallengeDialog } from "@/components/admin/StepUpChallengeDialog";
 
 interface Institution {
   id: string;
@@ -73,8 +75,10 @@ interface KYBSubmission {
 export default function InstitutionVerification() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { runWithStepUp, dialogProps: stepUpDialogProps } = useStepUp();
   const [branchDialogOpen, setBranchDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
   const [requestingKYB, setRequestingKYB] = useState<string | null>(null);
@@ -330,13 +334,14 @@ export default function InstitutionVerification() {
   const handleApproveKYB = async (institutionId: string, kybId: string) => {
     setApprovingKYB(institutionId);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-kyb-verify', {
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke('admin-kyb-verify', {
         body: {
           kyb_id: kybId,
           institution_id: institutionId,
           action: 'approve'
         }
-      });
+      }));
+
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -372,14 +377,15 @@ export default function InstitutionVerification() {
         throw new Error('No KYB submission found for this institution');
       }
 
-      const { data, error } = await supabase.functions.invoke('admin-kyb-verify', {
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke('admin-kyb-verify', {
         body: {
           kyb_id: kyb.id,
           institution_id: selectedInstitution.id,
           action: 'reject',
           rejection_reason: rejectionReason
         }
-      });
+      }));
+
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -408,9 +414,10 @@ export default function InstitutionVerification() {
 
   const handleFinalApproval = async (institution: Institution) => {
     try {
-      const { data, error } = await supabase.functions.invoke('admin-institution-approve', {
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke('admin-institution-approve', {
         body: { institution_id: institution.id }
-      });
+      }));
+
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -864,6 +871,7 @@ export default function InstitutionVerification() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <StepUpChallengeDialog {...stepUpDialogProps} />
       </div>
     </>
   );

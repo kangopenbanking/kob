@@ -31,6 +31,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useStepUp } from "@/lib/step-up-client";
+import { StepUpChallengeDialog } from "@/components/admin/StepUpChallengeDialog";
+
 
 const DOCS = [
   { key: "registration_certificate_url", label: "Registration Certificate", icon: FileText },
@@ -60,6 +63,8 @@ export default function BusinessKYCReview() {
   const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { runWithStepUp, dialogProps: stepUpDialogProps } = useStepUp();
+
 
   // ─── Data Fetching ───
   const { data: kybSubmissions, isLoading, isRefetching } = useQuery({
@@ -135,9 +140,10 @@ export default function BusinessKYCReview() {
           institutionId = inst?.id || null;
         }
         const action = status === "approved" ? "approve" : "reject";
-        const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
+        const { data, error } = await runWithStepUp(() => supabase.functions.invoke("admin-kyb-verify", {
           body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
-        });
+        }));
+
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
       }
@@ -760,6 +766,7 @@ export default function BusinessKYCReview() {
       </Dialog>
 
       <DocumentPreviewLightbox url={previewUrl} label={previewLabel} onClose={() => setPreviewUrl(null)} />
+      <StepUpChallengeDialog {...stepUpDialogProps} />
     </div>
   );
 }

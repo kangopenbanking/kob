@@ -371,6 +371,8 @@ const QRPaymentsAudit = lazy(() => import("./pages/admin/QRPaymentsAudit"));
 const SandboxManagement = lazy(() => import("./pages/admin/SandboxManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/admin/SecurityMonitoring"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const AuditLogExplorer = lazy(() => import("./pages/admin/AuditLogExplorer"));
+const WebhookHealthDashboard = lazy(() => import("./pages/admin/WebhookHealthDashboard"));
 const DashboardRoutingAudit = lazy(() => import("./pages/admin/DashboardRoutingAudit"));
 const PlatformStatus = lazy(() => import("./pages/admin/PlatformStatus"));
 const DocsDiagnostics = lazy(() => import("./pages/admin/DocsDiagnostics"));
@@ -1061,7 +1063,10 @@ function App() {
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />
               <Route path="audit-logs" element={<AuditLogs />} />
+              <Route path="audit-log-explorer" element={<AuditLogExplorer />} />
+              <Route path="webhook-health" element={<WebhookHealthDashboard />} />
               <Route path="gateway-audit" element={<GatewayAuditLogs />} />
+
               <Route path="system-config" element={<SystemConfig />} />
               <Route path="otp-providers" element={<AdminOTPProviderSettings />} />
               <Route path="email-provider-settings" element={<AdminEmailProviderSettings />} />

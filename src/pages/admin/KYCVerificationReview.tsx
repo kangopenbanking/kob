@@ -25,6 +25,10 @@ import { format } from "date-fns";
 import { useKycReviewPermissions } from "@/hooks/useKycReviewPermissions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useStepUp } from "@/lib/step-up-client";
+import { StepUpChallengeDialog } from "@/components/admin/StepUpChallengeDialog";
+
+
 
 export default function KYCVerificationReview() {
   const [selectedKYC, setSelectedKYC] = useState<any | null>(null);
@@ -41,6 +45,8 @@ export default function KYCVerificationReview() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { canReview, loading: permLoading } = useKycReviewPermissions();
+  const { runWithStepUp, dialogProps: stepUpDialogProps } = useStepUp();
+
 
   const { data: kycSubmissions, isLoading } = useQuery({
     queryKey: ["kyc-submissions-admin"],
@@ -85,9 +91,10 @@ export default function KYCVerificationReview() {
       const body: Record<string, unknown> = { kyc_id: id, action: status };
       if (status === "rejected") body.rejection_reason = notes;
       if (status === "info_requested") body.info_request_message = notes;
-      const { data, error } = await supabase.functions.invoke("admin-kyc-review", { body });
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke("admin-kyc-review", { body }));
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc-submissions-admin"] });
@@ -732,6 +739,7 @@ export default function KYCVerificationReview() {
 
       {/* Document Preview Lightbox */}
       <DocumentPreviewLightbox url={previewUrl} label={previewLabel} onClose={() => setPreviewUrl(null)} />
+      <StepUpChallengeDialog {...stepUpDialogProps} />
     </div>
   );
 }
