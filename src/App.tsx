@@ -1213,6 +1213,8 @@ function App() {
               <Route path="rate-limits" element={<DeveloperRateLimits />} />
               <Route path="snippets" element={<DeveloperClientSnippets />} />
               <Route path="standards" element={<InternationalStandards />} />
+              {/* PERMANENT PUBLIC ROUTE — DO NOT REMOVE OR REDIRECT (Order P1, P4, P6) */}
+              <Route path="registration-flows" element={<RegistrationFlowsDocs />} />
               <Route path="sandbox/webhook-tester" element={<SandboxWebhookTester />} />
               <Route path="forum" element={<DeveloperForum />} />
               <Route path="api/aisp" element={<AispReference />} />
