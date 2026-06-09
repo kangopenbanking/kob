@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkStepUp, recordStepUpDenied, stepUpDeniedResponse } from "../_shared/step-up.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -52,6 +53,19 @@ serve(async (req) => {
         JSON.stringify({ error: 'Forbidden: KYC review requires an admin, compliance officer, moderator, or institution role.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
+    }
+
+    // Step-up MFA: KYC approvals/rejections are sensitive — require a fresh AAL2 assertion.
+    const stepUp = checkStepUp(token);
+    if (!stepUp.ok) {
+      await recordStepUpDenied(supabaseAdmin, {
+        user_id: user.id,
+        action_type: 'admin_kyc_review.step_up_denied',
+        entity_type: 'kyc_verification',
+        reason: stepUp.reason ?? 'unknown',
+        metadata: { aal: stepUp.aal, age_seconds: stepUp.age_seconds, methods: stepUp.methods },
+      });
+      return stepUpDeniedResponse(stepUp);
     }
 
     const { kyc_id, action, rejection_reason, info_request_message } = await req.json();
@@ -169,6 +183,7 @@ serve(async (req) => {
         info_request_message: info_request_message || null,
         reviewer_roles: Array.from(callerRoles),
         user_id: kyc.user_id,
+        step_up: { aal: stepUp.aal, methods: stepUp.methods, age_seconds: stepUp.age_seconds },
       },
     });
 

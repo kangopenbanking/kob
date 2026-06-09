@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyUser } from "../_shared/admin-notify.ts";
+import { checkStepUp, recordStepUpDenied, stepUpDeniedResponse } from "../_shared/step-up.ts";
 
 interface KYBVerifyRequest {
   kyb_id: string;
@@ -47,9 +48,22 @@ Deno.serve(async (req) => {
       throw new Error('Forbidden: Admin access required');
     }
 
+    // Step-up MFA gate.
+    const stepUp = checkStepUp(token);
+    if (!stepUp.ok) {
+      await recordStepUpDenied(supabaseAdmin, {
+        user_id: user.id,
+        action_type: 'admin_kyb_verify.step_up_denied',
+        entity_type: 'business_kyc',
+        reason: stepUp.reason ?? 'unknown',
+        metadata: { aal: stepUp.aal, age_seconds: stepUp.age_seconds, methods: stepUp.methods },
+      });
+      return stepUpDeniedResponse(stepUp);
+    }
+
     const { kyb_id, institution_id, action, rejection_reason } = await req.json() as KYBVerifyRequest;
 
-    console.log(`Admin ${user.id} performing ${action} on KYB ${kyb_id} for institution ${institution_id}`);
+    console.log(`Admin ${user.id} performing ${action} on KYB ${kyb_id} for institution ${institution_id} (step_up aal=${stepUp.aal} age=${stepUp.age_seconds}s)`);
 
     if (action === 'approve') {
       // Update KYB status
@@ -107,7 +121,7 @@ Deno.serve(async (req) => {
           entity_type: 'business_kyc',
           entity_id: kyb_id,
           performed_by: user.id,
-          details: { institution_id, action: 'approved' }
+          details: { institution_id, action: 'approved', step_up: { aal: stepUp.aal, methods: stepUp.methods, age_seconds: stepUp.age_seconds } }
         });
 
       // Get institution info for notifications
@@ -208,7 +222,7 @@ Deno.serve(async (req) => {
           entity_type: 'business_kyc',
           entity_id: kyb_id,
           performed_by: user.id,
-          details: { institution_id, action: 'rejected', reason: rejection_reason }
+          details: { institution_id, action: 'rejected', reason: rejection_reason, step_up: { aal: stepUp.aal, methods: stepUp.methods, age_seconds: stepUp.age_seconds } }
         });
 
       // Get institution info for notifications
