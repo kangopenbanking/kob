@@ -81,6 +81,7 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Auth = lazy(() => import("./pages/Auth"));
 const EmailAuth = lazy(() => import("./pages/EmailAuth"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const AdminMagicLink = lazy(() => import("./pages/AdminMagicLink"));
 const OTPHealthCheck = lazy(() => import("./pages/OTPHealthCheck"));
 const MandatoryPinSetup = lazy(() => import("./pages/MandatoryPinSetup"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
