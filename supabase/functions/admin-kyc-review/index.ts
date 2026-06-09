@@ -183,6 +183,7 @@ serve(async (req) => {
         info_request_message: info_request_message || null,
         reviewer_roles: Array.from(callerRoles),
         user_id: kyc.user_id,
+        step_up: { aal: stepUp.aal, methods: stepUp.methods, age_seconds: stepUp.age_seconds },
       },
     });
 
