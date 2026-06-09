@@ -1067,6 +1067,7 @@ function App() {
               <Route path="audit-logs" element={<AuditLogs />} />
               <Route path="audit-log-explorer" element={<AuditLogExplorer />} />
               <Route path="webhook-health" element={<WebhookHealthDashboard />} />
+              <Route path="registration-queue" element={<RegistrationReviewQueue />} />
               <Route path="gateway-audit" element={<GatewayAuditLogs />} />
 
               <Route path="system-config" element={<SystemConfig />} />
