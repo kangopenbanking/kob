@@ -766,6 +766,7 @@ export default function BusinessKYCReview() {
       </Dialog>
 
       <DocumentPreviewLightbox url={previewUrl} label={previewLabel} onClose={() => setPreviewUrl(null)} />
+      <StepUpChallengeDialog {...stepUpDialogProps} />
     </div>
   );
 }
