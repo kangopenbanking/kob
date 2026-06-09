@@ -334,13 +334,14 @@ export default function InstitutionVerification() {
   const handleApproveKYB = async (institutionId: string, kybId: string) => {
     setApprovingKYB(institutionId);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-kyb-verify', {
+      const { data, error } = await runWithStepUp(() => supabase.functions.invoke('admin-kyb-verify', {
         body: {
           kyb_id: kybId,
           institution_id: institutionId,
           action: 'approve'
         }
-      });
+      }));
+
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
