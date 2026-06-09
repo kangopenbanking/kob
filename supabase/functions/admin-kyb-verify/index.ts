@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
 import { notifyUser } from "../_shared/admin-notify.ts";
+import { checkStepUp, recordStepUpDenied, stepUpDeniedResponse } from "../_shared/step-up.ts";
 
 interface KYBVerifyRequest {
   kyb_id: string;
