@@ -194,13 +194,43 @@ const CustomerAuth: React.FC = () => {
         throw new Error(parsed?.error || extractEdgeFunctionError(error, 'PIN login failed'));
       }
 
-      if (data?.success && data?.session) {
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
+      if (data?.success) {
+        // Prefer client-side verifyOtp so the browser writes a clean, fully
+        // valid session into auth storage (fixes the post-login redirect loop
+        // caused by JSON-transported sessions whose JWT was rejected with
+        // "missing sub claim" by GoTrue).
+        let sessionEstablished = false;
+        if (data.token_hash) {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: data.token_hash,
+            type: 'magiclink',
+          });
+          sessionEstablished = !verifyError;
+          if (verifyError) {
+            console.warn('Client verifyOtp failed, falling back to setSession:', verifyError);
+          }
+        }
+        if (!sessionEstablished && data.session?.access_token && data.session?.refresh_token) {
+          const { error: setErr } = await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+          sessionEstablished = !setErr;
+        }
+
+        // Verify the session is actually valid before navigating — otherwise
+        // route guards will bounce the user straight back to /app/auth.
+        const { data: { user: verifiedUser }, error: getUserErr } =
+          await supabase.auth.getUser();
+        if (!sessionEstablished || getUserErr || !verifiedUser) {
+          await supabase.auth.signOut().catch(() => {});
+          setPinError('Could not establish a secure session. Please try again.');
+          setPin('');
+          return;
+        }
+
         toast.success('Welcome back!');
-        await navigateAfterAuth(data.user_id);
+        await navigateAfterAuth(verifiedUser.id);
       } else {
         const remaining = data?.remaining_attempts;
         setPinError(`Invalid PIN.${remaining !== undefined ? ` ${remaining} attempts remaining.` : ''}`);
