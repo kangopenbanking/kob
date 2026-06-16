@@ -10,32 +10,47 @@ interface Props {
 /**
  * Guards Customer App routes — requires an authenticated user with
  * a profile (registered customer).
+ *
+ * If the stored auth token is corrupt / rejected by GoTrue (e.g. the
+ * "missing sub claim" 403 we observed after a stale magic-link session
+ * was written into localStorage), we forcibly sign out so the user can
+ * actually log in again rather than getting stuck in a redirect loop.
  */
 export const CustomerAppAuthGuard: React.FC<Props> = ({ children }) => {
   const [state, setState] = useState<'loading' | 'authorized' | 'unauthorized'>('loading');
 
   useEffect(() => {
+    let cancelled = false;
     const check = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        const { data: { user }, error: userErr } = await supabase.auth.getUser();
+        if (cancelled) return;
+
+        if (userErr || !user) {
+          // Bad / stale token — clear it so the next /app/auth visit is clean.
+          if (userErr) {
+            await supabase.auth.signOut().catch(() => {});
+          }
           setState('unauthorized');
           return;
         }
 
-        // Ensure user has a profile (registered customer)
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', user.id)
           .maybeSingle();
 
+        if (cancelled) return;
         setState(profile ? 'authorized' : 'unauthorized');
       } catch {
+        if (cancelled) return;
+        await supabase.auth.signOut().catch(() => {});
         setState('unauthorized');
       }
     };
     check();
+    return () => { cancelled = true; };
   }, []);
 
   if (state === 'loading') {
