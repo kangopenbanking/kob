@@ -181,11 +181,18 @@ serve(async (req) => {
 
       console.log(`PIN login successful for user: ${profile.id}`);
 
+      // Return BOTH the server-verified session AND the raw token_hash so the
+      // browser can re-run verifyOtp locally. The local verifyOtp writes the
+      // session into the browser's auth storage cleanly (correct sub claim,
+      // correct refresh-token rotation) and avoids the "missing sub claim"
+      // 403s we saw when relying solely on the JSON-transported session.
       return new Response(
         JSON.stringify({
           success: true,
           message: 'PIN login successful',
           user_id: profile.id,
+          email: userEmail,
+          token_hash: linkData.properties.hashed_token,
           session: sessionData.session,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
