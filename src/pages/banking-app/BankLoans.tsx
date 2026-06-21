@@ -144,6 +144,21 @@ const BankLoans: React.FC = () => {
         </div>
       )}
 
+      {activeLoans.length > 0 && (
+        <button
+          onClick={() => navigate('/app/banking/more/loans/promise')}
+          className="mb-6 w-full rounded-2xl border border-primary/40 p-4 text-left transition-colors hover:border-primary"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Promise to Pay</p>
+              <p className="text-xs text-muted-foreground">Set a date you'll pay — keep it to protect your credit</p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-primary" />
+          </div>
+        </button>
+      )}
+
       {/* All Applications */}
       {(loanApps || []).length > 0 && (
         <div className="mb-6">
