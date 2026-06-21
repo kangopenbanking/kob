@@ -24,16 +24,26 @@ export async function notifyPtpEvent(
   const meta = NOTIF_META[event];
   if (!meta) return;
 
-  // 1. In-app notification (always)
+  // 1. In-app notification (idempotent on promise_id + event)
   try {
-    await admin.from('app_notifications').insert({
-      user_id: userId,
-      type: event === 'broken' || event === 'swept' ? 'warning' : 'info',
-      title: meta.title,
-      message,
-      icon: meta.icon,
-      metadata: { promise_id: promiseId, ptp_event: event, ...templateData },
-    });
+    const { data: existing } = await admin
+      .from('app_notifications')
+      .select('id')
+      .eq('user_id', userId)
+      .filter('metadata->>promise_id', 'eq', promiseId)
+      .filter('metadata->>ptp_event', 'eq', event)
+      .limit(1)
+      .maybeSingle();
+    if (!existing) {
+      await admin.from('app_notifications').insert({
+        user_id: userId,
+        type: event === 'broken' || event === 'swept' ? 'warning' : 'info',
+        title: meta.title,
+        message,
+        icon: meta.icon,
+        metadata: { promise_id: promiseId, ptp_event: event, ...templateData },
+      });
+    }
   } catch (_) { /* non-fatal */ }
 
   // 2. Email (respect user preferences)
