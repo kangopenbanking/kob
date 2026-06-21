@@ -185,6 +185,7 @@ async function sendViaLovable(payload: EmailPayload): Promise<SendResult> {
 export async function sendEmailWithFallback(
   payload: EmailPayload,
   settings: ProviderSettings,
+  opts: { forceFallbackOn403?: boolean } = {},
 ): Promise<{ primary: SendResult; fallback?: SendResult; finalProvider: 'resend' | 'lovable_email' | null; ok: boolean }> {
   const primary = settings.primary_provider
   const useResendFirst = primary === 'resend' && settings.resend_enabled
@@ -192,8 +193,17 @@ export async function sendEmailWithFallback(
   const first = useResendFirst ? await sendViaResend(payload, settings) : await sendViaLovable(payload)
   if (first.ok) return { primary: first, finalProvider: first.provider, ok: true }
 
-  // Don't fallback on rate-limit/forbidden — those need queue-level handling.
-  if (first.rateLimited || first.forbidden || !settings.fallback_enabled || settings.fallback_provider === 'none') {
+  // Don't fallback on rate-limit — that needs queue-level backoff handling.
+  // 403 normally also skips fallback (quota/account issue), but admin test
+  // sends opt-in to fallback so unverified-recipient sandbox 403s still route
+  // through the secondary provider and return a useful result to the UI.
+  const skipFallback =
+    first.rateLimited ||
+    (!opts.forceFallbackOn403 && first.forbidden) ||
+    !settings.fallback_enabled ||
+    settings.fallback_provider === 'none'
+
+  if (skipFallback) {
     return { primary: first, finalProvider: null, ok: false }
   }
 
