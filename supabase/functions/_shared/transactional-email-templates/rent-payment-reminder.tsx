@@ -3,6 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { appUrl } from './_cta.tsx'
 
 interface Props {
   name?: string
@@ -71,7 +72,7 @@ const RentPaymentReminder = ({
                 : 'Recording your rent payment on time earns +5–10 CrediQ points. Late payments cost -10–25 pts, and missed payments cost -30 pts.'}
             </Text>
             <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-              <Button href={cta_url || 'https://kangopenbanking.com/app/rent-reporting'} style={s.button}>
+              <Button href={cta_url || appUrl('/rent-reporting')} style={s.button}>
                 {is_overdue ? 'Record payment now' : 'Open Rent Reporting'}
               </Button>
             </Section>
@@ -104,6 +105,6 @@ export const template = {
     due_date: 'May 1, 2026',
     days_until_due: 3,
     is_overdue: false,
-    cta_url: 'https://kangopenbanking.com/app/rent-reporting',
+    cta_url: 'https://info.kangfintechsolutions.com/rent-reporting',
   },
 } satisfies TemplateEntry

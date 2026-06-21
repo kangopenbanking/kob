@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; loanType?: string; amount?: string; currency?: string; reference?: string }
+interface Props { name?: string; loanType?: string; amount?: string; currency?: string; reference?: string; ctaUrl?: string }
 
-const LoanApplicationReceivedEmail = ({ name, loanType, amount, currency, reference }: Props) => (
+const LoanApplicationReceivedEmail = ({ name, loanType, amount, currency, reference, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your {loanType || 'loan'} application has been received — {s.BRAND_SHORT}</Preview>
@@ -33,6 +34,7 @@ const LoanApplicationReceivedEmail = ({ name, loanType, amount, currency, refere
             Our team will review your application and you will be notified once a decision has been made.
             This typically takes 1–3 business days.
           </Text>
+          <CtaButton href={ctaUrl} label="View loan status" fallbackPath="/loans" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; tppName?: string; revokedAt?: string; consentId?: string }
+interface Props { name?: string; tppName?: string; revokedAt?: string; consentId?: string; ctaUrl?: string }
 
-const ConsentRevokedEmail = ({ name, tppName, revokedAt, consentId }: Props) => (
+const ConsentRevokedEmail = ({ name, tppName, revokedAt, consentId, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Open Banking consent revoked for {tppName || 'a third party'} — {s.BRAND_SHORT}</Preview>
@@ -28,6 +29,7 @@ const ConsentRevokedEmail = ({ name, tppName, revokedAt, consentId }: Props) => 
           <Text style={s.text}>
             The third-party provider will no longer have access to your account data. If you did not initiate this action, please contact support.
           </Text>
+          <CtaButton href={ctaUrl} label="Manage consents" fallbackPath="/consents" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

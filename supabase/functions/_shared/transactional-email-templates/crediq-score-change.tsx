@@ -3,6 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { appUrl } from './_cta.tsx'
 
 interface Props { name?: string; score?: number; delta?: number; direction?: 'increased' | 'decreased'; cta_url?: string }
 
@@ -32,7 +33,7 @@ const CrediQScoreChange = ({ name, score, delta, direction, cta_url }: Props) =>
                 : 'A drop usually has a clear cause. Open CrediQ to see what changed and how to recover.'}
             </Text>
             <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-              <Button href={cta_url || 'https://kangopenbanking.com/app/credit'} style={s.button}>See what changed</Button>
+              <Button href={cta_url || appUrl('/credit-score')} style={s.button}>See what changed</Button>
             </Section>
           </Section>
           <Section style={s.footer}>
@@ -49,5 +50,5 @@ export const template = {
   component: CrediQScoreChange,
   subject: (d: Record<string, any>) => `Your CrediQ score ${d.direction || 'changed'} by ${Math.abs(d.delta ?? 0)} points`,
   displayName: 'CrediQ — Score change alert',
-  previewData: { name: 'Alex', score: 728, delta: 16, direction: 'increased', cta_url: 'https://kangopenbanking.com/app/credit' },
+  previewData: { name: 'Alex', score: 728, delta: 16, direction: 'increased', cta_url: 'https://info.kangfintechsolutions.com/credit-score' },
 } satisfies TemplateEntry

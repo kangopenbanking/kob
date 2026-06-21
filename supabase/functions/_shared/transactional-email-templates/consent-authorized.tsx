@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; tppName?: string; permissions?: string; expiresAt?: string; consentId?: string }
+interface Props { name?: string; tppName?: string; permissions?: string; expiresAt?: string; consentId?: string; ctaUrl?: string }
 
-const ConsentAuthorizedEmail = ({ name, tppName, permissions, expiresAt, consentId }: Props) => (
+const ConsentAuthorizedEmail = ({ name, tppName, permissions, expiresAt, consentId, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Open Banking consent granted to {tppName || 'a third party'} — {s.BRAND_SHORT}</Preview>
@@ -29,6 +30,7 @@ const ConsentAuthorizedEmail = ({ name, tppName, permissions, expiresAt, consent
           <Text style={s.text}>
             You can revoke this consent at any time from the Consents section in your {s.BRAND_SHORT} app.
           </Text>
+          <CtaButton href={ctaUrl} label="Manage consents" fallbackPath="/consents" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

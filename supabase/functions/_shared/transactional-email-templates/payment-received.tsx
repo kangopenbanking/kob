@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; amount?: string; currency?: string; sender?: string; reference?: string; date?: string }
+interface Props { name?: string; amount?: string; currency?: string; sender?: string; reference?: string; date?: string; ctaUrl?: string }
 
-const PaymentReceivedEmail = ({ name, amount, currency, sender, reference, date }: Props) => (
+const PaymentReceivedEmail = ({ name, amount, currency, sender, reference, date, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>You received {amount || ''} {currency || 'XAF'} — {s.BRAND_SHORT}</Preview>
@@ -31,6 +32,7 @@ const PaymentReceivedEmail = ({ name, amount, currency, sender, reference, date 
           <Text style={s.text}>
             The funds are now available in your account.
           </Text>
+          <CtaButton href={ctaUrl} label="Open your wallet" fallbackPath="/dashboard" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

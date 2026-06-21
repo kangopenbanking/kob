@@ -3,13 +3,14 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
 interface Props {
   name?: string; amount?: string; currency?: string; transactionType?: string
-  account?: string; reference?: string; date?: string
+  account?: string; reference?: string; date?: string; ctaUrl?: string
 }
 
-const HighValueAlertEmail = ({ name, amount, currency, transactionType, account, reference, date }: Props) => (
+const HighValueAlertEmail = ({ name, amount, currency, transactionType, account, reference, date, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>⚠️ High-value {transactionType || 'transaction'} alert — {s.BRAND_SHORT}</Preview>
@@ -37,6 +38,7 @@ const HighValueAlertEmail = ({ name, amount, currency, transactionType, account,
           <Text style={s.text}>
             If you authorised this transaction, no further action is required. If this transaction appears suspicious, please contact support immediately.
           </Text>
+          <CtaButton href={ctaUrl} label="Review transaction" fallbackPath="/dashboard" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated high-value alert from {s.SITE_NAME}.</Text>

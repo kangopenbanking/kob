@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; status?: string; reason?: string; level?: string }
+interface Props { name?: string; status?: string; reason?: string; level?: string; ctaUrl?: string }
 
-const KycStatusUpdateEmail = ({ name, status, reason, level }: Props) => {
+const KycStatusUpdateEmail = ({ name, status, reason, level, ctaUrl }: Props) => {
   const isApproved = status?.toLowerCase() === 'approved' || status?.toLowerCase() === 'verified'
   const boxStyle = isApproved ? s.successBox : s.alertBox
   const icon = isApproved ? '✓' : '✗'
@@ -37,6 +38,11 @@ const KycStatusUpdateEmail = ({ name, status, reason, level }: Props) => {
                 ? 'You now have full access to all banking services on the platform. Thank you for completing your verification.'
                 : 'Please review the requirements and resubmit your verification documents through the app.'}
             </Text>
+            <CtaButton
+              href={ctaUrl}
+              label={isApproved ? 'Open your dashboard' : 'Complete verification'}
+              fallbackPath={isApproved ? '/dashboard' : '/kyc-verification'}
+            />
           </Section>
           <Section style={s.footer}>
             <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; businessName?: string; merchantId?: string }
+interface Props { name?: string; businessName?: string; merchantId?: string; ctaUrl?: string }
 
-const MerchantOnboardedEmail = ({ name, businessName, merchantId }: Props) => (
+const MerchantOnboardedEmail = ({ name, businessName, merchantId, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Welcome to {s.BRAND_SHORT} — {businessName || 'Your business'} is now live</Preview>
@@ -38,6 +39,7 @@ const MerchantOnboardedEmail = ({ name, businessName, merchantId }: Props) => (
             • Manage payouts and settlements{'\n'}
             • Access the merchant API for custom integrations
           </Text>
+          <CtaButton href={ctaUrl} label="Open merchant dashboard" fallbackPath="/merchant" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

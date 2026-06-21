@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; agentName?: string; messagePreview?: string; subject?: string }
+interface Props { name?: string; agentName?: string; messagePreview?: string; subject?: string; ctaUrl?: string }
 
-const SupportReplyEmail = ({ name, agentName, messagePreview, subject }: Props) => (
+const SupportReplyEmail = ({ name, agentName, messagePreview, subject, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>New reply from {s.BRAND_SHORT} Support{agentName ? ` — ${agentName}` : ''}</Preview>
@@ -28,6 +29,7 @@ const SupportReplyEmail = ({ name, agentName, messagePreview, subject }: Props) 
           <Text style={s.text}>
             Open your {s.BRAND_SHORT} app to view the full conversation and respond.
           </Text>
+          <CtaButton href={ctaUrl} label="Open support chat" fallbackPath="/support" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

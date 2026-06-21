@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; subject?: string; department?: string; ticketId?: string }
+interface Props { name?: string; subject?: string; department?: string; ticketId?: string; ctaUrl?: string }
 
-const SupportTicketCreatedEmail = ({ name, subject, department, ticketId }: Props) => (
+const SupportTicketCreatedEmail = ({ name, subject, department, ticketId, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Support chat received — {s.BRAND_SHORT} team will respond shortly</Preview>
@@ -28,6 +29,7 @@ const SupportTicketCreatedEmail = ({ name, subject, department, ticketId }: Prop
           <Text style={s.text}>
             Our team typically responds within 15 minutes to 24 hours depending on the nature of your issue. You will be notified when an agent replies.
           </Text>
+          <CtaButton href={ctaUrl} label="Open support chat" fallbackPath="/support" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

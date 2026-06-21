@@ -121,6 +121,7 @@ Deno.serve(async (req) => {
             totalOutflow: fmtMoney(totalOutflow),
             topCategory: 'General',
             alertsCount,
+            dashboardUrl: `${Deno.env.get('APP_BASE_URL') || 'https://info.kangfintechsolutions.com'}/dashboard`,
           },
         },
       })

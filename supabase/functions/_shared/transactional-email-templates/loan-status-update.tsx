@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; loanType?: string; amount?: string; currency?: string; status?: string; reason?: string; reference?: string }
+interface Props { name?: string; loanType?: string; amount?: string; currency?: string; status?: string; reason?: string; reference?: string; ctaUrl?: string }
 
-const LoanStatusUpdateEmail = ({ name, loanType, amount, currency, status, reason, reference }: Props) => {
+const LoanStatusUpdateEmail = ({ name, loanType, amount, currency, status, reason, reference, ctaUrl }: Props) => {
   const isApproved = status?.toLowerCase() === 'approved'
   const isRejected = status?.toLowerCase() === 'rejected'
   const boxStyle = isApproved ? s.successBox : isRejected ? s.alertBox : s.infoBox
@@ -46,6 +47,7 @@ const LoanStatusUpdateEmail = ({ name, loanType, amount, currency, status, reaso
                   ? 'If you have questions about this decision or would like to discuss alternative options, please contact our support team.'
                   : 'Please log in to your app for full details.'}
             </Text>
+            <CtaButton href={ctaUrl} label="View loan details" fallbackPath="/loans" />
           </Section>
           <Section style={s.footer}>
             <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; clientName?: string; environment?: string; createdAt?: string }
+interface Props { name?: string; clientName?: string; environment?: string; createdAt?: string; ctaUrl?: string }
 
-const ApiKeyCreatedEmail = ({ name, clientName, environment, createdAt }: Props) => (
+const ApiKeyCreatedEmail = ({ name, clientName, environment, createdAt, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>New API credentials generated — {s.BRAND_SHORT}</Preview>
@@ -33,6 +34,7 @@ const ApiKeyCreatedEmail = ({ name, clientName, environment, createdAt }: Props)
           <Text style={s.text}>
             Refer to the {s.BRAND_SHORT} API documentation for integration guides and endpoint references.
           </Text>
+          <CtaButton href={ctaUrl} label="Open developer portal" fallbackPath="/developer" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

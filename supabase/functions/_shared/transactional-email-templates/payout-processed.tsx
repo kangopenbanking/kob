@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; amount?: string; currency?: string; bankAccount?: string; reference?: string; date?: string; status?: string }
+interface Props { name?: string; amount?: string; currency?: string; bankAccount?: string; reference?: string; date?: string; status?: string; ctaUrl?: string }
 
-const PayoutProcessedEmail = ({ name, amount, currency, bankAccount, reference, date, status }: Props) => {
+const PayoutProcessedEmail = ({ name, amount, currency, bankAccount, reference, date, status, ctaUrl }: Props) => {
   const isFailed = status?.toLowerCase() === 'failed'
   const boxStyle = isFailed ? s.alertBox : s.successBox
   const color = isFailed ? '#991B1B' : '#166534'
@@ -39,6 +40,7 @@ const PayoutProcessedEmail = ({ name, amount, currency, bankAccount, reference, 
                 ? 'Please verify your bank details and contact support if the issue persists.'
                 : 'The funds should arrive in your bank account within 1–2 business days.'}
             </Text>
+            <CtaButton href={ctaUrl} label="View payout details" fallbackPath="/merchant" />
           </Section>
           <Section style={s.footer}>
             <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>
