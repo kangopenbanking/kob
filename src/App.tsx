@@ -594,6 +594,7 @@ const AdminNiumFeeSettings = lazy(() => import("./pages/admin/AdminNiumFeeSettin
 const AdminNiumNameCorrections = lazy(() => import("./pages/admin/AdminNiumNameCorrections"));
 
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
+const PromiseToPayAdmin = lazy(() => import("./pages/admin/PromiseToPayAdmin"));
 const AdminSavingsAnomalyQueue = lazy(() => import("./pages/admin/AdminSavingsAnomalyQueue"));
 const EmailTestSuite = lazy(() => import("./pages/admin/EmailTestSuite"));
 const EmailHealthDashboard = lazy(() => import("./pages/admin/EmailHealthDashboard"));
@@ -1103,6 +1104,7 @@ function App() {
               <Route path="business-kyc" element={<BusinessKYCReview />} />
               <Route path="kyb-review-queue" element={<AdminKybReviewQueue />} />
               <Route path="loan-review-queue" element={<AdminLoanReviewQueue />} />
+              <Route path="promise-to-pay" element={<PromiseToPayAdmin />} />
               <Route path="savings-anomaly-queue" element={<AdminSavingsAnomalyQueue />} />
               <Route path="webhook-deliveries" element={<AdminWebhookDeliveries />} />
               <Route path="woo-webhooks" element={<AdminWooWebhooks />} />
