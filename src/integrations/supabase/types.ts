@@ -15767,6 +15767,24 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_reminder_log: {
+        Row: {
+          created_at: string
+          last_sent_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_sent_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       kyc_verification_audit: {
         Row: {
           country: string | null
