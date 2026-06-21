@@ -124,12 +124,13 @@ export default function KYCVerification() {
       const document_back_url = files.back ? await uploadFile(files.back, "back") : undefined;
       const selfie_url = await uploadFile(files.selfie, "selfie");
 
-      const { data, error } = await supabase.functions.invoke("kyc-submit", {
-        body: { ...formData, document_front_url, document_back_url, selfie_url },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const { submitIdentityKyc } = await import("@/lib/kycGateway");
+      const data = await submitIdentityKyc({
+        ...formData,
+        document_front_url,
+        document_back_url,
+        selfie_url,
+      } as any);
 
       toast({ title: "Submitted", description: "Your verification was received and is now under review." });
       setFiles({ front: null, back: null, selfie: null });
