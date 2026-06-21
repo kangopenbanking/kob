@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "LOCK_HASH=$(sha256sum package-lock.json | cut -d' ' -f1); STAMP=node_modules/.lockhash; if [ -f \"$STAMP\" ] && [ \"$(cat $STAMP)\" != \"$LOCK_HASH\" ]; then echo '[vercel] package-lock.json changed — busting node_modules cache'; rm -rf node_modules; fi; npm install --include-workspace-root --legacy-peer-deps --no-audit --no-fund && echo \"$LOCK_HASH\" > node_modules/.lockhash && node scripts/vercel-postinstall-check.mjs",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
