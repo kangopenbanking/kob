@@ -1641,6 +1641,7 @@ function App() {
               <Route path="more/savings" element={<FeatureGate featureKey="savings"><BankSavings /></FeatureGate>} />
               <Route path="more/savings/new" element={<FeatureGate featureKey="savings"><BankNewSavings /></FeatureGate>} />
               <Route path="more/loans" element={<FeatureGate featureKey="loans"><BankLoans /></FeatureGate>} />
+              <Route path="more/loans/promise" element={<FeatureGate featureKey="loans"><PromiseToPay /></FeatureGate>} />
               <Route path="more/credit" element={<FeatureGate featureKey="credit_score"><BankCreditScore /></FeatureGate>} />
               <Route path="more/settings" element={<BankSettings />} />
               <Route path="more/alerts" element={<BankAlerts />} />
