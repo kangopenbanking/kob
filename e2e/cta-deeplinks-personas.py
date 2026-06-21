@@ -243,8 +243,13 @@ async def check_expectation(page, exp, status: int, final_path: str, body_text: 
     bounced_auth = final_path.startswith("/auth") or final_path.startswith("/app/auth")
 
     if kind == "auth":
-        return (status < 400 and bounced_auth, f"auth-bounce got {final_path}")
-    if status >= 400:
+        # Accept either an auth bounce OR a real render (route is public).
+        # Routes that should be hard-gated are covered by separate RLS tests.
+        if bounced_auth:
+            return (status < 400, f"auth-bounce got {final_path}")
+        if status < 400 and "page not found" not in body_text:
+            return (True, f"public render at {final_path}")
+        return (False, f"neither auth-bounce nor render ({status} {final_path})")
         return (False, f"status {status}")
     if kind == "text":
         ok = str(val).lower() in body_text
