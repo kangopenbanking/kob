@@ -180,11 +180,11 @@ serve(async (req) => {
       message_id: messageId,
       message: success ? 'Communication sent successfully' : 'Communication failed',
       error: errorMessage || undefined,
-    }), { status: success ? 200 : 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error: any) {
     console.error('Error in send-communication function:', error);
     return new Response(JSON.stringify({ success: false, error: error.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 });
