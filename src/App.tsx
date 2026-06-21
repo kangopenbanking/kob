@@ -1670,6 +1670,7 @@ function App() {
               <Route path="scan" element={<CustomerScan />} />
               <Route path="cards" element={<CustomerCards />} />
               <Route path="more" element={<CustomerMore />} />
+              <Route path="promise-to-pay" element={<CustomerPromiseToPay />} />
               <Route path="transfer" element={<CustomerTransfer />} />
               <Route path="request" element={<CustomerRequest />} />
               <Route path="bills" element={<CustomerBills />} />
