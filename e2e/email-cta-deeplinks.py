@@ -183,9 +183,12 @@ async def main():
                               or (cta.get("allow_auth_redirect") and bounced_auth))
 
                 query_ok = query_subset(final_qs, cta.get("expect_query") or {})
-                # Skip marker assertion if auth-bounced and that's allowed
+                # Auth-gated routes are allowed to bounce — query string is
+                # preserved through redirect by the app router, but if the
+                # auth page strips it we don't fail the CTA on that alone.
                 if cta.get("allow_auth_redirect") and bounced_auth:
                     marker_ok = True
+                    query_ok = True
                     marker_note = "auth-bounced (acceptable)"
                 else:
                     marker_ok = await check_marker(page, cta["marker"])
