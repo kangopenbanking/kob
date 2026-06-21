@@ -4,6 +4,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { notifyPtpEvent } from '../_shared/ptp-notify.ts';
+import { dispatchPtpWebhook, type PtpWebhookEvent } from '../_shared/ptp-webhook.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -72,6 +73,11 @@ Deno.serve(async (req) => {
             paidAmount: String(amount), remaining: String(remaining),
             promisedDate: open.promised_date, missedAmount: String(remaining),
           });
+        await dispatchPtpWebhook(admin, `ptp.${evKey}` as PtpWebhookEvent, {
+          promise_id: open.id, user_id: open.user_id, loan_account_id: open.loan_account_id,
+          amount: newKept, currency: open.currency, promised_date: open.promised_date, status,
+          data: { paid_amount: amount, remaining, paid_at: paidDate.toISOString() },
+        });
       }
       return json({ matched: true, promise: updated });
     }
@@ -95,6 +101,11 @@ Deno.serve(async (req) => {
         await notifyPtpEvent(admin, 'swept', p.id, p.user_id,
           `Promise to Pay of ${p.promised_amount} ${p.currency} was not kept by ${p.promised_date}.`,
           { missedAmount: String(missed), currency: p.currency, promisedDate: p.promised_date });
+        await dispatchPtpWebhook(admin, 'ptp.swept', {
+          promise_id: p.id, user_id: p.user_id, loan_account_id: p.loan_account_id,
+          amount: p.promised_amount, currency: p.currency, promised_date: p.promised_date, status: 'broken',
+          data: { missed_amount: missed, via: 'sweep' },
+        });
         broken++;
       }
       return json({ swept: overdue?.length ?? 0, broken });

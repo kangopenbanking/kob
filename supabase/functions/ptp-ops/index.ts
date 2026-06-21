@@ -3,6 +3,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { notifyPtpEvent } from '../_shared/ptp-notify.ts';
+import { dispatchPtpWebhook } from '../_shared/ptp-webhook.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -87,6 +88,11 @@ Deno.serve(async (req) => {
       await notifyPtpEvent(admin, 'created', data.id, user.id,
         `Promise to Pay of ${promised_amount} ${currency} scheduled for ${promised_date}.`,
         { amount: String(promised_amount), currency, promisedDate: promised_date, reference: `PTP-${String(data.id).slice(0, 8).toUpperCase()}` });
+      await dispatchPtpWebhook(admin, 'ptp.created', {
+        promise_id: data.id, user_id: user.id, loan_account_id,
+        amount: promised_amount, currency, promised_date, status: data.status,
+        data: { payment_method },
+      });
       return json({ promise: data });
     }
 
@@ -98,6 +104,10 @@ Deno.serve(async (req) => {
       const { data, error } = await admin.from('promise_to_pay').update({ status: 'cancelled' }).eq('id', promise_id).select('*').single();
       if (error) throw error;
       await admin.from('promise_to_pay_events').insert({ promise_id, event_type: 'cancelled' });
+      await dispatchPtpWebhook(admin, 'ptp.cancelled', {
+        promise_id, user_id: user.id, loan_account_id: p.loan_account_id,
+        amount: p.promised_amount, currency: p.currency, promised_date: p.promised_date, status: 'cancelled',
+      });
       return json({ promise: data });
     }
 
@@ -138,6 +148,12 @@ Deno.serve(async (req) => {
       await notifyPtpEvent(admin, 'rescheduled', child.id, user.id,
         `Promise to Pay rescheduled to ${promised_date}.`,
         { amount: String(child.promised_amount), currency: child.currency, newDate: promised_date, reason, isRepeat });
+      await dispatchPtpWebhook(admin, 'ptp.rescheduled', {
+        promise_id: child.id, user_id: user.id, loan_account_id: child.loan_account_id,
+        amount: child.promised_amount, currency: child.currency, promised_date,
+        status: child.status,
+        data: { rescheduled_from: orig.id, reason, repeat: isRepeat },
+      });
       return json({ promise: child, original: orig.id });
     }
 
