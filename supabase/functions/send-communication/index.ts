@@ -85,6 +85,28 @@ serve(async (req) => {
         const fromEmail = settings.environment === 'production' ? settings.production_from_email : settings.sandbox_from_email;
         const fromName = settings.environment === 'production' ? settings.production_from_name : settings.sandbox_from_name;
 
+        // Provision an unsubscribe token (required by Lovable Email for transactional sends)
+        const normalizedEmail = recipient_email.toLowerCase().trim();
+        let unsubscribeToken: string | null = null;
+        try {
+          const { data: existing } = await supabaseClient
+            .from('email_unsubscribe_tokens')
+            .select('token')
+            .eq('email', normalizedEmail)
+            .maybeSingle();
+          if (existing?.token) {
+            unsubscribeToken = existing.token as string;
+          } else {
+            const newToken = crypto.randomUUID();
+            const { error: upsertErr } = await supabaseClient
+              .from('email_unsubscribe_tokens')
+              .upsert({ email: normalizedEmail, token: newToken }, { onConflict: 'email' });
+            if (!upsertErr) unsubscribeToken = newToken;
+          }
+        } catch (tokenErr) {
+          console.warn('Unsubscribe token provisioning failed:', tokenErr);
+        }
+
         const result = await sendEmailWithFallback({
           to: recipient_email,
           from: `${fromName || SITE_NAME} <${fromEmail}>`,
@@ -96,13 +118,15 @@ serve(async (req) => {
           label: `communication-${template_key}`,
           idempotency_key: `comm-${template_key}-${messageId}`,
           message_id: messageId,
-        }, settings);
+          unsubscribe_token: unsubscribeToken ?? undefined,
+        }, settings, { forceFallbackOn403: true });
 
         if (result.ok) {
           success = true;
           providerName = result.finalProvider;
           sentAt = new Date().toISOString();
         } else {
+          providerName = result.finalProvider ?? null;
           errorMessage = result.primary?.error || result.fallback?.error || 'Failed to send email';
         }
       } catch (error: any) {
