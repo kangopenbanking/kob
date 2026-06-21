@@ -113,8 +113,36 @@ Deno.serve(async (req) => {
           .select("email, full_name")
           .in("id", adminIds);
 
-        for (const p of adminProfiles || []) {
-          if (!p.email) continue;
+        // Filter out synthetic / undeliverable pseudo-emails that have caused
+        // permanent bounces in the past (e.g. phone-based or generated IDs).
+        // Also skip any address currently in the suppression list to prevent
+        // a self-reinforcing bounce → alert → bounce loop.
+        const SYNTHETIC_EMAIL_DOMAINS = [
+          "@phone.kob.cm",
+          "@kang.id",
+          "@no-email.local",
+          ".local",
+        ];
+        const candidateEmails = (adminProfiles || [])
+          .map((p: any) => ({ email: (p.email || "").toLowerCase().trim(), full_name: p.full_name }))
+          .filter((p) => p.email && p.email.includes("@") && !SYNTHETIC_EMAIL_DOMAINS.some((s) => p.email.endsWith(s)));
+
+        let suppressedSet = new Set<string>();
+        if (candidateEmails.length) {
+          const { data: suppressed } = await admin
+            .from("suppressed_emails")
+            .select("email")
+            .in("email", candidateEmails.map((p) => p.email));
+          suppressedSet = new Set((suppressed || []).map((s: any) => (s.email || "").toLowerCase()));
+        }
+
+        const deliverable = candidateEmails.filter((p) => !suppressedSet.has(p.email));
+        if (deliverable.length === 0) {
+          console.warn(`[email-queue-alerts] No deliverable admin recipients for ${type} (filtered ${candidateEmails.length})`);
+          return;
+        }
+
+        for (const p of deliverable) {
           await admin.functions.invoke("send-transactional-email", {
             headers: { Authorization: `Bearer ${SERVICE_KEY}` },
             body: {
