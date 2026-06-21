@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, AlertCircle, Info, Bell, RefreshCw, CheckCheck, Wallet, ArrowUpDown, ShieldCheck, Smartphone, Landmark, Filter } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle, Info, Bell, RefreshCw, CheckCheck, Wallet, ArrowUpDown, ShieldCheck, Smartphone, Landmark, Filter, HandCoins } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 
-type FilterType = 'all' | 'success' | 'info' | 'warning';
+type FilterType = 'all' | 'success' | 'info' | 'warning' | 'ptp';
 
 const typeIconMap: Record<string, React.ElementType> = {
   success: CheckCircle2,
@@ -20,6 +20,8 @@ const categoryIconMap: Record<string, React.ElementType> = {
   kyc: ShieldCheck,
   mobile_money: Smartphone,
   bank_transfer: Landmark,
+  loan: HandCoins,
+  payment: ArrowUpDown,
   default: Bell,
 };
 
@@ -29,8 +31,11 @@ const colorMap: Record<string, string> = {
   warning: 'bg-destructive/10 text-destructive',
 };
 
+const PTP_EVENTS = new Set(['created', 'partial', 'rescheduled', 'kept', 'broken', 'swept']);
+
 const filterOptions: { key: FilterType; label: string }[] = [
   { key: 'all', label: 'All' },
+  { key: 'ptp', label: 'Promises' },
   { key: 'success', label: 'Success' },
   { key: 'info', label: 'Updates' },
   { key: 'warning', label: 'Alerts' },
@@ -44,7 +49,9 @@ const BankAlerts: React.FC = () => {
 
   const filteredNotifications = filter === 'all'
     ? notifications
-    : notifications.filter(n => n.type === filter);
+    : filter === 'ptp'
+      ? notifications.filter(n => (n as any)?.metadata?.ptp_event || PTP_EVENTS.has(String((n as any)?.metadata?.ptp_event)) || n.icon === 'loan')
+      : notifications.filter(n => n.type === filter);
 
   const formatTime = (time: string) => {
     try {
