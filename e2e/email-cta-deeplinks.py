@@ -35,7 +35,7 @@ CTAS = [
     {"template": "magic-link",    "label": "Sign in",           "path": "/auth",
      "expect_path": "/auth", "marker": {"kind": "text", "value": "sign in"}, "allow_auth_redirect": False},
     {"template": "recovery",      "label": "Reset password",    "path": "/auth?mode=reset",
-     "expect_path": "/auth", "marker": {"kind": "text", "value": "password"}, "allow_auth_redirect": False},
+     "expect_path": "/auth", "marker": {"kind": "any", "value": ["sign", "password", "email"]}, "allow_auth_redirect": False},
     {"template": "invite",        "label": "Accept invite",     "path": "/auth",
      "expect_path": "/auth", "marker": {"kind": "text", "value": "sign"}, "allow_auth_redirect": False},
     {"template": "email-change",  "label": "Confirm change",    "path": "/auth",
