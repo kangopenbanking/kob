@@ -126,6 +126,9 @@ const Communications = () => {
       });
 
       if (response.error) throw response.error;
+      if (response.data && response.data.success === false) {
+        throw new Error(response.data.error || 'Communication failed');
+      }
       return response.data;
     },
     onSuccess: () => {
