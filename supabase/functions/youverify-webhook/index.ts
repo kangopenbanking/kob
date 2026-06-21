@@ -175,11 +175,12 @@ Deno.serve(async (req) => {
 
   let outcome = "session_not_found";
   let detail: string | null = unmapped ? `unmapped_status=${yvStatus || "(empty)"}` : null;
+  let notify: { user_id: string; template: string } | null = null;
 
   // NOTE: kyc_verifications uses column `status` (not `verification_status`).
   // business_kyc uses `verification_status`.
   const { data: existing } = await client
-    .from("kyc_verifications").select("id, status").eq("youverify_session_id", sessionId).maybeSingle();
+    .from("kyc_verifications").select("id, status, user_id").eq("youverify_session_id", sessionId).maybeSingle();
 
   if (existing) {
     const decided = existing.status === "approved" || existing.status === "rejected";
@@ -196,12 +197,15 @@ Deno.serve(async (req) => {
         .eq("id", existing.id);
       outcome = "applied";
       detail = [`status=${newStatus}`, unmapped ? `raw=${yvStatus}` : null].filter(Boolean).join(" ");
+      if (newStatus === "approved" || newStatus === "rejected") {
+        notify = { user_id: (existing as any).user_id, template: newStatus === "approved" ? "kyc_approved" : "kyc_rejected" };
+      }
     } else {
       outcome = "already_decided";
     }
   } else {
     const { data: biz } = await client
-      .from("business_kyc").select("id, verification_status").eq("youverify_session_id", sessionId).maybeSingle();
+      .from("business_kyc").select("id, verification_status, user_id").eq("youverify_session_id", sessionId).maybeSingle();
     if (biz) {
       const decided = biz.verification_status === "approved" || biz.verification_status === "rejected";
       if (decided && biz.verification_status !== newStatus) {
@@ -216,11 +220,44 @@ Deno.serve(async (req) => {
           .eq("id", biz.id);
         outcome = "applied";
         detail = [`business status=${newStatus}`, unmapped ? `raw=${yvStatus}` : null].filter(Boolean).join(" ");
+        if (newStatus === "approved" || newStatus === "rejected") {
+          notify = { user_id: (biz as any).user_id, template: newStatus === "approved" ? "kyb_approved" : "kyb_rejected" };
+        }
       } else {
         outcome = "already_decided";
       }
     }
   }
+
+  // Customer notification email (non-blocking). Triggered when YV result is applied.
+  if (notify) {
+    try {
+      const { data: profile } = await client
+        .from("profiles")
+        .select("email, full_name")
+        .eq("id", notify.user_id)
+        .maybeSingle();
+      const prof = profile as { email?: string; full_name?: string } | null;
+      if (prof?.email) {
+        await client.functions.invoke("send-communication", {
+          body: {
+            template_key: notify.template,
+            recipient_email: prof.email,
+            recipient_id: notify.user_id,
+            variables: {
+              recipient_name: prof.full_name || "Valued Customer",
+              status: newStatus,
+              verified_at: new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+              rejection_reason: newStatus === "rejected" ? `Verification status from provider: ${yvStatus || "rejected"}` : "",
+            },
+          },
+        });
+      }
+    } catch (notifyErr) {
+      console.error(JSON.stringify({ scope: "yv-webhook", event: "notify_failed", error: String(notifyErr) }));
+    }
+  }
+
 
   console.log(JSON.stringify({
     scope: "yv-webhook", event: "correlation",
