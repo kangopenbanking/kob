@@ -69,29 +69,26 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const { data, error } = await supabase.functions.invoke('business-kyc-submit', {
-        body: {
-          account_id: accountId,
-          business_name: formData.business_name,
-          registration_number: formData.registration_number,
-          business_type: formData.business_type,
-          industry: formData.industry,
-          vat_number: formData.vat_number || null,
-          tax_id: formData.tax_id || null,
-          registration_date: formData.registration_date || null,
-          business_address: { street: formData.street, city: formData.city, state: formData.state, postal_code: formData.postal_code, country: formData.country },
-          business_description: formData.business_description,
-          annual_turnover: formData.annual_turnover ? parseFloat(formData.annual_turnover) : null,
-          number_of_employees: formData.number_of_employees ? parseInt(formData.number_of_employees) : null,
-          registration_certificate_url: docUrls.registration_certificate || null,
-          articles_of_association_url: docUrls.articles_of_association || null,
-          tax_certificate_url: docUrls.tax_certificate || null,
-          proof_of_address_url: docUrls.proof_of_address || null,
-          bank_statement_url: docUrls.bank_statement || null,
-        }
+      const { submitBusinessKyb } = await import('@/lib/kycGateway');
+      const data = await submitBusinessKyb({
+        account_id: accountId,
+        business_name: formData.business_name,
+        registration_number: formData.registration_number,
+        business_type: formData.business_type,
+        industry: formData.industry,
+        vat_number: formData.vat_number || null,
+        tax_id: formData.tax_id || null,
+        registration_date: formData.registration_date || null,
+        business_address: { street: formData.street, city: formData.city, state: formData.state, postal_code: formData.postal_code, country: formData.country },
+        business_description: formData.business_description,
+        annual_turnover: formData.annual_turnover ? parseFloat(formData.annual_turnover) : null,
+        number_of_employees: formData.number_of_employees ? parseInt(formData.number_of_employees) : null,
+        registration_certificate_url: docUrls.registration_certificate || null,
+        articles_of_association_url: docUrls.articles_of_association || null,
+        tax_certificate_url: docUrls.tax_certificate || null,
+        proof_of_address_url: docUrls.proof_of_address || null,
+        bank_statement_url: docUrls.bank_statement || null,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
       toast({ title: "Success", description: "Business KYC submitted for verification" });
       onSuccess();
     } catch (error: any) {

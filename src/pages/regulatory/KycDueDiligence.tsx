@@ -164,40 +164,34 @@ export default function KycDueDiligence() {
       if (flowType === "individual") {
         if (!docs.idFront) { toast.error("Upload your ID document (front)."); setSubmitting(false); return; }
         if (!docs.selfie) { toast.error("Upload a selfie photo."); setSubmitting(false); return; }
-        const { data, error } = await supabase.functions.invoke("kyc-submit", {
-          body: {
-            verification_type: "identity",
-            document_type: form.idType || "national_id",
-            document_number: form.idNumber,
-            document_country: form.nationality || "CM",
-            document_expiry_date: form.idExpiry,
-            document_front_url: docs.idFront,
-            document_back_url: docs.idBack || undefined,
-            selfie_url: docs.selfie,
-          },
+        const { submitIdentityKyc } = await import("@/lib/kycGateway");
+        await submitIdentityKyc({
+          verification_type: "identity",
+          document_type: form.idType || "national_id",
+          document_number: form.idNumber,
+          document_country: form.nationality || "CM",
+          document_expiry_date: form.idExpiry,
+          document_front_url: docs.idFront,
+          document_back_url: docs.idBack || undefined,
+          selfie_url: docs.selfie,
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
         toast.success("KYC submitted successfully!");
       } else {
         if (!docs.registrationCertificate) { toast.error("Upload registration certificate."); setSubmitting(false); return; }
         if (!docs.articlesOfAssociation) { toast.error("Upload articles of association."); setSubmitting(false); return; }
-        const { data, error } = await supabase.functions.invoke("business-kyc-submit", {
-          body: {
-            business_name: form.businessName, registration_number: form.registrationNumber,
-            business_type: form.businessType, industry: form.industry,
-            business_address: { street: form.addressLine1, city: form.addressCity, country: form.registrationCountry || "CM" },
-            business_description: form.businessDescription,
-            annual_turnover: form.annualTurnover ? parseFloat(form.annualTurnover) : null,
-            registration_certificate_url: docs.registrationCertificate,
-            articles_of_association_url: docs.articlesOfAssociation,
-            tax_certificate_url: docs.taxCertificate || null,
-            proof_of_address_url: docs.businessProofOfAddress || null,
-            bank_statement_url: docs.bankStatement || null,
-          },
+        const { submitBusinessKyb } = await import("@/lib/kycGateway");
+        await submitBusinessKyb({
+          business_name: form.businessName, registration_number: form.registrationNumber,
+          business_type: form.businessType, industry: form.industry,
+          business_address: { street: form.addressLine1, city: form.addressCity, country: form.registrationCountry || "CM" },
+          business_description: form.businessDescription,
+          annual_turnover: form.annualTurnover ? parseFloat(form.annualTurnover) : null,
+          registration_certificate_url: docs.registrationCertificate,
+          articles_of_association_url: docs.articlesOfAssociation,
+          tax_certificate_url: docs.taxCertificate || null,
+          proof_of_address_url: docs.businessProofOfAddress || null,
+          bank_statement_url: docs.bankStatement || null,
         });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
         toast.success("Business KYB submitted successfully!");
       }
       setForm(initial); setDocs(initialDocs); setFlowType(null); setStep(0);

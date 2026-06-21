@@ -122,21 +122,21 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
       todayPlus.setFullYear(todayPlus.getFullYear() + 5);
       const fallbackExpiry = todayPlus.toISOString().slice(0, 10);
 
-      const { data, error } = await supabase.functions.invoke('kyc-submit', {
-        body: {
-          verification_type: 'identity',
-          document_type: personalInfo.idType,
-          document_number: personalInfo.idNumber,
-          document_country: personalInfo.nationality || 'CM',
-          document_expiry_date: fallbackExpiry,
-          document_front_url: documentFrontUrl,
-          document_back_url: documentBackUrl || undefined,
-          selfie_url: selfieUrl,
-        },
+      const { submitIdentityKyc } = await import('@/lib/kycGateway');
+      const data = await submitIdentityKyc({
+        verification_type: 'identity',
+        document_type: personalInfo.idType,
+        document_number: personalInfo.idNumber,
+        document_country: personalInfo.nationality || 'CM',
+        document_expiry_date: fallbackExpiry,
+        document_front_url: documentFrontUrl,
+        document_back_url: documentBackUrl || undefined,
+        selfie_url: selfieUrl,
+        source_app: 'banking_app',
+        institution_id: tenant.id || undefined,
+        date_of_birth: personalInfo.dateOfBirth,
+        nationality: personalInfo.nationality,
       });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
 
       // Best-effort: tag institution context onto the new verification
       if (tenant.id && data?.verification_id) {
