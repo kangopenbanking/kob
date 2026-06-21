@@ -250,6 +250,7 @@ async def check_expectation(page, exp, status: int, final_path: str, body_text: 
         if status < 400 and "page not found" not in body_text:
             return (True, f"public render at {final_path}")
         return (False, f"neither auth-bounce nor render ({status} {final_path})")
+    if status >= 400:
         return (False, f"status {status}")
     if kind == "text":
         ok = str(val).lower() in body_text
