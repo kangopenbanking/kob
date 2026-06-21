@@ -7,7 +7,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/((?!openapi(-sandbox)?\\.(json|yaml)|openapi-history/.*|apis(-sandbox)?\\.json|changelog\\.json|CHANGELOG\\.md|sitemap\\.xml|robots\\.txt|security\\.txt|manifest(-biz)?\\.json|placeholder\\.svg|reports/.*|postman/.*|sdk-downloads/.*|scripts/.*|docs/.*|\\.well-known/.*|OneSignalSDKWorker\\.js|SHA256SUMS\\.txt(\\.sig)?|artifact-signing-pubkey\\.pem|signing-key-updates\\.json|support-agent-health\\.json|_redirects|_headers|assets/.*|favicon\\.ico).*)", "destination": "/index.html" }
+    { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
     {
