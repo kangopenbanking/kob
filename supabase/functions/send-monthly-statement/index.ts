@@ -97,8 +97,8 @@ Deno.serve(async (req) => {
         }
       } catch {}
 
-      const statementUrl = `${APP_BASE_URL}/statements?period=${periodKey}&user=${uid}`
-      const csvUrl = `${APP_BASE_URL}/statements?period=${periodKey}&user=${uid}&format=csv`
+      const statementUrl = `${APP_BASE_URL}/app/statements?period=${periodKey}&user=${uid}`
+      const csvUrl = `${APP_BASE_URL}/app/statements?period=${periodKey}&user=${uid}&format=csv`
 
       const { error: invokeErr } = await supabase.functions.invoke('send-transactional-email', {
         body: {

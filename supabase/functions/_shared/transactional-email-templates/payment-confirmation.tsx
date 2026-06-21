@@ -3,13 +3,14 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
 interface Props {
   name?: string; amount?: string; currency?: string; recipient?: string
-  reference?: string; date?: string; status?: string
+  reference?: string; date?: string; status?: string; ctaUrl?: string
 }
 
-const PaymentConfirmationEmail = ({ name, amount, currency, recipient, reference, date, status }: Props) => (
+const PaymentConfirmationEmail = ({ name, amount, currency, recipient, reference, date, status, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Payment of {amount || ''} {currency || 'XAF'} confirmed — {s.BRAND_SHORT}</Preview>
@@ -36,6 +37,7 @@ const PaymentConfirmationEmail = ({ name, amount, currency, recipient, reference
           <Text style={s.text}>
             You can view the full transaction details in your {s.BRAND_SHORT} app.
           </Text>
+          <CtaButton href={ctaUrl} label="View transaction" fallbackPath="/dashboard" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

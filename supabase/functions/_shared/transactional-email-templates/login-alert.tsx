@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; device?: string; location?: string; time?: string }
+interface Props { name?: string; device?: string; location?: string; time?: string; ctaUrl?: string }
 
-const LoginAlertEmail = ({ name, device, location, time }: Props) => (
+const LoginAlertEmail = ({ name, device, location, time, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>New sign-in to your {s.BRAND_SHORT} account</Preview>
@@ -30,6 +31,7 @@ const LoginAlertEmail = ({ name, device, location, time }: Props) => (
               If this wasn't you, please change your password immediately and contact support.
             </Text>
           </Section>
+          <CtaButton href={ctaUrl} label="Review security settings" fallbackPath="/security" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated security notification from {s.SITE_NAME}.</Text>

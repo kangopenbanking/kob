@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { name?: string; portal?: string }
+interface Props { name?: string; portal?: string; ctaUrl?: string }
 
-const WelcomeEmail = ({ name, portal }: Props) => (
+const WelcomeEmail = ({ name, portal, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Welcome to {s.SITE_NAME} — Your Open Banking journey starts now</Preview>
@@ -38,6 +39,7 @@ const WelcomeEmail = ({ name, portal }: Props) => (
           <Text style={s.text}>
             If you need any assistance, our support team is available via live chat in your app.
           </Text>
+          <CtaButton href={ctaUrl} label="Open your dashboard" fallbackPath="/dashboard" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated message from {s.SITE_NAME}.</Text>

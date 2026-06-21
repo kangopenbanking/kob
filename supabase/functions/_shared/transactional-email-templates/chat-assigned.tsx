@@ -3,10 +3,11 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { CtaButton } from './_cta.tsx'
 
-interface Props { agentName?: string; customerName?: string; subject?: string; department?: string; priority?: string }
+interface Props { agentName?: string; customerName?: string; subject?: string; department?: string; priority?: string; ctaUrl?: string }
 
-const ChatAssignedEmail = ({ agentName, customerName, subject, department, priority }: Props) => (
+const ChatAssignedEmail = ({ agentName, customerName, subject, department, priority, ctaUrl }: Props) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Support chat assigned to you — {s.BRAND_SHORT}</Preview>
@@ -32,6 +33,7 @@ const ChatAssignedEmail = ({ agentName, customerName, subject, department, prior
           <Text style={s.text}>
             Please log in to the admin dashboard to respond to this customer's request promptly.
           </Text>
+          <CtaButton href={ctaUrl} label="Open admin support chat" fallbackPath="/admin/support-chat" />
         </Section>
         <Section style={s.footer}>
           <Text style={s.footerText}>This is an automated notification from {s.SITE_NAME}.</Text>

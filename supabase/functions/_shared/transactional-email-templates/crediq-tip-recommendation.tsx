@@ -3,6 +3,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import * as s from './_styles.ts'
+import { appUrl } from './_cta.tsx'
 
 interface Props { name?: string; tip?: string; impact?: number; cta_url?: string }
 
@@ -24,7 +25,7 @@ const CrediQTipRecommendation = ({ name, tip, impact, cta_url }: Props) => (
           </Section>
           <Text style={s.text}>Open CrediQ to mark this done or see your full action plan.</Text>
           <Section style={{ textAlign: 'center', margin: '24px 0' }}>
-            <Button href={cta_url || 'https://kangopenbanking.com/app/credit'} style={s.button}>View my tips</Button>
+            <Button href={cta_url || appUrl('/credit-score')} style={s.button}>View my tips</Button>
           </Section>
         </Section>
         <Section style={s.footer}>
@@ -40,5 +41,5 @@ export const template = {
   component: CrediQTipRecommendation,
   subject: (d: Record<string, any>) => `Your top CrediQ tip${d.impact ? ` (+${d.impact} pts)` : ''}`,
   displayName: 'CrediQ — Tip recommendation',
-  previewData: { name: 'Alex', tip: 'Pay down your highest-utilization card by 20%.', impact: 18, cta_url: 'https://kangopenbanking.com/app/credit' },
+  previewData: { name: 'Alex', tip: 'Pay down your highest-utilization card by 20%.', impact: 18, cta_url: 'https://info.kangfintechsolutions.com/credit-score' },
 } satisfies TemplateEntry

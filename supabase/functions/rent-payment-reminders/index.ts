@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const APP_URL = 'https://kangopenbanking.com';
+const APP_URL = Deno.env.get('APP_BASE_URL') || 'https://info.kangfintechsolutions.com';
 const REMINDER_OFFSETS = [3, 1, 0, -1, -3, -7]; // days_until_due (negative = overdue)
 
 Deno.serve(async (req) => {
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
                 due_date: dueDateFormatted,
                 days_until_due: target.days_until_due,
                 is_overdue: isOverdue,
-                cta_url: `${APP_URL}/app/rent-reporting`,
+                cta_url: `${APP_URL}/rent-reporting`,
               },
             },
           });
