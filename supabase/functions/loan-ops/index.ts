@@ -478,6 +478,17 @@ async function handleRepay(req: Request, body: any, bodyText: string) {
     await fetch(`${supabaseUrl}/functions/v1/credit-score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` }, body: JSON.stringify({ action: 'engine', user_id: roleResult.userId! }) });
   } catch (e) { console.error('Credit score recompute failed:', e); }
 
+  // Promise to Pay settlement (non-blocking)
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    await fetch(`${supabaseUrl}/functions/v1/ptp-settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+      body: JSON.stringify({ mode: 'match', loan_account_id, amount, paid_at: new Date().toISOString() }),
+    });
+  } catch (e) { console.error('PTP settle failed:', e); }
+
   // ✉️ Email customer: loan repayment confirmed
   const repayCustomerName = await getUserName(supabase, loan.user_id);
   sendManagedEmail(supabase, {
