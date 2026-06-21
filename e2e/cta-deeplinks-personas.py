@@ -135,7 +135,7 @@ CTAS = [
          "anonymous":    expect("auth"),
          "default":      expect("any", ["loan"]),
      }},
-    {"surface": "notification", "source": "dispute_update", "label": "View dispute", "path": "/disputes",
+    {"surface": "notification", "source": "dispute_update", "label": "View dispute", "path": "/app/disputes",
      "expects": {
          "anonymous":    expect("auth"),
          "default":      expect("any", ["dispute"]),
@@ -145,7 +145,7 @@ CTAS = [
          "anonymous":    expect("auth"),
          "default":      expect("any", ["wallet", "balance", "dashboard"]),
      }},
-    {"surface": "notification", "source": "bill_payment_success", "label": "Open bills", "path": "/bills",
+    {"surface": "notification", "source": "bill_payment_success", "label": "Open bills", "path": "/app/bills",
      "expects": {
          "anonymous":    expect("auth"),
          "default":      expect("any", ["bill", "payment"]),
