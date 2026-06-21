@@ -2,6 +2,7 @@
 // Direct backend: https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1/ptp-ops
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { notifyPtpEvent } from '../_shared/ptp-notify.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -83,6 +84,9 @@ Deno.serve(async (req) => {
         metadata: { payment_method, currency },
       });
       await recordCreditEvent(admin, user.id, 'ptp_created', { promise_id: data.id });
+      await notifyPtpEvent(admin, 'created', data.id, user.id,
+        `Promise to Pay of ${promised_amount} ${currency} scheduled for ${promised_date}.`,
+        { amount: String(promised_amount), currency, promisedDate: promised_date, reference: `PTP-${String(data.id).slice(0, 8).toUpperCase()}` });
       return json({ promise: data });
     }
 
@@ -131,6 +135,9 @@ Deno.serve(async (req) => {
         .gte('updated_at', new Date(Date.now() - 30 * 86400000).toISOString());
       const isRepeat = (count ?? 0) > 1;
       await recordCreditEvent(admin, user.id, isRepeat ? 'ptp_rescheduled_repeat' : 'ptp_rescheduled', { promise_id: orig.id, child_id: child.id });
+      await notifyPtpEvent(admin, 'rescheduled', child.id, user.id,
+        `Promise to Pay rescheduled to ${promised_date}.`,
+        { amount: String(child.promised_amount), currency: child.currency, newDate: promised_date, reason, isRepeat });
       return json({ promise: child, original: orig.id });
     }
 

@@ -3,6 +3,7 @@
 // and the daily cron sweep. Atomically marks promises kept/partial/broken.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { notifyPtpEvent } from '../_shared/ptp-notify.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -56,10 +57,21 @@ Deno.serve(async (req) => {
         promise_id: open.id, event_type: 'payment_matched', amount, metadata: { status, paid_at: paidDate.toISOString() },
       });
       if (status === 'kept' || status === 'partially_kept' || status === 'broken') {
+        const evKey = status === 'partially_kept' ? 'partial' : status;
         await admin.from('promise_to_pay_events').insert({
-          promise_id: open.id, event_type: status === 'partially_kept' ? 'partial' : status, amount: newKept,
+          promise_id: open.id, event_type: evKey, amount: newKept,
         });
-        await recordCreditEvent(admin, open.user_id, `ptp_${status === 'partially_kept' ? 'partial' : status}`, { promise_id: open.id, amount: newKept });
+        await recordCreditEvent(admin, open.user_id, `ptp_${evKey}`, { promise_id: open.id, amount: newKept });
+        const remaining = Math.max(0, Number(open.promised_amount) - newKept);
+        await notifyPtpEvent(admin, evKey as any, open.id, open.user_id,
+          evKey === 'kept' ? `You kept your Promise to Pay of ${open.promised_amount} ${open.currency}.` :
+          evKey === 'partial' ? `Partial payment of ${amount} ${open.currency} received. ${remaining} remaining.` :
+          `Promise to Pay of ${open.promised_amount} ${open.currency} was not kept.`,
+          {
+            amount: String(open.promised_amount), currency: open.currency,
+            paidAmount: String(amount), remaining: String(remaining),
+            promisedDate: open.promised_date, missedAmount: String(remaining),
+          });
       }
       return json({ matched: true, promise: updated });
     }
@@ -78,7 +90,11 @@ Deno.serve(async (req) => {
       for (const p of overdue ?? []) {
         await admin.from('promise_to_pay').update({ status: 'broken', broken_at: new Date().toISOString() }).eq('id', p.id);
         await admin.from('promise_to_pay_events').insert({ promise_id: p.id, event_type: 'broken' });
-        await recordCreditEvent(admin, p.user_id, 'ptp_broken', { promise_id: p.id, missed_amount: Number(p.promised_amount) - Number(p.kept_amount ?? 0) });
+        const missed = Number(p.promised_amount) - Number(p.kept_amount ?? 0);
+        await recordCreditEvent(admin, p.user_id, 'ptp_broken', { promise_id: p.id, missed_amount: missed, via: 'sweep' });
+        await notifyPtpEvent(admin, 'swept', p.id, p.user_id,
+          `Promise to Pay of ${p.promised_amount} ${p.currency} was not kept by ${p.promised_date}.`,
+          { missedAmount: String(missed), currency: p.currency, promisedDate: p.promised_date });
         broken++;
       }
       return json({ swept: overdue?.length ?? 0, broken });

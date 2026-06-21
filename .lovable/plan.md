@@ -1,105 +1,108 @@
+# Promise to Pay — Phase 2
 
-# Promise to Pay — Surgical Add-On to Loans + Credit Score
+Surgical, additive build on top of the existing PTP module. No renames, no schema removals.
 
-Adaptive, additive feature (Standing Order 4 — Surgeon Rule). No existing loan, credit, or payment columns are renamed or removed. All new objects are net-new.
+## 1. Notifications & email alerts
 
-## 1. Data model (new migration)
+**In-app (app_notifications):** insert a row from `ptp-ops` (create, reschedule, cancel) and `ptp-settle` (partial, kept, broken via sweep). Notification types: `ptp_created`, `ptp_partial`, `ptp_rescheduled`, `ptp_swept`, `ptp_broken`. Payload: `{ promise_id, loan_id, amount, currency, due_date, status }`. Wired into existing `useNotifications` hook — no UI changes required, badge updates automatically.
 
-New tables under `public`, all with `GRANT` + RLS + `has_role`-scoped policies:
+**Email alerts (app emails via Lovable Emails):**
+- Prerequisite check: `email_domain--check_email_domain_status`. If no domain → show setup dialog and stop. If domain exists → continue.
+- Run `setup_email_infra` if missing, then `scaffold_transactional_email` if missing.
+- New React Email templates in `supabase/functions/_shared/transactional-email-templates/`:
+  - `ptp-created.tsx` — confirmation + promised amount/date
+  - `ptp-partial.tsx` — payment received, remaining balance
+  - `ptp-rescheduled.tsx` — new date, credit impact note
+  - `ptp-broken.tsx` — broken notice + credit penalty applied
+  - `ptp-kept.tsx` — promise fulfilled, positive credit note
+- Register in `registry.ts`.
+- `ptp-ops` and `ptp-settle` invoke `send-transactional-email` with idempotency keys like `ptp-<event>-<promise_id>`.
+- Respect `notification_preferences` (skip email if user opted out).
 
-- `promise_to_pay`
-  - `id uuid pk`, `user_id uuid`, `loan_account_id uuid references loan_accounts(id)`
-  - `promised_amount numeric`, `promised_date date`, `currency text default 'GBP'`
-  - `payment_method text` enum-check: `pay_by_bank | debit_card | bank_transfer | other`
-  - `status text` enum-check: `scheduled | partially_kept | kept | broken | cancelled | rescheduled`
-  - `kept_amount numeric default 0`, `kept_at timestamptz`, `broken_at timestamptz`
-  - `reschedule_of uuid references promise_to_pay(id)` (chain when user "can't keep")
-  - `created_at`, `updated_at`, `idempotency_key uuid unique`
-- `promise_to_pay_events` — append-only audit (`created | reminder_sent | payment_matched | kept | partial | broken | rescheduled | cancelled`)
-- New `credit_events.event_type` values used (table is free-form text): `ptp_created`, `ptp_kept`, `ptp_partial`, `ptp_broken`, `ptp_rescheduled`
+## 2. Admin backend screen
 
-Validation trigger (not CHECK) enforces `promised_date >= today` on insert and `promised_amount <= outstanding_balance + penalty_charges`.
+New route `/admin/promise-to-pay` (admin-only via `useIsAdmin`).
 
-## 2. Edge functions (additive)
+**Features:**
+- Search by user email, loan ID, promise ID, status
+- Filters: status (pending/kept/partial/broken/cancelled/rescheduled), date range, currency, amount range
+- Sortable table: promise ID, customer, loan, amount, promised date, status, kept amount, created
+- Row actions (with confirm dialog + reason field):
+  - **Cancel promise** — sets status `cancelled`, no credit impact
+  - **Reschedule** — new date picker, writes audit row
+  - **Override credit event** — pick event type to reverse/insert (admin-only), writes to `credit_events` with `source='admin_override'` and reason
+- Detail drawer: full event timeline from `promise_to_pay_events` + linked `credit_events`
+- Every admin action writes to `promise_to_pay_events` AND `audit_logs` with admin user id, action, before/after, reason
 
-- `ptp-ops` (new) — single router, `SECURITY DEFINER` helpers, `auth.getUser()`, idempotency keys, `FOR UPDATE` row locks:
-  - `POST /create` — creates promise, emits `ptp_created` credit event (no score delta yet).
-  - `POST /cancel` — within grace window only.
-  - `POST /reschedule` — closes original as `rescheduled`, creates child row, links via `reschedule_of`.
-  - `GET /list`, `GET /:id`.
-- `ptp-settle` (new, called by existing payment webhooks): when a `loan_payments` row lands while an open promise exists for that loan, atomically match it:
-  - amount ≥ promised on/before `promised_date` → `kept`
-  - 0 < amount < promised → `partially_kept`
-  - none by EOD `promised_date+grace` → `broken`
-- `ptp-cron-sweep` (new, scheduled daily via `cron-auth.ts`): finds overdue promises, marks `broken`, emits credit event.
-- Hook into existing `pay-by-bank`, `payment-router-charge`, `loan-ops` repayment paths: after successful repayment they call `ptp-settle` (no schema changes to those tables).
+**Edge function:** new `ptp-admin-ops` (verify admin role via `has_role`) handling cancel/reschedule/override-credit. Reuses existing `ptp-ops` logic where possible.
 
-All new functions deployed via `https://wdzkzeahdtxlynetndqw.supabase.co/functions/v1` per Direct Backend Mandate.
+## 3. OpenAPI spec updates
 
-## 3. Credit score integration
+Bump `info.version` per Standing Order 6 (minor: 4.49.0 → 4.50.0 — additive examples + new admin endpoints).
 
-Extend `credit-score-engine` rule set additively — new rule rows in `credit_scoring_rules`:
+**Add to `public/openapi.yaml` (+ JSON mirror):**
+- Full `requestBody` and `responses` examples for:
+  - `POST /v1/loans/{id}/promises` (create) — request: amount, date, method, idempotency_key; response: full promise object
+  - `GET /v1/loans/{id}/promises` (list)
+  - `POST /v1/promises/{id}/reschedule` — request: new_date, reason
+  - `POST /v1/promises/{id}/cancel`
+  - Internal `POST /v1/promises/settle` (ptp-settle) — request: loan_payment_id, amount; response: matched promise + status
+- Admin endpoints (tagged `Admin`):
+  - `GET /v1/admin/promises` (search/filter)
+  - `POST /v1/admin/promises/{id}/override-credit`
+- New error codes in RFC 7807 catalogue: `ptp_amount_exceeds_outstanding`, `ptp_already_settled`, `ptp_not_found`.
+- Cite standards in description: FAPI-1.0-ADV, RFC 7807.
+- Snapshot history file + signatures via existing `snapshot-openapi-history.mjs` workflow.
 
-| Event | Delta | Cap |
-|---|---|---|
-| `ptp_kept` (on time, in full) | +3 | +15 / rolling 90 days |
-| `ptp_partial` | +1 | +5 / 90d |
-| `ptp_broken` | -25 | uncapped (matches existing missed-payment severity) |
-| `ptp_rescheduled` (first time, before due date) | 0 | n/a |
-| `ptp_rescheduled` (repeat within 30d) | -5 | -15 / 90d |
+## 4. Expanded E2E coverage
 
-Re-uses existing `credit-recompute` pipeline; no change to score range (300–850) or formula weights.
+**New Deno tests in `supabase/functions/ptp-ops/index.test.ts` and new `ptp-settle/index.test.ts`:**
+- Idempotency: same `idempotency_key` returns the same promise, no duplicates
+- Reschedule chain: create → reschedule → reschedule again → assert `ptp_rescheduled_repeat` rule fires (-5)
+- Multiple repayments same day: 3 partial payments → assert single `ptp_kept` (not 3) once cumulative ≥ promised
+- Sweep + credit math: create overdue → run sweep → read `credit_scores` before/after → assert delta = -25 exactly
+- Cancel after partial → asserts no broken event fires later
 
-## 4. Consumer app UI (mobile-first, design language: Professional Natural, no gradients, no emojis, outline icons)
+**New Playwright spec `e2e/authenticated/promise-to-pay-extended.spec.ts`:**
+- Admin search/filter/cancel/override flow
+- Notification badge appears after PTP create
+- Email log row appears in `email_send_log` for each event
 
-Routes under `/app/loans/:loanId/repay`:
+**New workflow `.github/workflows/ptp-e2e.yml`** running both suites on PR.
 
-1. **Make a payment hub** — mirrors uploaded "All due amounts / Return to credit limit / Statement balance / You decide the amount" cards. Each card is a soft, animated `Card` with chevron, contrast-correct text.
-2. **What this payment won't do** — informational sheet (image 1 layout).
-3. **Pay by Bank** — primary CTA → triggers existing `pay-by-bank` PISP flow. "Other ways to pay" → debit card / bank transfer (existing rails).
-4. **Enter other amount** — keypad screen, numeric input, Continue button (image 3 layout).
-5. **Set a Promise to Pay** — date + amount + method picker → confirms with summary sheet.
-6. **My Promises** — list of active/past promises with status chips and "I can't keep to my promise" sheet (image 8 layout): Reschedule, Pay now, or Call support.
-7. **Credit impact banner** — surfaced on every confirmation, copy: "Keeping this promise can improve your credit. Missing it can harm it." Links to `CreditScore.tsx`.
+## Technical details
 
-All flows are smooth multi-step transitions (existing `framer-motion` patterns), Lucide outline icons, no purple/indigo gradients, white-on-pink button text matches existing accent.
+```text
+Files created:
+- supabase/functions/ptp-admin-ops/index.ts
+- supabase/functions/ptp-admin-ops/index.test.ts
+- supabase/functions/ptp-settle/index.test.ts
+- supabase/functions/_shared/transactional-email-templates/ptp-{created,partial,rescheduled,broken,kept}.tsx
+- src/pages/admin/PromiseToPayAdmin.tsx
+- src/components/admin/ptp/{PtpTable,PtpFilters,PtpDetailDrawer,PtpActionDialog}.tsx
+- e2e/authenticated/promise-to-pay-extended.spec.ts
+- .github/workflows/ptp-e2e.yml
 
-## 5. OpenAPI / SDK (Standing Orders 1, 2, 6)
+Files modified:
+- supabase/functions/ptp-ops/index.ts (insert notifications + invoke email)
+- supabase/functions/ptp-settle/index.ts (same)
+- supabase/functions/_shared/transactional-email-templates/registry.ts
+- src/App.tsx (admin route)
+- src/pages/admin/AdminDashboard.tsx (nav link)
+- public/openapi.yaml + public/openapi.json
+- src/config/version.ts (4.50.0)
 
-- Bump `info.version` minor (e.g. `4.x.y → 4.(x+1).0`) — additive endpoints only.
-- New paths `/v1/loans/{id}/promises`, `/v1/promises/{id}`, `/v1/promises/{id}/reschedule`, `/v1/promises/{id}/cancel`. New `PromiseToPay` schema. Cite **CBP Vulnerable Customer Treatment + FCA CONC 7** in change log.
-- Regenerate typed SDKs (Node/Python/PHP) via existing `scripts/generate-typed-sdks.mjs`.
-- Update Postman collection + changelog within the 48 h window (Order P7).
-- Developer docs page `/developer/guides/promise-to-pay` with cURL + Node + Python examples runnable against sandbox (Order P5, P6, P9).
+Migrations:
+- None to existing PTP tables. Optional: add `admin_override` to credit_events source enum if not already present.
+```
 
-## 6. E2E coverage (full functionality, no gaps)
+## Rollout order
 
-Added to CI:
-
-- `e2e/authenticated/promise-to-pay.spec.ts` (Playwright):
-  1. Create promise from loan detail screen
-  2. Pay full amount on time → status `kept`, credit event recorded, score delta visible
-  3. Pay partial → `partially_kept`, +1 event
-  4. Skip payment, run `ptp-cron-sweep` → `broken`, -25 event
-  5. Reschedule flow + "I can't keep my promise" sheet
-- `scripts/ptp-e2e-runner.mjs` — API-level: create → settle → score recompute against sandbox.
-- Reuses existing `step-up-e2e` MFA gate for create/cancel.
-- New workflow `.github/workflows/ptp-e2e.yml` (mirrors `raas-e2e.yml`).
-
-## 7. Safety / Guardrails
-
-- All financial mutations go through edge functions with idempotency keys + `FOR UPDATE` (project memory: Financial Safety).
-- RLS: customer reads/writes only own promises; admin reads via `has_role('admin')`.
-- No emoji, no gradient, contrast-correct buttons, consistent fonts (workspace knowledge).
-- No changes to `loan_accounts`, `credit_scores`, or existing repayment columns — purely additive.
-- Permanent public docs route comment block preserved.
-
-## 8. Rollout order
-
-1. Migration (tables + grants + RLS + trigger)
-2. `ptp-ops`, `ptp-settle`, `ptp-cron-sweep` edge functions
-3. Wire `pay-by-bank` + `loan-ops` repayment success → `ptp-settle` (single added call each)
-4. `credit_scoring_rules` rows + recompute test
-5. Consumer UI screens
-6. OpenAPI + SDKs + docs + changelog
-7. E2E suite green, then publish
+1. Email prerequisite check → infra/scaffold if needed
+2. Templates + registry
+3. Wire notifications + email into existing edge functions
+4. Admin edge function + DB grants check
+5. Admin UI
+6. OpenAPI bump + examples + history snapshot
+7. Tests (Deno + Playwright) + workflow
+8. Run linter + edge function tests

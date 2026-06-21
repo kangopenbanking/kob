@@ -1,0 +1,31 @@
+name: PTP edge function tests
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/ptp-**'
+      - 'supabase/functions/_shared/ptp-notify.ts'
+      - '.github/workflows/ptp-e2e.yml'
+
+jobs:
+  deno-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Run Promise-to-Pay edge tests
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PTP_TEST_USER_ID: ${{ secrets.PTP_TEST_USER_ID }}
+          PTP_TEST_LOAN_ID: ${{ secrets.PTP_TEST_LOAN_ID }}
+          PTP_TEST_USER_JWT: ${{ secrets.PTP_TEST_USER_JWT }}
+          PTP_ADMIN_JWT: ${{ secrets.PTP_ADMIN_JWT }}
+        run: |
+          deno test --allow-net --allow-env --allow-read \
+            supabase/functions/ptp-ops/index.test.ts \
+            supabase/functions/ptp-settle/index.test.ts \
+            supabase/functions/ptp-admin-ops/index.test.ts

@@ -36,6 +36,11 @@ import { template as adminEmailQueueAlert } from './admin-email-queue-alert.tsx'
 import { template as supportAgentInvite } from './support-agent-invite.tsx'
 import { template as weeklyActivityDigest } from './weekly-activity-digest.tsx'
 import { template as monthlyStatement } from './monthly-statement.tsx'
+import { template as ptpCreated } from './ptp-created.tsx'
+import { template as ptpPartial } from './ptp-partial.tsx'
+import { template as ptpRescheduled } from './ptp-rescheduled.tsx'
+import { template as ptpBroken } from './ptp-broken.tsx'
+import { template as ptpKept } from './ptp-kept.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
@@ -65,4 +70,9 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'support-agent-invite': supportAgentInvite,
   'weekly-activity-digest': weeklyActivityDigest,
   'monthly-statement': monthlyStatement,
+  'ptp-created': ptpCreated,
+  'ptp-partial': ptpPartial,
+  'ptp-rescheduled': ptpRescheduled,
+  'ptp-broken': ptpBroken,
+  'ptp-kept': ptpKept,
 }
