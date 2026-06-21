@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Send, Download, Banknote, Link2,
   Receipt, FileText, Users, RefreshCw, PiggyBank, CircleDollarSign,
   BarChart3, Home, Building2, ChevronRight, Loader2,
-  Bus, Compass, Plane, Train, Globe, Vault, UtensilsCrossed,
+  Bus, Compass, Plane, Train, Globe, Vault, UtensilsCrossed, HandCoins,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
