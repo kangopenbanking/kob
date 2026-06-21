@@ -21481,6 +21481,113 @@ export type Database = {
           },
         ]
       }
+      promise_to_pay: {
+        Row: {
+          broken_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          idempotency_key: string | null
+          kept_amount: number
+          kept_at: string | null
+          loan_account_id: string
+          payment_method: string
+          promised_amount: number
+          promised_date: string
+          reason: string | null
+          reschedule_of: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          broken_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          kept_amount?: number
+          kept_at?: string | null
+          loan_account_id: string
+          payment_method?: string
+          promised_amount: number
+          promised_date: string
+          reason?: string | null
+          reschedule_of?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          broken_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          kept_amount?: number
+          kept_at?: string | null
+          loan_account_id?: string
+          payment_method?: string
+          promised_amount?: number
+          promised_date?: string
+          reason?: string | null
+          reschedule_of?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promise_to_pay_loan_account_id_fkey"
+            columns: ["loan_account_id"]
+            isOneToOne: false
+            referencedRelation: "loan_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promise_to_pay_reschedule_of_fkey"
+            columns: ["reschedule_of"]
+            isOneToOne: false
+            referencedRelation: "promise_to_pay"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promise_to_pay_events: {
+        Row: {
+          amount: number | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          promise_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          promise_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          promise_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promise_to_pay_events_promise_id_fkey"
+            columns: ["promise_id"]
+            isOneToOne: false
+            referencedRelation: "promise_to_pay"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_business_profiles: {
         Row: {
           business_name: string

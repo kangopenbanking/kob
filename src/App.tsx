@@ -661,6 +661,7 @@ const BankReceive = lazy(() => import("./pages/banking-app/BankReceive"));
 const BankSavings = lazy(() => import("./pages/banking-app/BankSavings"));
 const BankNewSavings = lazy(() => import("./pages/banking-app/BankNewSavings"));
 const BankLoans = lazy(() => import("./pages/banking-app/BankLoans"));
+const PromiseToPay = lazy(() => import("./pages/banking-app/PromiseToPay"));
 const BankCreditScore = lazy(() => import("./pages/banking-app/BankCreditScore"));
 const BankSettings = lazy(() => import("./pages/banking-app/BankSettings"));
 const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
@@ -1640,6 +1641,7 @@ function App() {
               <Route path="more/savings" element={<FeatureGate featureKey="savings"><BankSavings /></FeatureGate>} />
               <Route path="more/savings/new" element={<FeatureGate featureKey="savings"><BankNewSavings /></FeatureGate>} />
               <Route path="more/loans" element={<FeatureGate featureKey="loans"><BankLoans /></FeatureGate>} />
+              <Route path="more/loans/promise" element={<FeatureGate featureKey="loans"><PromiseToPay /></FeatureGate>} />
               <Route path="more/credit" element={<FeatureGate featureKey="credit_score"><BankCreditScore /></FeatureGate>} />
               <Route path="more/settings" element={<BankSettings />} />
               <Route path="more/alerts" element={<BankAlerts />} />
