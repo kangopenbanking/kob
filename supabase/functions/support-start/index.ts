@@ -200,6 +200,13 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Always include the KOB support inbox so a human is notified for every
+        // new chat, even if no agents are online/assigned.
+        const SUPPORT_INBOX = 'info@kangfintechsolutions.com';
+        if (!agentEmails.map(e => e.toLowerCase()).includes(SUPPORT_INBOX)) {
+          agentEmails.push(SUPPORT_INBOX);
+        }
+
         for (const agentEmail of agentEmails) {
           await supabase.functions.invoke('send-transactional-email', {
             body: {
@@ -216,6 +223,7 @@ Deno.serve(async (req) => {
             },
           });
         }
+
       } catch (e) {
         console.warn('support-start: email dispatch failed', e);
       }
