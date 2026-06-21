@@ -85,6 +85,34 @@ Deno.serve(async (req) => {
     const fromName = settings.environment === 'production' ? settings.production_from_name : settings.sandbox_from_name;
     const messageId = crypto.randomUUID();
 
+    // Get-or-create unsubscribe token (Lovable Email requires it for
+    // transactional sends; Resend ignores it). One token per recipient address.
+    const normalizedEmail = recipient.toLowerCase();
+    let unsubscribeToken: string | undefined;
+    try {
+      const { data: existing } = await admin
+        .from('email_unsubscribe_tokens')
+        .select('token, used_at')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+      if (existing?.token && !existing.used_at) {
+        unsubscribeToken = existing.token;
+      } else if (!existing) {
+        const newToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '');
+        await admin
+          .from('email_unsubscribe_tokens')
+          .upsert({ token: newToken, email: normalizedEmail }, { onConflict: 'email', ignoreDuplicates: true });
+        const { data: stored } = await admin
+          .from('email_unsubscribe_tokens')
+          .select('token')
+          .eq('email', normalizedEmail)
+          .maybeSingle();
+        unsubscribeToken = stored?.token || newToken;
+      }
+    } catch (tokenErr) {
+      console.error('admin-test-email unsubscribe token error:', tokenErr);
+    }
+
     const result = await sendEmailWithFallback({
       to: recipient,
       from: `${fromName || SITE_NAME} <${fromEmail}>`,
@@ -96,6 +124,7 @@ Deno.serve(async (req) => {
       label: `admin-test-${templateLabel}`,
       idempotency_key: `admin-test-${templateLabel}-${messageId}`,
       message_id: messageId,
+      unsubscribe_token: unsubscribeToken,
     }, settings, { forceFallbackOn403: true });
 
     // Always return HTTP 200 so the Supabase Functions client surfaces the
