@@ -75,7 +75,7 @@ const CustomerMore: React.FC = () => {
       <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Quick Actions')}</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-          {enabledActions.map((action) => (
+            {enabledActions.map((action) => (
             <button key={action.key} onClick={() => go(
               action.key === 'qr_scan' ? 'scan' :
               action.key === 'cash_out' ? 'cash-out' :
@@ -83,6 +83,7 @@ const CustomerMore: React.FC = () => {
               action.key === 'global_accounts' ? 'global-accounts' :
               action.key === 'daily_needs' ? 'daily-needs' :
               action.key === 'driver_hub' ? 'driver' :
+              action.key === 'promise_to_pay' ? 'promise-to-pay' :
               action.key
             )} className="flex flex-col items-center gap-2">
               <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
