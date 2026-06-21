@@ -96,8 +96,11 @@ Deno.serve(async (req) => {
       label: `admin-test-${templateLabel}`,
       idempotency_key: `admin-test-${templateLabel}-${messageId}`,
       message_id: messageId,
-    }, settings);
+    }, settings, { forceFallbackOn403: true });
 
+    // Always return HTTP 200 so the Supabase Functions client surfaces the
+    // structured JSON body to the admin UI instead of throwing a generic
+    // "non-2xx" error. The `success` flag carries the real outcome.
     return new Response(JSON.stringify({
       success: result.ok,
       delivered: result.ok,
@@ -109,9 +112,9 @@ Deno.serve(async (req) => {
       environment: settings.environment,
       primary: result.primary,
       fallback: result.fallback,
-      error: result.ok ? null : (result.primary?.error || result.fallback?.error || 'Unknown'),
+      error: result.ok ? null : (result.fallback?.error || result.primary?.error || 'Unknown send error'),
     }), {
-      status: result.ok ? 200 : 502,
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e: any) {
