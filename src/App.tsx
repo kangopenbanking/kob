@@ -683,6 +683,7 @@ const CustomerScan = lazy(() => import("./pages/customer-app/CustomerScan"));
 const CustomerActivity = lazy(() => import("./pages/customer-app/CustomerActivity"));
 const CustomerCards = lazy(() => import("./pages/customer-app/CustomerCards"));
 const CustomerMore = lazy(() => import("./pages/customer-app/CustomerMore"));
+const CustomerPromiseToPay = lazy(() => import("./pages/customer-app/CustomerPromiseToPay"));
 const CustomerOrderTracking = lazy(() => import("./pages/customer-app/CustomerOrderTracking").then(m => ({ default: m.CustomerOrderTracking })));
 const CustomerTransfer = lazy(() => import("./pages/customer-app/CustomerTransfer"));
 const CustomerRequest = lazy(() => import("./pages/customer-app/CustomerRequest"));
