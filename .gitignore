@@ -26,3 +26,6 @@ dist-ssr
 # Generated typed SDKs (built in CI, distributed via Actions artifact)
 sdks/generated/
 .keys/
+
+# Vercel
+.vercel

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "npm ci",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/((?!openapi(-sandbox)?\\.(json|yaml)|openapi-history/.*|apis(-sandbox)?\\.json|changelog\\.json|CHANGELOG\\.md|sitemap\\.xml|robots\\.txt|security\\.txt|manifest(-biz)?\\.json|placeholder\\.svg|reports/.*|postman/.*|sdk-downloads/.*|scripts/.*|docs/.*|\\.well-known/.*|OneSignalSDKWorker\\.js|SHA256SUMS\\.txt(\\.sig)?|artifact-signing-pubkey\\.pem|signing-key-updates\\.json|support-agent-health\\.json|_redirects|_headers|assets/.*|favicon\\.ico).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/openapi.json",
+      "headers": [
+        { "key": "content-type", "value": "application/json; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "access-control-allow-methods", "value": "GET, HEAD, OPTIONS" },
+        { "key": "access-control-allow-headers", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/openapi.yaml",
+      "headers": [
+        { "key": "content-type", "value": "application/yaml; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "access-control-allow-methods", "value": "GET, HEAD, OPTIONS" },
+        { "key": "access-control-allow-headers", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/openapi-sandbox.json",
+      "headers": [
+        { "key": "content-type", "value": "application/json; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/openapi-sandbox.yaml",
+      "headers": [
+        { "key": "content-type", "value": "application/yaml; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/apis(-sandbox)?.json",
+      "headers": [
+        { "key": "content-type", "value": "application/json; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/changelog.json",
+      "headers": [
+        { "key": "content-type", "value": "application/json; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/postman/(.*)",
+      "headers": [
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "content-type", "value": "application/xml; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/CHANGELOG.md",
+      "headers": [
+        { "key": "content-type", "value": "text/markdown; charset=utf-8" },
+        { "key": "cache-control", "value": "public, max-age=300, stale-while-revalidate=86400" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    },
+    {
+      "source": "/developer/deployment-status",
+      "headers": [{ "key": "x-robots-tag", "value": "noindex" }]
+    },
+    {
+      "source": "/developer/env-vars",
+      "headers": [{ "key": "x-robots-tag", "value": "noindex" }]
+    },
+    {
+      "source": "/developer/(.*)",
+      "headers": [
+        { "key": "x-robots-tag", "value": "all" },
+        { "key": "cache-control", "value": "public, max-age=60, stale-while-revalidate=600" }
+      ]
+    },
+    {
+      "source": "/.well-known/ai-plugin.json",
+      "headers": [
+        { "key": "content-type", "value": "application/json; charset=utf-8" },
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "x-robots-tag", "value": "all" }
+      ]
+    }
+  ]
+}
