@@ -661,6 +661,7 @@ const BankReceive = lazy(() => import("./pages/banking-app/BankReceive"));
 const BankSavings = lazy(() => import("./pages/banking-app/BankSavings"));
 const BankNewSavings = lazy(() => import("./pages/banking-app/BankNewSavings"));
 const BankLoans = lazy(() => import("./pages/banking-app/BankLoans"));
+const PromiseToPay = lazy(() => import("./pages/banking-app/PromiseToPay"));
 const BankCreditScore = lazy(() => import("./pages/banking-app/BankCreditScore"));
 const BankSettings = lazy(() => import("./pages/banking-app/BankSettings"));
 const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
