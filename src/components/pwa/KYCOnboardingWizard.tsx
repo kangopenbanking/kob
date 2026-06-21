@@ -132,6 +132,10 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
         document_front_url: documentFrontUrl,
         document_back_url: documentBackUrl || undefined,
         selfie_url: selfieUrl,
+        source_app: 'banking_app',
+        institution_id: tenant.id || undefined,
+        date_of_birth: personalInfo.dateOfBirth,
+        nationality: personalInfo.nationality,
       });
 
       // Best-effort: tag institution context onto the new verification
