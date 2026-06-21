@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build",
+  "buildCommand": "node scripts/vercel-preinstall-check.mjs && export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "npm install --legacy-peer-deps --no-audit --no-fund",
+  "installCommand": "npm install --include-workspace-root --legacy-peer-deps --no-audit --no-fund",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
