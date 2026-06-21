@@ -194,6 +194,8 @@ export default function PromiseToPayAdmin() {
         </CardContent>
       </Card>
 
+      <PtpWebhookHealth />
+
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
           <SheetHeader>
