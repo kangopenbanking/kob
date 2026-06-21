@@ -25,6 +25,7 @@
         "Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)"
       ]
     },
+    {
       "version": "4.50.0",
       "date": "2026-06-05",
       "type": "minor",
