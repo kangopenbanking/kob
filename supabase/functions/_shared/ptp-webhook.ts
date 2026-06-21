@@ -65,10 +65,22 @@ export async function dispatchPtpWebhook(
       event_data: fullPayload as unknown as Record<string, unknown>,
       status: 'pending',
       attempt_count: 0,
-      trace_id: `ptp-${payload.promise_id}-${Date.now()}`,
+      // Stable trace/request ID — dedupes retries of the same logical event
+      // per subscriber so notification + credit writes downstream stay idempotent.
+      trace_id: `ptp:${event}:${payload.promise_id}:${h.id}`,
     }));
 
-    const { error: insErr } = await admin.from('webhook_deliveries').insert(rows);
+    // Skip rows already queued/delivered for the same trace_id (idempotency).
+    const traceIds = rows.map((r) => r.trace_id);
+    const { data: existing } = await admin
+      .from('webhook_deliveries')
+      .select('trace_id')
+      .in('trace_id', traceIds);
+    const seen = new Set((existing ?? []).map((r: any) => r.trace_id));
+    const toInsert = rows.filter((r) => !seen.has(r.trace_id));
+    if (toInsert.length === 0) return;
+
+    const { error: insErr } = await admin.from('webhook_deliveries').insert(toInsert);
     if (insErr) console.error('[ptp-webhook] queue failed:', insErr.message);
   } catch (e) {
     console.error('[ptp-webhook] unexpected:', (e as Error).message);

@@ -6,7 +6,7 @@ import {
   TrendingUp, TrendingDown, Send, Download, Banknote, Link2,
   Receipt, FileText, Users, RefreshCw, PiggyBank, CircleDollarSign,
   BarChart3, Home, Building2, ChevronRight, Loader2,
-  Bus, Compass, Plane, Train, Globe, Vault, UtensilsCrossed,
+  Bus, Compass, Plane, Train, Globe, Vault, UtensilsCrossed, HandCoins,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
@@ -72,6 +72,7 @@ const paymentsBills: FeatureItem[] = [
   { label: 'Invoices', description: 'Manage & pay invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', borderColor: 'border-transparent', featureKey: 'invoices' },
   { label: 'Split Bills', description: 'Share costs with friends', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-transparent', featureKey: 'split_bills' },
   { label: 'Recurring', description: 'Auto-pay subscriptions', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-transparent', featureKey: 'recurring' },
+  { label: 'Promise to Pay', description: 'Schedule a loan repayment promise', icon: HandCoins, path: 'promise-to-pay', color: 'bg-[hsl(265,55%,92%)]', iconColor: 'text-[hsl(265,55%,40%)]', borderColor: 'border-transparent', featureKey: 'loans' },
 ];
 
 const savingsGoals: FeatureItem[] = [

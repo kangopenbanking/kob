@@ -683,6 +683,7 @@ const CustomerScan = lazy(() => import("./pages/customer-app/CustomerScan"));
 const CustomerActivity = lazy(() => import("./pages/customer-app/CustomerActivity"));
 const CustomerCards = lazy(() => import("./pages/customer-app/CustomerCards"));
 const CustomerMore = lazy(() => import("./pages/customer-app/CustomerMore"));
+const CustomerPromiseToPay = lazy(() => import("./pages/customer-app/CustomerPromiseToPay"));
 const CustomerOrderTracking = lazy(() => import("./pages/customer-app/CustomerOrderTracking").then(m => ({ default: m.CustomerOrderTracking })));
 const CustomerTransfer = lazy(() => import("./pages/customer-app/CustomerTransfer"));
 const CustomerRequest = lazy(() => import("./pages/customer-app/CustomerRequest"));
@@ -1669,6 +1670,7 @@ function App() {
               <Route path="scan" element={<CustomerScan />} />
               <Route path="cards" element={<CustomerCards />} />
               <Route path="more" element={<CustomerMore />} />
+              <Route path="promise-to-pay" element={<CustomerPromiseToPay />} />
               <Route path="transfer" element={<CustomerTransfer />} />
               <Route path="request" element={<CustomerRequest />} />
               <Route path="bills" element={<CustomerBills />} />

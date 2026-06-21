@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Send, Download, Receipt, Building2, Users,
   Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
-  Lock, ChevronRight, Loader2, Package, ShieldAlert, Globe, Heart, Star, Store, MessageCircle
+  Lock, ChevronRight, Loader2, Package, ShieldAlert, Globe, Heart, Star, Store, MessageCircle, HandCoins
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
@@ -23,6 +23,7 @@ const allQuickActions = [
   { key: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-[hsl(30,70%,90%)]', iconColor: 'text-[hsl(30,60%,40%)]' },
   { key: 'daily_needs', label: 'Daily Needs', icon: Store, color: 'bg-[hsl(160,60%,90%)]', iconColor: 'text-[hsl(160,50%,35%)]' },
   { key: 'driver_hub', label: 'Driver Hub', icon: Users, color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
+  { key: 'promise_to_pay', label: 'Promise to Pay', icon: HandCoins, color: 'bg-[hsl(265,55%,92%)]', iconColor: 'text-[hsl(265,55%,40%)]', featureKey: 'loans' },
 ];
 
 const utilityItems = [
@@ -74,7 +75,7 @@ const CustomerMore: React.FC = () => {
       <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Quick Actions')}</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-          {enabledActions.map((action) => (
+            {enabledActions.map((action) => (
             <button key={action.key} onClick={() => go(
               action.key === 'qr_scan' ? 'scan' :
               action.key === 'cash_out' ? 'cash-out' :
@@ -82,6 +83,7 @@ const CustomerMore: React.FC = () => {
               action.key === 'global_accounts' ? 'global-accounts' :
               action.key === 'daily_needs' ? 'daily-needs' :
               action.key === 'driver_hub' ? 'driver' :
+              action.key === 'promise_to_pay' ? 'promise-to-pay' :
               action.key
             )} className="flex flex-col items-center gap-2">
               <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>

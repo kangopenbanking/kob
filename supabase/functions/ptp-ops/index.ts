@@ -27,6 +27,20 @@ async function getUser(req: Request) {
 }
 
 async function recordCreditEvent(admin: ReturnType<typeof createClient>, userId: string, eventType: string, meta: Record<string, unknown>) {
+  // Idempotent on (user_id, event_type, metadata.promise_id) so retries and
+  // webhook-triggered re-dispatch never double-write credit events.
+  const promiseId = (meta as any)?.promise_id;
+  if (promiseId) {
+    const { data: existing } = await admin
+      .from('credit_events')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('event_type', eventType)
+      .filter('metadata->>promise_id', 'eq', String(promiseId))
+      .limit(1)
+      .maybeSingle();
+    if (existing) return;
+  }
   await admin.from('credit_events').insert({
     user_id: userId,
     event_type: eventType,

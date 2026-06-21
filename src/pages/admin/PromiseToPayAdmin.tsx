@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Search, RefreshCw, XCircle, Calendar, Shield } from "lucide-react";
+import PtpWebhookHealth from "@/components/admin/ptp/PtpWebhookHealth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -192,6 +193,8 @@ export default function PromiseToPayAdmin() {
           </Table>
         </CardContent>
       </Card>
+
+      <PtpWebhookHealth />
 
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
