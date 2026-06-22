@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Run perf budget
         run: node scripts/openapi-perf-budget.mjs --spec public/openapi.json
 
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Compare deployed spec to repo (informational)
         run: |
           node scripts/openapi-deployed-parity.mjs \
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Compare deployed spec to repo (strict version, lenient counts)
         # On nightly: still allow `behind` because Publish is manual; only fail
         # if deployed version is AHEAD of repo (out-of-sync repo). Allow up to
