@@ -5,6 +5,26 @@
   "lastUpdated": "2026-06-05",
   "entries": [
     {
+      "version": "4.51.0",
+      "date": "2026-06-22",
+      "type": "minor",
+      "breaking_changes": false,
+      "summary": "Promise to Pay (PTP) lifecycle. Additive endpoints and admin/consumer surfaces for creating, settling, partial-payment, rescheduling, sweeping, and breaking PTP arrangements, with outbound institution webhooks and detailed delivery logs.",
+      "highlights": [
+        "Added /v1/ptp/ops and /v1/ptp/settle operations covering create, partial, reschedule, sweep, and break events with idempotency keys (UUIDv4) on every state-changing call.",
+        "New admin console /admin/promise-to-pay with webhook health panel, plus consumer surfaces /app/ptp (status, next due date, remaining balance) and inbox alerts for created/partial/rescheduled/swept/broken events.",
+        "Outbound institution webhooks for every PTP event with HMAC-SHA256 signing, per-event subscription check, and detailed delivery logs (request id, event name, institution id, response code).",
+        "Transactional email templates: ptp-created, ptp-partial, ptp-rescheduled, ptp-kept, ptp-broken — registered in the shared template registry.",
+        "CI: new .github/workflows/ptp-e2e.yml ratchets PTP edge functions end-to-end on every PR."
+      ],
+      "breaking": [],
+      "standard_citations": [
+        "RFC 7807 (Problem Details for HTTP APIs)",
+        "RFC 6920 (HMAC-SHA-256 named information signatures)",
+        "Guardian Standing Orders 2 (Ratchet), 4 (Surgeon), 6 (Version Gate), P7 (Changelog)"
+      ]
+    },
+    {
       "version": "4.50.1",
       "date": "2026-06-05",
       "type": "patch",
