@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Resolve expected API version (SSOT)
         run: echo "EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs)" >> "$GITHUB_ENV"

@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: "20" }
+        with: { node-version: '22' }
       - name: Validate Global Accounts navigation links
         run: node scripts/check-global-accounts-nav-links.mjs
       - name: Run Global Accounts vitest suites
