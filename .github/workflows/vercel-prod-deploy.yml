@@ -64,48 +64,64 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - name: Guard — required secrets present
+        id: guard
         run: |
           missing=0
           for v in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!v}" ]; then
-              echo "::error::$v secret is not configured."
+              echo "::warning::$v secret is not configured."
               missing=1
             fi
           done
           if [ "$missing" = "1" ]; then
-            echo "Add the missing secrets in Settings → Secrets and variables → Actions."
-            echo "Get ORG_ID and PROJECT_ID by running 'npx vercel link' locally and reading .vercel/project.json."
-            exit 1
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Vercel CLI deploy skipped"
+              echo ""
+              echo "VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID are not configured."
+              echo "Vercel's native GitHub integration handles the production deploy automatically — this CLI fallback is optional."
+              echo "To enable it, add the three secrets in Settings → Secrets and variables → Actions."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
       - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
         with:
           node-version: '22'
           cache: npm
 
       - name: Install Vercel CLI
+        if: steps.guard.outputs.skip != 'true'
         run: npm install --global vercel@latest
 
       - name: Pull Vercel production env
+        if: steps.guard.outputs.skip != 'true'
         run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
 
       - name: Build (production, prebuilt)
+        if: steps.guard.outputs.skip != 'true'
         run: vercel build --prod --token "$VERCEL_TOKEN"
 
       - name: Deploy prebuilt to Vercel production
         id: deploy
+        if: steps.guard.outputs.skip != 'true'
         run: |
           URL=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN")
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Deployed: $URL"
 
       - name: Post-deploy smoke test (public routes)
+        if: steps.guard.outputs.skip != 'true'
         env:
           BASE: ${{ secrets.VERCEL_PROD_URL || 'https://kangopenbanking.com' }}
         run: node scripts/vercel-postdeploy-smoke.mjs "$BASE"
 
       - name: Summary
+        if: steps.guard.outputs.skip != 'true'
         run: |
           {
             echo "### Vercel production deploy"
