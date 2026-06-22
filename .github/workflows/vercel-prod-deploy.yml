@@ -87,33 +87,41 @@ jobs:
           fi
 
       - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
       - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
         with:
           node-version: '22'
           cache: npm
 
       - name: Install Vercel CLI
+        if: steps.guard.outputs.skip != 'true'
         run: npm install --global vercel@latest
 
       - name: Pull Vercel production env
+        if: steps.guard.outputs.skip != 'true'
         run: vercel pull --yes --environment=production --token "$VERCEL_TOKEN"
 
       - name: Build (production, prebuilt)
+        if: steps.guard.outputs.skip != 'true'
         run: vercel build --prod --token "$VERCEL_TOKEN"
 
       - name: Deploy prebuilt to Vercel production
         id: deploy
+        if: steps.guard.outputs.skip != 'true'
         run: |
           URL=$(vercel deploy --prebuilt --prod --token "$VERCEL_TOKEN")
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Deployed: $URL"
 
       - name: Post-deploy smoke test (public routes)
+        if: steps.guard.outputs.skip != 'true'
         env:
           BASE: ${{ secrets.VERCEL_PROD_URL || 'https://kangopenbanking.com' }}
         run: node scripts/vercel-postdeploy-smoke.mjs "$BASE"
 
       - name: Summary
+        if: steps.guard.outputs.skip != 'true'
         run: |
           {
             echo "### Vercel production deploy"
