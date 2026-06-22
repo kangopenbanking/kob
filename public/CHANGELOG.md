@@ -1,12 +1,46 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.50.0** · Last updated: **2026-06-05**
+Current API version: **4.51.0** · Last updated: **2026-06-22**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.51.0 — 2026-06-22
+**Type:** minor · **Breaking changes:** none
+
+Promise to Pay (PTP) lifecycle. Additive endpoints and admin/consumer surfaces for creating, settling, partial-payment, rescheduling, sweeping, and breaking PTP arrangements, with outbound institution webhooks and detailed delivery logs.
+
+### Highlights
+- Added /v1/ptp/ops and /v1/ptp/settle operations covering create, partial, reschedule, sweep, and break events with idempotency keys (UUIDv4) on every state-changing call.
+- New admin console /admin/promise-to-pay with webhook health panel, plus consumer surfaces /app/ptp (status, next due date, remaining balance) and inbox alerts for created/partial/rescheduled/swept/broken events.
+- Outbound institution webhooks for every PTP event with HMAC-SHA256 signing, per-event subscription check, and detailed delivery logs (request id, event name, institution id, response code).
+- Transactional email templates: ptp-created, ptp-partial, ptp-rescheduled, ptp-kept, ptp-broken — registered in the shared template registry.
+- CI: new .github/workflows/ptp-e2e.yml ratchets PTP edge functions end-to-end on every PR.
+
+### Standards & citations
+- RFC 7807 (Problem Details for HTTP APIs)
+- RFC 6920 (HMAC-SHA-256 named information signatures)
+- Guardian Standing Orders 2 (Ratchet), 4 (Surgeon), 6 (Version Gate), P7 (Changelog)
+
+---
+
+## 4.50.1 — 2026-06-05
+**Type:** patch · **Breaking changes:** none
+
+BEAC / COBAC compliance hardening on Nium Global Accounts. Additive: hardcoded Purpose-of-Payment whitelist, strict KYC name matching on account creation, double-spread FX transparency endpoint, exact-name UI warning. Legacy /v1/gateway/virtual-accounts (NGN/Wema) is now flagged `deprecated: true` (sunset 2027-01-01). No operationIds renamed or removed (Standing Order 1).
+
+### Highlights
+- POST /v1/gateway/global-accounts now REJECTS free-text `beneficiary_name` (HTTP 400 `beneficiary_name_override_forbidden`). The beneficiary is pulled from the verified KYC profile only.
+- POST /v1/gateway/global-accounts accepts a new optional `pop_code` enum locked to `"Software/Digital Services"` or `"Royalties"` (BEAC Règlement 02/18/CEMAC/UMAC/CM).
+- POST /v1/gateway/global-accounts/quote — new public-facing helper that returns gross → Nium FX → KOB spread → MoMo fee → Net XAF for any (currency, amount, route). Shares math with the live webhook.
+- profiles.default_payout_method (KANG_WALLET | MOBILE_MONEY) backfilled from existing payout_preference; cascade resolution (account override > user default > KANG_WALLET) unchanged.
+- Customer App /app/global-accounts: non-dismissible exact-name warning, BEAC PoP picker, live Transaction Preview component.
+- Legacy `/v1/gateway/virtual-accounts*` operations marked `deprecated: true` + `x-sunset: 2027-01-01`. Endpoints continue to function unchanged until then.
 
 ---
 
