@@ -29,3 +29,5 @@ sdks/generated/
 
 # Vercel
 .vercel
+
+kob-signing/

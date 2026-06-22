@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.50.0
+  version: 4.51.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -28873,6 +28873,9 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+      deprecated: true
+      x-sunset: '2027-01-01'
+      x-deprecation-notice: Use /v1/gateway/global-accounts (Nium) for new integrations. This endpoint will be removed on 2027-01-01.
     get:
       tags:
         - Payment Gateway
@@ -29003,6 +29006,9 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+      deprecated: true
+      x-sunset: '2027-01-01'
+      x-deprecation-notice: Use /v1/gateway/global-accounts (Nium) for new integrations. This endpoint will be removed on 2027-01-01.
   /v1/gateway/virtual-accounts/{accountId}:
     get:
       tags:
@@ -29132,6 +29138,9 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+      deprecated: true
+      x-sunset: '2027-01-01'
+      x-deprecation-notice: Use /v1/gateway/global-accounts (Nium) for new integrations. This endpoint will be removed on 2027-01-01.
   /v1/gateway/balances:
     get:
       tags:

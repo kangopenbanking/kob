@@ -141,6 +141,7 @@ kob.pisp.submit_payment(
 
 ## Changelog
 
+- **1.7.0** — Aligned to OpenAPI v4.51.0 (Promise to Pay lifecycle, outbound webhooks, delivery logs).
 - **1.6.1** — Aligned to OpenAPI v4.49.0 (Phase 10/11: USSD, agent banking,
   QR + offline payments, CEMAC remittance, integrator governance APIs).
 - **1.2.0** — Aligned to OpenAPI v4.29.3. `submit_payment` now requires

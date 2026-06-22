@@ -1,6 +1,6 @@
 # @kang/openbanking-node
 
-Official Node.js / TypeScript SDK for the **Kang Open Banking (KOB) v1 API** (v1.6.1, aligned to OpenAPI v4.49.0).
+Official Node.js / TypeScript SDK for the **Kang Open Banking (KOB) v1 API** (v1.7.0, aligned to OpenAPI v4.51.0).
 
 ## Installation
 

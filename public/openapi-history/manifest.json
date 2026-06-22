@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.50.0",
+  "current": "4.51.0",
   "versions": [
+    {
+      "version": "4.51.0",
+      "released_at": "2026-06-22T00:40:31.866Z",
+      "type": "snapshot",
+      "file": "openapi-4.51.0.json",
+      "notes": "Promise to Pay (PTP) lifecycle. Additive endpoints and admin/consumer surfaces for creating, settling, partial-payment, rescheduling, sweeping, and breaking PTP arrangements, with outbound institution webhooks and detailed delivery logs."
+    },
     {
       "version": "4.50.0",
       "released_at": "2026-06-05T11:15:00.000Z",
