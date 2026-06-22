@@ -64,18 +64,26 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - name: Guard — required secrets present
+        id: guard
         run: |
           missing=0
           for v in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!v}" ]; then
-              echo "::error::$v secret is not configured."
+              echo "::warning::$v secret is not configured."
               missing=1
             fi
           done
           if [ "$missing" = "1" ]; then
-            echo "Add the missing secrets in Settings → Secrets and variables → Actions."
-            echo "Get ORG_ID and PROJECT_ID by running 'npx vercel link' locally and reading .vercel/project.json."
-            exit 1
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Vercel CLI deploy skipped"
+              echo ""
+              echo "VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID are not configured."
+              echo "Vercel's native GitHub integration handles the production deploy automatically — this CLI fallback is optional."
+              echo "To enable it, add the three secrets in Settings → Secrets and variables → Actions."
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v4
