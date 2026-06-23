@@ -23,6 +23,13 @@ interface LoanAcct {
   currency?: string;
 }
 
+interface FeePolicy {
+  ptp_missed_fee_enabled: boolean;
+  ptp_missed_fee_type: 'fixed' | 'percentage';
+  ptp_missed_fee_value: number;
+  ptp_missed_fee_cap: number | null;
+}
+
 interface Promise {
   id: string;
   loan_account_id: string;
@@ -32,6 +39,10 @@ interface Promise {
   payment_method: string;
   currency: string;
   kept_amount: number;
+  missed_fee_amount?: number | null;
+  missed_fee_currency?: string | null;
+  missed_fee_type?: string | null;
+  missed_fee_reference?: string | null;
 }
 
 const fade = { initial: { opacity: 0, x: 12 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -12 } };
