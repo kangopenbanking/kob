@@ -124,15 +124,25 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
               alt={slide.title}
               className="absolute inset-0 h-full w-full object-cover"
               draggable={false}
+              loading="eager"
+              decoding="async"
             />
           )}
 
           {hasVideo && (
             <video
+              ref={(el) => {
+                if (el) {
+                  el.muted = true;
+                  const p = el.play();
+                  if (p && typeof p.catch === 'function') p.catch(() => {});
+                }
+              }}
               src={slide.media_url!}
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
+              defaultMuted
               playsInline
               loop
               preload="auto"
