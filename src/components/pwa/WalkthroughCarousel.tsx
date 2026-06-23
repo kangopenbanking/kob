@@ -73,6 +73,35 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
   const slides = propSlides || dbSlides || defaultSlides;
   const isLast = current === slides.length - 1;
 
+  // Preload upcoming slide media (images, GIFs, videos) so they appear instantly.
+  const preloadedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const lookahead = [current + 1, current + 2];
+    lookahead.forEach((idx) => {
+      const s = slides[idx];
+      if (!s || !s.media_url || s.media_type === 'icon') return;
+      const url = s.media_url;
+      if (preloadedRef.current.has(url)) return;
+      preloadedRef.current.add(url);
+
+      if (s.media_type === 'image') {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+      } else if (s.media_type === 'video') {
+        // Warm HTTP cache so playback starts immediately on slide change.
+        const v = document.createElement('video');
+        v.preload = 'auto';
+        v.muted = true;
+        v.playsInline = true;
+        v.src = url;
+        try { v.load(); } catch { /* noop */ }
+        // Also kick a fetch as a fallback for browsers that lazy-load <video>.
+        fetch(url, { mode: 'no-cors', cache: 'force-cache' }).catch(() => {});
+      }
+    });
+  }, [current, slides]);
+
   const next = () => {
     if (isLast) onComplete();
     else setCurrent((p) => p + 1);
