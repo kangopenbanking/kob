@@ -398,6 +398,18 @@ const PromiseToPay: React.FC = () => {
               <Row label="By" value={new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} />
               <Row label="Method" value={method.replace('_', ' ')} />
             </Card>
+            {feePolicy?.ptp_missed_fee_enabled && projectedFee > 0 && (
+              <Card className="p-4 border-l-4 border-l-amber-500/70 text-sm">
+                <p className="font-semibold mb-1">Missed-payment fee</p>
+                <p className="text-muted-foreground">
+                  If this promise is not kept, a fee of{' '}
+                  <span className="font-semibold text-foreground">{fmt(projectedFee)}</span>{' '}
+                  ({feePolicy.ptp_missed_fee_type === 'percentage'
+                    ? `${feePolicy.ptp_missed_fee_value}% of the amount`
+                    : 'fixed'}) will be added to your loan balance.
+                </p>
+              </Card>
+            )}
             <Button disabled={submitting} className="w-full" onClick={createPromise}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm promise'}
             </Button>
