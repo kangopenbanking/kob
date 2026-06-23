@@ -142,7 +142,7 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
-              defaultMuted
+              playsInline
               playsInline
               loop
               preload="auto"
