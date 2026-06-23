@@ -13,6 +13,31 @@ by a chosen date and method. Outcomes feed the credit-score engine:
 | `rescheduled` (first time, before due) | 0 |
 | `rescheduled` (repeat within 30 days) | **-5** |
 
+## Missed-payment fee
+
+When a Promise to Pay is marked `broken` (either by the daily `mode=sweep`
+cron or by a repayment that finalises with `status=broken`), the platform
+charges a bank-configurable fee to the loan account.
+
+The fee is configured per loan product:
+
+| Column on `loan_products` | Meaning |
+|---|---|
+| `ptp_missed_fee_enabled` | Master switch (default `false`). |
+| `ptp_missed_fee_type`    | `fixed` or `percentage`. |
+| `ptp_missed_fee_value`   | Fixed amount or percentage applied to the unpaid portion. |
+| `ptp_missed_fee_cap`     | Optional max amount (used for `percentage`). |
+| `ptp_missed_fee_grace_days` | Days after `promised_date` before sweep marks it broken. |
+
+When charged:
+
+1. Promise row gets `missed_fee_amount` / `_currency` / `_type` / `_charged_at` / `_reference` (idempotent on `promise_id`).
+2. `loan_accounts.outstanding_balance` and `penalty_charges` are incremented by the fee.
+3. A `transaction_fees` row of `transaction_type='ptp_missed_fee'` is written.
+4. A `promise_to_pay_events` row of type `fee_charged` is appended.
+5. The customer receives an in-app notification.
+6. Webhook `ptp.fee_charged` is dispatched to subscribers.
+
 ## Endpoints
 
 All requests must include a Supabase JWT for the customer in the

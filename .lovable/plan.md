@@ -1,108 +1,80 @@
-# Promise to Pay — Phase 2
+## Promise to Pay (PTP) — E2E Audit + Missed-Payment Fee Enhancement
 
-Surgical, additive build on top of the existing PTP module. No renames, no schema removals.
+### 1. Audit findings (current state)
 
-## 1. Notifications & email alerts
+**Working today**
+- Tables: `promise_to_pay`, `promise_to_pay_events` (with RLS, status check constraints, idempotency_key, reschedule chain).
+- Edge functions: `ptp-ops` (create/list/cancel/reschedule), `ptp-settle` (`mode=match` + `mode=sweep`), `ptp-admin-ops` (list/detail/cancel/reschedule/override-credit). Shared `ptp-notify.ts` + `ptp-webhook.ts`.
+- Loan repayment path (`loan-ops`) calls `ptp-settle?mode=match` after every repayment — confirmed.
+- Credit-score integration: `ptp_created / kept / partial / broken / rescheduled / rescheduled_repeat` events recorded (idempotent on promise_id).
+- Admin dashboard (`/admin/promise-to-pay`), banking flow (`/app/bank/more/loans/promise`), customer summary (`/app/customer/promise-to-pay`) all wired.
+- Deno tests exist for `ptp-ops` and `ptp-settle`.
 
-**In-app (app_notifications):** insert a row from `ptp-ops` (create, reschedule, cancel) and `ptp-settle` (partial, kept, broken via sweep). Notification types: `ptp_created`, `ptp_partial`, `ptp_rescheduled`, `ptp_swept`, `ptp_broken`. Payload: `{ promise_id, loan_id, amount, currency, due_date, status }`. Wired into existing `useNotifications` hook — no UI changes required, badge updates automatically.
+**Gaps identified**
+1. **No missed-payment fee anywhere.** Sweep marks promise `broken`, fires credit penalty (-25) and notification, but does NOT debit the customer / increase loan outstanding / record a `transaction_fees` or journal entry. Bank cannot configure a fee.
+2. **No reminder dispatcher.** Event enum includes `reminder_sent` but nothing emits it (no T-3 / T-1 / due-day reminders).
+3. **`loan_schedule` not linked.** PTP is free-form (amount + date) — no FK to a specific installment, so multiple PTPs for the same instalment can be created and the schedule isn't updated on `kept`.
+4. **Currency mismatch.** Banking flow hard-codes `GBP`; rest of the platform uses `XAF` / loan account currency. Cosmetic but causes wrong symbols in totals.
+5. **Sweep is not scheduled.** No `pg_cron` job calling `ptp-settle?mode=sweep` — overdue PTPs never auto-break.
+6. **Customer/admin UIs don't surface fee, penalty, or remaining balance change.**
+7. **No webhook event for `ptp.fee_charged`** (so external integrators miss the bank-side debit).
 
-**Email alerts (app emails via Lovable Emails):**
-- Prerequisite check: `email_domain--check_email_domain_status`. If no domain → show setup dialog and stop. If domain exists → continue.
-- Run `setup_email_infra` if missing, then `scaffold_transactional_email` if missing.
-- New React Email templates in `supabase/functions/_shared/transactional-email-templates/`:
-  - `ptp-created.tsx` — confirmation + promised amount/date
-  - `ptp-partial.tsx` — payment received, remaining balance
-  - `ptp-rescheduled.tsx` — new date, credit impact note
-  - `ptp-broken.tsx` — broken notice + credit penalty applied
-  - `ptp-kept.tsx` — promise fulfilled, positive credit note
-- Register in `registry.ts`.
-- `ptp-ops` and `ptp-settle` invoke `send-transactional-email` with idempotency keys like `ptp-<event>-<promise_id>`.
-- Respect `notification_preferences` (skip email if user opted out).
+### 2. Enhancement — bank-configurable missed-payment fee
 
-## 2. Admin backend screen
+**Scope decision:** configure at the **loan_products** level (per-institution, per-product). This is the existing per-institution lending config table, keeps fees consistent across all loans of that product, and avoids a new top-level table. (Recommended — confirm or override.)
 
-New route `/admin/promise-to-pay` (admin-only via `useIsAdmin`).
+**Additive schema changes (backwards-compatible, no destructive ops)**
 
-**Features:**
-- Search by user email, loan ID, promise ID, status
-- Filters: status (pending/kept/partial/broken/cancelled/rescheduled), date range, currency, amount range
-- Sortable table: promise ID, customer, loan, amount, promised date, status, kept amount, created
-- Row actions (with confirm dialog + reason field):
-  - **Cancel promise** — sets status `cancelled`, no credit impact
-  - **Reschedule** — new date picker, writes audit row
-  - **Override credit event** — pick event type to reverse/insert (admin-only), writes to `credit_events` with `source='admin_override'` and reason
-- Detail drawer: full event timeline from `promise_to_pay_events` + linked `credit_events`
-- Every admin action writes to `promise_to_pay_events` AND `audit_logs` with admin user id, action, before/after, reason
+```sql
+ALTER TABLE public.loan_products
+  ADD COLUMN ptp_missed_fee_enabled  boolean        NOT NULL DEFAULT false,
+  ADD COLUMN ptp_missed_fee_type     text           NOT NULL DEFAULT 'fixed'
+    CHECK (ptp_missed_fee_type IN ('fixed','percentage')),
+  ADD COLUMN ptp_missed_fee_value    numeric(18,4)  NOT NULL DEFAULT 0
+    CHECK (ptp_missed_fee_value >= 0),
+  ADD COLUMN ptp_missed_fee_cap      numeric(18,2),  -- optional max for % fees
+  ADD COLUMN ptp_missed_fee_grace_days int NOT NULL DEFAULT 1;
 
-**Edge function:** new `ptp-admin-ops` (verify admin role via `has_role`) handling cancel/reschedule/override-credit. Reuses existing `ptp-ops` logic where possible.
-
-## 3. OpenAPI spec updates
-
-Bump `info.version` per Standing Order 6 (minor: 4.49.0 → 4.50.0 — additive examples + new admin endpoints).
-
-**Add to `public/openapi.yaml` (+ JSON mirror):**
-- Full `requestBody` and `responses` examples for:
-  - `POST /v1/loans/{id}/promises` (create) — request: amount, date, method, idempotency_key; response: full promise object
-  - `GET /v1/loans/{id}/promises` (list)
-  - `POST /v1/promises/{id}/reschedule` — request: new_date, reason
-  - `POST /v1/promises/{id}/cancel`
-  - Internal `POST /v1/promises/settle` (ptp-settle) — request: loan_payment_id, amount; response: matched promise + status
-- Admin endpoints (tagged `Admin`):
-  - `GET /v1/admin/promises` (search/filter)
-  - `POST /v1/admin/promises/{id}/override-credit`
-- New error codes in RFC 7807 catalogue: `ptp_amount_exceeds_outstanding`, `ptp_already_settled`, `ptp_not_found`.
-- Cite standards in description: FAPI-1.0-ADV, RFC 7807.
-- Snapshot history file + signatures via existing `snapshot-openapi-history.mjs` workflow.
-
-## 4. Expanded E2E coverage
-
-**New Deno tests in `supabase/functions/ptp-ops/index.test.ts` and new `ptp-settle/index.test.ts`:**
-- Idempotency: same `idempotency_key` returns the same promise, no duplicates
-- Reschedule chain: create → reschedule → reschedule again → assert `ptp_rescheduled_repeat` rule fires (-5)
-- Multiple repayments same day: 3 partial payments → assert single `ptp_kept` (not 3) once cumulative ≥ promised
-- Sweep + credit math: create overdue → run sweep → read `credit_scores` before/after → assert delta = -25 exactly
-- Cancel after partial → asserts no broken event fires later
-
-**New Playwright spec `e2e/authenticated/promise-to-pay-extended.spec.ts`:**
-- Admin search/filter/cancel/override flow
-- Notification badge appears after PTP create
-- Email log row appears in `email_send_log` for each event
-
-**New workflow `.github/workflows/ptp-e2e.yml`** running both suites on PR.
-
-## Technical details
-
-```text
-Files created:
-- supabase/functions/ptp-admin-ops/index.ts
-- supabase/functions/ptp-admin-ops/index.test.ts
-- supabase/functions/ptp-settle/index.test.ts
-- supabase/functions/_shared/transactional-email-templates/ptp-{created,partial,rescheduled,broken,kept}.tsx
-- src/pages/admin/PromiseToPayAdmin.tsx
-- src/components/admin/ptp/{PtpTable,PtpFilters,PtpDetailDrawer,PtpActionDialog}.tsx
-- e2e/authenticated/promise-to-pay-extended.spec.ts
-- .github/workflows/ptp-e2e.yml
-
-Files modified:
-- supabase/functions/ptp-ops/index.ts (insert notifications + invoke email)
-- supabase/functions/ptp-settle/index.ts (same)
-- supabase/functions/_shared/transactional-email-templates/registry.ts
-- src/App.tsx (admin route)
-- src/pages/admin/AdminDashboard.tsx (nav link)
-- public/openapi.yaml + public/openapi.json
-- src/config/version.ts (4.50.0)
-
-Migrations:
-- None to existing PTP tables. Optional: add `admin_override` to credit_events source enum if not already present.
+ALTER TABLE public.promise_to_pay
+  ADD COLUMN missed_fee_amount       numeric(18,2),
+  ADD COLUMN missed_fee_currency     text,
+  ADD COLUMN missed_fee_type         text,      -- snapshot of fixed/percentage
+  ADD COLUMN missed_fee_charged_at   timestamptz,
+  ADD COLUMN missed_fee_reference    text;      -- payment_reference of the debit
 ```
 
-## Rollout order
+Plus extend the `promise_to_pay_events.event_type` CHECK to allow `fee_charged` and `fee_waived` (additive — Standing Order 4 Surgeon Rule).
 
-1. Email prerequisite check → infra/scaffold if needed
-2. Templates + registry
-3. Wire notifications + email into existing edge functions
-4. Admin edge function + DB grants check
-5. Admin UI
-6. OpenAPI bump + examples + history snapshot
-7. Tests (Deno + Playwright) + workflow
-8. Run linter + edge function tests
+### 3. Sequenced implementation steps
+
+| # | Step | Test gate before moving on |
+|---|------|----------------------------|
+| 1 | Migration: add 5 cols to `loan_products`, 5 cols to `promise_to_pay`, expand events check, add `ptp.fee_charged` webhook event type. | `SELECT` confirms columns + check accepts new events. |
+| 2 | Build shared helper `supabase/functions/_shared/ptp-fee.ts` — `computeMissedFee(product, missedAmount, currency)` returning `{amount, type, capped}`. Unit tested via deno. | New `ptp-fee.test.ts` passes 4 cases (disabled / fixed / percentage / capped). |
+| 3 | Extend `ptp-settle?mode=sweep` (and the direct `broken` branch of `match`) to: (a) fetch loan + product, (b) compute fee, (c) insert `transaction_fees` row + bump `loan_accounts.penalty_charges` and `outstanding_balance` atomically, (d) write `promise_to_pay_events.fee_charged`, (e) update PTP `missed_fee_*` cols, (f) dispatch `ptp.fee_charged` webhook, (g) notify customer with fee included. Fee step is idempotent on `promise_id`. | Re-running sweep on the same promise does NOT double-charge. Existing `ptp-settle/index.test.ts` continues to pass. |
+| 4 | Schedule pg_cron daily `ptp-settle?mode=sweep` (uses `insert` tool, project-specific) at 02:00 UTC. | `cron.job` row present; manual invoke green. |
+| 5 | Admin UI: new "Fee policy" tab on `/admin/promise-to-pay` listing loan products with inline edit (enabled toggle, type, value, cap, grace days). Saves via tiny `loan-products-ops?action=update_ptp_fee` action (or extends existing loan-products edge function — check first, do not duplicate). | Toggling persists, reload shows value, RLS prevents non-admin write. |
+| 6 | Banking PromiseToPay screen: show "Missed-payment fee" badge with the computed projected fee at the Review step (informational, before confirming). Fix GBP → loan account currency. | Manual: create PTP → review shows correct fee preview. |
+| 7 | Customer PromiseToPay summary: when `missed_fee_amount IS NOT NULL`, add a "Late fee charged" line with amount + date and surface in History card. | Visible after sweep marks a test promise broken. |
+| 8 | Sequential E2E test script `e2e/ptp-missed-fee.spec.ts` (Playwright + service-role seed) covering the 6-step flow: loan → schedule → PTP → miss → sweep → fee applied → UI reflects → webhook fired. Documented PASS/FAIL per step. | All 6 sub-tests PASS before declaring done. |
+
+### 4. Guardrails enforced
+- All schema changes additive; no `DROP`, no rename, no destructive ops on existing PTP / loan / payment rows.
+- No edits to shared layouts, auth, profile, or unrelated modules.
+- `loan-ops` is read but not modified (PTP-settle remains its only PTP touchpoint).
+- Webhook event additions and event_type enum additions only ratchet forward (Standing Order 2).
+- `ptp.fee_charged` added to `_shared/ptp-webhook.ts` type union, not renaming existing events.
+- All new fee math goes through the shared helper — no duplicate logic.
+
+### 5. Deliverables
+1. This audit report (above).
+2. SQL migration script (Step 1) — backwards-compatible.
+3. Fee helper + extended sweep + cron — backend.
+4. Admin fee-config UI + customer/banking display — frontend.
+5. Sequential E2E test report with PASS/FAIL for each of the 6 stages.
+
+### One decision needed before build
+Scope of the fee configuration — please confirm **per loan_product** (recommended) or pick another scope:
+- Per loan product (recommended): granular, lives next to interest/late-fee config you already have.
+- Per institution: simpler, one rule for all products.
+- Per individual loan account: most flexible, but creates ops overhead.

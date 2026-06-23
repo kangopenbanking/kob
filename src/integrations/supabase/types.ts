@@ -16443,6 +16443,11 @@ export type Database = {
           processing_fee_percentage: number | null
           product_code: string
           product_name: string
+          ptp_missed_fee_cap: number | null
+          ptp_missed_fee_enabled: boolean
+          ptp_missed_fee_grace_days: number
+          ptp_missed_fee_type: string
+          ptp_missed_fee_value: number
           required_documents: Json | null
           requires_collateral: boolean | null
           requires_guarantor: boolean | null
@@ -16468,6 +16473,11 @@ export type Database = {
           processing_fee_percentage?: number | null
           product_code: string
           product_name: string
+          ptp_missed_fee_cap?: number | null
+          ptp_missed_fee_enabled?: boolean
+          ptp_missed_fee_grace_days?: number
+          ptp_missed_fee_type?: string
+          ptp_missed_fee_value?: number
           required_documents?: Json | null
           requires_collateral?: boolean | null
           requires_guarantor?: boolean | null
@@ -16493,6 +16503,11 @@ export type Database = {
           processing_fee_percentage?: number | null
           product_code?: string
           product_name?: string
+          ptp_missed_fee_cap?: number | null
+          ptp_missed_fee_enabled?: boolean
+          ptp_missed_fee_grace_days?: number
+          ptp_missed_fee_type?: string
+          ptp_missed_fee_value?: number
           required_documents?: Json | null
           requires_collateral?: boolean | null
           requires_guarantor?: boolean | null
@@ -21491,6 +21506,11 @@ export type Database = {
           kept_amount: number
           kept_at: string | null
           loan_account_id: string
+          missed_fee_amount: number | null
+          missed_fee_charged_at: string | null
+          missed_fee_currency: string | null
+          missed_fee_reference: string | null
+          missed_fee_type: string | null
           payment_method: string
           promised_amount: number
           promised_date: string
@@ -21509,6 +21529,11 @@ export type Database = {
           kept_amount?: number
           kept_at?: string | null
           loan_account_id: string
+          missed_fee_amount?: number | null
+          missed_fee_charged_at?: string | null
+          missed_fee_currency?: string | null
+          missed_fee_reference?: string | null
+          missed_fee_type?: string | null
           payment_method?: string
           promised_amount: number
           promised_date: string
@@ -21527,6 +21552,11 @@ export type Database = {
           kept_amount?: number
           kept_at?: string | null
           loan_account_id?: string
+          missed_fee_amount?: number | null
+          missed_fee_charged_at?: string | null
+          missed_fee_currency?: string | null
+          missed_fee_reference?: string | null
+          missed_fee_type?: string | null
           payment_method?: string
           promised_amount?: number
           promised_date?: string

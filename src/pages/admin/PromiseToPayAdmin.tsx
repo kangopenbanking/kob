@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Search, RefreshCw, XCircle, Calendar, Shield } from "lucide-react";
 import PtpWebhookHealth from "@/components/admin/ptp/PtpWebhookHealth";
+import PtpFeePolicy from "@/components/admin/ptp/PtpFeePolicy";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -194,6 +195,8 @@ export default function PromiseToPayAdmin() {
         </CardContent>
       </Card>
 
+      <PtpFeePolicy />
+
       <PtpWebhookHealth />
 
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
@@ -212,6 +215,13 @@ export default function PromiseToPayAdmin() {
                 <div><span className="text-muted-foreground">Kept: </span>{Number(detail.promise.kept_amount ?? 0).toLocaleString()}</div>
                 <div><span className="text-muted-foreground">Due: </span>{detail.promise.promised_date}</div>
                 <div><span className="text-muted-foreground">Status: </span><Badge variant="outline" className={STATUS_COLORS[detail.promise.status]}>{detail.promise.status}</Badge></div>
+                {detail.promise.missed_fee_amount && (
+                  <div className="col-span-2 mt-1 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs">
+                    <span className="font-semibold text-destructive">Missed-payment fee charged: </span>
+                    {Number(detail.promise.missed_fee_amount).toLocaleString()} {detail.promise.missed_fee_currency}
+                    {' '}({detail.promise.missed_fee_type}) — ref {detail.promise.missed_fee_reference}
+                  </div>
+                )}
               </CardContent></Card>
 
               <div>

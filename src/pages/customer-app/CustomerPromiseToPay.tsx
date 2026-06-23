@@ -20,6 +20,11 @@ interface Promise {
   currency: string;
   kept_amount: number;
   created_at: string;
+  missed_fee_amount?: number | null;
+  missed_fee_currency?: string | null;
+  missed_fee_type?: string | null;
+  missed_fee_charged_at?: string | null;
+  missed_fee_reference?: string | null;
 }
 
 const statusMeta: Record<string, { tone: string; icon: React.ElementType; label: string }> = {
@@ -117,6 +122,16 @@ const CustomerPromiseToPay: React.FC = () => {
               <Progress value={progress} className="h-2" />
             </div>
 
+            {active.missed_fee_amount && (
+              <div className="mb-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-destructive">Late-payment fee</p>
+                <p className="mt-1 text-sm font-bold text-destructive">
+                  {fmt(Number(active.missed_fee_amount), active.missed_fee_currency || active.currency)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">Added to your outstanding balance.</p>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={load}>Refresh</Button>
               <Button className="flex-1" onClick={() => navigate('/app/bank')}>
@@ -146,15 +161,23 @@ const CustomerPromiseToPay: React.FC = () => {
               const meta = statusMeta[p.status] ?? statusMeta.scheduled;
               const Icon = meta.icon;
               return (
-                <Card key={p.id} className="flex items-center gap-3 rounded-2xl p-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                    <Icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                <Card key={p.id} className="rounded-2xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
+                      <Icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">{fmt(p.promised_amount, p.currency)}</p>
+                      <p className="text-xs text-muted-foreground">{format(parseISO(p.promised_date), 'd MMM yyyy')}</p>
+                    </div>
+                    <Badge variant="outline" className={meta.tone}>{meta.label}</Badge>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{fmt(p.promised_amount, p.currency)}</p>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(p.promised_date), 'd MMM yyyy')}</p>
-                  </div>
-                  <Badge variant="outline" className={meta.tone}>{meta.label}</Badge>
+                  {p.missed_fee_amount && (
+                    <p className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 px-2 py-1 text-[11px] text-destructive">
+                      Late-payment fee charged: {fmt(Number(p.missed_fee_amount), p.missed_fee_currency || p.currency)}
+                      {p.missed_fee_charged_at ? ` on ${format(parseISO(p.missed_fee_charged_at), 'd MMM yyyy')}` : ''}
+                    </p>
+                  )}
                 </Card>
               );
             })}
