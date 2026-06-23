@@ -366,15 +366,28 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
     updateItem(id, { url, provider, video_id });
   };
 
-  const handleImageUpload = async (id: string, file: File) => {
+  const handleMediaFileUpload = async (id: string, file: File, kind: 'image' | 'video') => {
+    const maxBytes = kind === 'video' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error(`File too large. Max ${kind === 'video' ? '50MB' : '10MB'}.`);
+      return;
+    }
     setUploading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
-    const path = `${user.id}/media/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${user.id}/media/${Date.now()}_${safeName}`;
+    const { error } = await supabase.storage.from('pwa-media').upload(path, file, {
+      contentType: file.type || (kind === 'video' ? 'video/mp4' : 'image/png'),
+      cacheControl: '3600',
+      upsert: false,
+    });
     if (error) { toast.error('Upload failed'); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
-    updateItem(id, { url: publicUrl });
+    const patch: Partial<MediaSection> = { url: publicUrl };
+    if (kind === 'video') { patch.provider = 'file'; patch.video_id = ''; }
+    updateItem(id, patch);
+    toast.success(`${kind === 'video' ? 'Video' : 'Image'} uploaded`);
     setUploading(false);
   };
 
