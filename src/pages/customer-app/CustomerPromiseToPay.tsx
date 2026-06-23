@@ -20,6 +20,11 @@ interface Promise {
   currency: string;
   kept_amount: number;
   created_at: string;
+  missed_fee_amount?: number | null;
+  missed_fee_currency?: string | null;
+  missed_fee_type?: string | null;
+  missed_fee_charged_at?: string | null;
+  missed_fee_reference?: string | null;
 }
 
 const statusMeta: Record<string, { tone: string; icon: React.ElementType; label: string }> = {
