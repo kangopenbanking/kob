@@ -7,7 +7,7 @@
       "php": "1.7.0"
     }
   },
-  "generatedAt": "2026-06-23T01:52:17.364Z",
+  "generatedAt": "2026-06-23T01:53:37.890Z",
   "algorithm": "sha256",
   "signing": {
     "algorithm": "ed25519",
@@ -16,7 +16,7 @@
     "publicKeyFingerprintSha256Hex": "a9:d9:40:e6:b5:20:a0:69:e8:d8:3b:fb:2e:65:d3:ea:a7:92:d2:0a:a8:d4:ec:b7:4a:cc:e1:89:a7:eb:61:20",
     "manifestSigUrl": "/SHA256SUMS.txt.sig",
     "keySource": "local-dev",
-    "signedAt": "2026-06-23T01:52:17.628Z",
+    "signedAt": "2026-06-23T01:53:38.154Z",
     "verifyInstructionsUrl": "/developer/openapi#verify",
     "rotationDocsUrl": "/developer/openapi#rotation",
     "next": null
@@ -280,7 +280,7 @@
       "category": "changelog",
       "version": "4.51.0",
       "size": 139754,
-      "sha256": "b0669d66a9ecdfaca600e860f18896eb692a3c1845139cf62909142d02e4b999",
+      "sha256": "ec95e946854361ae2f5b3d95720c02c25f3754ba49e84d3839f4d966486e0c83",
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
