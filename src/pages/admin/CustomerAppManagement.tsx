@@ -423,15 +423,22 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
               <div className="space-y-2">
                 <Input placeholder={tr('Image URL')} value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
                 <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
-                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image'}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(item.id, e.target.files[0])} />
+                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image from device'}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleMediaFileUpload(item.id, e.target.files[0], 'image')} />
                 </label>
                 {item.url && <img src={item.url} alt="" className={`w-full rounded object-cover ${item.aspect === 'portrait' ? 'h-40' : 'h-20'}`} />}
               </div>
             ) : (
               <div className="space-y-2">
-                <Input placeholder={tr('Video URL (YouTube, Facebook, X, etc.)')} value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
-                {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider}</Badge>}
+                <Input placeholder={tr('Video URL (YouTube, Facebook, X, etc.) or upload below')} value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Video className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload video from device (MP4, WebM, max 50MB)'}
+                  <input type="file" accept="video/mp4,video/webm,video/ogg,video/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleMediaFileUpload(item.id, e.target.files[0], 'video')} />
+                </label>
+                {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider === 'custom' ? 'uploaded file' : item.provider}</Badge>}
+                {item.url && item.provider === 'custom' && (
+                  <video src={item.url} className={`w-full rounded object-cover ${item.aspect === 'portrait' ? 'h-40' : 'h-24'}`} muted playsInline controls preload="metadata" />
+                )}
               </div>
             )}
           </div>
