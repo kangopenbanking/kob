@@ -236,6 +236,58 @@ Deno.serve(async (req) => {
       return json({ swept: overdue?.length ?? 0, broken, fees_charged: feesCharged });
     }
 
+    if (mode === 'remind') {
+      // Daily cron: notify consumers about upcoming due dates and broken-but-unpaid promises.
+      // Idempotent per (promise_id, ptp_event) via notifyPtpEvent's app_notifications dedup.
+      const today = new Date();
+      const isoOffset = (days: number) => {
+        const d = new Date(today.getTime() + days * 86400000);
+        return d.toISOString().slice(0, 10);
+      };
+      const offsets: Array<{ days: number; event: 'reminder_3d' | 'reminder_1d' | 'reminder_due' }> = [
+        { days: 3, event: 'reminder_3d' },
+        { days: 1, event: 'reminder_1d' },
+        { days: 0, event: 'reminder_due' },
+      ];
+
+      let upcomingSent = 0;
+      for (const { days, event } of offsets) {
+        const targetDate = isoOffset(days);
+        const { data: due } = await admin
+          .from('promise_to_pay')
+          .select('*')
+          .in('status', ['scheduled', 'partially_kept'])
+          .eq('promised_date', targetDate);
+        for (const p of due ?? []) {
+          const remaining = Math.max(0, Number(p.promised_amount) - Number(p.kept_amount ?? 0));
+          const when = days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
+          await notifyPtpEvent(admin, event as any, p.id, p.user_id,
+            `Your Promise to Pay of ${remaining} ${p.currency} is due ${when} (${p.promised_date}).`,
+            { amount: String(remaining), currency: p.currency, promisedDate: p.promised_date, daysUntilDue: String(days) });
+          upcomingSent++;
+        }
+      }
+
+      // Broken follow-up: 3 days after broken, still unpaid, single reminder.
+      const brokenCutoff = new Date(today.getTime() - 3 * 86400000).toISOString().slice(0, 10);
+      const { data: brokenUnpaid } = await admin
+        .from('promise_to_pay')
+        .select('*')
+        .eq('status', 'broken')
+        .lte('broken_at', brokenCutoff + 'T23:59:59Z');
+      let followups = 0;
+      for (const p of brokenUnpaid ?? []) {
+        const remaining = Math.max(0, Number(p.promised_amount) - Number(p.kept_amount ?? 0));
+        if (remaining <= 0) continue;
+        await notifyPtpEvent(admin, 'broken_followup' as any, p.id, p.user_id,
+          `Your Promise to Pay of ${remaining} ${p.currency} from ${p.promised_date} is still unpaid. Please settle to protect your credit score.`,
+          { amount: String(remaining), currency: p.currency, promisedDate: p.promised_date });
+        followups++;
+      }
+
+      return json({ upcoming_sent: upcomingSent, broken_followups: followups });
+    }
+
     return json({ error: `unknown mode: ${mode}` }, 400);
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
