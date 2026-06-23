@@ -151,15 +151,23 @@ const CustomerPromiseToPay: React.FC = () => {
               const meta = statusMeta[p.status] ?? statusMeta.scheduled;
               const Icon = meta.icon;
               return (
-                <Card key={p.id} className="flex items-center gap-3 rounded-2xl p-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-                    <Icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                <Card key={p.id} className="rounded-2xl p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
+                      <Icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">{fmt(p.promised_amount, p.currency)}</p>
+                      <p className="text-xs text-muted-foreground">{format(parseISO(p.promised_date), 'd MMM yyyy')}</p>
+                    </div>
+                    <Badge variant="outline" className={meta.tone}>{meta.label}</Badge>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{fmt(p.promised_amount, p.currency)}</p>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(p.promised_date), 'd MMM yyyy')}</p>
-                  </div>
-                  <Badge variant="outline" className={meta.tone}>{meta.label}</Badge>
+                  {p.missed_fee_amount && (
+                    <p className="mt-2 rounded-md border border-destructive/40 bg-destructive/5 px-2 py-1 text-[11px] text-destructive">
+                      Late-payment fee charged: {fmt(Number(p.missed_fee_amount), p.missed_fee_currency || p.currency)}
+                      {p.missed_fee_charged_at ? ` on ${format(parseISO(p.missed_fee_charged_at), 'd MMM yyyy')}` : ''}
+                    </p>
+                  )}
                 </Card>
               );
             })}
