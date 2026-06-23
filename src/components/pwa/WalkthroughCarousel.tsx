@@ -143,7 +143,6 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
               autoPlay
               muted
               playsInline
-              playsInline
               loop
               preload="auto"
             />
