@@ -366,15 +366,28 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
     updateItem(id, { url, provider, video_id });
   };
 
-  const handleImageUpload = async (id: string, file: File) => {
+  const handleMediaFileUpload = async (id: string, file: File, kind: 'image' | 'video') => {
+    const maxBytes = kind === 'video' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error(`File too large. Max ${kind === 'video' ? '50MB' : '10MB'}.`);
+      return;
+    }
     setUploading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
-    const path = `${user.id}/media/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${user.id}/media/${Date.now()}_${safeName}`;
+    const { error } = await supabase.storage.from('pwa-media').upload(path, file, {
+      contentType: file.type || (kind === 'video' ? 'video/mp4' : 'image/png'),
+      cacheControl: '3600',
+      upsert: false,
+    });
     if (error) { toast.error('Upload failed'); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
-    updateItem(id, { url: publicUrl });
+    const patch: Partial<MediaSection> = { url: publicUrl };
+    if (kind === 'video') { patch.provider = 'custom'; patch.video_id = ''; }
+    updateItem(id, patch);
+    toast.success(`${kind === 'video' ? 'Video' : 'Image'} uploaded`);
     setUploading(false);
   };
 
@@ -410,15 +423,22 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
               <div className="space-y-2">
                 <Input placeholder={tr('Image URL')} value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
                 <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
-                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image'}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(item.id, e.target.files[0])} />
+                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image from device'}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleMediaFileUpload(item.id, e.target.files[0], 'image')} />
                 </label>
                 {item.url && <img src={item.url} alt="" className={`w-full rounded object-cover ${item.aspect === 'portrait' ? 'h-40' : 'h-20'}`} />}
               </div>
             ) : (
               <div className="space-y-2">
-                <Input placeholder={tr('Video URL (YouTube, Facebook, X, etc.)')} value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
-                {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider}</Badge>}
+                <Input placeholder={tr('Video URL (YouTube, Facebook, X, etc.) or upload below')} value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Video className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload video from device (MP4, WebM, max 50MB)'}
+                  <input type="file" accept="video/mp4,video/webm,video/ogg,video/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleMediaFileUpload(item.id, e.target.files[0], 'video')} />
+                </label>
+                {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider === 'custom' ? 'uploaded file' : item.provider}</Badge>}
+                {item.url && item.provider === 'custom' && (
+                  <video src={item.url} className={`w-full rounded object-cover ${item.aspect === 'portrait' ? 'h-40' : 'h-24'}`} muted playsInline controls preload="metadata" />
+                )}
               </div>
             )}
           </div>
