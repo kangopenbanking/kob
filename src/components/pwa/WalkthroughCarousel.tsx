@@ -111,36 +111,31 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35 }}
           className="relative w-full shrink-0 overflow-hidden"
-          style={{ height: '55vh', minHeight: '280px', maxHeight: '520px' }}
+          style={{
+            height: '60vh',
+            minHeight: '320px',
+            maxHeight: '720px',
+            backgroundColor: slide.bg_color || wConfig.bg_color || 'hsl(var(--muted))',
+          }}
         >
           {hasImage && (
-            <div
-              className="flex h-full w-full items-center justify-center"
-              style={{
-                backgroundColor: slide.bg_color || wConfig.bg_color || 'hsl(var(--muted))',
-              }}
-            >
-              <img
-                src={slide.media_url!}
-                alt={slide.title}
-                className="h-full w-full object-contain"
-                style={{ padding: '0' }}
-                draggable={false}
-              />
-            </div>
+            <img
+              src={slide.media_url!}
+              alt={slide.title}
+              className="absolute inset-0 h-full w-full object-cover"
+              draggable={false}
+            />
           )}
 
           {hasVideo && (
             <video
               src={slide.media_url!}
-              className="h-full w-full object-contain"
-              style={{
-                backgroundColor: slide.bg_color || wConfig.bg_color || 'hsl(var(--muted))',
-              }}
+              className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
               playsInline
               loop
+              preload="auto"
             />
           )}
 

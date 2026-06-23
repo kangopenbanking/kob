@@ -577,23 +577,54 @@ function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }
                   </div>
                 )}
               </div>
-              {editSlide.media_type === 'image' && (
+              {(editSlide.media_type === 'image' || editSlide.media_type === 'video') && (
                 <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
-                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Upload image'}
-                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setUploading(true);
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
-                    const path = `${user.id}/walkthrough/${Date.now()}_${file.name}`;
-                    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
-                    if (error) { toast.error('Upload failed'); setUploading(false); return; }
-                    const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
-                    setEditSlide((prev: any) => ({ ...prev, media_url: publicUrl }));
-                    setUploading(false);
-                  }} />
+                  <Image className="h-3.5 w-3.5" />
+                  {uploading
+                    ? 'Uploading...'
+                    : editSlide.media_type === 'video'
+                      ? 'Upload video from device'
+                      : 'Upload image from device'}
+                  <input
+                    type="file"
+                    accept={editSlide.media_type === 'video' ? 'video/*' : 'image/*'}
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const maxBytes = editSlide.media_type === 'video' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+                      if (file.size > maxBytes) {
+                        toast.error(`File too large. Max ${editSlide.media_type === 'video' ? '50MB' : '10MB'}.`);
+                        return;
+                      }
+                      setUploading(true);
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
+                      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                      const path = `${user.id}/walkthrough/${Date.now()}_${safeName}`;
+                      const { error } = await supabase.storage.from('pwa-media').upload(path, file, {
+                        cacheControl: '3600',
+                        upsert: false,
+                        contentType: file.type,
+                      });
+                      if (error) { toast.error('Upload failed'); setUploading(false); return; }
+                      const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
+                      setEditSlide((prev: any) => ({ ...prev, media_url: publicUrl }));
+                      setUploading(false);
+                      toast.success(`${editSlide.media_type === 'video' ? 'Video' : 'Image'} uploaded`);
+                    }}
+                  />
                 </label>
+              )}
+              {editSlide.media_url && editSlide.media_type === 'image' && (
+                <div className="rounded border overflow-hidden bg-muted aspect-video">
+                  <img src={editSlide.media_url} alt="preview" className="h-full w-full object-cover" />
+                </div>
+              )}
+              {editSlide.media_url && editSlide.media_type === 'video' && (
+                <div className="rounded border overflow-hidden bg-muted aspect-video">
+                  <video src={editSlide.media_url} className="h-full w-full object-cover" muted playsInline controls />
+                </div>
               )}
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => saveSlideMutation.mutate(editSlide)} disabled={saveSlideMutation.isPending}>
