@@ -68,9 +68,40 @@ const PromiseToPay: React.FC = () => {
   const [date, setDate] = useState<string>(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [submitting, setSubmitting] = useState(false);
   const [showCantKeep, setShowCantKeep] = useState<Promise | null>(null);
+  const [feePolicy, setFeePolicy] = useState<FeePolicy | null>(null);
 
-  const currency = loan?.currency || 'GBP';
-  const fmt = (n: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(n);
+  const currency = loan?.currency || 'XAF';
+  const fmtLocale = currency === 'GBP' ? 'en-GB' : currency === 'EUR' ? 'fr-FR' : 'fr-CM';
+  const fmt = (n: number) => {
+    try { return new Intl.NumberFormat(fmtLocale, { style: 'currency', currency, maximumFractionDigits: currency === 'XAF' || currency === 'XOF' ? 0 : 2 }).format(n); }
+    catch { return `${Number(n).toLocaleString()} ${currency}`; }
+  };
+
+  // Load fee policy for the selected loan's product
+  useEffect(() => {
+    if (!loan?.loan_product_id) { setFeePolicy(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('loan_products')
+        .select('ptp_missed_fee_enabled, ptp_missed_fee_type, ptp_missed_fee_value, ptp_missed_fee_cap')
+        .eq('id', loan.loan_product_id!)
+        .maybeSingle();
+      if (!cancelled) setFeePolicy((data as any) ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [loan?.loan_product_id]);
+
+  const projectedFee = useMemo(() => {
+    if (!feePolicy?.ptp_missed_fee_enabled) return 0;
+    const amt = Number(amount) || 0;
+    if (amt <= 0) return 0;
+    let raw = feePolicy.ptp_missed_fee_type === 'percentage'
+      ? (amt * Number(feePolicy.ptp_missed_fee_value)) / 100
+      : Number(feePolicy.ptp_missed_fee_value);
+    if (feePolicy.ptp_missed_fee_cap && raw > Number(feePolicy.ptp_missed_fee_cap)) raw = Number(feePolicy.ptp_missed_fee_cap);
+    return Math.round(raw * 100) / 100;
+  }, [feePolicy, amount]);
 
   const refresh = async () => {
     setLoadingLoans(true);
