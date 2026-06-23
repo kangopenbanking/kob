@@ -21,6 +21,7 @@ interface LoanAcct {
   next_payment_date: string | null;
   penalty_charges: number | null;
   currency?: string;
+  loan_product_id?: string;
 }
 
 interface FeePolicy {
