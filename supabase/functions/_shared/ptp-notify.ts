@@ -11,6 +11,11 @@ const NOTIF_META: Record<string, { title: string; template: string; icon: string
   kept: { title: 'Promise to Pay kept', template: 'ptp-kept', icon: 'loan' },
   broken: { title: 'Promise to Pay not kept', template: 'ptp-broken', icon: 'loan' },
   swept: { title: 'Promise to Pay overdue', template: 'ptp-broken', icon: 'loan' },
+  fee_charged: { title: 'Late-payment fee charged', template: 'ptp-broken', icon: 'loan' },
+  reminder_3d: { title: 'Promise to Pay due in 3 days', template: 'ptp-reminder', icon: 'loan' },
+  reminder_1d: { title: 'Promise to Pay due tomorrow', template: 'ptp-reminder', icon: 'loan' },
+  reminder_due: { title: 'Promise to Pay due today', template: 'ptp-reminder', icon: 'loan' },
+  broken_followup: { title: 'Promise to Pay still unpaid', template: 'ptp-broken', icon: 'loan' },
 };
 
 export async function notifyPtpEvent(
