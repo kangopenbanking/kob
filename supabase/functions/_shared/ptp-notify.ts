@@ -42,7 +42,7 @@ export async function notifyPtpEvent(
     if (!existing) {
       await admin.from('app_notifications').insert({
         user_id: userId,
-        type: event === 'broken' || event === 'swept' ? 'warning' : 'info',
+        type: ['broken','swept','broken_followup','reminder_due','fee_charged'].includes(event) ? 'warning' : 'info',
         title: meta.title,
         message,
         icon: meta.icon,
