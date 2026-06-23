@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CreditCard, SendHorizontal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -124,11 +124,20 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
               alt={slide.title}
               className="absolute inset-0 h-full w-full object-cover"
               draggable={false}
+              loading="eager"
+              decoding="async"
             />
           )}
 
           {hasVideo && (
             <video
+              ref={(el) => {
+                if (el) {
+                  el.muted = true;
+                  const p = el.play();
+                  if (p && typeof p.catch === 'function') p.catch(() => {});
+                }
+              }}
               src={slide.media_url!}
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
