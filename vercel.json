@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node scripts/vercel-preinstall-check.mjs && export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run predeploy:offline && npm run build",
+  "buildCommand": "node scripts/vercel-preinstall-check.mjs && export EXPECTED_OPENAPI_VERSION=$(node scripts/print-expected-version.mjs) && npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "bash scripts/vercel-install.sh",
