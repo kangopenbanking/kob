@@ -122,6 +122,16 @@ const CustomerPromiseToPay: React.FC = () => {
               <Progress value={progress} className="h-2" />
             </div>
 
+            {active.missed_fee_amount && (
+              <div className="mb-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-destructive">Late-payment fee</p>
+                <p className="mt-1 text-sm font-bold text-destructive">
+                  {fmt(Number(active.missed_fee_amount), active.missed_fee_currency || active.currency)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">Added to your outstanding balance.</p>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={load}>Refresh</Button>
               <Button className="flex-1" onClick={() => navigate('/app/bank')}>
