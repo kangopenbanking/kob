@@ -385,7 +385,7 @@ function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { me
     if (error) { toast.error('Upload failed'); setUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
     const patch: Partial<MediaSection> = { url: publicUrl };
-    if (kind === 'video') { patch.provider = 'file'; patch.video_id = ''; }
+    if (kind === 'video') { patch.provider = 'custom'; patch.video_id = ''; }
     updateItem(id, patch);
     toast.success(`${kind === 'video' ? 'Video' : 'Image'} uploaded`);
     setUploading(false);
