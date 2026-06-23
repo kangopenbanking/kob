@@ -195,6 +195,8 @@ export default function PromiseToPayAdmin() {
         </CardContent>
       </Card>
 
+      <PtpFeePolicy />
+
       <PtpWebhookHealth />
 
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
