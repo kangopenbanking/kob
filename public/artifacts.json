@@ -7,16 +7,16 @@
       "php": "1.7.0"
     }
   },
-  "generatedAt": "2026-06-22T00:41:23.551Z",
+  "generatedAt": "2026-06-23T01:33:09.780Z",
   "algorithm": "sha256",
   "signing": {
     "algorithm": "ed25519",
     "publicKeyUrl": "/artifact-signing-pubkey.pem",
-    "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ",
-    "publicKeyFingerprintSha256Hex": "19:51:f6:6c:3e:bd:79:74:02:60:84:6b:ea:b7:df:5f:8e:c8:56:34:fe:76:39:09:08:5d:05:0c:78:8c:51:94",
+    "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA",
+    "publicKeyFingerprintSha256Hex": "a9:d9:40:e6:b5:20:a0:69:e8:d8:3b:fb:2e:65:d3:ea:a7:92:d2:0a:a8:d4:ec:b7:4a:cc:e1:89:a7:eb:61:20",
     "manifestSigUrl": "/SHA256SUMS.txt.sig",
     "keySource": "local-dev",
-    "signedAt": "2026-06-22T00:41:23.843Z",
+    "signedAt": "2026-06-23T01:33:10.063Z",
     "verifyInstructionsUrl": "/developer/openapi#verify",
     "rotationDocsUrl": "/developer/openapi#rotation",
     "next": null
@@ -51,7 +51,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/openapi.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -64,7 +64,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/openapi.yaml.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -77,7 +77,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/openapi-sandbox.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -90,7 +90,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/openapi-sandbox.yaml.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -103,7 +103,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/apis.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -116,7 +116,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/apis-sandbox.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -129,7 +129,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/openapi-history/openapi-4.51.0.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -142,7 +142,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/openapi-history/openapi-4.51.0.yaml.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -155,7 +155,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/postman/Kang_Open_Banking_API_latest.postman_collection.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -168,7 +168,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/postman/Kang_Open_Banking_API_v4.51.0.postman_collection.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -181,7 +181,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/postman/Kang_Open_Banking_Sandbox.postman_environment.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -194,7 +194,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/postman/Kang_Open_Banking_Production.postman_environment.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -207,7 +207,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/sdk-downloads/sdk-node-package.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -220,7 +220,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/sdk-downloads/sdk-node-README.md.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -233,7 +233,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/sdk-downloads/sdk-php-composer.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -246,7 +246,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/sdk-downloads/sdk-php-README.md.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -259,7 +259,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/sdk-downloads/sdk-python-pyproject.toml.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -272,7 +272,7 @@
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/sdk-downloads/sdk-python-README.md.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     },
     {
@@ -280,12 +280,12 @@
       "category": "changelog",
       "version": "4.51.0",
       "size": 139754,
-      "sha256": "b8476d7798d5b6f8cc3825abca5a0d92e61851bb8d2dc32a897dd153afbd6391",
+      "sha256": "53eac44af4f5182c67bc8dd74835fa09367934a2da1668720b74fc50a43f33d8",
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
         "sigUrl": "/changelog.json.sig",
-        "publicKeyFingerprint": "SHA256:GVH2bD69eXQCYIRr6rffX47IVjT+djkJCF0FDHiMUZQ"
+        "publicKeyFingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA"
       }
     }
   ]
