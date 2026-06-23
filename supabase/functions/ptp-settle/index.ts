@@ -1,10 +1,12 @@
 // Promise to Pay — settlement matcher
 // Called by repayment success paths (pay-by-bank, loan-ops, payment-router-charge)
-// and the daily cron sweep. Atomically marks promises kept/partial/broken.
+// and the daily cron sweep. Atomically marks promises kept/partial/broken
+// and charges the bank-configured missed-payment fee when a promise breaks.
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { notifyPtpEvent } from '../_shared/ptp-notify.ts';
 import { dispatchPtpWebhook, type PtpWebhookEvent } from '../_shared/ptp-webhook.ts';
+import { computeMissedFee } from '../_shared/ptp-fee.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -33,6 +35,109 @@ async function recordCreditEvent(admin: ReturnType<typeof createClient>, userId:
   }
   await admin.from('credit_events').insert({ user_id: userId, event_type: eventType, metadata: meta });
 }
+
+/**
+ * Charge the bank-configured missed-payment fee for a broken promise.
+ * Idempotent on promise_id (skips if missed_fee_charged_at is already set).
+ * Non-fatal: errors are logged so the sweep / match path always completes.
+ */
+async function chargeMissedFee(
+  admin: ReturnType<typeof createClient>,
+  promise: any,
+  source: 'sweep' | 'match',
+) {
+  try {
+    if (promise?.missed_fee_charged_at) return null; // already charged
+
+    const { data: loan } = await admin
+      .from('loan_accounts')
+      .select('id, user_id, loan_product_id, outstanding_balance, penalty_charges, loan_account_number')
+      .eq('id', promise.loan_account_id)
+      .maybeSingle();
+    if (!loan) return null;
+
+    const { data: product } = await admin
+      .from('loan_products')
+      .select('id, institution_id, ptp_missed_fee_enabled, ptp_missed_fee_type, ptp_missed_fee_value, ptp_missed_fee_cap, ptp_missed_fee_grace_days')
+      .eq('id', (loan as any).loan_product_id)
+      .maybeSingle();
+
+    const missed = Math.max(0, Number(promise.promised_amount) - Number(promise.kept_amount ?? 0));
+    const fee = computeMissedFee(product as any, missed);
+    if (!fee.enabled || fee.amount <= 0) return null;
+
+    const currency = promise.currency ?? 'XAF';
+    const institutionId = (product as any)?.institution_id ?? null;
+    const reference = `PTP-FEE-${String(promise.id).slice(0, 8).toUpperCase()}`;
+
+    // Re-check on the live row to avoid a race between concurrent sweep workers
+    const { data: claim, error: claimErr } = await admin
+      .from('promise_to_pay')
+      .update({
+        missed_fee_amount: fee.amount,
+        missed_fee_currency: currency,
+        missed_fee_type: fee.type,
+        missed_fee_charged_at: new Date().toISOString(),
+        missed_fee_reference: reference,
+      })
+      .eq('id', promise.id)
+      .is('missed_fee_charged_at', null)
+      .select('id')
+      .maybeSingle();
+    if (claimErr || !claim) return null; // another worker won the race
+
+    // Bump loan outstanding + penalty_charges
+    await admin.from('loan_accounts').update({
+      outstanding_balance: Math.round((Number((loan as any).outstanding_balance ?? 0) + fee.amount) * 100) / 100,
+      penalty_charges: Math.round((Number((loan as any).penalty_charges ?? 0) + fee.amount) * 100) / 100,
+    }).eq('id', (loan as any).id);
+
+    // Record on transaction_fees ledger if institution is known
+    if (institutionId) {
+      await admin.from('transaction_fees').insert({
+        transaction_type: 'ptp_missed_fee',
+        transaction_ref: reference,
+        transaction_amount: missed,
+        transaction_currency: currency,
+        institution_id: institutionId,
+        fee_model: fee.type,
+        calculated_fee: fee.amount,
+        final_fee: fee.amount,
+        fee_breakdown: { promise_id: promise.id, loan_account_id: promise.loan_account_id, source, type: fee.type, raw_amount: fee.raw_amount, capped: fee.capped },
+        metadata: { promise_id: promise.id, user_id: promise.user_id, source },
+      });
+    }
+
+    await admin.from('promise_to_pay_events').insert({
+      promise_id: promise.id,
+      event_type: 'fee_charged',
+      amount: fee.amount,
+      metadata: { type: fee.type, currency, reference, source, raw_amount: fee.raw_amount, capped: fee.capped },
+    });
+
+    await notifyPtpEvent(admin, 'fee_charged' as any, promise.id, promise.user_id,
+      `A late-payment fee of ${fee.amount} ${currency} was applied to your loan because your Promise to Pay was not kept.`,
+      { feeAmount: String(fee.amount), feeType: fee.type, currency, reference });
+
+    await dispatchPtpWebhook(admin, 'ptp.fee_charged', {
+      promise_id: promise.id,
+      user_id: promise.user_id,
+      loan_account_id: promise.loan_account_id,
+      amount: fee.amount,
+      currency,
+      promised_date: promise.promised_date,
+      status: 'broken',
+      data: { fee_type: fee.type, missed_amount: missed, reference, source, capped: fee.capped, raw_amount: fee.raw_amount },
+    });
+
+    return { amount: fee.amount, type: fee.type, currency, reference };
+  } catch (e) {
+    console.error('[ptp-settle] chargeMissedFee failed:', (e as Error).message);
+    return null;
+  }
+}
+
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -92,6 +197,9 @@ Deno.serve(async (req) => {
           amount: newKept, currency: open.currency, promised_date: open.promised_date, status,
           data: { paid_amount: amount, remaining, paid_at: paidDate.toISOString() },
         });
+        if (status === 'broken') {
+          await chargeMissedFee(admin, updated ?? { ...open, ...updates }, 'match');
+        }
       }
       return json({ matched: true, promise: updated });
     }
@@ -107,6 +215,7 @@ Deno.serve(async (req) => {
         .lt('promised_date', cutoff);
 
       let broken = 0;
+      let feesCharged = 0;
       for (const p of overdue ?? []) {
         await admin.from('promise_to_pay').update({ status: 'broken', broken_at: new Date().toISOString() }).eq('id', p.id);
         await admin.from('promise_to_pay_events').insert({ promise_id: p.id, event_type: 'broken' });
@@ -120,9 +229,11 @@ Deno.serve(async (req) => {
           amount: p.promised_amount, currency: p.currency, promised_date: p.promised_date, status: 'broken',
           data: { missed_amount: missed, via: 'sweep' },
         });
+        const fee = await chargeMissedFee(admin, { ...p, status: 'broken' }, 'sweep');
+        if (fee) feesCharged++;
         broken++;
       }
-      return json({ swept: overdue?.length ?? 0, broken });
+      return json({ swept: overdue?.length ?? 0, broken, fees_charged: feesCharged });
     }
 
     return json({ error: `unknown mode: ${mode}` }, 400);

@@ -16,7 +16,9 @@ export type PtpWebhookEvent =
   | 'ptp.kept'
   | 'ptp.broken'
   | 'ptp.swept'
-  | 'ptp.cancelled';
+  | 'ptp.cancelled'
+  | 'ptp.fee_charged'
+  | 'ptp.fee_waived';
 
 export interface PtpWebhookPayload {
   event: PtpWebhookEvent;
