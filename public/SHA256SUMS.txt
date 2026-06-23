@@ -1,5 +1,5 @@
 # Kang Open Banking — artifact checksums
-# Generated: 2026-06-23T01:33:09.780Z
+# Generated: 2026-06-23T01:54:58.025Z
 # API: v4.51.0  SDK: node@1.7.0 php@1.7.0 python@1.7.0
 # Verify: sha256sum -c SHA256SUMS.txt
 b6157a98bc3c49c216c27c69639c8b22cd89574ab9210c356194cb499caab4bd  ./openapi.json
@@ -20,4 +20,4 @@ c11beb483f939c4ac75aeefeecc06df366f7fa2c60072f34328f4d3d62fbad44  ./openapi-sand
 b5023fc851e3fcb272df28b271b865a46e7444f4da0b464fad1065320d6f7255  ./sdk-downloads/sdk-php-README.md
 878400bbafce1765841d405f1aac5dbb91b0eae031c466451236e62b1a0612ca  ./sdk-downloads/sdk-python-pyproject.toml
 8656689de4814dd1e8fe10fc9cbd24f0415f421dfc4275e686ae7d361737a2ee  ./sdk-downloads/sdk-python-README.md
-53eac44af4f5182c67bc8dd74835fa09367934a2da1668720b74fc50a43f33d8  ./changelog.json
+4ba61ed6d35e02933be8d820caf073b5f651202bd7c7d2ccf078e16a693861cd  ./changelog.json

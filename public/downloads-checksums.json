@@ -7,7 +7,7 @@
       "php": "1.7.0"
     }
   },
-  "generatedAt": "2026-06-23T01:33:09.780Z",
+  "generatedAt": "2026-06-23T01:54:58.025Z",
   "algorithm": "sha256",
   "verifyHint": "curl -sSO https://kangopenbanking.com/SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt",
   "artifacts": [
@@ -250,7 +250,7 @@
       "category": "changelog",
       "version": "4.51.0",
       "size": 139754,
-      "sha256": "53eac44af4f5182c67bc8dd74835fa09367934a2da1668720b74fc50a43f33d8",
+      "sha256": "4ba61ed6d35e02933be8d820caf073b5f651202bd7c7d2ccf078e16a693861cd",
       "signature": {
         "algorithm": "ed25519",
         "encoding": "base64",
@@ -266,7 +266,7 @@
     "publicKeyFingerprintSha256Hex": "a9:d9:40:e6:b5:20:a0:69:e8:d8:3b:fb:2e:65:d3:ea:a7:92:d2:0a:a8:d4:ec:b7:4a:cc:e1:89:a7:eb:61:20",
     "manifestSigUrl": "/SHA256SUMS.txt.sig",
     "keySource": "local-dev",
-    "signedAt": "2026-06-23T01:33:10.063Z",
+    "signedAt": "2026-06-23T01:54:58.296Z",
     "verifyInstructionsUrl": "/developer/openapi#verify",
     "rotationDocsUrl": "/developer/openapi#rotation",
     "next": null
