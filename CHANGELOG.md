@@ -1,12 +1,31 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.51.1** · Last updated: **2026-06-25**
+Current API version: **4.51.2** · Last updated: **2026-06-25**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.51.2 — 2026-06-25
+**Type:** patch · **Breaking changes:** none
+
+Phase 2 authentication reality check. Developer-portal auth pages, FAPI conformance statement, and token-lifecycle reference hedged to match what the code actually implements. No spec paths, operationIds, schemas, security schemes, or enum values changed (Standing Orders 1, 2, 4).
+
+### Highlights
+- AuthFapi page: 'certified to FAPI 1.0 Advanced' -> 'targets FAPI 1.0 Advanced; certification in progress', with an explicit implementation-maturity notice and a Status column on client-auth types.
+- ComplianceFapi statement: PAR marked partial (available, not yet mandatory), private_key_jwt marked not_supported (planned), refresh-token rotation + reuse detection marked not_supported (roadmap), mTLS marked partial (infrastructure-dependent), DCR marked partial (SSA signature verified in production only).
+- AuthOAuth2 quickstart: PAR wording softened from 'must' to 'should'; refresh-token reuse-detection callout rewritten as a roadmap notice.
+- token-lifecycle.md: access-token TTL corrected to 3600s; refresh-token rotation reframed as roadmap; reuse-detection section reframed as roadmap.
+- Audit report PHASE_2_AUTH_REALITY.md and closeout PHASE_2_CLOSEOUT_REPORT.md published at repo root.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- RFC 6749, RFC 7009, RFC 7591, RFC 7636, RFC 7662, RFC 8705, RFC 9126, OIDC Core, FAPI 1.0 Advanced
+- Internal: PHASE_2_AUTH_REALITY.md, PHASE_2_CLOSEOUT_REPORT.md
 
 ---
 
