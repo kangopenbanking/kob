@@ -332,9 +332,9 @@ export default function ForDevelopers() {
                 <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
                   <Lock className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3">Bank-Grade Security</h3>
+                <h3 className="text-xl font-semibold mb-3">Strong Authentication</h3>
                 <p className="text-muted-foreground">
-                  COBAC compliant, PCI-DSS certified with OAuth 2.0 authentication
+                  OAuth 2.0 Authorization Code with PKCE and rotating refresh tokens. Designed for COBAC alignment; KOB does not handle raw card PANs (tokenised via our partner).
                 </p>
               </div>
 

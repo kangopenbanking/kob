@@ -110,11 +110,11 @@ const Index = () => {
                   </div>
                   <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
                     <Shield className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-900">COBAC Compliant</span>
+                    <span className="text-sm font-semibold text-blue-900">Designed for COBAC alignment</span>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
                     <Lock className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-900">PCI-DSS Certified</span>
+                    <span className="text-sm font-semibold text-blue-900">PCI-DSS scope via tokenisation partner</span>
                   </div>
                 </div>
               </div>
@@ -454,7 +454,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold">Consent-Based Access</h4>
-                      <p className="text-sm text-muted-foreground">COBAC-compliant data sharing with user consent</p>
+                      <p className="text-sm text-muted-foreground">Consent-driven data sharing designed for COBAC alignment</p>
                     </div>
                   </div>
                 </div>
@@ -616,7 +616,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold">Regulatory Reporting</h4>
-                      <p className="text-sm text-muted-foreground">Automated COBAC compliance and reporting</p>
+                      <p className="text-sm text-muted-foreground">Reporting workflows designed against COBAC reporting templates</p>
                     </div>
                   </div>
                 </div>
@@ -895,8 +895,8 @@ const Index = () => {
           </ScrollReveal>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {[
-              { icon: Shield, title: "Bank-Grade Security", desc: "TLS 1.3 encryption, AES-256 at rest, PCI-DSS Level 1 certified with 24/7 monitoring." },
-              { icon: Lock, title: "Regulatory Compliant", desc: "Full COBAC & BEAC compliance with automated reporting and comprehensive audit trails." },
+              { icon: Shield, title: "Strong Transport Security", desc: "TLS 1.3 in transit and AES-256 at rest, with 24/7 monitoring. Card data is handled via our tokenisation partner so KOB stays out of PCI SAQ-D scope." },
+              { icon: Lock, title: "Designed for COBAC & BEAC", desc: "Built against COBAC and BEAC requirements with audit trails and reporting templates. Licensing is in progress; no certification is claimed." },
               { icon: Globe, title: "CEMAC Coverage", desc: "Access banks and mobile money across Cameroon and the Central African region." },
               { icon: Clock, title: "Real-Time Data", desc: "Instant account balances, transactions, and payment status updates in real-time." },
             ].map((item, i) => (
