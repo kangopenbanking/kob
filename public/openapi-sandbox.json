@@ -175,199 +175,297 @@
   "tags": [
     {
       "name": "Monitoring",
-      "description": "Health and readiness probes"
+      "description": "Health and readiness probes",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "OAuth",
-      "description": "OAuth 2.0 / OIDC / FAPI 1.0 Advanced"
+      "description": "OAuth 2.0 / OIDC / FAPI 1.0 Advanced",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Authentication",
-      "description": "Phone auth, PIN, password management"
+      "description": "Phone auth, PIN, password management",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Security",
-      "description": "CAPTCHA, SCA (Strong Customer Authentication)"
+      "description": "CAPTCHA, SCA (Strong Customer Authentication)",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Certificates",
-      "description": "mTLS certificate management (RFC 8705)"
+      "description": "mTLS certificate management (RFC 8705)",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "AISP",
-      "description": "Account Information Service Provider (PSD2/Open Banking)"
+      "description": "Account Information Service Provider (PSD2/Open Banking)",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "PISP",
-      "description": "Payment Initiation Service Provider"
+      "description": "Payment Initiation Service Provider",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Consent Management",
-      "description": "AISP/PISP consent lifecycle"
+      "description": "AISP/PISP consent lifecycle",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Credit Scoring",
-      "description": "Credit scores, simulation, and reports"
+      "description": "Credit scores, simulation, and reports",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Loans",
-      "description": "Loan products, applications, disbursement, repayment, schedules"
+      "description": "Loan products, applications, disbursement, repayment, schedules",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Savings",
-      "description": "Savings products, accounts, interest accrual"
+      "description": "Savings products, accounts, interest accrual",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Ledger",
-      "description": "Double-entry accounting (chart of accounts, journal entries)"
+      "description": "Double-entry accounting (chart of accounts, journal entries)",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Mobile Money",
-      "description": "MTN & Orange Mobile Money integration"
+      "description": "MTN & Orange Mobile Money integration",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Payments",
-      "description": "Flutterwave & Stripe payment processing"
+      "description": "Flutterwave & Stripe payment processing",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Banking Operations",
-      "description": "Bulk transfers, exchange rates"
+      "description": "Bulk transfers, exchange rates",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Virtual Cards",
-      "description": "Virtual card issuance and management"
+      "description": "Virtual card issuance and management",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Standards",
-      "description": "ISO 20022 & SWIFT message processing"
+      "description": "ISO 20022 & SWIFT message processing",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "KYC & Compliance",
-      "description": "Identity verification, sanctions screening"
+      "description": "Identity verification, sanctions screening",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Webhooks",
-      "description": "Webhook registration and delivery"
+      "description": "Webhook registration and delivery",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Admin",
-      "description": "Administrative endpoints (RBAC protected)"
+      "description": "Administrative endpoints (RBAC protected)",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Communications",
-      "description": "Email, SMS, push notifications"
+      "description": "Email, SMS, push notifications",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Settlement",
-      "description": "Settlement calculation, processing, invoicing"
+      "description": "Settlement calculation, processing, invoicing",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Institution",
-      "description": "Institution registration and management"
+      "description": "Institution registration and management",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "CrediQ",
-      "description": "Credit health monitoring and action plans"
+      "description": "Credit health monitoring and action plans",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "PostiQ",
-      "description": "Address verification and postal codes"
+      "description": "Address verification and postal codes",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "WooCommerce",
-      "description": "WooCommerce payment plugin integration"
+      "description": "WooCommerce payment plugin integration",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Sandbox",
-      "description": "Sandbox environment management"
+      "description": "Sandbox environment management",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Developer",
-      "description": "Developer app registration"
+      "description": "Developer app registration",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Payment Gateway",
-      "description": "Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation"
+      "description": "Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Payment Facilitation",
-      "description": "White-label payment processing — facilitated charges, settlement calculation and processing"
+      "description": "White-label payment processing — facilitated charges, settlement calculation and processing",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Merchant Onboarding",
-      "description": "Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks"
+      "description": "Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Consumer Tools",
-      "description": "Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)"
+      "description": "Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Bank Directory",
-      "description": "Bank/ASPSP registration, lifecycle management, PSU linking, and public directory"
+      "description": "Bank/ASPSP registration, lifecycle management, PSU linking, and public directory",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Bank Connectors",
-      "description": "Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring, and payment status callbacks"
+      "description": "Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring, and payment status callbacks",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Interbank",
-      "description": "Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)"
+      "description": "Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Pay by Bank",
-      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)"
+      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Provider Webhooks (Inbound)",
-      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention."
+      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention.",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Overdraft",
-      "description": "Account overdraft facility — eligibility, limits, approval, suspension, and reinstatement lifecycle"
+      "description": "Account overdraft facility — eligibility, limits, approval, suspension, and reinstatement lifecycle",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Approval Workflows",
-      "description": "Multi-level approval workflows for high-value transactions and withdrawal requests"
+      "description": "Multi-level approval workflows for high-value transactions and withdrawal requests",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Directory",
-      "description": "Public institution and bank directory — read-only public endpoints"
+      "description": "Public institution and bank directory — read-only public endpoints",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Operational Controls",
-      "description": "Internal operational controls — teller transactions, withdrawal policies, and staff authorisations"
+      "description": "Internal operational controls — teller transactions, withdrawal policies, and staff authorisations",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Standards - ISO 20022",
-      "description": "ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows."
+      "description": "ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.",
+      "x-maturity": "preview",
+      "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Consents",
-      "description": "Unified AISP/PISP/CBPII consent lifecycle."
+      "description": "Unified AISP/PISP/CBPII consent lifecycle.",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Statements",
-      "description": "ISO 20022 camt.053 + PDF + CSV statement generation."
+      "description": "ISO 20022 camt.053 + PDF + CSV statement generation.",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Platform",
-      "description": "Platform-wide metadata (rate limits, health, capabilities)."
+      "description": "Platform-wide metadata (rate limits, health, capabilities).",
+      "x-maturity": "ga",
+      "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Agents",
-      "description": "Agent (cash-in/out) banking. CEMAC-wide registry, float management, customer cash transactions. See BIS Agent Banking Guidelines (2018) and Mojaloop v1.1."
+      "description": "Agent (cash-in/out) banking. CEMAC-wide registry, float management, customer cash transactions. See BIS Agent Banking Guidelines (2018) and Mojaloop v1.1.",
+      "x-maturity": "experimental",
+      "x-maturity-note": "Experimental. Reference shape only; implementation is partial and may change without a major version bump until promoted."
     },
     {
       "name": "USSD",
-      "description": "Session-based USSD menu engine for feature-phone banking. ETSI TS 102 226."
+      "description": "Session-based USSD menu engine for feature-phone banking. ETSI TS 102 226.",
+      "x-maturity": "experimental",
+      "x-maturity-note": "Experimental. Reference shape only; implementation is partial and may change without a major version bump until promoted."
     },
     {
       "name": "QR & Offline",
-      "description": "EMVCo-compliant QR + signed offline-payment tokens. EMVCo QR Spec v1.1."
+      "description": "EMVCo-compliant QR + signed offline-payment tokens. EMVCo QR Spec v1.1.",
+      "x-maturity": "experimental",
+      "x-maturity-note": "Experimental. Reference shape only; implementation is partial and may change without a major version bump until promoted."
     },
     {
       "name": "CEMAC Remittance",
-      "description": "Cross-border XAF/XAF remittance inside the six BEAC-zone countries. BEAC Règlement N°02/CEMAC."
+      "description": "Cross-border XAF/XAF remittance inside the six BEAC-zone countries. BEAC Règlement N°02/CEMAC.",
+      "x-maturity": "experimental",
+      "x-maturity-note": "Experimental. Reference shape only; implementation is partial and may change without a major version bump until promoted."
     }
   ],
   "components": {
@@ -82708,5 +82806,10 @@
       "Adyen capacity-planning guide",
       "KOB SO-5 Dead-Code Rule"
     ]
+  },
+  "x-maturity-legend": {
+    "ga": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description.",
+    "preview": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA.",
+    "experimental": "Experimental. Reference shape only; implementation is partial and may change without a major version bump until promoted."
   }
 }
