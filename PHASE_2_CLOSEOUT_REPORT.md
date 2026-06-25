@@ -1,95 +1,64 @@
-# Phase 2 — AuthZ Scope Matrix & Webhook Resilience — Closeout Report
+# Phase 2 — Authentication Reality Check · Closeout Report
 
-**Version bump:** 4.33.0 → **4.34.0** (minor, additive)
-**Date:** 2026-05-17
-**Standing Orders:** SO-1 (Lock), SO-2 (Ratchet), SO-3 (Audit Trail), SO-4 (Surgeon), SO-6 (Version Gate) — all honored.
-**Change appetite:** Additive + safe refactors. Zero rename, zero removal.
+**Version:** 4.51.1 → **4.51.2** (patch; doc/UI hedges only)
+**Date:** 2026-06-25
+**Standing Orders applied:** 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
 
----
+## Scope
 
-## Scope delivered
+Align developer-portal auth surfaces, FAPI conformance statement, and token-lifecycle reference with what the code actually implements. **No** OpenAPI paths, operationIds, schemas, security schemes, or enum values were removed or modified (Standing Orders 1 + 2). Hedges are text-only and additive.
 
-### 1. Per-key scope matrix (AuthZ)
+Audit source: `PHASE_2_AUTH_REALITY.md` (auto-generated, read-only audit, 282 lines).
 
-| Surface | Change | Type |
-|---|---|---|
-| `public.api_key_scopes` table | **new** — `(api_key_id, scope)` unique pairs, RLS admin-only | DB additive |
-| `components.securitySchemes.bearerAuth.x-scopes` | **new** documentation extension listing the 12 canonical scopes | Spec additive |
-| OpenAPI `info.version` | 4.33.0 → 4.34.0 | SO-6 |
+## Files changed
 
-**Canonical scopes (12):** `charges:read`, `charges:write`, `payouts:read`, `payouts:write`, `customers:read`, `customers:write`, `webhooks:manage`, `webhooks:replay`, `reports:read`, `compliance:read`, `compliance:write`, `admin:*`.
-
-Justification: OAuth 2.0 scope semantics (RFC 6749 §3.3) and the Stripe restricted-key model.
-
-### 2. Webhook resilience (delivery layer)
-
-| Surface | Change | Type |
-|---|---|---|
-| `public.webhook_endpoint_health` table | **new** — `circuit_state` enum, rolling failure counters, `open_until` deadline | DB additive |
-| `components.headers.X-Webhook-Replay` | **new** boolean header | Spec additive |
-| `components.headers.X-Webhook-Replay-Of` | **new** UUID header (origin delivery) | Spec additive |
-| `components.headers.X-Circuit-State` | **new** enum header (`closed` / `half_open` / `open`) | Spec additive |
-| `webhooks.*.post.parameters` | All 8 documented event types now reference the three headers above | Spec additive |
-
-Justification: Nygard's circuit-breaker pattern (Release It!, 2007) + Stripe's manual-replay UX.
-
-### 3. Public webhook event registry
-
-| Surface | Change | Type |
-|---|---|---|
-| `/developer/webhooks/events` (lazy-loaded route, `WebhookEventsRegistry.tsx`) | **new permanent public page** | Frontend additive |
-| Source of truth | `src/lib/webhook-event-schemas.ts` (no duplication) | Doc parity |
-| SEO | Unique `<title>`, description, canonical, OG image, breadcrumb JSON-LD | Order P1/P2/P6 |
-
-The page enumerates every event, groups them by category, surfaces the envelope, lists delivery headers (now including the new ones), and cross-links to the integration guide, retry-policy doc, and sandbox tester.
-
----
-
-## Acceptance gates
-
-| Gate | Status |
+| File | Change |
 |---|---|
-| G1–G9 OpenAPI quality gates (from Phase 1) | All carried over; no regressions |
-| No operationId / path / schema rename or removal | ✓ verified — only additions |
-| `info.version` incremented | ✓ 4.33.0 → 4.34.0 |
-| `public/openapi-history/openapi-4.34.0.json` snapshot | ✓ written |
-| `public/openapi-history/manifest.json` current bumped | ✓ |
-| `public/changelog.json` entry within 48 h (Order P7) | ✓ written |
-| `src/config/version.ts` SSOT bumped | ✓ |
-| Sandbox spec parity | ✓ mirrored |
-| Public docs route accessible without auth (Order P1) | ✓ `/developer/webhooks/events` |
+| `src/pages/developer/AuthFapi.tsx` | Hero hedged ("targets" / "certification in progress"); maturity notice added; Mandatory-Requirements table status column reflects current reality; Client-Auth-Types table gained a Status column; Standards section retitled "Standards Alignment" and hedged. |
+| `src/pages/developer/ComplianceFapi.tsx` | PAR (FAPI-AUTH-2) → partial; private_key_jwt (FAPI-TOK-2) → not_supported (planned); RT rotation (FAPI-TOK-4) → not_supported (roadmap); mTLS (FAPI-TOK-1, TOK-3) → partial (infrastructure-dependent); DCR (FAPI-CON-3) → partial (SSA verified in production only). Page intro hedged. |
+| `src/pages/developer/AuthOAuth2.tsx` | PAR wording "must" → "should"; refresh-token callout rewritten as roadmap with current behaviour and operational guidance. |
+| `docs/developer-portal/reference/token-lifecycle.md` | Access-token TTL corrected from 15 min → 60 min (3600 s); rotation + reuse-detection reframed as roadmap; current behaviour documented explicitly. |
+| `public/openapi.json`, `public/openapi.yaml` | `info.version` bumped 4.51.1 → 4.51.2. No other changes (Standing Order 1). |
+| `src/config/version.ts` | `KOB_API_VERSION` / `KOB_POSTMAN_VERSION` → 4.51.2; `KOB_SPEC_DATE` → 2026-06-25. |
+| `public/changelog.json` | New 4.51.2 entry summarising Phase 2 hedges; `apiVersion` bumped. |
+| `PHASE_2_AUTH_REALITY.md` | Audit report (created in audit step). |
+| `PHASE_2_CLOSEOUT_REPORT.md` | This file. |
 
----
+## Capability-status alignment (before → after)
 
-## Files touched
+| Capability | Spec/UI claim (before) | Reality | New status surfaced |
+|---|---|---|---|
+| OAuth 2.0 auth_code + PKCE S256 | Required | Enforced server-side | Required (unchanged) |
+| client_credentials | Supported | Implemented | Supported (unchanged) |
+| Refresh-token rotation + reuse detection | Supported / Required | Not implemented — no new RT issued; no reuse cascade | **Not supported (roadmap)** |
+| OIDC discovery | Supported | Implemented | Supported (unchanged) |
+| JWKS endpoint | Supported | Implemented; empty until operator provisions keys | Supported (operator-provisioned) |
+| PAR (RFC 9126) | Required | Endpoint live; not enforced at /authorize | **Partial (recommended, not yet mandatory)** |
+| DCR (RFC 7591) with SSA | Supported | Sig verified in production only; sandbox decodes only | **Partial (production verified; sandbox decoded)** |
+| Token introspection (RFC 7662) | Supported | Implemented; client_secret only | Supported (auth method noted) |
+| Token revocation (RFC 7009) | Supported | Implemented | Supported (unchanged) |
+| private_key_jwt | Supported | Not exercised at token endpoint | **Not supported (planned)** |
+| mTLS / tls_client_auth | Supported | Depends on TLS-terminating proxy header forwarding | **Partial (infrastructure-dependent)** |
+| FAPI 1.0 Advanced "certified" | Certified / Full conformance | No OpenID Foundation certification | **Targeted; certification in progress** |
 
-**Added**
-- `supabase/migrations/<phase2>.sql` — `api_key_scopes`, `webhook_endpoint_health`, RLS
-- `scripts/phase2-spec-hardening.mjs`
-- `src/pages/developer/WebhookEventsRegistry.tsx`
-- `public/openapi-history/openapi-4.34.0.json`
-- `PHASE_2_CLOSEOUT_REPORT.md` (this file)
+## Standing Orders compliance
 
-**Edited (additive only)**
-- `public/openapi.json`, `public/openapi.yaml`
-- `public/openapi-sandbox.json`, `public/openapi-sandbox.yaml`
-- `public/openapi-history/manifest.json`
-- `public/changelog.json`
-- `src/config/version.ts`
-- `src/App.tsx` (new route + lazy import)
+- **Order 1 (Lock):** No operationId, path, schema, security scheme, or component renamed/removed. ✅
+- **Order 2 (Ratchet):** No required[], enum[], response code, or security declaration removed from the OpenAPI document. The hedges live in UI/docs, not in the spec. ✅
+- **Order 3 (Audit Trail):** Each hedge cites the relevant RFC / OIDC / FAPI section in the file itself; aggregate citations in the changelog entry. ✅
+- **Order 4 (Surgeon):** All changes are additive (status columns, notices) or text-only rewordings. ✅
+- **Order 5 (Dead Code):** No components added. ✅
+- **Order 6 (Version Gate):** Patch bump 4.51.1 → 4.51.2. ✅
 
----
+## Known follow-ups (Phase 3 candidates)
 
-## Out of scope (deferred to later phases per roadmap)
+1. Wire `request_uri` enforcement at `oauth-authorize` to make PAR truly mandatory for FAPI-registered clients, then re-promote FAPI-AUTH-2 / FAPI-AUTH-3 to `supported`.
+2. Implement refresh-token rotation + reuse detection (issue new `refresh_token`, cascade-revoke family on replay, emit `token.reuse_detected` webhook).
+3. Implement `private_key_jwt` client-assertion verification at the token endpoint.
+4. Add mTLS support to `oauth-introspect` and `oauth-revoke`.
+5. Implement RFC 7592 client-management endpoints (GET / PUT / DELETE on registered client).
+6. Document the mTLS-proxy contract (which header carries the client certificate, expected encoding) in a dedicated infrastructure guide.
 
-- Wiring scope-enforcement middleware into `banking-api-router` / `gateway-charges-router` (Phase 2.b — needs key-issuance UI to grant scopes first).
-- Live circuit-breaker reads inside `gateway-webhook-deliver-v2` (Phase 2.b — table is ready, edge function wiring will follow once the breaker tuning constants are agreed).
-- DLQ replay button persisting `X-Webhook-Replay-Of` end-to-end (Phase 2.c).
+## Decision gate for Phase 3
 
-These are all additive and unblocked by today's work.
-
----
-
-## Next step
-
-Approve to proceed with **Phase 3 — Settlement & Reconciliation Closeout** (target 4.35.0).
+Phase 3 (scope containment via `x-maturity` annotations and PCI boundary documentation) is ready to begin on the next "go ahead" from the user.
