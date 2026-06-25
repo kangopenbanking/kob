@@ -72,7 +72,7 @@ export default function AuthOAuth2() {
         <section>
           <h2 className="text-2xl font-semibold text-foreground mb-4" id="step-1">Step 1: Pushed Authorization Request (PAR)</h2>
           <p className="text-muted-foreground mb-4">
-            All authorization requests must use PAR (RFC 9126). This pushes the authorization parameters to the server first, then uses the returned <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">request_uri</code> in the redirect.
+            Authorization requests <strong>should</strong> use PAR (RFC 9126). This pushes the authorization parameters to the server first, then uses the returned <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">request_uri</code> in the redirect. PAR is the recommended path for confidential and FAPI-registered clients; mandatory enforcement is on the roadmap.
           </p>
           <CodeBlock examples={[{ code: parRequest, language: "bash" }]} title="PAR Request" />
         </section>
@@ -120,9 +120,14 @@ export default function AuthOAuth2() {
             Access tokens expire after 1 hour. Use the refresh token to obtain new ones without user interaction. Requires <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">offline_access</code> scope.
           </p>
           <CodeBlock examples={[{ code: refreshToken, language: "bash" }]} title="Refresh Token" />
-          <div className="p-4 border border-primary/30 bg-primary/5 rounded-lg mt-4">
-            <p className="text-sm text-foreground font-medium">Refresh Token Reuse Detection</p>
-            <p className="text-sm text-muted-foreground">Each refresh token can only be used once. If reuse is detected, all tokens for that session are immediately revoked (per FAPI 1.0 security requirements).</p>
+          <div className="p-4 border border-amber-500/40 bg-amber-500/5 rounded-lg mt-4">
+            <p className="text-sm text-foreground font-medium">Refresh Token Rotation — Roadmap</p>
+            <p className="text-sm text-muted-foreground">
+              Refresh-token rotation and automatic reuse detection are <strong>not yet implemented</strong>.
+              Current behaviour: refresh tokens remain valid until explicit revocation or expiry.
+              Always store refresh tokens encrypted at rest, revoke them on logout via <code className="font-mono">/v1/oauth/revoke</code>,
+              and rotate manually for sensitive sessions. Automatic rotation with reuse detection is on the roadmap.
+            </p>
           </div>
         </section>
 
