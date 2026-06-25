@@ -597,16 +597,6 @@ tags:
     x-maturity-note: >-
       Experimental. Reference shape only; implementation is partial and may change without a major version bump until
       promoted.
-x-maturity-legend:
-  ga: >-
-    Generally available. Stable contract; suitable for production integration subject to licensing status noted in
-    info.description.
-  preview: >-
-    Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change
-    before GA.
-  experimental: >-
-    Experimental. Reference shape only; implementation is partial and may change without a major version bump until
-    promoted.
 components:
   securitySchemes:
     bearerAuth:
@@ -58407,3 +58397,13 @@ x-scalability:
     - Stripe load-test methodology
     - Adyen capacity-planning guide
     - KOB SO-5 Dead-Code Rule
+x-maturity-legend:
+  ga: >-
+    Generally available. Stable contract; suitable for production integration subject to licensing status noted in
+    info.description.
+  preview: >-
+    Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change
+    before GA.
+  experimental: >-
+    Experimental. Reference shape only; implementation is partial and may change without a major version bump until
+    promoted.

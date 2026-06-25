@@ -1,12 +1,31 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.51.2** · Last updated: **2026-06-25**
+Current API version: **4.51.3** · Last updated: **2026-06-25**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.51.3 — 2026-06-25
+**Type:** patch · **Breaking changes:** none
+
+Phase 3 scope containment. Every tag in the public OpenAPI spec now carries an x-maturity flag (ga | preview | experimental) and an x-maturity-note so integrators can tell at a glance which surfaces are production-track versus sandbox/pilot versus experimental. Additive metadata only — no paths, operationIds, schemas, security schemes, parameters, or enum values changed (Standing Orders 1, 2, 4).
+
+### Highlights
+- openapi.json + openapi.yaml: x-maturity and x-maturity-note added to all tags; ga covers Monitoring, OAuth, Authentication, Security, Consent Management, AISP, PISP, KYC & Compliance, Webhooks, Admin, Communications, Directory, Bank Directory, Platform, Specification, Developer, Sandbox, Provider Webhooks (Inbound), Mobile Money, Payments, Payment Gateway, Merchants, Merchant Onboarding, Statements, Banking Operations.
+- preview covers Loans, Savings, Credit Scoring, CrediQ, PostiQ, Virtual Cards, Issuing, Ledger, Interbank, ISO 20022 Standards, Bank Connectors, Pay by Bank, Settlement, Payment Facilitation, Institution, Consumer Tools, Overdraft, Approval Workflows, Operational Controls, Gateway, Budgeting, Certificates, WooCommerce.
+- experimental covers Agents, USSD, QR & Offline, CEMAC Remittance.
+- Root-level x-maturity-legend added so tooling can render the maturity scale without hard-coding it.
+- Sandbox spec mirrors get the same annotations. Phase 3 audit + closeout reports published at repo root.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- OpenAPI 3.1 specification extensions (x-* vendor extensions)
+- Internal: PHASE_3_SCOPE_CONTAINMENT.md, PHASE_3_CLOSEOUT_REPORT.md
 
 ---
 
