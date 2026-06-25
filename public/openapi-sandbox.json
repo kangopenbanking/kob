@@ -2,9 +2,9 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "4.51.4",
+    "version": "4.51.5",
     "summary": "Unified Open Banking API for Cameroon",
-    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push — 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true — FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas — complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints — universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints — consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints — universal paginated envelope. G6: application/problem+json added to all 400 responses — RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.\n\n## Token Lifetimes\n\n| Token Type | Lifetime | Rotation Policy |\n|---|---|---|\n| Access Token | 15 minutes | Non-rotating; request a new one via refresh |\n| Refresh Token | 30 days | Rotating — each use issues a new refresh token and invalidates the old one |\n| Authorization Code | 60 seconds | Single-use; expires if not exchanged |\n\nRefresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).\n\n## Webhook Delivery Policy\n\n| Parameter | Value |\n|---|---|\n| Maximum attempts | 7 |\n| Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |\n| Timeout per attempt | 10 seconds |\n| Signature | HMAC-SHA256 via `X-KOB-Signature` header |\n| Dead letter | Failed events retained for 30 days; manual replay available via API |\n\n### Webhook Signature & Replay Headers (canonical)\n\nAll outbound webhook deliveries include the following headers. Header names are case-insensitive per RFC 7230 §3.2. Aliases are accepted by verification middleware for backward compatibility but new integrations MUST use the canonical names below.\n\n| Canonical Header | Purpose | Accepted Aliases |\n|---|---|---|\n| `X-KOB-Signature` | HMAC-SHA256 hex digest of the raw request body using the endpoint secret. Format: `v1=<hex>` (signature versioning per Stripe convention). | `X-Kang-Signature`, `X-Webhook-Signature` |\n| `X-Webhook-ID` | Unique event identifier (UUID v4). Receivers MUST deduplicate on this value within a 24-hour window. | `Kang-Webhook-ID` |\n| `X-Webhook-Timestamp` | RFC 3339 / ISO 8601 timestamp of event emission. Receivers SHOULD reject events older than 5 minutes (replay protection). | — |\n| `X-Webhook-Event` | Event type (e.g. `payment.completed`). Mirrors the `type` field in the body. | — |\n| `X-Webhook-Attempt` | 1-based delivery attempt counter (1–7). Useful for receiver-side retry telemetry. | — |\n\n\n## HTTP Caching\n\nGET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.\n\n\n## Rate Limits\n\nAll production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.\n\n| Endpoint Group | Limit (Production) | Limit (Sandbox) |\n|---|---|---|\n| All authenticated endpoints | 300 req/min | 120 req/min |\n| Payment initiation (POST /payments*) | 60 req/min | 30 req/min |\n| OAuth /token endpoint | 30 req/min per IP | 30 req/min |\n| Webhook replay | 10 req/min | 10 req/min |\n\n### Rate Limit Response Headers\n\nEvery response includes the following headers:\n\n| Header | Description |\n|---|---|\n| `X-RateLimit-Limit` | Maximum requests allowed in the current window |\n| `X-RateLimit-Remaining` | Requests remaining in the current window |\n| `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |\n| `Retry-After` | Seconds to wait before retrying (present on 429 only) |\n\nWhen the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.\n\n## Service Level Agreement (SLA)\n\n| Environment | Uptime SLA | Response Time (p95) | Support Response |\n|---|---|---|---|\n| Production | 99.9%/mo | < 500ms | P1: 30 min |\n| Sandbox | 99.5%/mo | < 1000ms | Best effort |\n\nPlanned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com\n | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv §5.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 §3.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes — Standing Order 1 (The Lock) preserved; all original field names retained.",
+    "description": "COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc). Note: POS, Catalog, and Inventory modules are planned for a future release and are not yet exposed in this version of the API. | v4.3.0 (2026-03-27): Standards remediation release. Fixed PISP required fields, added FAPI x-fapi-interaction-id headers, corrected server URL versioning, moved provider webhook paths under /v1/, added currency enums, corrected amount field types to string, added 4 missing tag declarations, removed 6 unused POS tags, added OIDC discovery mandatory fields, added OAuth2 refreshUrl, enumerated webhook event types, added pagination to 17 list endpoints, added savings account read endpoints, extended KYC schema for FATF R.10 compliance, structured escrow release_conditions, added DCR grant_type enums, added Sunset metadata to deprecated endpoints, secured WooCommerce plugin download endpoint. No breaking changes to existing paths, operationIds, or schema names. | v4.4.0 (2026-03-29): Final compliance release. R1: Removed duplicate inline pagination params. R2: Wired StandardResponse/PaginatedResponse allOf envelopes on 12 operations. R3: Added 6 OBIE-mandated required fields to Account schema. R4: Added 7 OBIE PascalCase aliases with x-obie-mapping to Transaction schema. R5: Added 5 FAPI params (nonce, request_uri, request, acr_values, claims) to /v1/oauth/authorize. R6: Added 8 missing fields to GatewayCharge schema. R7: Added PATCH/DELETE to subscriptions endpoint. R8: Added ProblemDetails (RFC 7807) schema with application/problem+json on 6 endpoints. R9: Added ISO 20022 metadata to interbank payment endpoints. R10: Added mTLS security option to /v1/oauth/token. R11: Added 5 new ISO 20022 message endpoints (pacs.004, pacs.009, camt.052, camt.054, camt.056). R12: Added PayPal webhook signature verification documentation. No breaking changes. | v4.5.0 (2026-03-27): Final compliance push \u2014 100/100. N1: Standards-ISO 20022 tag declared. N2: nonce required=true. N3: Token endpoint restored for public PKCE clients [{},{\"mtls\":[]}]. N4: camt052/054 renamed to parse with correct operationIds parseISO20022Camt052/parseISO20022Camt054 and correct x-iso20022-message versions. N5: ProblemDetails extended with error_id and timestamp. N6: GatewayCharge required[] added. N7: Transaction required[] added. N8-N11: StandardResponse/PaginatedResponse wired to 4 remaining operations. N11b: TransactionInformation and Status OBIE aliases added. N11c: Account required[] extended with status. N12: KYC submit 400 now supports application/problem+json. N13: PayPal webhook signature verification headers fully documented. N14: x-iso20022-message added to original 4 ISO 20022 endpoints. N15: GatewaySubscription trial, cancel_at_period_end, billing_cycle_anchor, metadata fields added. Zero breaking changes. | v4.6.0 (2026-03-27): 100/100 COMPLIANCE ACHIEVED. G1: code_challenge and code_challenge_method required=true \u2014 FAPI 1.0 Advanced fully satisfied, API now certifiable. G2: required[] added to all 37 remaining schemas \u2014 complete schema validation coverage across all 49+1 schemas. G3: Idempotency-Key added to 15 payment-related POST endpoints \u2014 universal idempotency coverage. G4: StandardResponse allOf applied to 19 single-resource GET endpoints \u2014 consistent response envelope. G5: PaginatedResponse allOf applied to all 67 list GET endpoints \u2014 universal paginated envelope. G6: application/problem+json added to all 400 responses \u2014 RFC 7807 fully adopted across all 339 operations. G7: WebhookEventPayload base schema added with 52-event type mapping and data examples. G8: pushed_authorization_request_endpoint and backchannel_authentication_endpoint added to OIDC discovery. Zero breaking changes. Guardian invariants protected throughout.\n\n## Token Lifetimes\n\n| Token Type | Lifetime | Rotation Policy |\n|---|---|---|\n| Access Token | 15 minutes | Non-rotating; request a new one via refresh |\n| Refresh Token | 30 days | Rotating \u2014 each use issues a new refresh token and invalidates the old one |\n| Authorization Code | 60 seconds | Single-use; expires if not exchanged |\n\nRefresh token reuse detection is enabled: if a previously used refresh token is presented, all tokens in the session chain are revoked immediately (per OAuth 2.1 Section 6.1).\n\n## Webhook Delivery Policy\n\n| Parameter | Value |\n|---|---|\n| Maximum attempts | 7 |\n| Backoff schedule | Exponential: 1m, 5m, 30m, 2h, 8h, 24h, 48h |\n| Timeout per attempt | 10 seconds |\n| Signature | HMAC-SHA256 via `X-KOB-Signature` header |\n| Dead letter | Failed events retained for 30 days; manual replay available via API |\n\n### Webhook Signature & Replay Headers (canonical)\n\nAll outbound webhook deliveries include the following headers. Header names are case-insensitive per RFC 7230 \u00a73.2. Aliases are accepted by verification middleware for backward compatibility but new integrations MUST use the canonical names below.\n\n| Canonical Header | Purpose | Accepted Aliases |\n|---|---|---|\n| `X-KOB-Signature` | HMAC-SHA256 hex digest of the raw request body using the endpoint secret. Format: `v1=<hex>` (signature versioning per Stripe convention). | `X-Kang-Signature`, `X-Webhook-Signature` |\n| `X-Webhook-ID` | Unique event identifier (UUID v4). Receivers MUST deduplicate on this value within a 24-hour window. | `Kang-Webhook-ID` |\n| `X-Webhook-Timestamp` | RFC 3339 / ISO 8601 timestamp of event emission. Receivers SHOULD reject events older than 5 minutes (replay protection). | \u2014 |\n| `X-Webhook-Event` | Event type (e.g. `payment.completed`). Mirrors the `type` field in the body. | \u2014 |\n| `X-Webhook-Attempt` | 1-based delivery attempt counter (1\u20137). Useful for receiver-side retry telemetry. | \u2014 |\n\n\n## HTTP Caching\n\nGET endpoints return `Cache-Control`, `ETag`, and (where applicable) `Last-Modified` headers. Use conditional requests (`If-None-Match`, `If-Modified-Since`) to reduce bandwidth and respect rate limits. Mutable resources (balances, transactions) use `no-cache`; semi-static resources (bank directory, exchange rates) use `max-age=300`.\n\n\n## Rate Limits\n\nAll production endpoints are rate-limited per `client_id`. Sandbox limits are applied per `client_id` at a reduced threshold.\n\n| Endpoint Group | Limit (Production) | Limit (Sandbox) |\n|---|---|---|\n| All authenticated endpoints | 300 req/min | 120 req/min |\n| Payment initiation (POST /payments*) | 60 req/min | 30 req/min |\n| OAuth /token endpoint | 30 req/min per IP | 30 req/min |\n| Webhook replay | 10 req/min | 10 req/min |\n\n### Rate Limit Response Headers\n\nEvery response includes the following headers:\n\n| Header | Description |\n|---|---|\n| `X-RateLimit-Limit` | Maximum requests allowed in the current window |\n| `X-RateLimit-Remaining` | Requests remaining in the current window |\n| `X-RateLimit-Reset` | Unix epoch timestamp when the window resets |\n| `Retry-After` | Seconds to wait before retrying (present on 429 only) |\n\nWhen the rate limit is exceeded, the API returns HTTP 429 with `Content-Type: application/problem+json` and a `Retry-After` header.\n\n## Service Level Agreement (SLA)\n\n| Environment | Uptime SLA | Response Time (p95) | Support Response |\n|---|---|---|---|\n| Production | 99.9%/mo | < 500ms | P1: 30 min |\n| Sandbox | 99.5%/mo | < 1000ms | Best effort |\n\nPlanned maintenance windows are announced at least 72 hours in advance via the status page and registered developer email addresses. Current API status: https://status.kangopenbanking.com\n | v4.17.0 (2026-04-24): Spec correctness pass. (a) Added string-typed monetary siblings to VirtualCard (balance, currency) and LoanScheduleItem (principal_amount, interest_amount, fees_amount, total_due_amount); deprecated original number-typed fields per RFC 8259 / FAPI 1.0 Adv \u00a75.2.2. (b) Added reusable Unauthorized and Forbidden response components (RFC 6750 \u00a73.1, RFC 7235) returning application/problem+json. (c) Introduced TransactionOBIE schema for OBIE Read/Write Data API v3.1 consumers; existing PascalCase aliases on Transaction marked deprecated with x-replacement pointers. Zero breaking changes \u2014 Standing Order 1 (The Lock) preserved; all original field names retained.",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
     "contact": {
       "name": "Kang Open Banking Support",
@@ -343,25 +343,25 @@
     },
     {
       "name": "Payment Gateway",
-      "description": "Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation",
+      "description": "Unified payment gateway \u2014 charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation",
       "x-maturity": "ga",
       "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Payment Facilitation",
-      "description": "White-label payment processing — facilitated charges, settlement calculation and processing",
+      "description": "White-label payment processing \u2014 facilitated charges, settlement calculation and processing",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Merchant Onboarding",
-      "description": "Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks",
+      "description": "Merchant lifecycle \u2014 registration, KYB verification, API keys, settlement accounts, webhooks",
       "x-maturity": "ga",
       "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Consumer Tools",
-      "description": "Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)",
+      "description": "Consumer financial tools \u2014 Piggy Bank (savings goals) and Njangi (group rotation savings)",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
@@ -379,25 +379,25 @@
     },
     {
       "name": "Interbank",
-      "description": "Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)",
+      "description": "Interbank payment engine \u2014 ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Pay by Bank",
-      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)",
+      "description": "Redirect-based Pay by Bank with Strong Customer Authentication (SCA) \u2014 payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Provider Webhooks (Inbound)",
-      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification — no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention.",
+      "description": "Inbound webhook receivers for payment providers (Stripe, Flutterwave, PayPal). Secured by provider-specific signature verification \u2014 no bearer auth required. Paths follow /v1/webhooks/providers/{provider} convention.",
       "x-maturity": "ga",
       "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Overdraft",
-      "description": "Account overdraft facility — eligibility, limits, approval, suspension, and reinstatement lifecycle",
+      "description": "Account overdraft facility \u2014 eligibility, limits, approval, suspension, and reinstatement lifecycle",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
@@ -409,19 +409,19 @@
     },
     {
       "name": "Directory",
-      "description": "Public institution and bank directory — read-only public endpoints",
+      "description": "Public institution and bank directory \u2014 read-only public endpoints",
       "x-maturity": "ga",
       "x-maturity-note": "Generally available. Stable contract; suitable for production integration subject to licensing status noted in info.description."
     },
     {
       "name": "Operational Controls",
-      "description": "Internal operational controls — teller transactions, withdrawal policies, and staff authorisations",
+      "description": "Internal operational controls \u2014 teller transactions, withdrawal policies, and staff authorisations",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
     {
       "name": "Standards - ISO 20022",
-      "description": "ISO 20022 message generation and parsing — pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.",
+      "description": "ISO 20022 message generation and parsing \u2014 pacs.004, pacs.008, pacs.009, pacs.002, camt.052, camt.053, camt.054, camt.056, and pain.001 message types for interbank settlement, payment return, FI credit transfer, account reporting, debit/credit notification, payment cancellation, and corporate treasury workflows.",
       "x-maturity": "preview",
       "x-maturity-note": "Sandbox/pilot. Implemented in sandbox for integration testing; not yet authorised for production traffic. May change before GA."
     },
@@ -463,7 +463,7 @@
     },
     {
       "name": "CEMAC Remittance",
-      "description": "Cross-border XAF/XAF remittance inside the six BEAC-zone countries. BEAC Règlement N°02/CEMAC.",
+      "description": "Cross-border XAF/XAF remittance inside the six BEAC-zone countries. BEAC R\u00e8glement N\u00b002/CEMAC.",
       "x-maturity": "experimental",
       "x-maturity-note": "Experimental. Reference shape only; implementation is partial and may change without a major version bump until promoted."
     }
@@ -1151,7 +1151,7 @@
             "type": "string",
             "maxLength": 500,
             "description": "OBIE OBTransaction6 alias for the description field. Narrative text conveying information from the originator to the beneficiary about the payment transaction.",
-            "example": "Payment for Invoice INV-2025-001 — Professional Services"
+            "example": "Payment for Invoice INV-2025-001 \u2014 Professional Services"
           },
           "Status": {
             "type": "string",
@@ -1632,31 +1632,31 @@
             "example": "80000",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision",
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision",
             "deprecated": true,
-            "description": " [DEPRECATED — removal in v5.0.0. Use `principal_amount` (zero-decimal string, ^[0-9]{1,15}$).]"
+            "description": " [DEPRECATED \u2014 removal in v5.0.0. Use `principal_amount` (zero-decimal string, ^[0-9]{1,15}$).]"
           },
           "interest": {
             "type": "string",
             "example": "12500",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision",
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision",
             "deprecated": true,
-            "description": " [DEPRECATED — removal in v5.0.0. Use `interest_amount` (zero-decimal string, ^[0-9]{1,15}$).]"
+            "description": " [DEPRECATED \u2014 removal in v5.0.0. Use `interest_amount` (zero-decimal string, ^[0-9]{1,15}$).]"
           },
           "fees": {
             "type": "string",
             "example": "0",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "total_due": {
             "type": "number",
             "example": 92500,
             "deprecated": true,
-            "description": " [DEPRECATED — removal in v5.0.0. Use `total_due_amount` (zero-decimal string, ^[0-9]{1,15}$).]"
+            "description": " [DEPRECATED \u2014 removal in v5.0.0. Use `total_due_amount` (zero-decimal string, ^[0-9]{1,15}$).]"
           },
           "outstanding_balance": {
             "type": "string",
@@ -1692,7 +1692,7 @@
           },
           "migration_guide_url": "https://kangopenbanking.com/developer/changelog#loan-schedule-item-numeric-fields",
           "cited_standards": [
-            "RFC 6648 §3",
+            "RFC 6648 \u00a73",
             "draft-ietf-httpapi-deprecation-header-02"
           ]
         }
@@ -1933,7 +1933,7 @@
               "ExpressUnion",
               "CamPost"
             ],
-            "description": "Mobile-money provider. CEMAC-wide coverage: MTN MoMo (CM/CG/CI), Orange Money (CM/CI/SN/ML), Airtel Money (TD/CG/CD/RW/ZM/MW), Express Union (CM cash-pickup), CamPost (CM postal financial services). See GSMA MMA v1.2 §4.2."
+            "description": "Mobile-money provider. CEMAC-wide coverage: MTN MoMo (CM/CG/CI), Orange Money (CM/CI/SN/ML), Airtel Money (TD/CG/CD/RW/ZM/MW), Express Union (CM cash-pickup), CamPost (CM postal financial services). See GSMA MMA v1.2 \u00a74.2."
           },
           "status": {
             "type": "string",
@@ -2216,14 +2216,14 @@
             "example": "200",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "net_amount": {
             "type": "string",
             "example": "4800",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "tx_ref": {
             "type": "string"
@@ -2576,7 +2576,7 @@
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
             "example": "0",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "settled_at": {
             "type": "string",
@@ -2668,14 +2668,14 @@
             "example": "200",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "net_amount": {
             "type": "string",
             "example": "4800",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "fee_percentage": {
             "type": "string",
@@ -2686,7 +2686,7 @@
             "example": "50",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           }
         },
         "required": [
@@ -2711,7 +2711,7 @@
           "account_number": {
             "type": "string",
             "example": "37001 23456 78901234567 89",
-            "description": "Bank account or virtual-account number. For CEMAC banks this is a 23-digit RIB (Relevé d'Identité Bancaire) per BEAC Reg. 02/03 §7."
+            "description": "Bank account or virtual-account number. For CEMAC banks this is a 23-digit RIB (Relev\u00e9 d'Identit\u00e9 Bancaire) per BEAC Reg. 02/03 \u00a77."
           },
           "bank_name": {
             "type": "string",
@@ -3511,14 +3511,14 @@
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
             "example": "0",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "net_amount": {
             "type": "string",
             "pattern": "^-?[0-9]{1,15}$",
             "format": "monetary-minor-unit",
             "example": "0",
-            "x-coercion": "numeric→string in v4.29.0 per FAPI 1.0 Adv §5.2.2 / RFC 8259 precision"
+            "x-coercion": "numeric\u2192string in v4.29.0 per FAPI 1.0 Adv \u00a75.2.2 / RFC 8259 precision"
           },
           "created_at": {
             "type": "string",
@@ -4023,7 +4023,7 @@
       },
       "PaymentIntent": {
         "type": "object",
-        "description": "Rail-agnostic asynchronous payment intent. Models the canonical lifecycle of any payment from creation through terminal state. State machine (Stripe API Reference §payment_intents): requires_payment_method → requires_confirmation → processing → (requires_action → processing →)* succeeded | canceled | failed.",
+        "description": "Rail-agnostic asynchronous payment intent. Models the canonical lifecycle of any payment from creation through terminal state. State machine (Stripe API Reference \u00a7payment_intents): requires_payment_method \u2192 requires_confirmation \u2192 processing \u2192 (requires_action \u2192 processing \u2192)* succeeded | canceled | failed.",
         "required": [
           "id",
           "amount",
@@ -4294,7 +4294,7 @@
           },
           "raw_code": {
             "type": "string",
-            "description": "Verbatim provider error code (e.g. MTN ‘NOT_ENOUGH_FUNDS’)."
+            "description": "Verbatim provider error code (e.g. MTN \u2018NOT_ENOUGH_FUNDS\u2019)."
           },
           "raw_message": {
             "type": "string"
@@ -4621,7 +4621,7 @@
           },
           "title_fr": {
             "type": "string",
-            "example": "Jeton d'accès invalide"
+            "example": "Jeton d'acc\u00e8s invalide"
           },
           "detail_en": {
             "type": "string"
@@ -4869,7 +4869,7 @@
           "city": {
             "type": "string",
             "nullable": true,
-            "example": "Yaoundé"
+            "example": "Yaound\u00e9"
           },
           "address": {
             "type": "string",
@@ -5305,7 +5305,7 @@
             "properties": {
               "api_key": {
                 "type": "string",
-                "example": "sk_live_…"
+                "example": "sk_live_\u2026"
               },
               "shown_once": {
                 "type": "boolean"
@@ -6402,13 +6402,13 @@
         }
       },
       "X-Idempotent-Replay": {
-        "description": "Set to `true` when the response was served from the idempotency cache for a replayed request (Stripe API Reference §Idempotent Requests).",
+        "description": "Set to `true` when the response was served from the idempotency cache for a replayed request (Stripe API Reference \u00a7Idempotent Requests).",
         "schema": {
           "type": "boolean"
         }
       },
       "X-Idempotency-Status": {
-        "description": "Idempotency outcome: `first_request` (new key, normal processing), `replayed` (cached response served), `conflict_rejected` (same key reused with different payload — 409).",
+        "description": "Idempotency outcome: `first_request` (new key, normal processing), `replayed` (cached response served), `conflict_rejected` (same key reused with different payload \u2014 409).",
         "schema": {
           "type": "string",
           "enum": [
@@ -6757,7 +6757,7 @@
         }
       },
       "ProblemDetailsConflict": {
-        "summary": "RFC 7807 — idempotency key reused with different payload (409)",
+        "summary": "RFC 7807 \u2014 idempotency key reused with different payload (409)",
         "value": {
           "type": "https://api.kangopenbanking.com/errors/idempotency-key-reused",
           "title": "Idempotency Key Conflict",
@@ -6769,7 +6769,7 @@
         }
       },
       "ProblemDetailsValidation": {
-        "summary": "RFC 7807 — request body validation error (422)",
+        "summary": "RFC 7807 \u2014 request body validation error (422)",
         "value": {
           "type": "https://api.kangopenbanking.com/errors/validation",
           "title": "Unprocessable Entity",
@@ -6793,7 +6793,7 @@
         }
       },
       "ProblemDetailsRateLimited": {
-        "summary": "RFC 7807 — rate limit exceeded (429)",
+        "summary": "RFC 7807 \u2014 rate limit exceeded (429)",
         "value": {
           "type": "https://api.kangopenbanking.com/errors/rate-limited",
           "title": "Too Many Requests",
@@ -7697,7 +7697,7 @@
             }
           }
         },
-        "description": "OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE — no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) — present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced.",
+        "description": "OAuth 2.0 Token Endpoint. Supports two client authentication modes: (1) Public clients using authorization_code + PKCE \u2014 no client authentication required, use an empty security context. (2) Confidential clients using mTLS (RFC 8705) \u2014 present the client certificate registered via /v1/certificates for certificate-bound access tokens required by FAPI 1.0 Advanced.  Supports mutual TLS (mTLS) client authentication per RFC 8705 for certificate-bound access tokens required by FAPI 1.0 Advanced.",
         "parameters": [
           {
             "$ref": "#/components/parameters/RequestId"
@@ -8570,7 +8570,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8584,6 +8584,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -8692,7 +8701,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8706,6 +8715,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -11530,7 +11548,7 @@
               "type": "integer",
               "default": 0
             },
-            "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination)."
+            "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination)."
           },
           {
             "name": "sort_by",
@@ -11567,7 +11585,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+            "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -11577,7 +11595,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+            "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -11641,7 +11659,7 @@
                 "$ref": "#/components/headers/ETag"
               },
               "X-Pagination-Mode": {
-                "description": "Either `cursor` or `offset` — echoes which mode the gateway interpreted.",
+                "description": "Either `cursor` or `offset` \u2014 echoes which mode the gateway interpreted.",
                 "schema": {
                   "type": "string",
                   "enum": [
@@ -11651,7 +11669,7 @@
                 }
               },
               "X-Pagination-Has-More": {
-                "description": "Boolean (`true`/`false`) — whether more results are available.",
+                "description": "Boolean (`true`/`false`) \u2014 whether more results are available.",
                 "schema": {
                   "type": "string"
                 }
@@ -12261,7 +12279,7 @@
               "type": "integer",
               "default": 0
             },
-            "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination)."
+            "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination)."
           },
           {
             "name": "sort_by",
@@ -12298,7 +12316,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+            "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -12308,7 +12326,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+            "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -12372,7 +12390,7 @@
                 "$ref": "#/components/headers/ETag"
               },
               "X-Pagination-Mode": {
-                "description": "Either `cursor` or `offset` — echoes which mode the gateway interpreted.",
+                "description": "Either `cursor` or `offset` \u2014 echoes which mode the gateway interpreted.",
                 "schema": {
                   "type": "string",
                   "enum": [
@@ -12382,7 +12400,7 @@
                 }
               },
               "X-Pagination-Has-More": {
-                "description": "Boolean (`true`/`false`) — whether more results are available.",
+                "description": "Boolean (`true`/`false`) \u2014 whether more results are available.",
                 "schema": {
                   "type": "string"
                 }
@@ -14460,7 +14478,7 @@
               "type": "integer",
               "default": 0
             },
-            "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination)."
+            "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination)."
           },
           {
             "name": "sort_by",
@@ -14488,7 +14506,7 @@
             "name": "starting_after",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+            "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -14498,7 +14516,7 @@
             "name": "ending_before",
             "in": "query",
             "required": false,
-            "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+            "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
             "schema": {
               "type": "string",
               "example": "acc_01HZQ..."
@@ -14562,7 +14580,7 @@
                 "$ref": "#/components/headers/ETag"
               },
               "X-Pagination-Mode": {
-                "description": "Either `cursor` or `offset` — echoes which mode the gateway interpreted.",
+                "description": "Either `cursor` or `offset` \u2014 echoes which mode the gateway interpreted.",
                 "schema": {
                   "type": "string",
                   "enum": [
@@ -14572,7 +14590,7 @@
                 }
               },
               "X-Pagination-Has-More": {
-                "description": "Boolean (`true`/`false`) — whether more results are available.",
+                "description": "Boolean (`true`/`false`) \u2014 whether more results are available.",
                 "schema": {
                   "type": "string"
                 }
@@ -14744,6 +14762,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -17895,7 +17922,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -17909,6 +17936,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -19776,7 +19812,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/charges?channel=mobile_money",
+            "description": "Gone \u2014 use /v1/gateway/charges?channel=mobile_money",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -19801,6 +19837,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -19843,10 +19888,21 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           }
         },
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses will conform to the StandardResponse envelope in a future minor release.",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses will conform to the StandardResponse envelope in a future minor release.",
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
         "x-retired": true,
@@ -19937,7 +19993,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/payouts?channel=mobile_money",
+            "description": "Gone \u2014 use /v1/gateway/payouts?channel=mobile_money",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -19962,6 +20018,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20004,12 +20069,23 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           }
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/gateway/payouts?channel=mobile_money",
@@ -20049,7 +20125,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/charges/{chargeId}",
+            "description": "Gone \u2014 use /v1/gateway/charges/{chargeId}",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20074,6 +20150,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20116,6 +20201,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           }
         },
@@ -20146,7 +20242,7 @@
         ],
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/gateway/charges/{chargeId}",
@@ -20223,7 +20319,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/payouts?channel=bank_transfer",
+            "description": "Gone \u2014 use /v1/gateway/payouts?channel=bank_transfer",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20248,6 +20344,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20290,12 +20395,23 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           }
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: momo)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/gateway/payouts?channel=bank_transfer",
@@ -20391,7 +20507,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/payouts?provider=flutterwave",
+            "description": "Gone \u2014 use /v1/gateway/payouts?provider=flutterwave",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20416,6 +20532,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20436,7 +20561,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: flutterwave)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/gateway/payouts?provider=flutterwave",
@@ -20489,7 +20614,7 @@
         ],
         "responses": {
           "410": {
-            "description": "Gone — use /v1/banks/directory",
+            "description": "Gone \u2014 use /v1/banks/directory",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20514,6 +20639,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20534,7 +20668,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: flutterwave)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/banks/directory",
@@ -20578,7 +20712,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/banks/verify-account",
+            "description": "Gone \u2014 use /v1/banks/verify-account",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20603,6 +20737,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20623,7 +20766,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: flutterwave)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/banks/verify-account",
@@ -20722,7 +20865,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/charges?provider=stripe",
+            "description": "Gone \u2014 use /v1/gateway/charges?provider=stripe",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20747,6 +20890,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20767,7 +20919,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: stripe)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/gateway/charges?provider=stripe",
@@ -20831,7 +20983,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/gateway/charges/{chargeId}",
+            "description": "Gone \u2014 use /v1/gateway/charges/{chargeId}",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -20856,6 +21008,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -20876,7 +21037,7 @@
         },
         "x-sunset": "2026-01-01",
         "x-replaced-by": "/v1/gateway/charges (channel: stripe)",
-        "description": "⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
+        "description": "\u26a0\ufe0f DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. ",
         "x-retired": true,
         "x-sunset-date": "2026-01-01",
         "x-successor": "/v1/gateway/charges/{chargeId}",
@@ -23242,7 +23403,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/standards/iso20022/pacs008/generate",
+            "description": "Gone \u2014 use /v1/standards/iso20022/pacs008/generate",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -23267,6 +23428,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -23286,7 +23456,7 @@
           }
         },
         "deprecated": true,
-        "description": "⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
+        "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
         "x-sunset": "2025-11-22",
         "x-replaced-by": "/v1/standards/iso20022/pacs008/generate",
         "x-retired": true,
@@ -23333,7 +23503,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/standards/iso20022/camt053/parse",
+            "description": "Gone \u2014 use /v1/standards/iso20022/camt053/parse",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -23358,6 +23528,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -23377,7 +23556,7 @@
           }
         },
         "deprecated": true,
-        "description": "⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
+        "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
         "x-sunset": "2025-11-22",
         "x-replaced-by": "/v1/standards/iso20022/camt053/parse",
         "x-retired": true,
@@ -23448,7 +23627,7 @@
         },
         "responses": {
           "410": {
-            "description": "Gone — use /v1/standards/iso20022/pacs008/generate",
+            "description": "Gone \u2014 use /v1/standards/iso20022/pacs008/generate",
             "headers": {
               "Sunset": {
                 "schema": {
@@ -23473,6 +23652,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -23492,7 +23680,7 @@
           }
         },
         "deprecated": true,
-        "description": "⚠️ DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
+        "description": "\u26a0\ufe0f DEPRECATED: SWIFT MT messages are being decommissioned as part of the global ISO 20022 migration programme. This endpoint will be removed on 2025-11-22. Please migrate to the equivalent ISO 20022 MX message endpoints: /v1/standards/iso20022/pacs008/generate (replaces MT103) and /v1/standards/iso20022/camt053/parse (replaces MT940). ",
         "x-sunset": "2025-11-22",
         "x-replaced-by": "/v1/standards/iso20022/pacs008/generate",
         "x-retired": true,
@@ -24442,7 +24630,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -24456,6 +24644,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -42460,7 +42657,7 @@
                   },
                   "bank_name": {
                     "type": "string",
-                    "example": "Société Générale Cameroun"
+                    "example": "Soci\u00e9t\u00e9 G\u00e9n\u00e9rale Cameroun"
                   },
                   "amount": {
                     "type": "string",
@@ -42962,6 +43159,17 @@
                     "$ref": "#/components/examples/MobileMoneyInsufficientFunds"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -43470,7 +43678,7 @@
           "Payment Gateway"
         ],
         "summary": "Score transaction risk",
-        "description": "Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0–100 risk score, flags, and recommended action (allow | flag_for_review | block).",
+        "description": "Run velocity, amount-threshold, and pattern-anomaly checks against a proposed transaction. Returns a 0\u2013100 risk score, flags, and recommended action (allow | flag_for_review | block).",
         "operationId": "gatewayRiskScore",
         "security": [
           {
@@ -46532,7 +46740,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -46546,6 +46754,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -46671,7 +46888,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -46685,6 +46902,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -52484,7 +52710,7 @@
                     },
                     "secret": {
                       "type": "string",
-                      "description": "HMAC secret — shown once"
+                      "description": "HMAC secret \u2014 shown once"
                     },
                     "status": {
                       "type": "string"
@@ -53132,7 +53358,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -53146,6 +53372,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -68505,7 +68740,7 @@
                     },
                     "secret": {
                       "type": "string",
-                      "description": "whsec_... — shown only on creation"
+                      "description": "whsec_... \u2014 shown only on creation"
                     },
                     "events": {
                       "type": "array",
@@ -76240,7 +76475,7 @@
           "Merchant Onboarding"
         ],
         "summary": "Rotate webhook signing secret",
-        "description": "Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately invalidated. The new secret is returned once — store it securely.",
+        "description": "Generates a new signing secret for the specified merchant webhook endpoint. The old secret is immediately invalidated. The new secret is returned once \u2014 store it securely.",
         "operationId": "rotateMerchantWebhookSecret",
         "parameters": [
           {
@@ -76291,7 +76526,7 @@
                         },
                         "secret": {
                           "type": "string",
-                          "description": "New webhook signing secret — shown once only"
+                          "description": "New webhook signing secret \u2014 shown once only"
                         }
                       }
                     },
@@ -76331,7 +76566,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -76396,7 +76631,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -76410,6 +76645,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -76529,7 +76773,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -76583,7 +76827,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -76597,6 +76841,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -76704,7 +76957,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -76758,7 +77011,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -76772,6 +77025,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -76784,7 +77046,7 @@
           "Provider Webhooks (Inbound)"
         ],
         "summary": "PayPal inbound webhook",
-        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API — not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` → funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` → auto-captures PayPal order\n- `PAYOUTS-ITEM.*` → payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post\n\n**PayPal Webhook Request Headers (present on every delivery):**\n\n| Header | Description |\n|--------|-------------|\n| `PayPal-Transmission-Id` | Unique identifier for this webhook transmission. Use for deduplication. |\n| `PayPal-Transmission-Time` | ISO 8601 timestamp when PayPal transmitted the event. |\n| `PayPal-Cert-Url` | HTTPS URL of the PayPal X.509 public certificate used for signing. Cache with ETag. |\n| `PayPal-Auth-Algo` | Signing algorithm, typically `SHA256withRSA`. |\n| `PayPal-Transmission-Sig` | Base64-encoded RSA-SHA256 signature over the verification string. |\n\n**Manual Verification Algorithm (alternative to API-based verification):**\n1. Retrieve the certificate from `PayPal-Cert-Url` (validate it is a paypal.com domain)\n2. Construct the verification string: `{PayPal-Transmission-Id}|{PayPal-Transmission-Time}|{PAYPAL_WEBHOOK_ID}|{CRC32(raw_request_body)}`\n3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate's public key and the algorithm in `PayPal-Auth-Algo`\n4. Reject any request where verification fails — return HTTP 400 to halt retries\n5. For SDK-based verification, use PayPal's Node.js/Java/PHP SDKs which handle the above automatically",
+        "description": "Receives PayPal webhook events for payment captures, checkout approvals, and payout status updates.\n\n**Signature Verification (Certificate-Based)**\n\nKOB verifies PayPal webhooks using PayPal's `POST /v1/notifications/verify-webhook-signature` API \u2014 not local cert validation. The flow:\n\n1. Extract the 5 `paypal-*` headers from the incoming request\n2. POST them along with the raw event body and the configured `PAYPAL_WEBHOOK_ID` to PayPal's verification endpoint\n3. If PayPal returns `verification_status: \"SUCCESS\"`, the event is accepted; otherwise rejected with `401`\n\n**Deduplication**: Events are keyed by `paypal_{event.id}` in the `webhook_inbox` table. Duplicates return `200 {status: \"already_processed\"}`.\n\n**Handled Event Types**:\n- `PAYMENT.CAPTURE.COMPLETED` \u2192 funding intent succeeded, triggers ledger credit\n- `CHECKOUT.ORDER.APPROVED` \u2192 auto-captures PayPal order\n- `PAYOUTS-ITEM.*` \u2192 payout status sync (succeeded/failed/reversed) Return HTTP 400 for malformed payloads to prevent infinite provider retry loops. Return HTTP 200 for all valid but unhandled event types. **Signature Verification:** All inbound PayPal webhooks MUST be verified using the PayPal Webhook Signature Verification API (POST /v1/notifications/verify-webhook-signature). Required headers: PAYPAL-TRANSMISSION-ID, PAYPAL-TRANSMISSION-TIME, PAYPAL-TRANSMISSION-SIG, PAYPAL-CERT-URL, PAYPAL-AUTH-ALGO. The server must validate the transmission signature against the webhook ID before processing any event. Unverified payloads must be rejected with HTTP 401. See: https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post\n\n**PayPal Webhook Request Headers (present on every delivery):**\n\n| Header | Description |\n|--------|-------------|\n| `PayPal-Transmission-Id` | Unique identifier for this webhook transmission. Use for deduplication. |\n| `PayPal-Transmission-Time` | ISO 8601 timestamp when PayPal transmitted the event. |\n| `PayPal-Cert-Url` | HTTPS URL of the PayPal X.509 public certificate used for signing. Cache with ETag. |\n| `PayPal-Auth-Algo` | Signing algorithm, typically `SHA256withRSA`. |\n| `PayPal-Transmission-Sig` | Base64-encoded RSA-SHA256 signature over the verification string. |\n\n**Manual Verification Algorithm (alternative to API-based verification):**\n1. Retrieve the certificate from `PayPal-Cert-Url` (validate it is a paypal.com domain)\n2. Construct the verification string: `{PayPal-Transmission-Id}|{PayPal-Transmission-Time}|{PAYPAL_WEBHOOK_ID}|{CRC32(raw_request_body)}`\n3. Verify `PayPal-Transmission-Sig` against the verification string using the certificate's public key and the algorithm in `PayPal-Auth-Algo`\n4. Reject any request where verification fails \u2014 return HTTP 400 to halt retries\n5. For SDK-based verification, use PayPal's Node.js/Java/PHP SDKs which handle the above automatically",
         "operationId": "receivePaypalWebhook",
         "security": [],
         "requestBody": {
@@ -76860,7 +77122,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — malformed or unrecognised webhook payload. Provider should NOT retry.",
+            "description": "Bad Request \u2014 malformed or unrecognised webhook payload. Provider should NOT retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -76914,7 +77176,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -76928,6 +77190,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -77185,7 +77456,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -77199,6 +77470,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -77337,7 +77617,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid input data",
+            "description": "Bad Request \u2014 invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -77391,7 +77671,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -77405,6 +77685,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -77543,7 +77832,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid input data",
+            "description": "Bad Request \u2014 invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -77597,7 +77886,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -77611,6 +77900,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -77749,7 +78047,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid input data",
+            "description": "Bad Request \u2014 invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -77803,7 +78101,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -77817,6 +78115,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -77955,7 +78262,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid input data",
+            "description": "Bad Request \u2014 invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -78009,7 +78316,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78023,6 +78330,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78161,7 +78477,7 @@
             }
           },
           "400": {
-            "description": "Bad Request — invalid input data",
+            "description": "Bad Request \u2014 invalid input data",
             "content": {
               "application/json": {
                 "schema": {
@@ -78215,7 +78531,7 @@
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78229,6 +78545,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78241,7 +78566,7 @@
           "Monitoring"
         ],
         "summary": "Security posture self-verification",
-        "description": "Reviewer-friendly snapshot of the API's live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 — S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required.",
+        "description": "Reviewer-friendly snapshot of the API's live security posture: OAuth 2.0, OIDC, mTLS (FAPI 1.0 Advanced / RFC 8705), DCR (RFC 7591), PAR (RFC 9126), JAR (RFC 9101), PKCE (RFC 7636 \u2014 S256), webhook signing, JWKS rotation, and sandbox status. Returns 200 with cache-control public, max-age=60. No authentication required.",
         "operationId": "securityHealthz",
         "security": [],
         "responses": {
@@ -78267,11 +78592,20 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78285,6 +78619,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78384,11 +78727,20 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78402,6 +78754,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78500,11 +78861,20 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78518,6 +78888,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78605,11 +78984,20 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78623,6 +79011,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78690,11 +79087,20 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "default": {
-            "description": "Server error — see ProblemDetails for trace ID.",
+            "description": "Server error \u2014 see ProblemDetails for trace ID.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -78708,6 +79114,15 @@
                 "schema": {
                   "type": "string"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -78780,6 +79195,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -78803,6 +79227,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -78812,6 +79247,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -78828,6 +79274,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -78837,6 +79294,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -78852,6 +79320,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -78928,6 +79410,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -78944,6 +79435,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -78953,6 +79455,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -78969,6 +79482,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -78978,6 +79502,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -78993,6 +79528,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -79047,6 +79596,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79063,6 +79621,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79073,6 +79642,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "404": {
@@ -79082,6 +79662,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79098,6 +79689,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79107,6 +79709,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79122,6 +79735,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -79189,6 +79816,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -79212,6 +79848,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79221,6 +79868,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79237,6 +79895,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79246,6 +79915,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79261,6 +79941,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -79317,6 +80011,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -79340,6 +80043,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79349,6 +80063,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79365,6 +80090,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79374,6 +80110,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79390,6 +80137,20 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
             }
           }
         }
@@ -79401,7 +80162,7 @@
           "Webhooks"
         ],
         "operationId": "replayWebhookEvent",
-        "summary": "Replay a webhook event (canonical façade)",
+        "summary": "Replay a webhook event (canonical fa\u00e7ade)",
         "description": "Manually redeliver a webhook event by event_id. Looks up the originating endpoint and delivery, then re-queues. Convenience wrapper over `/v1/webhooks/v2/endpoints/{endpointId}/deliveries/{deliveryId}/replay`.",
         "security": [
           {
@@ -79446,6 +80207,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -79478,6 +80248,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79488,6 +80269,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "404": {
@@ -79497,6 +80289,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79513,6 +80316,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79522,6 +80336,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79537,6 +80362,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -79611,6 +80450,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79627,6 +80475,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79636,6 +80495,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79652,6 +80522,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79661,6 +80542,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79676,6 +80568,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -79732,6 +80638,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -79755,6 +80670,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79764,6 +80690,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79780,6 +80717,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79789,6 +80737,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79804,6 +80763,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -79897,6 +80870,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79913,6 +80895,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -79922,6 +80915,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79938,6 +80942,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -79947,6 +80962,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -79963,6 +80989,20 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
             }
           }
         }
@@ -79975,7 +81015,7 @@
         ],
         "operationId": "simulateSandboxChargeOutcome",
         "summary": "Simulate an outcome on a sandbox charge",
-        "description": "Charge-scoped façade over `/v1/sandbox/payments/simulate`.",
+        "description": "Charge-scoped fa\u00e7ade over `/v1/sandbox/payments/simulate`.",
         "security": [
           {
             "bearerAuth": []
@@ -80052,6 +81092,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -80068,6 +81117,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
@@ -80077,6 +81137,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -80093,6 +81164,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "422": {
@@ -80102,6 +81184,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -80117,6 +81210,20 @@
                     "$ref": "#/components/examples/ProblemDetailsRateLimited"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -80167,6 +81274,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80201,6 +81317,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80273,6 +81398,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80327,6 +81461,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80378,6 +81521,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80442,6 +81594,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80511,6 +81672,15 @@
               },
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -80568,11 +81738,31 @@
             "headers": {
               "Content-Language": {
                 "$ref": "#/components/headers/Content-Language"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "404": {
-            "description": "Unknown code"
+            "description": "Unknown code",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -80583,7 +81773,7 @@
         "tags": [
           "Identity & KYC"
         ],
-        "summary": "Verify a CEMAC Numéro d'Identification National (NIN)",
+        "summary": "Verify a CEMAC Num\u00e9ro d'Identification National (NIN)",
         "description": "Resolves a CEMAC NIN against the national identity registry (ANTIC for Cameroon; equivalent issuers for GA/CG/TD/CF/GQ). Requires a customer consent referenced by `consent_id`.",
         "security": [
           {
@@ -80617,6 +81807,15 @@
                   "type": "string",
                   "example": "en"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -80635,13 +81834,46 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Not found in registry"
+            "description": "Not found in registry",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -80652,7 +81884,7 @@
         "tags": [
           "Identity & KYC"
         ],
-        "summary": "Verify a CEMAC Carte Nationale d'Identité (CNI)",
+        "summary": "Verify a CEMAC Carte Nationale d'Identit\u00e9 (CNI)",
         "description": "Resolves a CEMAC national ID card. Mirrors /v1/verify/nin but keyed on the card serial rather than the lifetime NIN.",
         "security": [
           {
@@ -80686,6 +81918,15 @@
                   "type": "string",
                   "example": "fr"
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -80704,13 +81945,46 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Not found in registry"
+            "description": "Not found in registry",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -80799,6 +82073,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           }
         }
@@ -80839,10 +82124,32 @@
                   "$ref": "#/components/schemas/Agent"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
-            "description": "Validation error"
+            "description": "Validation error",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -80898,10 +82205,32 @@
                   ]
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "404": {
-            "description": "Not found"
+            "description": "Not found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -80955,7 +82284,18 @@
         },
         "responses": {
           "200": {
-            "description": "Idempotent replay"
+            "description": "Idempotent replay",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "201": {
             "description": "Transaction recorded",
@@ -80965,10 +82305,32 @@
                   "$ref": "#/components/schemas/AgentCashTransaction"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "409": {
-            "description": "Insufficient float"
+            "description": "Insufficient float",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81022,7 +82384,18 @@
         },
         "responses": {
           "200": {
-            "description": "Idempotent replay"
+            "description": "Idempotent replay",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "201": {
             "description": "Transaction recorded",
@@ -81032,10 +82405,32 @@
                   "$ref": "#/components/schemas/AgentCashTransaction"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "409": {
-            "description": "Insufficient float"
+            "description": "Insufficient float",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81089,7 +82484,18 @@
         },
         "responses": {
           "200": {
-            "description": "Idempotent replay"
+            "description": "Idempotent replay",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "201": {
             "description": "Transaction recorded",
@@ -81102,6 +82508,15 @@
                     "low_float"
                   ]
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -81113,7 +82528,18 @@
             }
           },
           "409": {
-            "description": "Insufficient float or cash"
+            "description": "Insufficient float or cash",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81167,7 +82593,18 @@
         },
         "responses": {
           "200": {
-            "description": "Idempotent replay"
+            "description": "Idempotent replay",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "201": {
             "description": "Transaction recorded",
@@ -81180,6 +82617,15 @@
                     "low_float"
                   ]
                 }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             },
             "content": {
@@ -81191,7 +82637,18 @@
             }
           },
           "409": {
-            "description": "Insufficient float or cash"
+            "description": "Insufficient float or cash",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81253,6 +82710,17 @@
                   }
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           }
         }
@@ -81290,16 +82758,60 @@
                   "$ref": "#/components/schemas/AdminTestWebhookResult"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad request",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "403": {
-            "description": "Admin role required"
+            "description": "Admin role required",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Endpoint not found"
+            "description": "Endpoint not found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81336,13 +82848,46 @@
                   "$ref": "#/components/schemas/AdminApiKeyCreateResponse"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad request",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Forbidden",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81379,13 +82924,46 @@
                   "$ref": "#/components/schemas/AdminApiKey"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Forbidden",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Not found"
+            "description": "Not found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81432,13 +83010,46 @@
                   "$ref": "#/components/schemas/AdminApiKey"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Forbidden",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Not found"
+            "description": "Not found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81475,13 +83086,46 @@
                   "$ref": "#/components/schemas/AdminApiKey"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "403": {
-            "description": "Forbidden"
+            "description": "Forbidden",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Not found"
+            "description": "Not found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -81524,6 +83168,17 @@
                   "$ref": "#/components/schemas/UssdSession"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
@@ -81534,6 +83189,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "429": {
@@ -81543,6 +83209,20 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
               }
             }
           }
@@ -81602,6 +83282,17 @@
                   "$ref": "#/components/schemas/QrCode"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
@@ -81611,6 +83302,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81655,6 +83357,17 @@
                   "$ref": "#/components/schemas/OfflineToken"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
@@ -81665,6 +83378,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "409": {
@@ -81674,6 +83398,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81718,6 +83453,17 @@
                   "$ref": "#/components/schemas/OfflineToken"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
@@ -81727,6 +83473,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
@@ -81738,6 +83495,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "410": {
@@ -81747,6 +83515,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81771,6 +83550,17 @@
                     "$ref": "#/components/schemas/CemacCorridor"
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81803,6 +83593,17 @@
                   "$ref": "#/components/schemas/CemacRemittanceQuote"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
@@ -81812,6 +83613,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81866,6 +83678,17 @@
                   "$ref": "#/components/schemas/CemacRemittanceTransfer"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
@@ -81876,6 +83699,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "409": {
@@ -81885,6 +83719,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81918,6 +83763,17 @@
                   "$ref": "#/components/schemas/CemacRemittanceTransfer"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "404": {
@@ -81927,6 +83783,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -81970,6 +83837,17 @@
                   "$ref": "#/components/schemas/CemacRemittanceTransfer"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "404": {
@@ -81980,6 +83858,17 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "409": {
@@ -81989,6 +83878,17 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -82045,6 +83945,17 @@
                   "$ref": "#/components/schemas/NiumGlobalAccount"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "201": {
@@ -82055,16 +83966,60 @@
                   "$ref": "#/components/schemas/NiumGlobalAccount"
                 }
               }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
             }
           },
           "400": {
-            "description": "Invalid request"
+            "description": "Invalid request",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "502": {
-            "description": "Nium provider error"
+            "description": "Nium provider error",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       },
@@ -82104,6 +84059,17 @@
                     }
                   }
                 }
+              }
+            },
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           }
@@ -82193,13 +84159,46 @@
         },
         "responses": {
           "200": {
-            "description": "Updated"
+            "description": "Updated",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "400": {
-            "description": "Invalid request"
+            "description": "Invalid request",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Account not found"
+            "description": "Account not found",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
@@ -82209,7 +84208,7 @@
         "tags": [
           "Gateway"
         ],
-        "summary": "Nium incoming-payment webhook (provider → KOB)",
+        "summary": "Nium incoming-payment webhook (provider \u2192 KOB)",
         "description": "Called by Nium when funds land in a global virtual account. HMAC-SHA256 signed via header `x-nium-signature`. Idempotent on `transactionId`. KOB applies FX + spread, deducts withdrawal fee (only for MOBILE_MONEY routing), credits the user's Kang Wallet, and asynchronously dispatches Mobile Money payouts through Flutterwave when applicable.",
         "operationId": "niumIncomingWebhook",
         "security": [],
@@ -82235,20 +84234,53 @@
         },
         "responses": {
           "200": {
-            "description": "Acknowledged"
+            "description": "Acknowledged",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "401": {
-            "description": "Invalid signature"
+            "description": "Invalid signature",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           },
           "404": {
-            "description": "Unknown account"
+            "description": "Unknown account",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
           }
         }
       }
     }
   },
   "externalDocs": {
-    "description": "Kang Open Banking Developer Portal — sandbox guides, test credentials, free-forever sandbox console",
+    "description": "Kang Open Banking Developer Portal \u2014 sandbox guides, test credentials, free-forever sandbox console",
     "url": "https://kangopenbanking.com/developer/sandbox"
   },
   "x-api-standards": {
@@ -82294,9 +84326,9 @@
   "x-error-catalog": {
     "envelope": {
       "error": "Machine-readable error type (e.g. invalid_request_error, authentication_error, rate_limit_error)",
-      "error_code": "Domain-prefixed code (AUTH_001, PAY_003, LED_002, …)",
+      "error_code": "Domain-prefixed code (AUTH_001, PAY_003, LED_002, \u2026)",
       "message": "Human-readable description",
-      "error_id": "Trace id — include in support tickets",
+      "error_id": "Trace id \u2014 include in support tickets",
       "timestamp": "ISO 8601",
       "details": "Optional field-level validation errors"
     },
@@ -82334,7 +84366,7 @@
       "Dashboard banner",
       "X-API-Deprecation header"
     ],
-    "version_strategy": "Path-based major (/v1, /v2). Minor & patch are backwards compatible. Major version supported ≥ 12 months after successor GA.",
+    "version_strategy": "Path-based major (/v1, /v2). Minor & patch are backwards compatible. Major version supported \u2265 12 months after successor GA.",
     "backwards_compat_rules": [
       "Never remove a documented field from a response without major version bump",
       "Never tighten a request schema in-place",
@@ -82377,7 +84409,7 @@
       "Retry-After"
     ],
     "error_status": 429,
-    "error_format": "application/problem+json (RFC 7807) — see RateLimitError schema",
+    "error_format": "application/problem+json (RFC 7807) \u2014 see RateLimitError schema",
     "window_unit": "per_minute",
     "authoritative_source": "spec['x-rate-limits']",
     "note": "All limits in this object are per-minute unless explicitly stated. Markdown documentation mirrors these values."
@@ -82696,7 +84728,7 @@
     "route": "/functions/v1/payment-orchestrator",
     "delegates_to": "/functions/v1/payment-router-charge",
     "guarantees": [
-      "Transparent passthrough when flag is OFF — zero behavioural change vs v4.36.0.",
+      "Transparent passthrough when flag is OFF \u2014 zero behavioural change vs v4.36.0.",
       "Idempotency replay cache TTL extended to 24h via public.idempotency_cache_extended.",
       "Dead-letter queue public.charge_dlq captures charges that exhaust provider 5xx retries (admin replay surface in /admin/orchestrator)."
     ],

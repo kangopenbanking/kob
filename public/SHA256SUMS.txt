@@ -1,23 +1,23 @@
 # Kang Open Banking — artifact checksums
-# Generated: 2026-06-23T01:54:58.025Z
-# API: v4.51.0  SDK: node@1.7.0 php@1.7.0 python@1.7.0
+# Generated: 2026-06-25T14:00:58.687Z
+# API: v4.51.5  SDK: node@1.7.0 php@1.7.0 python@1.7.0
 # Verify: sha256sum -c SHA256SUMS.txt
-b6157a98bc3c49c216c27c69639c8b22cd89574ab9210c356194cb499caab4bd  ./openapi.json
-540e901b05dbe347afb5b46d682d5a5a093de876e17d7ec4015214deb39750f3  ./openapi.yaml
-03b6b0d27a103c28b3c34eafb83b891aa9e85cb86f392cdbc86b76d7ec768e71  ./openapi-sandbox.json
-c11beb483f939c4ac75aeefeecc06df366f7fa2c60072f34328f4d3d62fbad44  ./openapi-sandbox.yaml
+dd1ee1fc8e9b76da7c420f97d8e9c42bbd8fed515b2198bd11ff85fcf5189e38  ./openapi.json
+9c67dfea62af62c70995aaa5ac37dc6ba8a9d429b553fa4d505139d37d9a14e1  ./openapi.yaml
+0a90479ad8fc61be60085f9f99c6e987f21296dd51b918759d5c9a553b83088d  ./openapi-sandbox.json
+5d70f2a9e886a1afe89221a59d5d3b9d4a9ad190db787339156657dd653bb1c2  ./openapi-sandbox.yaml
 7f5ccdb365425cf6d0377913ed6cd944cced240d2c34561b066c0271a06c54e4  ./apis.json
 3132ce4fa158b8637b7776c369c3ecd4513dc79bec0f283aa181dbce4548311a  ./apis-sandbox.json
-2cf54bd19cecc11e81a08f7c7575bad449191ecd0bd108835204ce790d53e157  ./openapi-history/openapi-4.51.0.json
-540e901b05dbe347afb5b46d682d5a5a093de876e17d7ec4015214deb39750f3  ./openapi-history/openapi-4.51.0.yaml
-6280870f9b34cdeabfcdf007880ba48c49002d511be9ab14fda3fea55c04503e  ./postman/Kang_Open_Banking_API_latest.postman_collection.json
-6280870f9b34cdeabfcdf007880ba48c49002d511be9ab14fda3fea55c04503e  ./postman/Kang_Open_Banking_API_v4.51.0.postman_collection.json
+dd1ee1fc8e9b76da7c420f97d8e9c42bbd8fed515b2198bd11ff85fcf5189e38  ./openapi-history/openapi-4.51.5.json
+9c67dfea62af62c70995aaa5ac37dc6ba8a9d429b553fa4d505139d37d9a14e1  ./openapi-history/openapi-4.51.5.yaml
+3d1836c8748d8a61b0fcd46979a6e81719d3b4109545481c24ea0002e1e1fccb  ./postman/Kang_Open_Banking_API_latest.postman_collection.json
+3d1836c8748d8a61b0fcd46979a6e81719d3b4109545481c24ea0002e1e1fccb  ./postman/Kang_Open_Banking_API_v4.51.5.postman_collection.json
 29eedcc1066ff8db06b94337fdaa7ed020ab33d534d616bdd7ad1b9c66e5841c  ./postman/Kang_Open_Banking_Sandbox.postman_environment.json
 327eab31e7737ee31b3c453d9359d0ae79b1cd06189d87207a2cfebcd0b74f9b  ./postman/Kang_Open_Banking_Production.postman_environment.json
 0dfb2e6b5d218c8a124abcdbb559e168e26a8165888750316dc55df3a7b9ba12  ./sdk-downloads/sdk-node-package.json
-4a84ffd4be2ef098a7c453ed90721dce2485719f384a6e991d7201c8f264645d  ./sdk-downloads/sdk-node-README.md
+9e2cfe0b464ed50b64a8e1234609026b6286b398c71b39cca0db7c3cad1247e4  ./sdk-downloads/sdk-node-README.md
 1d7600493fe60e9280e821089bd0717553d11320c07843740a7824df6ff5e297  ./sdk-downloads/sdk-php-composer.json
-b5023fc851e3fcb272df28b271b865a46e7444f4da0b464fad1065320d6f7255  ./sdk-downloads/sdk-php-README.md
+429a77b998067d50503d3e081b254f2fd2e20ff55bccfd3334539ceb237584a5  ./sdk-downloads/sdk-php-README.md
 878400bbafce1765841d405f1aac5dbb91b0eae031c466451236e62b1a0612ca  ./sdk-downloads/sdk-python-pyproject.toml
-8656689de4814dd1e8fe10fc9cbd24f0415f421dfc4275e686ae7d361737a2ee  ./sdk-downloads/sdk-python-README.md
-4ba61ed6d35e02933be8d820caf073b5f651202bd7c7d2ccf078e16a693861cd  ./changelog.json
+1762d522740eaabb10b9bd698fcab3a0e2fa37ffd90e3e38df29aabac5ddc7d8  ./sdk-downloads/sdk-python-README.md
+696429ed4a894d499d6132292ac5fb55570ea15f49e8f63a0880e83ad26c466a  ./changelog.json

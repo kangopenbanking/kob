@@ -1,6 +1,6 @@
 # kang/openbanking-php
 
-Official PHP SDK for the **Kang Open Banking (KOB) v1 API** (v1.7.0, aligned to OpenAPI v4.51.0) with Laravel support.
+Official PHP SDK for the **Kang Open Banking (KOB) v1 API** (v1.7.0, aligned to OpenAPI v4.51.5) with Laravel support.
 
 ## Requirements
 

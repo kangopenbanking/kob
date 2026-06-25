@@ -1,12 +1,31 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.51.4** · Last updated: **2026-06-25**
+Current API version: **4.51.5** · Last updated: **2026-06-25**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.51.5 — 2026-06-25
+**Type:** patch · **Breaking changes:** none
+
+Phase 5 consistency & hygiene. Every operation response in the production and sandbox specs now advertises X-RateLimit-Limit / X-RateLimit-Remaining / X-RateLimit-Reset, and every 429 response advertises Retry-After. Money-amount string schemas were audited for the zero-decimal currency pattern (^[0-9]{1,15}$); no regressions found. Additive metadata only (Standing Orders 1, 2, 4).
+
+### Highlights
+- openapi.json + openapi.yaml: 3,852 rate-limit header refs added across 7,744 responses; 50 Retry-After refs added to 429 responses.
+- Sandbox spec mirrors the same headers so integration tests see identical rate-limit advertising in both environments.
+- Money-amount audit (Balance, GatewayCharge, GatewayFeeEstimate, money-bearing request/response schemas) confirms all amount-typed string fields keep the canonical zero-decimal pattern; flagged non-amount fields (currency, channel, balance_type) are report-only.
+- Phase 5 hardening script (scripts/phase5-consistency-hygiene.mjs) and closeout (PHASE_5_CONSISTENCY_HYGIENE_CLOSEOUT.md) published at repo root.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- IETF draft-ietf-httpapi-ratelimit-headers (RateLimit-* advertising)
+- RFC 7231 §7.1.3 (Retry-After)
+- Internal: scripts/phase5-consistency-hygiene.mjs, PHASE_5_CONSISTENCY_HYGIENE_CLOSEOUT.md
 
 ---
 

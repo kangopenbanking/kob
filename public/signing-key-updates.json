@@ -1,11 +1,11 @@
 {
   "algorithm": "ed25519",
-  "generatedAt": "2026-06-23T01:54:58.422Z",
+  "generatedAt": "2026-06-25T14:00:59.219Z",
   "current": {
-    "fingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA",
-    "fingerprintHex": "a9:d9:40:e6:b5:20:a0:69:e8:d8:3b:fb:2e:65:d3:ea:a7:92:d2:0a:a8:d4:ec:b7:4a:cc:e1:89:a7:eb:61:20",
+    "fingerprint": "SHA256:bdTpzMgEZDkXVo8IbrGyQBoCNkXZEOkTJ7dAg5Ws09o",
+    "fingerprintHex": "6d:d4:e9:cc:c8:04:64:39:17:56:8f:08:6e:b1:b2:40:1a:02:36:45:d9:10:e9:13:27:b7:40:83:95:ac:d3:da",
     "publicKeyUrl": "/artifact-signing-pubkey.pem",
-    "establishedAt": "2026-06-23T01:33:10.214Z"
+    "establishedAt": "2026-06-25T14:00:59.219Z"
   },
   "next": null,
   "history": [
@@ -20,6 +20,12 @@
       "fingerprintHex": "19:51:f6:6c:3e:bd:79:74:02:60:84:6b:ea:b7:df:5f:8e:c8:56:34:fe:76:39:09:08:5d:05:0c:78:8c:51:94",
       "establishedAt": "2026-06-22T00:41:23.989Z",
       "retiredAt": "2026-06-23T01:33:10.214Z"
+    },
+    {
+      "fingerprint": "SHA256:qdlA5rUgoGno2Dv7LmXT6qeS0gqo1Oy3SszhiafrYSA",
+      "fingerprintHex": "a9:d9:40:e6:b5:20:a0:69:e8:d8:3b:fb:2e:65:d3:ea:a7:92:d2:0a:a8:d4:ec:b7:4a:cc:e1:89:a7:eb:61:20",
+      "establishedAt": "2026-06-23T01:33:10.214Z",
+      "retiredAt": "2026-06-25T14:00:59.219Z"
     }
   ],
   "docsUrl": "/docs/signing-key-rotation.md",

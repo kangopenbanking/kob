@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.51.0",
+  "current": "4.51.5",
   "versions": [
+    {
+      "version": "4.51.5",
+      "released_at": "2026-06-25T13:59:34.235Z",
+      "type": "snapshot",
+      "file": "openapi-4.51.5.json",
+      "notes": "Phase 5 consistency & hygiene. Every operation response in the production and sandbox specs now advertises X-RateLimit-Limit / X-RateLimit-Remaining / X-RateLimit-Reset, and every 429 response advertises Retry-After. Money-amount string schemas were audited for the zero-decimal currency pattern (^[0-9]{1,15}$); no regressions found. Additive metadata only (Standing Orders 1, 2, 4)."
+    },
     {
       "version": "4.51.0",
       "released_at": "2026-06-22T00:40:31.866Z",

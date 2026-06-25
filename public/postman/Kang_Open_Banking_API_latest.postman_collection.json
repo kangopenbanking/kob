@@ -1,10 +1,10 @@
 {
   "info": {
     "_postman_id": "kob-api-v4.50.0",
-    "name": "Kang Open Banking API v4.51.4",
-    "description": "Auto-generated from OpenAPI 4.50.0.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.\n\nIncludes Nium-powered global virtual accounts (USD/EUR/GBP) — see the 'Global Accounts (Nium)' folder.",
+    "name": "Kang Open Banking API v4.51.5",
+    "description": "Auto-generated from OpenAPI 4.50.0.\n\nBase URLs:\n  - Sandbox:    https://sandbox-api.kangopenbanking.com/v1\n  - Production: https://api.kangopenbanking.com/v1\n\nSet `base_url` and `access_token` (or `api_key`) in the environment.\n\nIncludes Nium-powered global virtual accounts (USD/EUR/GBP) \u2014 see the 'Global Accounts (Nium)' folder.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "4.51.4"
+    "version": "4.51.5"
   },
   "item": [
     {
@@ -1306,7 +1306,7 @@
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination).",
+                  "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination).",
                   "disabled": true
                 },
                 {
@@ -1324,13 +1324,13 @@
                 {
                   "key": "starting_after",
                   "value": "",
-                  "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+                  "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
                   "disabled": true
                 },
                 {
                   "key": "ending_before",
                   "value": "",
-                  "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+                  "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
                   "disabled": true
                 }
               ],
@@ -1412,13 +1412,13 @@
                 {
                   "key": "limit",
                   "value": "",
-                  "description": "Page size (additive — omitting preserves legacy behaviour).",
+                  "description": "Page size (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 },
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Page offset (additive — omitting preserves legacy behaviour).",
+                  "description": "Page offset (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 }
               ],
@@ -1484,13 +1484,13 @@
                 {
                   "key": "limit",
                   "value": "",
-                  "description": "Page size (additive — omitting preserves legacy behaviour).",
+                  "description": "Page size (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 },
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Page offset (additive — omitting preserves legacy behaviour).",
+                  "description": "Page offset (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 }
               ],
@@ -1610,13 +1610,13 @@
                 {
                   "key": "limit",
                   "value": "",
-                  "description": "Page size (additive — omitting preserves legacy behaviour).",
+                  "description": "Page size (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 },
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Page offset (additive — omitting preserves legacy behaviour).",
+                  "description": "Page offset (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 }
               ],
@@ -1682,13 +1682,13 @@
                 {
                   "key": "limit",
                   "value": "",
-                  "description": "Page size (additive — omitting preserves legacy behaviour).",
+                  "description": "Page size (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 },
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Page offset (additive — omitting preserves legacy behaviour).",
+                  "description": "Page offset (additive \u2014 omitting preserves legacy behaviour).",
                   "disabled": true
                 }
               ],
@@ -1781,7 +1781,7 @@
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination).",
+                  "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination).",
                   "disabled": true
                 },
                 {
@@ -1799,13 +1799,13 @@
                 {
                   "key": "starting_after",
                   "value": "",
-                  "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+                  "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
                   "disabled": true
                 },
                 {
                   "key": "ending_before",
                   "value": "",
-                  "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+                  "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
                   "disabled": true
                 }
               ],
@@ -4376,7 +4376,7 @@
             "description": "Institution-facilitated bank transfer",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"account_number\": \"1234567890\",\n  \"bank_code\": \"SGCM\",\n  \"bank_name\": \"Société Générale Cameroun\",\n  \"amount\": \"100000\",\n  \"currency\": \"XAF\",\n  \"narration\": \"Salary payment\",\n  \"institution_id\": \"00000000-0000-4000-8000-000000000000\",\n  \"account_name\": \"Jean Dupont\"\n}",
+              "raw": "{\n  \"account_number\": \"1234567890\",\n  \"bank_code\": \"SGCM\",\n  \"bank_name\": \"Soci\u00e9t\u00e9 G\u00e9n\u00e9rale Cameroun\",\n  \"amount\": \"100000\",\n  \"currency\": \"XAF\",\n  \"narration\": \"Salary payment\",\n  \"institution_id\": \"00000000-0000-4000-8000-000000000000\",\n  \"account_name\": \"Jean Dupont\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5053,7 +5053,7 @@
                 {
                   "key": "offset",
                   "value": "",
-                  "description": "Items to skip Legacy: kept for backwards compatibility — prefer starting_after/ending_before (see x-pagination).",
+                  "description": "Items to skip Legacy: kept for backwards compatibility \u2014 prefer starting_after/ending_before (see x-pagination).",
                   "disabled": true
                 },
                 {
@@ -5071,13 +5071,13 @@
                 {
                   "key": "starting_after",
                   "value": "",
-                  "description": "Cursor pagination — returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
+                  "description": "Cursor pagination \u2014 returns the page of results AFTER this resource id. Mutually exclusive with offset/ending_before. Preferred for new integrations (see x-pagination).",
                   "disabled": true
                 },
                 {
                   "key": "ending_before",
                   "value": "",
-                  "description": "Cursor pagination — returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
+                  "description": "Cursor pagination \u2014 returns the page of results BEFORE this resource id. Mutually exclusive with offset/starting_after.",
                   "disabled": true
                 }
               ],
@@ -22052,7 +22052,7 @@
       "description": "USD / EUR / GBP receiving accounts issued via Nium. Incoming credits convert to XAF (Nium FX + spread) and route to Kang Wallet or Mobile Money.",
       "item": [
         {
-          "name": "createGlobalAccount — provision a Nium-powered global account (idempotent per user+currency).",
+          "name": "createGlobalAccount \u2014 provision a Nium-powered global account (idempotent per user+currency).",
           "request": {
             "method": "POST",
             "header": [
@@ -22083,7 +22083,7 @@
                 "global-accounts"
               ]
             },
-            "description": "createGlobalAccount — provision a Nium-powered global account (idempotent per user+currency).",
+            "description": "createGlobalAccount \u2014 provision a Nium-powered global account (idempotent per user+currency).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currency\": \"USD\",\n  \"beneficiary_name\": \"Jane Influencer\"\n}",
@@ -22097,7 +22097,7 @@
           "response": []
         },
         {
-          "name": "listGlobalAccounts — accounts, recent incoming payments and user-level defaults.",
+          "name": "listGlobalAccounts \u2014 accounts, recent incoming payments and user-level defaults.",
           "request": {
             "method": "GET",
             "header": [
@@ -22123,7 +22123,7 @@
                 "global-accounts"
               ]
             },
-            "description": "listGlobalAccounts — accounts, recent incoming payments and user-level defaults."
+            "description": "listGlobalAccounts \u2014 accounts, recent incoming payments and user-level defaults."
           },
           "response": []
         },
@@ -22220,7 +22220,7 @@
           "response": []
         },
         {
-          "name": "niumIncomingWebhook — provider→KOB. HMAC-SHA256 over raw body (header x-nium-signature). For testing only.",
+          "name": "niumIncomingWebhook \u2014 provider\u2192KOB. HMAC-SHA256 over raw body (header x-nium-signature). For testing only.",
           "request": {
             "method": "POST",
             "header": [
@@ -22257,7 +22257,7 @@
                 "webhook"
               ]
             },
-            "description": "niumIncomingWebhook — provider→KOB. HMAC-SHA256 over raw body (header x-nium-signature). For testing only.",
+            "description": "niumIncomingWebhook \u2014 provider\u2192KOB. HMAC-SHA256 over raw body (header x-nium-signature). For testing only.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"eventType\": \"payment_incoming\",\n  \"transactionId\": \"NIUM_TX_001\",\n  \"accountId\": \"nium_acc_abc123\",\n  \"amount\": 250.0,\n  \"currency\": \"USD\",\n  \"senderName\": \"YouTube Adsense\",\n  \"reference\": \"Creator payout March 2026\"\n}",

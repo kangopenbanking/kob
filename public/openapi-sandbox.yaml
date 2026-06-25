@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.51.4
+  version: 4.51.5
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -6889,6 +6889,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -6969,6 +6975,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -11158,6 +11170,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/credit/score:
     get:
       tags:
@@ -13343,6 +13361,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/savings/accounts/{accountId}/deposit:
     post:
       tags:
@@ -14660,6 +14684,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -14684,6 +14714,13 @@ paths:
               examples:
                 insufficient_funds:
                   $ref: '#/components/examples/MobileMoneyInsufficientFunds'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       description: >-
         ⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead.  Responses
         will conform to the StandardResponse envelope in a future minor release.
@@ -14773,6 +14810,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -14797,6 +14840,13 @@ paths:
               examples:
                 insufficient_funds:
                   $ref: '#/components/examples/MobileMoneyInsufficientFunds'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
@@ -14846,6 +14896,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -14870,6 +14926,13 @@ paths:
               examples:
                 insufficient_funds:
                   $ref: '#/components/examples/MobileMoneyInsufficientFunds'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - name: Idempotency-Key
           in: header
@@ -14958,6 +15021,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -14982,6 +15051,13 @@ paths:
               examples:
                 insufficient_funds:
                   $ref: '#/components/examples/MobileMoneyInsufficientFunds'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       x-sunset: '2026-01-01'
       x-replaced-by: '/v1/gateway/charges (channel: momo)'
       description: '⚠️ DEPRECATED (sunset: 2026-01-01): Use the unified Payment Gateway at /v1/gateway/charges instead. '
@@ -15074,6 +15150,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -15135,6 +15217,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -15197,6 +15285,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -15296,6 +15390,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -15369,6 +15469,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -17047,6 +17153,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -17110,6 +17222,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -17187,6 +17305,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/problem+json:
               schema:
@@ -17886,6 +18010,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -30828,6 +30958,13 @@ paths:
               examples:
                 insufficient_funds:
                   $ref: '#/components/examples/MobileMoneyInsufficientFunds'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           $ref: '#/components/responses/TooManyRequests'
           headers:
@@ -33333,6 +33470,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
     delete:
       operationId: deleteSubscription
       summary: Cancel a subscription
@@ -33429,6 +33572,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/gateway/subscriptions/cancel:
     post:
       tags:
@@ -37912,6 +38061,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -54186,6 +54341,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       security:
         - bearerAuth: []
       deprecated: true
@@ -54316,6 +54477,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/webhooks/providers/flutterwave:
     post:
       tags:
@@ -54437,6 +54604,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/webhooks/providers/paypal:
     post:
       tags:
@@ -54615,6 +54788,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - name: paypal-auth-algo
           in: header
@@ -54792,6 +54971,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/standards/iso20022/pacs004/generate:
     post:
       operationId: generatePacs004
@@ -54932,6 +55117,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/standards/iso20022/pacs009/generate:
     post:
       operationId: generatePacs009
@@ -55070,6 +55261,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/standards/iso20022/camt056/generate:
     post:
       operationId: generateCamt056
@@ -55210,6 +55407,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/standards/iso20022/camt052/parse:
     post:
       operationId: parseISO20022Camt052
@@ -55352,6 +55555,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/standards/iso20022/camt054/parse:
     post:
       operationId: parseISO20022Camt054
@@ -55494,6 +55703,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /healthz:
     get:
       tags:
@@ -55524,6 +55739,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         default:
           description: Server error — see ProblemDetails for trace ID.
           content:
@@ -55537,6 +55758,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -55603,6 +55830,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         default:
           description: Server error — see ProblemDetails for trace ID.
           content:
@@ -55616,6 +55849,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -55681,6 +55920,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         default:
           description: Server error — see ProblemDetails for trace ID.
           content:
@@ -55694,6 +55939,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -55746,6 +55997,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         default:
           description: Server error — see ProblemDetails for trace ID.
           content:
@@ -55759,6 +56016,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -55801,6 +56064,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         default:
           description: Server error — see ProblemDetails for trace ID.
           content:
@@ -55814,6 +56083,12 @@ paths:
                 present; otherwise a server-generated UUID v4.
               schema:
                 type: string
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/Traceparent'
@@ -55853,6 +56128,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -55866,12 +56147,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -55881,12 +56176,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -55896,6 +56205,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
     get:
       tags:
         - Payments
@@ -55942,6 +56260,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad Request
           content:
@@ -55951,12 +56275,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -55966,12 +56304,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -55981,6 +56333,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/payment-intents/{id}:
     get:
       tags:
@@ -56011,6 +56372,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad Request
           content:
@@ -56020,18 +56387,39 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not Found
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56041,12 +56429,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56056,6 +56458,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/payment-intents/{id}/confirm:
     post:
       tags:
@@ -56094,6 +56505,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -56107,12 +56524,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56122,12 +56553,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56137,6 +56582,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/payment-intents/{id}/cancel:
     post:
       tags:
@@ -56168,6 +56622,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -56181,12 +56641,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56196,12 +56670,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56211,6 +56699,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/webhooks/events/{eventId}/replay:
     post:
       tags:
@@ -56245,6 +56742,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -56264,18 +56767,39 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Event not found
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56285,12 +56809,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56300,6 +56838,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/webhooks/dlq:
     get:
       tags:
@@ -56343,6 +56890,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad Request
           content:
@@ -56352,12 +56905,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56367,12 +56934,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56382,6 +56963,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/webhooks/dlq/{deliveryId}/requeue:
     post:
       tags:
@@ -56413,6 +57003,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -56426,12 +57022,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56441,12 +57051,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56456,6 +57080,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/sandbox/trigger:
     post:
       tags:
@@ -56514,6 +57147,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad Request
           content:
@@ -56523,12 +57162,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56538,12 +57191,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56553,6 +57220,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/sandbox/charges/{chargeId}/simulate:
     post:
       tags:
@@ -56607,6 +57283,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad Request
           content:
@@ -56616,12 +57298,26 @@ paths:
               examples:
                 ProblemDetailsValidation:
                   $ref: '#/components/examples/ProblemDetailsValidation'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Conflict
           content:
@@ -56631,12 +57327,26 @@ paths:
               examples:
                 ProblemDetailsConflict:
                   $ref: '#/components/examples/ProblemDetailsConflict'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '422':
           description: Unprocessable Entity
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Rate Limited
           content:
@@ -56646,6 +57356,15 @@ paths:
               examples:
                 ProblemDetailsRateLimited:
                   $ref: '#/components/examples/ProblemDetailsRateLimited'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/consents/{consentId}:
     parameters:
       - name: consentId
@@ -56674,6 +57393,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
     delete:
       tags:
         - Consents
@@ -56692,6 +57417,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/consents/{consentId}/extend:
     parameters:
       - name: consentId
@@ -56733,6 +57464,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/statements:
     post:
       tags:
@@ -56765,6 +57502,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/statements/{statementId}:
     parameters:
       - name: statementId
@@ -56794,6 +57537,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/statements/{statementId}/content:
     parameters:
       - name: statementId
@@ -56834,6 +57583,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/rate-limits:
     get:
       tags:
@@ -56879,6 +57634,12 @@ paths:
               $ref: '#/components/headers/Traceparent'
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/errors/{code}:
     get:
       operationId: getLocalizedError
@@ -56918,8 +57679,21 @@ paths:
           headers:
             Content-Language:
               $ref: '#/components/headers/Content-Language'
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Unknown code
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/verify/nin:
     post:
       operationId: verifyNin
@@ -56948,6 +57722,12 @@ paths:
               schema:
                 type: string
                 example: en
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -56958,10 +57738,31 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not found in registry
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/verify/cni:
     post:
       operationId: verifyCni
@@ -56990,6 +57791,12 @@ paths:
               schema:
                 type: string
                 example: fr
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
@@ -57000,10 +57807,31 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not found in registry
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents:
     get:
       tags:
@@ -57063,6 +57891,13 @@ paths:
                       $ref: '#/components/schemas/Agent'
                   count:
                     type: integer
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
     post:
       tags:
         - Agents
@@ -57088,8 +57923,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Agent'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Validation error
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents/{agentId}:
     get:
       tags:
@@ -57123,8 +57972,22 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/AgentFloat'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not found
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents/{agentId}/float/topup:
     post:
       tags:
@@ -57160,14 +58023,35 @@ paths:
       responses:
         '200':
           description: Idempotent replay
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '201':
           description: Transaction recorded
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentCashTransaction'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Insufficient float
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents/{agentId}/float/withdraw:
     post:
       tags:
@@ -57203,14 +58087,35 @@ paths:
       responses:
         '200':
           description: Idempotent replay
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '201':
           description: Transaction recorded
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentCashTransaction'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Insufficient float
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents/{agentId}/cash-in:
     post:
       tags:
@@ -57246,6 +58151,13 @@ paths:
       responses:
         '200':
           description: Idempotent replay
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '201':
           description: Transaction recorded
           headers:
@@ -57255,12 +58167,25 @@ paths:
                 type: string
                 enum:
                   - low_float
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentCashTransaction'
         '409':
           description: Insufficient float or cash
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents/{agentId}/cash-out:
     post:
       tags:
@@ -57296,6 +58221,13 @@ paths:
       responses:
         '200':
           description: Idempotent replay
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '201':
           description: Transaction recorded
           headers:
@@ -57305,12 +58237,25 @@ paths:
                 type: string
                 enum:
                   - low_float
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentCashTransaction'
         '409':
           description: Insufficient float or cash
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/agents/{agentId}/transactions:
     get:
       tags:
@@ -57351,6 +58296,13 @@ paths:
                       $ref: '#/components/schemas/AgentCashTransaction'
                   count:
                     type: integer
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/admin/webhooks/test:
     post:
       tags:
@@ -57375,12 +58327,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminTestWebhookResult'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad request
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '403':
           description: Admin role required
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Endpoint not found
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/admin/api-keys:
     post:
       tags:
@@ -57403,10 +58383,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminApiKeyCreateResponse'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Bad request
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '403':
           description: Forbidden
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/admin/api-keys/{id}/rotate:
     post:
       tags:
@@ -57429,10 +58430,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminApiKey'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '403':
           description: Forbidden
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not found
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/admin/api-keys/{id}/suspend:
     post:
       tags:
@@ -57461,10 +58483,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminApiKey'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '403':
           description: Forbidden
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not found
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/admin/api-keys/{id}/revoke:
     post:
       tags:
@@ -57487,10 +58530,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminApiKey'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '403':
           description: Forbidden
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Not found
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/ussd/sessions:
     post:
       tags:
@@ -57518,18 +58582,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UssdSession'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '429':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
+            Retry-After:
+              $ref: '#/components/headers/RetryAfter'
   /v1/gateway/qr:
     post:
       tags:
@@ -57569,12 +58656,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QrCode'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/gateway/qr/offline/issue:
     post:
       tags:
@@ -57602,18 +58703,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OfflineToken'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/gateway/qr/offline/redeem:
     post:
       tags:
@@ -57641,24 +58763,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OfflineToken'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '410':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/remittance/cemac/corridors:
     get:
       tags:
@@ -57674,6 +58824,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CemacCorridor'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/remittance/cemac/quote:
     post:
       tags:
@@ -57693,12 +58850,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CemacRemittanceQuote'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/remittance/cemac/transfers:
     post:
       tags:
@@ -57733,18 +58904,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CemacRemittanceTransfer'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/remittance/cemac/transfers/{id}:
     get:
       tags:
@@ -57765,12 +58957,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CemacRemittanceTransfer'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/remittance/cemac/transfers/{id}/cancel:
     post:
       tags:
@@ -57798,18 +59004,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CemacRemittanceTransfer'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '409':
           description: Problem details (RFC 7807).
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/gateway/global-accounts:
     post:
       tags:
@@ -57848,18 +59075,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NiumGlobalAccount'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '201':
           description: Account created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NiumGlobalAccount'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Invalid request
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Unauthorized
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '502':
           description: Nium provider error
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
     get:
       tags:
         - Gateway
@@ -57885,6 +59147,13 @@ paths:
                       $ref: '#/components/schemas/NiumIncomingPayment'
                   user_defaults:
                     $ref: '#/components/schemas/NiumPayoutPreference'
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/gateway/global-accounts/payout-preference:
     patch:
       tags:
@@ -57941,10 +59210,31 @@ paths:
       responses:
         '200':
           description: Updated
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '400':
           description: Invalid request
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Account not found
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
   /v1/gateway/global-accounts/webhook:
     post:
       tags:
@@ -57972,10 +59262,31 @@ paths:
       responses:
         '200':
           description: Acknowledged
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '401':
           description: Invalid signature
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
         '404':
           description: Unknown account
+          headers:
+            X-RateLimit-Limit:
+              $ref: '#/components/headers/XRateLimitLimit'
+            X-RateLimit-Remaining:
+              $ref: '#/components/headers/XRateLimitRemaining'
+            X-RateLimit-Reset:
+              $ref: '#/components/headers/XRateLimitReset'
 externalDocs:
   description: Kang Open Banking Developer Portal — sandbox guides, test credentials, free-forever sandbox console
   url: https://kangopenbanking.com/developer/sandbox
