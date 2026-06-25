@@ -1,9 +1,29 @@
 {
-  "apiVersion": "4.51.2",
+  "apiVersion": "4.51.3",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-06-25",
   "entries": [
+    {
+      "version": "4.51.3",
+      "date": "2026-06-25",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Phase 3 scope containment. Every tag in the public OpenAPI spec now carries an x-maturity flag (ga | preview | experimental) and an x-maturity-note so integrators can tell at a glance which surfaces are production-track versus sandbox/pilot versus experimental. Additive metadata only — no paths, operationIds, schemas, security schemes, parameters, or enum values changed (Standing Orders 1, 2, 4).",
+      "highlights": [
+        "openapi.json + openapi.yaml: x-maturity and x-maturity-note added to all tags; ga covers Monitoring, OAuth, Authentication, Security, Consent Management, AISP, PISP, KYC & Compliance, Webhooks, Admin, Communications, Directory, Bank Directory, Platform, Specification, Developer, Sandbox, Provider Webhooks (Inbound), Mobile Money, Payments, Payment Gateway, Merchants, Merchant Onboarding, Statements, Banking Operations.",
+        "preview covers Loans, Savings, Credit Scoring, CrediQ, PostiQ, Virtual Cards, Issuing, Ledger, Interbank, ISO 20022 Standards, Bank Connectors, Pay by Bank, Settlement, Payment Facilitation, Institution, Consumer Tools, Overdraft, Approval Workflows, Operational Controls, Gateway, Budgeting, Certificates, WooCommerce.",
+        "experimental covers Agents, USSD, QR & Offline, CEMAC Remittance.",
+        "Root-level x-maturity-legend added so tooling can render the maturity scale without hard-coding it.",
+        "Sandbox spec mirrors get the same annotations. Phase 3 audit + closeout reports published at repo root."
+      ],
+      "breaking": [],
+      "standard_citations": [
+        "Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)",
+        "OpenAPI 3.1 specification extensions (x-* vendor extensions)",
+        "Internal: PHASE_3_SCOPE_CONTAINMENT.md, PHASE_3_CLOSEOUT_REPORT.md"
+      ]
+    },
     {
       "version": "4.51.2",
       "date": "2026-06-25",
