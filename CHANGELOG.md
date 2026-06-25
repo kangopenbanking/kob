@@ -1,12 +1,31 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.51.3** · Last updated: **2026-06-25**
+Current API version: **4.51.4** · Last updated: **2026-06-25**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.51.4 — 2026-06-25
+**Type:** patch · **Breaking changes:** none
+
+Phase 4 PCI / Card Data Boundary. Operations and schemas that touch cardholder data now carry an explicit x-pci-scope flag so integrators and auditors can see, at the contract level, which surfaces are in PCI DSS scope and which are not. Additive metadata only — no paths, operationIds, schemas, security schemes, parameters, enums, or required-arrays changed (Standing Orders 1, 2, 4).
+
+### Highlights
+- Root x-pci-scope-legend added: none | masked_pan_only | cardholder_data | sensitive_auth_data.
+- POST /v1/payouts/push-to-card (payoutPushToCard) flagged x-pci-scope: cardholder_data with note documenting that PAN is forwarded to Kora and not persisted in KOB.
+- POST /v1/issuing/cards/{id}/reveal (revealVirtualCard) flagged x-pci-scope: cardholder_data with note documenting that PAN/CVV originate from the Kora vault and are returned in-memory only.
+- VirtualCard.card_number_masked flagged x-pci-scope: masked_pan_only with PCI DSS req 3.3 citation (first 6 / last 4).
+- Phase 4 audit (PHASE_4_PCI_BOUNDARY.md) and closeout (PHASE_4_COMPLIANCE_CLOSEOUT.md) published at repo root.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- PCI DSS v4.0 Requirements 3.2 (no SAD after authorization), 3.3 (PAN masking — first 6 / last 4)
+- Internal: PHASE_4_PCI_BOUNDARY.md, PHASE_4_COMPLIANCE_CLOSEOUT.md
 
 ---
 
