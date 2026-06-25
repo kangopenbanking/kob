@@ -15,7 +15,14 @@ export default function AuthFapi() {
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-3">FAPI 1.0 Advanced Security Profile</h1>
           <p className="text-lg text-muted-foreground">
-            The Kang Open Banking API is certified to the Financial-grade API (FAPI) 1.0 Advanced profile. This page documents the security requirements your application must meet.
+            The Kang Open Banking API <strong>targets</strong> the Financial-grade API (FAPI) 1.0 Advanced profile. Formal OpenID Foundation certification is <strong>in progress</strong>. This page documents the security requirements your application must meet and the current conformance status — see the <a href="/developer/compliance/fapi" className="text-primary underline">conformance statement</a> for the control-by-control matrix.
+          </p>
+        </div>
+
+        <div className="p-4 border border-amber-500/40 bg-amber-500/5 rounded-lg text-sm text-foreground">
+          <p className="font-medium mb-1">Implementation maturity notice</p>
+          <p className="text-muted-foreground">
+            Several FAPI 1.0 Advanced controls are currently <em>partial</em> or on the roadmap, including mandatory PAR enforcement, signed Request Objects (JAR), JARM, <code className="font-mono">private_key_jwt</code> client authentication, and refresh-token rotation with reuse detection. Until certification completes, do not represent this gateway as a fully certified FAPI 1.0 Advanced deployment.
           </p>
         </div>
 
@@ -32,13 +39,13 @@ export default function AuthFapi() {
               </thead>
               <tbody>
                 {[
-                  ["PKCE (S256)", "RFC 7636 — code_challenge required on all authorization requests", "Required"],
-                  ["PAR", "RFC 9126 — All auth requests via Pushed Authorization Request endpoint", "Required"],
+                  ["PKCE (S256)", "RFC 7636 — code_challenge required on all authorization requests", "Required — enforced"],
+                  ["PAR", "RFC 9126 — Pushed Authorization Request endpoint available", "Available — not yet mandatory"],
                   ["Nonce", "OIDC Core — nonce parameter required in authorization request", "Required"],
-                  ["JARM", "JWT Secured Authorization Response Mode", "Supported"],
-                  ["mTLS", "RFC 8705 — Certificate-bound access tokens for confidential clients", "Supported"],
+                  ["JARM", "JWT Secured Authorization Response Mode", "Partial — roadmap"],
+                  ["mTLS", "RFC 8705 — Certificate-bound access tokens (requires mTLS-terminating proxy)", "Available where infrastructure supports it"],
                   ["PS256 Signing", "JWTs signed with PS256 (RSASSA-PSS)", "Required"],
-                  ["Token Binding", "Sender-constrained tokens via mTLS or DPoP", "Supported"],
+                  ["Token Binding", "Sender-constrained tokens via mTLS", "Available where infrastructure supports it"],
                 ].map(([req, spec, status]) => (
                   <tr key={req} className="border-t border-border">
                     <td className="p-3 font-medium text-foreground">{req}</td>
@@ -80,18 +87,21 @@ export default function AuthFapi() {
                   <th className="text-left p-3 font-medium text-foreground">Client Type</th>
                   <th className="text-left p-3 font-medium text-foreground">Auth Method</th>
                   <th className="text-left p-3 font-medium text-foreground">Use Case</th>
+                  <th className="text-left p-3 font-medium text-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  ["Public (PKCE)", "No client secret — PKCE code_verifier proves possession", "Mobile apps, SPAs, public-facing TPPs"],
-                  ["Confidential (mTLS)", "TLS client certificate bound to access tokens", "Banks, regulated FIs, server-to-server"],
-                  ["Confidential (private_key_jwt)", "JWT assertion signed with client private key", "Enterprise TPPs with HSM key storage"],
-                ].map(([type, method, useCase]) => (
+                  ["Public (PKCE)", "No client secret — PKCE code_verifier proves possession", "Mobile apps, SPAs, public-facing TPPs", "Available"],
+                  ["Confidential (client_secret)", "client_secret submitted at the token endpoint", "Server-to-server TPPs without mTLS infrastructure", "Available"],
+                  ["Confidential (mTLS / tls_client_auth)", "TLS client certificate bound to access tokens. Requires an mTLS-terminating reverse proxy that forwards the client certificate as an HTTP header.", "Banks, regulated FIs with mTLS infrastructure", "Infrastructure-dependent"],
+                  ["Confidential (private_key_jwt)", "JWT assertion signed with client private key", "Enterprise TPPs with HSM key storage", "Planned — not yet exercised at the token endpoint"],
+                ].map(([type, method, useCase, status]) => (
                   <tr key={type} className="border-t border-border">
                     <td className="p-3 font-medium text-foreground">{type}</td>
                     <td className="p-3 text-muted-foreground">{method}</td>
                     <td className="p-3 text-muted-foreground">{useCase}</td>
+                    <td className="p-3 text-muted-foreground">{status}</td>
                   </tr>
                 ))}
               </tbody>
@@ -100,12 +110,12 @@ export default function AuthFapi() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold text-foreground mb-4" id="compliance">Standards Compliance</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-4" id="compliance">Standards Alignment</h2>
           <ul className="space-y-2 text-muted-foreground list-disc list-inside">
-            <li><strong>FAPI 1.0 Advanced</strong> — Full conformance (OpenID Foundation certified)</li>
-            <li><strong>PSD2 SCA</strong> — Strong Customer Authentication via redirect flow</li>
-            <li><strong>OBIE R/W API v3.1</strong> — UK Open Banking consent model</li>
-            <li><strong>COBAC</strong> — Central African Banking Commission regulatory alignment</li>
+            <li><strong>FAPI 1.0 Advanced</strong> — Targeted profile; conformance is partial and formal certification is in progress. See the <a href="/developer/compliance/fapi" className="text-primary underline">conformance statement</a>.</li>
+            <li><strong>PSD2 SCA</strong> — Strong Customer Authentication patterns implemented via redirect and step-up flows; not a substitute for an EU PSD2 licence.</li>
+            <li><strong>OBIE R/W API v3.1</strong> — Consent model is patterned on OBIE; no OBIE-issued conformance certificate.</li>
+            <li><strong>COBAC</strong> — Designed to align with CEMAC regulatory expectations; operator licensing is in progress.</li>
           </ul>
         </section>
 

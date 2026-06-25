@@ -19,18 +19,18 @@ interface Control {
 const CONTROLS: Control[] = [
   // Authorization request hardening
   { id: "FAPI-AUTH-1", area: "Authorization", control: "PKCE (S256) on every authorization request", status: "supported", spec: "FAPI-1.0-Adv §5.2.2-1", notes: "Enforced server-side. Plain method rejected." },
-  { id: "FAPI-AUTH-2", area: "Authorization", control: "PAR (Pushed Authorization Requests, RFC 9126)", status: "supported", spec: "FAPI-1.0-Adv §5.2.2-2", notes: "/v1/oauth/par endpoint live; request_uri TTL 60s." },
-  { id: "FAPI-AUTH-3", area: "Authorization", control: "Signed Request Object (JAR, RFC 9101)", status: "partial", spec: "FAPI-1.0-Adv §5.2.2-3", notes: "Accepted when client registers a JWKS; not yet mandatory. Mandatory enforcement targeted Q2 2026." },
+  { id: "FAPI-AUTH-2", area: "Authorization", control: "PAR (Pushed Authorization Requests, RFC 9126)", status: "partial", spec: "FAPI-1.0-Adv §5.2.2-2", notes: "/v1/oauth/par endpoint live; PAR is available but not yet mandatory — the authorize endpoint still accepts direct query parameters. Mandatory enforcement on the roadmap." },
+  { id: "FAPI-AUTH-3", area: "Authorization", control: "Signed Request Object (JAR, RFC 9101)", status: "partial", spec: "FAPI-1.0-Adv §5.2.2-3", notes: "Accepted at the PAR endpoint when a client registers a JWKS; not yet validated by the /authorize endpoint and not yet mandatory." },
   { id: "FAPI-AUTH-4", area: "Authorization", control: "Nonce required for all OIDC requests", status: "supported", spec: "OIDC Core §3.1.2.1", notes: "Missing nonce → invalid_request." },
   { id: "FAPI-AUTH-5", area: "Authorization", control: "redirect_uri exact match (no wildcard)", status: "supported", spec: "FAPI-1.0-Adv §5.2.2-7", notes: "Strict match against DCR-registered URIs." },
   { id: "FAPI-AUTH-6", area: "Authorization", control: "acr_values=urn:openbanking:psd2:sca enforced for high-value", status: "supported", spec: "PSD2 RTS Art. 4", notes: "Step-up SCA via /sca-challenge for amounts > XAF 250 000." },
 
   // Token endpoint
-  { id: "FAPI-TOK-1", area: "Token", control: "Mutual TLS client authentication (tls_client_auth)", status: "supported", spec: "RFC 8705 §2.1", notes: "TLS termination at proxy; cert thumbprint verified in edge function (see mTLS limitations memo)." },
-  { id: "FAPI-TOK-2", area: "Token", control: "private_key_jwt client authentication", status: "supported", spec: "OIDC Core §9", notes: "Alternative to mTLS for confidential clients." },
-  { id: "FAPI-TOK-3", area: "Token", control: "Certificate-bound access tokens (cnf.x5t#S256)", status: "supported", spec: "RFC 8705 §3", notes: "Token cnf claim populated from mTLS thumbprint; resource server validates per request." },
-  { id: "FAPI-TOK-4", area: "Token", control: "Refresh token rotation with reuse detection", status: "supported", spec: "OAuth 2.1 §6.1", notes: "Reuse triggers immediate revocation of token family." },
-  { id: "FAPI-TOK-5", area: "Token", control: "Access token TTL ≤ 1 hour", status: "supported", spec: "FAPI-1.0-Adv §5.2.2-12", notes: "Default 900s; max 3600s." },
+  { id: "FAPI-TOK-1", area: "Token", control: "Mutual TLS client authentication (tls_client_auth)", status: "partial", spec: "RFC 8705 §2.1", notes: "Code path verifies certificate thumbprint when an mTLS-terminating proxy forwards the client certificate as an HTTP header. Without that infrastructure, tls_client_auth registrations cannot complete. Introspection and revocation endpoints currently accept client_secret only." },
+  { id: "FAPI-TOK-2", area: "Token", control: "private_key_jwt client authentication", status: "not_supported", spec: "OIDC Core §9", notes: "Listed in token_endpoint_auth_methods_supported and accepted by DCR, but client_assertion / client_assertion_type are not yet exercised at the token endpoint. Planned." },
+  { id: "FAPI-TOK-3", area: "Token", control: "Certificate-bound access tokens (cnf.x5t#S256)", status: "partial", spec: "RFC 8705 §3", notes: "cnf claim populated when mTLS thumbprint is present. Effective only where the mTLS-terminating proxy is configured." },
+  { id: "FAPI-TOK-4", area: "Token", control: "Refresh token rotation with reuse detection", status: "not_supported", spec: "OAuth 2.1 §6.1", notes: "Roadmap. Current behaviour: refresh tokens are persistent until explicit revocation or expiry; reuse is not yet detected automatically. Do not rely on rotation as a security control." },
+  { id: "FAPI-TOK-5", area: "Token", control: "Access token TTL ≤ 1 hour", status: "supported", spec: "FAPI-1.0-Adv §5.2.2-12", notes: "Default 3600s (1 hour)." },
   { id: "FAPI-TOK-6", area: "Token", control: "Cache-Control: no-store on token responses", status: "supported", spec: "RFC 6749 §5.1", notes: "Header set globally on /v1/oauth/token." },
 
   // Authorization response / ID token
@@ -48,7 +48,7 @@ const CONTROLS: Control[] = [
   // Consent / dynamic registration
   { id: "FAPI-CON-1", area: "Consent", control: "Granular permissions (Read/Write split per scope)", status: "supported", spec: "OBIE R/W §Permissions", notes: "AISP and PISP consents enforce per-permission scopes." },
   { id: "FAPI-CON-2", area: "Consent", control: "Consent revocation by PSU and TPP", status: "supported", spec: "PSD2 RTS Art. 67", notes: "Revoke endpoint emits consent.revoked webhook." },
-  { id: "FAPI-CON-3", area: "DCR", control: "Dynamic Client Registration (RFC 7591) with signed SSA", status: "supported", spec: "RFC 7591 / OBIE", notes: "SSA JWT verified against operator JWKS." },
+  { id: "FAPI-CON-3", area: "DCR", control: "Dynamic Client Registration (RFC 7591) with signed SSA", status: "partial", spec: "RFC 7591 / OBIE", notes: "SSA JWT signature verified against operator JWKS in production (KOB_ENVIRONMENT=production). Sandbox decodes the SSA without verifying the signature for ease of testing. RFC 7592 client management endpoints (GET/PUT/DELETE) are not yet implemented." },
 
   // Logging / monitoring
   { id: "FAPI-LOG-1", area: "Audit", control: "5-year audit log retention (COBAC)", status: "supported", spec: "COBAC R-2016/04", notes: "Append-only audit_logs table; service-role only writes." },
@@ -86,9 +86,11 @@ export default function ComplianceFapi() {
           <p className="text-muted-foreground">
             This is the public, control-by-control conformance statement for the Kang Open Banking
             gateway against the OpenID Foundation's <em>Financial-grade API — Part 2: Advanced</em>
-            (FAPI 1.0 Advanced) profile, plus the related PSD2 RTS, OBIE Read/Write API, and COBAC
-            requirements that apply to CEMAC operators. It is updated within 7 days of any change
-            (Standing Order P10).
+            (FAPI 1.0 Advanced) profile, plus the related PSD2 RTS, OBIE Read/Write API, and CEMAC
+            regulatory expectations. The gateway <strong>targets</strong> FAPI 1.0 Advanced; formal
+            OpenID Foundation certification is <strong>in progress</strong> and several controls
+            are currently <em>partial</em> or on the roadmap. It is updated within 7 days of any
+            change (Standing Order P10).
           </p>
         </header>
 
