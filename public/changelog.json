@@ -1,9 +1,29 @@
 {
-  "apiVersion": "4.51.4",
+  "apiVersion": "4.51.5",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-06-25",
   "entries": [
+    {
+      "version": "4.51.5",
+      "date": "2026-06-25",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Phase 5 consistency & hygiene. Every operation response in the production and sandbox specs now advertises X-RateLimit-Limit / X-RateLimit-Remaining / X-RateLimit-Reset, and every 429 response advertises Retry-After. Money-amount string schemas were audited for the zero-decimal currency pattern (^[0-9]{1,15}$); no regressions found. Additive metadata only (Standing Orders 1, 2, 4).",
+      "highlights": [
+        "openapi.json + openapi.yaml: 3,852 rate-limit header refs added across 7,744 responses; 50 Retry-After refs added to 429 responses.",
+        "Sandbox spec mirrors the same headers so integration tests see identical rate-limit advertising in both environments.",
+        "Money-amount audit (Balance, GatewayCharge, GatewayFeeEstimate, money-bearing request/response schemas) confirms all amount-typed string fields keep the canonical zero-decimal pattern; flagged non-amount fields (currency, channel, balance_type) are report-only.",
+        "Phase 5 hardening script (scripts/phase5-consistency-hygiene.mjs) and closeout (PHASE_5_CONSISTENCY_HYGIENE_CLOSEOUT.md) published at repo root."
+      ],
+      "breaking": [],
+      "standard_citations": [
+        "Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)",
+        "IETF draft-ietf-httpapi-ratelimit-headers (RateLimit-* advertising)",
+        "RFC 7231 §7.1.3 (Retry-After)",
+        "Internal: scripts/phase5-consistency-hygiene.mjs, PHASE_5_CONSISTENCY_HYGIENE_CLOSEOUT.md"
+      ]
+    },
     {
       "version": "4.51.4",
       "date": "2026-06-25",
