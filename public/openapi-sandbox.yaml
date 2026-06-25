@@ -597,6 +597,15 @@ tags:
     x-maturity-note: >-
       Experimental. Reference shape only; implementation is partial and may change without a major version bump until
       promoted.
+x-pci-scope-legend:
+  none: >-
+    Operation does not transmit, process, or store cardholder data (PAN, CVV, full track, or sensitive auth data). Out of PCI DSS scope.
+  masked_pan_only: >-
+    Operation returns or accepts a truncated PAN (first 6 / last 4 maximum per PCI DSS req 3.3) and no CVV. Out of PCI DSS scope for stored data; safe for application logs and UI.
+  cardholder_data: >-
+    Operation transmits or returns cardholder data (full PAN, expiry, cardholder name) on the wire. In PCI DSS scope. KOB does not store the PAN at rest in its primary datastore; full PAN/CVV is held only inside the Kora-managed card vault (SAQ-D delegated to Kora). All calls require step-up authentication, are rate-limited per principal, and are audit-logged.
+  sensitive_auth_data: >-
+    Operation handles sensitive authentication data (CVV, full track, PIN block). MUST NOT be stored after authorization per PCI DSS req 3.2. KOB only forwards the value to the issuer/processor and discards it.
 components:
   securitySchemes:
     bearerAuth:
@@ -1823,6 +1832,8 @@ components:
         card_number_masked:
           type: string
           example: '**** **** **** 1234'
+        x-pci-scope: masked_pan_only
+        description: Truncated PAN per PCI DSS req 3.3 (first 6 / last 4 maximum). Safe for storage, logs, and UI.
         balance_usd:
           type: number
           example: 100
@@ -47101,6 +47112,9 @@ paths:
       summary: Push-to-card payout
       description: Visa Direct card push disbursement.
       operationId: payoutPushToCard
+      x-pci-scope: cardholder_data
+      x-pci-note: >-
+        Accepts a full PAN on the wire to fund a push-to-card payout. The PAN is forwarded to Kora and never persisted in KOB's datastore. Step-up MFA, idempotency, and per-principal rate limits apply.
       security:
         - bearerAuth: []
       parameters:
