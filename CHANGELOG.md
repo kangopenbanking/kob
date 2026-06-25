@@ -1,12 +1,29 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.51.0** · Last updated: **2026-06-23**
+Current API version: **4.51.1** · Last updated: **2026-06-25**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.51.1 — 2026-06-25
+**Type:** patch · **Breaking changes:** none
+
+Phase 1 trust & truthfulness pass. Public OpenAPI info.description rewritten to remove unverified compliance claims ("COBAC & BEAC compliant", "100/100", "Guardian/Standing Order" narration). Regulatory framing on public pages hedged to "designed for alignment; licensing in progress". No paths, operationIds, schemas, security schemes, or examples changed.
+
+### Highlights
+- openapi.json + openapi.yaml info.description rewritten as a factual paragraph; original prose archived to internal CHANGELOG_INTERNAL.md (not served).
+- Landing page, About page, ForDevelopers page, and Compliance page hedged to remove uncertified "compliant" and "certified" claims.
+- Added top-of-page disclaimer card to /compliance and /about Regulatory Framework section.
+- Version bumped 4.51.0 -> 4.51.1 (patch; additive metadata only) per Standing Order 6.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 4 (Surgeon), 6 (Version Gate)
+- Internal: TRUTH_AUDIT.md, PHASE_1_REPORT.md
 
 ---
 
