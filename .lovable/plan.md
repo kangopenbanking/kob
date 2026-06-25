@@ -1,80 +1,103 @@
-## Promise to Pay (PTP) — E2E Audit + Missed-Payment Fee Enhancement
 
-### 1. Audit findings (current state)
+# KOB Compliance & Production-Readiness Remediation — Execution Plan
 
-**Working today**
-- Tables: `promise_to_pay`, `promise_to_pay_events` (with RLS, status check constraints, idempotency_key, reschedule chain).
-- Edge functions: `ptp-ops` (create/list/cancel/reschedule), `ptp-settle` (`mode=match` + `mode=sweep`), `ptp-admin-ops` (list/detail/cancel/reschedule/override-credit). Shared `ptp-notify.ts` + `ptp-webhook.ts`.
-- Loan repayment path (`loan-ops`) calls `ptp-settle?mode=match` after every repayment — confirmed.
-- Credit-score integration: `ptp_created / kept / partial / broken / rescheduled / rescheduled_repeat` events recorded (idempotent on promise_id).
-- Admin dashboard (`/admin/promise-to-pay`), banking flow (`/app/bank/more/loans/promise`), customer summary (`/app/customer/promise-to-pay`) all wired.
-- Deno tests exist for `ptp-ops` and `ptp-settle`.
+This is a **multi-week, multi-phase** remediation. I will execute it strictly in order, stop at every decision gate, and never mark a phase complete without evidence (diffs, test output, or quoted removed text). Nothing existing will be renamed, removed, or reshaped.
 
-**Gaps identified**
-1. **No missed-payment fee anywhere.** Sweep marks promise `broken`, fires credit penalty (-25) and notification, but does NOT debit the customer / increase loan outstanding / record a `transaction_fees` or journal entry. Bank cannot configure a fee.
-2. **No reminder dispatcher.** Event enum includes `reminder_sent` but nothing emits it (no T-3 / T-1 / due-day reminders).
-3. **`loan_schedule` not linked.** PTP is free-form (amount + date) — no FK to a specific installment, so multiple PTPs for the same instalment can be created and the schedule isn't updated on `kept`.
-4. **Currency mismatch.** Banking flow hard-codes `GBP`; rest of the platform uses `XAF` / loan account currency. Cosmetic but causes wrong symbols in totals.
-5. **Sweep is not scheduled.** No `pg_cron` job calling `ptp-settle?mode=sweep` — overdue PTPs never auto-break.
-6. **Customer/admin UIs don't surface fee, penalty, or remaining balance change.**
-7. **No webhook event for `ptp.fee_charged`** (so external integrators miss the bank-side debit).
+---
 
-### 2. Enhancement — bank-configurable missed-payment fee
+## Guardrails I will enforce on every change
 
-**Scope decision:** configure at the **loan_products** level (per-institution, per-product). This is the existing per-institution lending config table, keeps fees consistent across all loans of that product, and avoids a new top-level table. (Recommended — confirm or override.)
+1. **Additive only.** No renames, no removed operationIds/schemas/fields/endpoints. If a fix would break shape, I stop and flag `BREAKING — REQUIRES HUMAN APPROVAL`.
+2. **No fabricated compliance claims.** Any "COBAC compliant", "BEAC compliant", "100/100", "financial-grade", "certifiable", "secure by default" language gets hedged to factual status ("designed with X requirements in mind; licensing in progress").
+3. **No self-referential changelog narration** in public surfaces. "Guardian", "Standing Order", "The Lock", per-version self-grading get moved out of `openapi.*` `info.description` and any rendered public doc into an internal `CHANGELOG_INTERNAL.md`.
+4. **No AI-assistant filler.** Merge markers, "Here is your fully polished…", placeholder badge/star requests get deleted.
+5. **Spec must match implementation.** If a feature is described but not actually wired end-to-end, the doc gets relabeled `Planned — not yet implemented` rather than the spec being "made true" by writing more prose.
+6. **Preserve sandbox contracts.** Before any auth/webhook/schema work in Phase 2+, I will produce a frozen inventory of every currently-shipping endpoint + field so we can confirm nothing changed shape.
 
-**Additive schema changes (backwards-compatible, no destructive ops)**
+---
 
-```sql
-ALTER TABLE public.loan_products
-  ADD COLUMN ptp_missed_fee_enabled  boolean        NOT NULL DEFAULT false,
-  ADD COLUMN ptp_missed_fee_type     text           NOT NULL DEFAULT 'fixed'
-    CHECK (ptp_missed_fee_type IN ('fixed','percentage')),
-  ADD COLUMN ptp_missed_fee_value    numeric(18,4)  NOT NULL DEFAULT 0
-    CHECK (ptp_missed_fee_value >= 0),
-  ADD COLUMN ptp_missed_fee_cap      numeric(18,2),  -- optional max for % fees
-  ADD COLUMN ptp_missed_fee_grace_days int NOT NULL DEFAULT 1;
+## Phase 1 — Trust & Truthfulness Pass (no code logic changes)
 
-ALTER TABLE public.promise_to_pay
-  ADD COLUMN missed_fee_amount       numeric(18,2),
-  ADD COLUMN missed_fee_currency     text,
-  ADD COLUMN missed_fee_type         text,      -- snapshot of fixed/percentage
-  ADD COLUMN missed_fee_charged_at   timestamptz,
-  ADD COLUMN missed_fee_reference    text;      -- payment_reference of the debit
-```
+Scope is documentation + spec metadata + README text only. No runtime behavior changes.
 
-Plus extend the `promise_to_pay_events.event_type` CHECK to allow `fee_charged` and `fee_waived` (additive — Standing Order 4 Surgeon Rule).
+Deliverables:
 
-### 3. Sequenced implementation steps
+- `TRUTH_AUDIT.md` at repo root with a single table:
+  `Claim | Location (file:line) | Status (Implemented / Partial / Planned / Not Started) | Evidence | Recommended Hedge`
+- Rewritten `public/openapi.json` + `public/openapi.yaml` `info.description` — factual, no Guardian/Standing Order/score language. Operations, paths, schemas, components, security: **untouched**.
+- Internal-only `CHANGELOG_INTERNAL.md` holding the moved narration (so nothing is lost).
+- Sweep of every SDK README (`packages/sdk-node`, `sdk-python`, `sdk-php`, `sdk-go`, `sdk-java`, plus `public/sdk-downloads/*README*`) for: AI artifacts, "secure by default", "financial-grade", unverified auth claims. Replaced with per-SDK status block (what auth actually works today, what is stubbed).
+- Sweep of landing page + `/developer` portal copy for "COBAC & BEAC compliant" → hedged language.
+- A short `PHASE_1_REPORT.md` with: files changed, **explicit list of files NOT changed and why**, and direct before/after quotes for every removed compliance claim.
 
-| # | Step | Test gate before moving on |
-|---|------|----------------------------|
-| 1 | Migration: add 5 cols to `loan_products`, 5 cols to `promise_to_pay`, expand events check, add `ptp.fee_charged` webhook event type. | `SELECT` confirms columns + check accepts new events. |
-| 2 | Build shared helper `supabase/functions/_shared/ptp-fee.ts` — `computeMissedFee(product, missedAmount, currency)` returning `{amount, type, capped}`. Unit tested via deno. | New `ptp-fee.test.ts` passes 4 cases (disabled / fixed / percentage / capped). |
-| 3 | Extend `ptp-settle?mode=sweep` (and the direct `broken` branch of `match`) to: (a) fetch loan + product, (b) compute fee, (c) insert `transaction_fees` row + bump `loan_accounts.penalty_charges` and `outstanding_balance` atomically, (d) write `promise_to_pay_events.fee_charged`, (e) update PTP `missed_fee_*` cols, (f) dispatch `ptp.fee_charged` webhook, (g) notify customer with fee included. Fee step is idempotent on `promise_id`. | Re-running sweep on the same promise does NOT double-charge. Existing `ptp-settle/index.test.ts` continues to pass. |
-| 4 | Schedule pg_cron daily `ptp-settle?mode=sweep` (uses `insert` tool, project-specific) at 02:00 UTC. | `cron.job` row present; manual invoke green. |
-| 5 | Admin UI: new "Fee policy" tab on `/admin/promise-to-pay` listing loan products with inline edit (enabled toggle, type, value, cap, grace days). Saves via tiny `loan-products-ops?action=update_ptp_fee` action (or extends existing loan-products edge function — check first, do not duplicate). | Toggling persists, reload shows value, RLS prevents non-admin write. |
-| 6 | Banking PromiseToPay screen: show "Missed-payment fee" badge with the computed projected fee at the Review step (informational, before confirming). Fix GBP → loan account currency. | Manual: create PTP → review shows correct fee preview. |
-| 7 | Customer PromiseToPay summary: when `missed_fee_amount IS NOT NULL`, add a "Late fee charged" line with amount + date and surface in History card. | Visible after sweep marks a test promise broken. |
-| 8 | Sequential E2E test script `e2e/ptp-missed-fee.spec.ts` (Playwright + service-role seed) covering the 6-step flow: loan → schedule → PTP → miss → sweep → fee applied → UI reflects → webhook fired. Documented PASS/FAIL per step. | All 6 sub-tests PASS before declaring done. |
+I will not start Phase 2 until you review `TRUTH_AUDIT.md` and `PHASE_1_REPORT.md`.
 
-### 4. Guardrails enforced
-- All schema changes additive; no `DROP`, no rename, no destructive ops on existing PTP / loan / payment rows.
-- No edits to shared layouts, auth, profile, or unrelated modules.
-- `loan-ops` is read but not modified (PTP-settle remains its only PTP touchpoint).
-- Webhook event additions and event_type enum additions only ratchet forward (Standing Order 2).
-- `ptp.fee_charged` added to `_shared/ptp-webhook.ts` type union, not renaming existing events.
-- All new fee math goes through the shared helper — no duplicate logic.
+---
 
-### 5. Deliverables
-1. This audit report (above).
-2. SQL migration script (Step 1) — backwards-compatible.
-3. Fee helper + extended sweep + cron — backend.
-4. Admin fee-config UI + customer/banking display — frontend.
-5. Sequential E2E test report with PASS/FAIL for each of the 6 stages.
+## Phase 2 — Authentication Reality Check (DECISION GATE before starting)
 
-### One decision needed before build
-Scope of the fee configuration — please confirm **per loan_product** (recommended) or pick another scope:
-- Per loan product (recommended): granular, lives next to interest/late-fee config you already have.
-- Per institution: simpler, one rule for all products.
-- Per individual loan account: most flexible, but creates ops overhead.
+Before I touch auth code I need three answers from you (see Open Questions). Then:
+
+- Produce a frozen `SANDBOX_CONTRACT_FREEZE.md` listing every currently-callable endpoint + every field shape, so any later change can be diffed against it.
+- Inventory what actually exists today in the auth edge functions for: `authorization_code`, PKCE, refresh-token rotation, refresh-token reuse detection, mTLS client auth, `private_key_jwt`, `token_endpoint_auth_method=none`.
+- Mark each as Implemented / Partial / Not Started with code references.
+- Add integration tests for the ones that already work (expired token rejection, replayed auth code rejection, reused refresh token → full session revoke).
+- For each that does not work end-to-end: either implement it for real, or relabel its public docs `Not yet implemented`. No silent "spec says yes, code says no".
+- Resolve `token_endpoint_auth_method=none` contradiction with one consistent, documented policy.
+
+---
+
+## Phase 3 — Scope Containment (additive `x-maturity` flag)
+
+- Add OpenAPI vendor extension `x-maturity: ga | beta | experimental | not-licensed` per tag.
+- `ga`: AISP, PISP only.
+- `not-licensed` / `experimental`: Loans, Savings, Ledger, Issuing/Virtual Cards, Interbank/ISO 20022, Credit Scoring, Escrow, Custodial Wallets.
+- Add a sandbox-only guard: production API keys calling a `not-licensed` route return a structured `403 not_licensed_in_production` (additive — no existing 2xx becomes a 4xx for sandbox keys).
+- Update `/developer` copy to reflect honest availability.
+
+---
+
+## Phase 4 — PCI / Card Data Boundary
+
+- Produce internal architecture doc tracing every code path that could touch a raw PAN.
+- If KOB never touches raw PAN (Kora tokenizes upstream): add the guarantee to spec + add a CI log-scan that fails on PAN-shaped strings in logs/stored fields.
+- If KOB does touch raw PAN anywhere: stop and flag `BREAKING — REQUIRES HUMAN APPROVAL — PCI SAQ D SCOPE`.
+
+---
+
+## Phase 5 — Consistency & Hygiene
+
+- Keep all deprecated float/PascalCase fields untouched; ensure **new** examples in docs use only canonical snake_case + string-minor-unit.
+- One money-consistency test per money-returning endpoint.
+- Verify rate-limit, webhook-retry, idempotency-key middleware match the spec with one test per claim.
+- Run Spectral against `openapi.json`, attach raw output. FAPI conformance suite only if Phase 2 confirmed an FAPI-eligible auth surface.
+
+---
+
+## Technical notes (for the engineer reading this)
+
+- All `openapi.*` edits go through additive JSON patching; `paths`, `components.schemas`, `components.securitySchemes`, `security`, `tags` arrays are not reordered or removed.
+- Moved narration lands in `CHANGELOG_INTERNAL.md` (not served, not linked from `/developer`, added to any docs allowlist as excluded).
+- SDK README rewrites do not touch package.json/version/exports — text only.
+- `x-maturity` is a vendor extension; no tool in the current pipeline rejects unknown `x-*` keys (verified before merging Phase 3).
+- Sandbox-only guard in Phase 3 is implemented in the existing edge-function request pipeline, not in client SDKs.
+
+---
+
+## Open Questions (need answers before Phase 2; Phase 1 can start now)
+
+1. **Licensing reality** — Confirm in writing: are COBAC / BEAC licenses (a) granted, (b) applied for, or (c) not yet applied? I will hedge to whichever you confirm. Default if no answer: "licensing in progress".
+2. **FAPI target** — Is FAPI 1.0 Advanced the actual target for v1, or is baseline OAuth2 + PKCE sufficient for the first production cut? This decides whether `token_endpoint_auth_method=none` must be removed everywhere or is allowed for specific public clients.
+3. **PCI scope** — Best knowledge today: does any KOB-owned service ever receive a raw PAN, or is it 100% Kora-tokenized at the edge? (If you don't know, I will assume "must verify" and Phase 4 starts with a code trace, not a claim.)
+4. **Phase 1 authorization** — OK to proceed immediately with Phase 1 (docs/spec-description/README text only, zero runtime change) while you answer 1–3?
+
+---
+
+## Recommended defaults if you don't want to decide each question
+
+- Q1: Hedge everything to "licensing in progress with COBAC/BEAC".
+- Q2: Target baseline OAuth2 + PKCE + refresh rotation for v1; mark FAPI 1.0 Advanced as `Planned`. This is the lowest-risk honest position.
+- Q3: Assume "must verify via code trace" and treat any PAN handling as a stop-and-escalate.
+- Q4: Yes, start Phase 1 now.
+
+If you reply "go with recommended defaults", I will start Phase 1 immediately and return with `TRUTH_AUDIT.md` + `PHASE_1_REPORT.md` for review before touching anything else.
