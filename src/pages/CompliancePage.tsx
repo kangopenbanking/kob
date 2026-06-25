@@ -16,10 +16,16 @@ export default function CompliancePage() {
       
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="space-y-8 pr-4">
+          <Card className="p-5 border-l-4 border-l-primary">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Important — read first:</strong> this page describes the regulatory framework Kang Open Banking is <em>designed to align with</em>. It is not a statement of certifications held or licences granted. KOB does not currently hold a COBAC or BEAC licence; licensing is in progress. Specific clause references (COBAC R-2018/01, R-2005/01, R-2001/08, R-2001/07) describe the rules we build against, not attestations of compliance. Treat this page as a roadmap and a transparency document, not as a regulator-issued approval.
+            </p>
+          </Card>
+
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Compliance Overview</h2>
+            <h2 className="text-2xl font-semibold mb-4">Framework Overview</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Kang Open Banking maintains full compliance with CEMAC (Central African Economic and Monetary Community) financial regulations, ensuring secure and legally compliant banking API services across Cameroon and the region.
+              Kang Open Banking is built against CEMAC (Central African Economic and Monetary Community) financial regulations, with the intent of operating as a licensed open-banking platform across Cameroon and the region once licensing is complete.
             </p>
           </section>
 

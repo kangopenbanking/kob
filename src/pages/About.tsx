@@ -94,7 +94,7 @@ export default function About() {
                 What started as a small team of passionate developers and banking professionals has grown into Cameroon's most trusted open banking platform. Today, we connect over 25 financial institutions with hundreds of developers and businesses, processing over 1 million API calls daily.
               </p>
               <p>
-                Our journey has been guided by three core principles: security first, regulatory compliance, and developer experience. We work closely with COBAC (Central African Banking Commission) and BEAC (Bank of Central African States) to ensure our platform meets the highest standards while remaining accessible to developers of all skill levels.
+                Our journey has been guided by three core principles: security first, regulatory alignment, and developer experience. We engage with COBAC (Central African Banking Commission) and BEAC (Bank of Central African States) requirements as we work through licensing, and we build to those standards today while keeping the platform accessible to developers of all skill levels. Nothing on this page should be read as a claim that KOB currently holds a COBAC or BEAC licence.
               </p>
             </div>
           </Card>
@@ -108,7 +108,7 @@ export default function About() {
               <Shield className="h-10 w-10 text-primary mb-4" />
               <h3 className="text-xl font-bold mb-3">Security & Trust</h3>
               <p className="text-muted-foreground">
-                We treat your data with the highest level of security. PCI-DSS Level 1 certified, ISO 27001 compliant, and continuously monitored by our 24/7 security operations center.
+                We treat your data with the highest level of security. The platform is built to PCI-DSS and ISO 27001 control objectives, with 24/7 monitoring; formal third-party certifications are tracked separately and are not claimed here unless individually evidenced.
               </p>
             </Card>
 
@@ -188,7 +188,7 @@ export default function About() {
                   <Shield className="h-12 w-12 text-primary mx-auto mb-3" />
                   <h3 className="font-semibold mb-2">Compliance Specialists</h3>
                   <p className="text-sm text-muted-foreground">
-                    Regulatory experts ensuring COBAC/BEAC adherence
+                    Regulatory experts working toward COBAC/BEAC licensing
                   </p>
                 </div>
               </div>
@@ -196,14 +196,19 @@ export default function About() {
           </Card>
         </section>
 
-        {/* Regulatory Compliance */}
+        {/* Regulatory Framework */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-8 text-center">Regulatory Framework</h2>
+          <Card className="p-5 mb-6 border-l-4 border-l-primary">
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Important:</strong> the items listed below describe the regulations and control frameworks Kang Open Banking is designed against. They are not statements that KOB currently holds a COBAC licence, a BEAC licence, PCI-DSS attestation, ISO 27001 certification, or a SOC 2 report. Licensing and certification programmes are in progress and will be evidenced individually when complete.
+            </p>
+          </Card>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">COBAC Compliant</h3>
+              <h3 className="text-xl font-bold mb-4">Designed for COBAC alignment</h3>
               <p className="text-muted-foreground mb-4">
-                Fully compliant with Central African Banking Commission regulations governing payment services, data protection, and financial infrastructure.
+                Designed against the Central African Banking Commission regulations governing payment services, data protection, and financial infrastructure. Licence application in progress.
               </p>
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li>• COBAC R-2018/01 (Payment Services)</li>
@@ -213,14 +218,14 @@ export default function About() {
             </Card>
 
             <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">International Standards</h3>
+              <h3 className="text-xl font-bold mb-4">International standards we build against</h3>
               <p className="text-muted-foreground mb-4">
-                Certified to international security and compliance standards, ensuring world-class protection for your data.
+                The platform is built against the following international security and compliance standards. Where a certification is not yet held, it is listed as a target, not a claim.
               </p>
               <ul className="text-sm text-muted-foreground space-y-2">
-                <li>• PCI-DSS Level 1 Certified</li>
-                <li>• ISO 27001:2013 Certified</li>
-                <li>• SOC 2 Type II Audited</li>
+                <li>• PCI-DSS controls (raw card data handled by tokenisation partner; KOB out of SAQ-D scope)</li>
+                <li>• ISO 27001:2013 control objectives (certification: planned)</li>
+                <li>• SOC 2 Type II (report: planned)</li>
               </ul>
             </Card>
           </div>
