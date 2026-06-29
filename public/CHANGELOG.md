@@ -1,12 +1,32 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.51.5** · Last updated: **2026-06-29**
+Current API version: **4.52.0** · Last updated: **2026-06-29**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.52.0 — 2026-06-29
+**Type:** minor · **Breaking changes:** none
+
+Nium integration expansion: 17 supported currencies (default destination XAF), new endpoints for Beneficiaries, Payouts, Conversions, and Requests for Information (RFI), plus Virtual vs Global account_kind. Additive only — no operationIds, schemas, security schemes, parameters, enums, or required arrays changed (Standing Orders 1, 2, 4).
+
+### Highlights
+- Global accounts: account_kind ('virtual' | 'global') and 17 currencies (USD, EUR, GBP, AUD, CAD, SGD, AED, JPY, INR, ZAR, HKD, CHF, NZD, SEK, NOK, DKK, CNY) with XAF as the locked destination.
+- New endpoints: POST/GET /v1/gateway/nium/beneficiaries, /v1/gateway/nium/payouts, /v1/gateway/nium/conversions, /v1/gateway/nium/rfi.
+- Webhook events extended: nium.payout.*, nium.conversion.*, nium.rfi.* (idempotent on event_id).
+- SDKs (Node 1.2.0, Python 0.1.0, PHP 1.2.0): new BeneficiariesResource, PayoutsResource, ConversionsResource, RfiResource under the global accounts namespace.
+- BEAC/COBAC compliance preserved: PoP whitelist unchanged, KYC-name-only beneficiary enforcement, shared FX math via _shared/nium-client.ts.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- BEAC Règlement n°02/18/CEMAC/UMAC/CM (relations financières extérieures)
+- RFC 7231 §4.3 (idempotent methods)
+- Internal: supabase/functions/_shared/nium-client.ts, NIUM_E2E_REPORT.md
 
 ---
 
