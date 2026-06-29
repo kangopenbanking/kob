@@ -148,7 +148,51 @@ export default function ApiClientManagement() {
     }
   };
 
-  const toggleClientStatus = async (clientId: string, currentStatus: boolean) => {
+  const createSandboxClient = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('sandbox-create-oauth-client', {
+        body: {
+          client_name: newSandboxClientData.client_name,
+          redirect_uris: newSandboxClientData.redirect_uris.split(',').map(u => u.trim()).filter(Boolean),
+          scopes: newSandboxClientData.scopes,
+          grant_types: newSandboxClientData.grant_types,
+          rate_limit_tier: newSandboxClientData.rate_limit_tier
+        }
+      });
+
+      if (error) throw error;
+
+      setSandboxCreatedSecret({
+        client_id: data.client_id,
+        client_secret: data.client_secret,
+        api_environment: data.api_environment
+      });
+
+      toast.success('Sandbox OAuth 2.0 client created successfully');
+      loadClients();
+
+      setNewSandboxClientData({
+        client_name: '',
+        redirect_uris: 'https://ci.kangopenbanking.com/callback',
+        scopes: ALL_SCOPES.map(s => s.value),
+        grant_types: ['authorization_code', 'refresh_token'],
+        rate_limit_tier: 'sandbox'
+      });
+    } catch (error) {
+      logger.error('Error creating sandbox OAuth client:', error);
+      toast.error('Failed to create sandbox OAuth client');
+    }
+  };
+
+  const filteredClients = clients.filter(c =>
+    filterEnv === 'all' || c.api_environment === filterEnv
+  );
+
+  const getEnvironmentBadge = (env: string | null) => {
+    if (env === 'sandbox') return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200"><Beaker className="h-3 w-3 mr-1" /> Sandbox</Badge>;
+    if (env === 'production') return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" /> Production</Badge>;
+    return <Badge variant="outline">Default</Badge>;
+  };
     try {
       const { error } = await supabase
         .from('api_clients')
