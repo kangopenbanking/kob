@@ -37,11 +37,14 @@ interface ApiClient {
   client_id: string;
   client_name: string;
   institution_id: string;
+  api_environment: 'sandbox' | 'production' | null;
   scopes: any;
   grant_types: any;
   redirect_uris: any;
   is_active: boolean;
   created_at: string;
+  developer_user_id?: string | null;
+  rate_limit_tier?: string | null;
 }
 
 export default function ApiClientManagement() {
