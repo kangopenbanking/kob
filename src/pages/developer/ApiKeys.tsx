@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Copy, CheckCircle, XCircle, Plus, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Key, Copy, CheckCircle, XCircle, Plus, Eye, EyeOff, Trash2, FlaskConical } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 import { GoLiveToggle } from "@/components/shared/GoLiveToggle";
@@ -38,7 +38,9 @@ export default function ApiKeys() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showSandboxDialog, setShowSandboxDialog] = useState(false);
   const [showSecretDialog, setShowSecretDialog] = useState(false);
+  const [creatingSandbox, setCreatingSandbox] = useState(false);
   const [newClientSecret, setNewClientSecret] = useState("");
   const [newClientId, setNewClientId] = useState("");
   const [showSecret, setShowSecret] = useState(false);
@@ -49,6 +51,12 @@ export default function ApiKeys() {
     developer_use_case: "",
     api_environment: "sandbox",
     rate_limit_tier: "free"
+  });
+  const [sandboxForm, setSandboxForm] = useState({
+    client_name: "",
+    redirect_uris: "https://ci.kangopenbanking.com/callback",
+    developer_company: "",
+    developer_use_case: "Sandbox PKCE testing"
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -144,6 +152,51 @@ export default function ApiKeys() {
     }
   };
 
+  const handleCreateSandbox = async () => {
+    if (!sandboxForm.client_name.trim()) {
+      toast({ title: "Name required", description: "Please enter a client name.", variant: "destructive" });
+      return;
+    }
+    setCreatingSandbox(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Authentication required", description: "Please sign in.", variant: "destructive" });
+        setCreatingSandbox(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('sandbox-create-oauth-client', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          client_name: sandboxForm.client_name.trim(),
+          redirect_uris: sandboxForm.redirect_uris.split(',').map(u => u.trim()).filter(Boolean),
+          developer_company: sandboxForm.developer_company || undefined,
+          developer_use_case: sandboxForm.developer_use_case || undefined,
+          scopes: ['openid', 'accounts', 'balances', 'transactions', 'payments', 'offline_access'],
+          grant_types: ['authorization_code', 'refresh_token', 'client_credentials'],
+        }
+      });
+      if (error) throw error;
+      setNewClientId(data.client_id);
+      setNewClientSecret(data.client_secret);
+      setShowSandboxDialog(false);
+      setShowSecretDialog(true);
+      toast({ title: "Sandbox client created", description: `Client ID: ${data.client_id}` });
+      await loadApiKeys();
+      setSandboxForm({
+        client_name: "",
+        redirect_uris: "https://ci.kangopenbanking.com/callback",
+        developer_company: "",
+        developer_use_case: "Sandbox PKCE testing"
+      });
+    } catch (err: any) {
+      console.error('Sandbox client creation failed:', err);
+      toast({ title: "Error", description: err?.message || "Failed to create sandbox client", variant: "destructive" });
+    } finally {
+      setCreatingSandbox(false);
+    }
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast({
@@ -218,10 +271,16 @@ export default function ApiKeys() {
               Manage your API credentials and monitor usage
             </p>
           </div>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create New App
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowSandboxDialog(true)}>
+              <FlaskConical className="mr-2 h-4 w-4" />
+              Create Sandbox OAuth Client
+            </Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create New App
+            </Button>
+          </div>
         </div>
 
         <GoLiveToggle entity="developer" />
@@ -491,6 +550,68 @@ export default function ApiKeys() {
                 setShowSecret(false);
               }}>
                 I've Saved My Credentials
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showSandboxDialog} onOpenChange={setShowSandboxDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Sandbox OAuth 2.0 Client</DialogTitle>
+              <DialogDescription>
+                Issues an <code className="text-xs">sbx_*</code> client ID for PKCE testing against the sandbox environment. Free, rate-limited, and isolated from production.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="sbx_name">Client Name *</Label>
+                <Input
+                  id="sbx_name"
+                  value={sandboxForm.client_name}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, client_name: e.target.value })}
+                  placeholder="My Sandbox PKCE Tester"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sbx_redirect">Redirect URIs (comma-separated)</Label>
+                <Input
+                  id="sbx_redirect"
+                  value={sandboxForm.redirect_uris}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, redirect_uris: e.target.value })}
+                  placeholder="https://ci.kangopenbanking.com/callback"
+                />
+                <p className="text-xs text-muted-foreground">Default matches the CI smoke test redirect.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sbx_company">Company (optional)</Label>
+                <Input
+                  id="sbx_company"
+                  value={sandboxForm.developer_company}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, developer_company: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sbx_use_case">Use Case</Label>
+                <Textarea
+                  id="sbx_use_case"
+                  rows={2}
+                  value={sandboxForm.developer_use_case}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, developer_use_case: e.target.value })}
+                />
+              </div>
+              <Alert>
+                <AlertDescription className="text-xs">
+                  Includes scopes: openid, accounts, balances, transactions, payments, offline_access. Grant types: authorization_code (PKCE), refresh_token, client_credentials.
+                </AlertDescription>
+              </Alert>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSandboxDialog(false)} disabled={creatingSandbox}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateSandbox} disabled={creatingSandbox}>
+                {creatingSandbox ? "Creating..." : "Create Sandbox Client"}
               </Button>
             </DialogFooter>
           </DialogContent>
