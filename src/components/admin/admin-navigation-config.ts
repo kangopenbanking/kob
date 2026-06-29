@@ -109,8 +109,6 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "User Management", path: "/admin/users", icon: Users },
       { title: "Linked Account Requests", path: "/admin/linked-account-requests", icon: ArrowLeftRight },
       { title: "Branch Management", path: "/admin/branches", icon: Building2 },
-      { title: "API Clients", path: "/admin/api-clients", icon: Key },
-      { title: "Developer Management", path: "/admin/developer-management", icon: Code2 },
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
       { title: "Webhook Deliveries", path: "/admin/webhook-deliveries", icon: Webhook },
       { title: "Webhook Health", path: "/admin/webhook-health", icon: Activity },
@@ -118,8 +116,17 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Email Templates", path: "/admin/email-templates", icon: FileCode },
       { title: "Managed Emails", path: "/admin/managed-emails", icon: Mail },
       { title: "WooCommerce Plugin", path: "/admin/woocommerce-plugin", icon: ShoppingCart },
-      { title: "Sandbox", path: "/admin/sandbox", icon: Database },
       { title: "Institution App URLs", path: "/admin/institution-urls", icon: Link2 },
+    ],
+  },
+  {
+    title: "Developer Ops",
+    items: [
+      { title: "Sandbox Management", path: "/admin/sandbox", icon: Database },
+      { title: "API Clients", path: "/admin/api-clients", icon: Key },
+      { title: "Developers", path: "/admin/developer-management", icon: Code2 },
+      { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: ShieldCheck },
+      { title: "Institution API Keys", path: "/admin/institution-api-keys", icon: Key },
     ],
   },
   {
