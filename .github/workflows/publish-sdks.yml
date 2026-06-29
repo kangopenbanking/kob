@@ -18,18 +18,20 @@ jobs:
   publish-npm:
     name: Publish to npm
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/sdk-node
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: https://registry.npmjs.org
+      - name: Validate Node SDK README matches source
+        run: node scripts/check-node-sdk-readme.mjs
       - run: npm ci
+        working-directory: packages/sdk-node
       - run: npm run build
+        working-directory: packages/sdk-node
       - run: npm publish --access public
+        working-directory: packages/sdk-node
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
