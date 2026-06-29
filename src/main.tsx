@@ -3,6 +3,10 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
+import { runCacheBust } from "./lib/cache-bust";
+
+// Purge legacy banner state and stale caches on every boot.
+runCacheBust();
 
 // Remove server-rendered fallback content once React hydrates
 const ssrFallback = document.getElementById('ssr-fallback');

@@ -91,7 +91,7 @@ export default function GatewayGlobalAccountsGuide() {
                   <tr className="border-t border-border"><td className="p-2">Developer shortcut</td><td className="p-2"><code>/developer/global-accounts</code></td><td className="p-2"><code>/developer/gateway/global-accounts</code></td></tr>
                   <tr className="border-t border-border"><td className="p-2">Developer canonical</td><td className="p-2"><code>/developer/gateway/global-accounts</code></td><td className="p-2">This guide</td></tr>
                   <tr className="border-t border-border"><td className="p-2">iOS / Android (Capacitor)</td><td className="p-2"><code>app.lovable.342820e7280a44d388ce2854c6d907ed://global-accounts</code></td><td className="p-2"><code>/app/global-accounts</code> via WebView</td></tr>
-                  <tr className="border-t border-border"><td className="p-2">Universal link</td><td className="p-2"><code>https://kob.lovable.app/global-accounts</code></td><td className="p-2"><code>/app/global-accounts</code></td></tr>
+                  <tr className="border-t border-border"><td className="p-2">Universal link</td><td className="p-2"><code>https://kangopenbanking.com/global-accounts</code></td><td className="p-2"><code>/app/global-accounts</code></td></tr>
                 </tbody>
               </table>
               <p className="mt-2 text-xs">A CI link validator (<code>scripts/check-global-accounts-nav-links.mjs</code>) compares this table, sidebar entries, and mobile menu items against the <code>App.tsx</code> route table and <code>public/sitemap.xml</code> on every PR.</p>

@@ -50,7 +50,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
     displayName: "Welcome to Kang",
     trigger: "First successful sign-up & email verification.",
     variables: ["name", "loginUrl"],
-    sampleData: { name: "Jane Doe", loginUrl: "https://kob.lovable.app/auth" },
+    sampleData: { name: "Jane Doe", loginUrl: "https://kangopenbanking.com/auth" },
   },
   {
     name: "password-changed",
@@ -126,7 +126,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
     sampleData: {
       name: "Jane Doe",
       periodLabel: "May 2026",
-      downloadUrl: "https://kob.lovable.app/statements/test",
+      downloadUrl: "https://kangopenbanking.com/statements/test",
     },
   },
   {
@@ -187,7 +187,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
       name: "Jane Doe",
       status: "info_requested",
       reviewerNotes: "Please upload a clearer photo of your ID front side.",
-      actionUrl: "https://kob.lovable.app/app/verify-identity",
+      actionUrl: "https://kangopenbanking.com/app/verify-identity",
     },
   },
 
@@ -230,7 +230,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
     variables: ["merchantName", "dashboardUrl"],
     sampleData: {
       merchantName: "Sample Merchant",
-      dashboardUrl: "https://kob.lovable.app/business",
+      dashboardUrl: "https://kangopenbanking.com/business",
     },
   },
 
@@ -256,7 +256,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
       ticketId: "TCK-TEST-001",
       agentName: "Alex (Support)",
       replyExcerpt: "Thanks for the details — could you confirm the merchant name?",
-      ticketUrl: "https://kob.lovable.app/support/TCK-TEST-001",
+      ticketUrl: "https://kangopenbanking.com/support/TCK-TEST-001",
     },
   },
   {
@@ -268,7 +268,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
     variables: ["agentName", "inviteUrl", "departmentName"],
     sampleData: {
       agentName: "Alex Banda",
-      inviteUrl: "https://kob.lovable.app/support/accept-invite?token=test",
+      inviteUrl: "https://kangopenbanking.com/support/accept-invite?token=test",
       departmentName: "Tier 1 Support",
     },
   },
@@ -282,7 +282,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
     sampleData: {
       agentName: "Alex Banda",
       customerName: "Jane Doe",
-      conversationUrl: "https://kob.lovable.app/admin/support-chat/test",
+      conversationUrl: "https://kangopenbanking.com/admin/support-chat/test",
     },
   },
 
@@ -328,7 +328,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
       name: "Jane Doe",
       month: "May 2026",
       score: 712,
-      reportUrl: "https://kob.lovable.app/crediq/report/test",
+      reportUrl: "https://kangopenbanking.com/crediq/report/test",
     },
   },
   {
@@ -372,7 +372,7 @@ export const EMAIL_TEMPLATES: EmailTemplateSpec[] = [
       amount: "120,000",
       currency: "XAF",
       dueDate: new Date(Date.now() + 3 * 86400_000).toISOString(),
-      payUrl: "https://kob.lovable.app/app/rent/pay/test",
+      payUrl: "https://kangopenbanking.com/app/rent/pay/test",
     },
   },
 

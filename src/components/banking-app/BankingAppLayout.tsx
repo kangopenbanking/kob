@@ -11,7 +11,6 @@ import { BankingAppAuthGuard } from '@/components/auth/BankingAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
-import { HealthBanner } from '@/components/HealthBanner';
 import { useBankingWebhookEvents } from '@/hooks/useBankingWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -39,7 +38,6 @@ const BankingAppInner: React.FC = () => {
       className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text"
       style={{ '--pwa-font-multiplier': tenant.fontSizeMultiplier } as React.CSSProperties}
     >
-      <HealthBanner />
       <ScreenshotGuard />
       <KYCStatusBanner verifyHref={`${basePath}/kyc`} />
       <OfflineIndicator />
