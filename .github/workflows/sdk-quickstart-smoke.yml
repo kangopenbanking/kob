@@ -1,0 +1,123 @@
+name: SDK Quickstart Smoke (Node / Python / PHP)
+
+# Exercises the OAuth quickstart snippets published on the developer portal
+# against the live sandbox gateway. Verifies that:
+#   1. /v1/oauth/token (client_credentials) returns an access token
+#   2. A secured endpoint (/v1/health authenticated probe) returns 200 with that token
+# in each of the three documented SDK languages. Runs on every push to main
+# and nightly so docs drift is caught fast.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/sdk-node/**'
+      - 'packages/sdk-python/**'
+      - 'packages/sdk-php/**'
+      - 'public/sdk-downloads/**'
+      - 'public/openapi.json'
+      - '.github/workflows/sdk-quickstart-smoke.yml'
+  schedule:
+    - cron: '17 5 * * *'   # 05:17 UTC nightly
+  workflow_dispatch:
+
+env:
+  KOB_SANDBOX_BASE: https://sandbox-api.kangopenbanking.com/v1
+  KOB_CLIENT_ID:    ${{ secrets.KOB_SANDBOX_CLIENT_ID }}
+  KOB_CLIENT_SECRET: ${{ secrets.KOB_SANDBOX_CLIENT_SECRET }}
+
+jobs:
+  node-quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Node quickstart — token + secured call
+        run: |
+          node <<'JS'
+          const base = process.env.KOB_SANDBOX_BASE;
+          const id = process.env.KOB_CLIENT_ID, secret = process.env.KOB_CLIENT_SECRET;
+          if (!id || !secret) { console.log('skip: sandbox creds not configured'); process.exit(0); }
+          const body = new URLSearchParams({ grant_type: 'client_credentials', scope: 'health:read' });
+          const tok = await fetch(`${base}/oauth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                       Authorization: 'Basic ' + Buffer.from(`${id}:${secret}`).toString('base64') },
+            body,
+          });
+          if (!tok.ok) { console.error('token failed', tok.status, await tok.text()); process.exit(1); }
+          const { access_token } = await tok.json();
+          const h = await fetch(`${base}/health`, { headers: { Authorization: `Bearer ${access_token}` }});
+          if (!h.ok) { console.error('secured call failed', h.status, await h.text()); process.exit(1); }
+          console.log('Node quickstart OK');
+          JS
+
+  python-quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install requests
+      - name: Python quickstart — token + secured call
+        run: |
+          python <<'PY'
+          import os, sys, requests
+          base = os.environ['KOB_SANDBOX_BASE']
+          cid, sec = os.environ.get('KOB_CLIENT_ID'), os.environ.get('KOB_CLIENT_SECRET')
+          if not cid or not sec:
+              print('skip: sandbox creds not configured'); sys.exit(0)
+          r = requests.post(f"{base}/oauth/token",
+              auth=(cid, sec),
+              data={'grant_type':'client_credentials','scope':'health:read'},
+              timeout=15)
+          r.raise_for_status()
+          tok = r.json()['access_token']
+          h = requests.get(f"{base}/health", headers={'Authorization': f'Bearer {tok}'}, timeout=15)
+          h.raise_for_status()
+          print('Python quickstart OK')
+          PY
+
+  php-quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: curl, json }
+      - name: PHP quickstart — token + secured call
+        run: |
+          php <<'PHP'
+          <?php
+          $base = getenv('KOB_SANDBOX_BASE');
+          $cid = getenv('KOB_CLIENT_ID'); $sec = getenv('KOB_CLIENT_SECRET');
+          if (!$cid || !$sec) { echo "skip: sandbox creds not configured\n"; exit(0); }
+          $ch = curl_init("$base/oauth/token");
+          curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_USERPWD => "$cid:$sec",
+            CURLOPT_POSTFIELDS => http_build_query(['grant_type'=>'client_credentials','scope'=>'health:read']),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/x-www-form-urlencoded'],
+          ]);
+          $resp = curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+          if ($code !== 200) { fwrite(STDERR, "token failed $code: $resp\n"); exit(1); }
+          $tok = json_decode($resp, true)['access_token'];
+          $ch = curl_init("$base/health");
+          curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ["Authorization: Bearer $tok"],
+          ]);
+          curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE); curl_close($ch);
+          if ($code !== 200) { fwrite(STDERR, "secured call failed $code\n"); exit(1); }
+          echo "PHP quickstart OK\n";
+          PHP
+
+  sdk-version-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Verify SDK version consistency across spec / Postman / READMEs
+        run: node scripts/check-sdk-version-consistency.mjs

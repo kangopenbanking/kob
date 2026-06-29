@@ -3,7 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Upload, FileSearch, RotateCcw, GitCompare, ShieldCheck, Activity } from "lucide-react";
+import { Upload, FileSearch, RotateCcw, GitCompare, ShieldCheck, Activity, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/developer/CodeBlock";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { ConnectorSandboxSimulator } from "@/components/developer/ConnectorSandboxSimulator";
@@ -84,6 +85,26 @@ export default function BankConnectorRunbook() {
               For the schema reference, see the <Link to="/developer/connectors/byo-mobile-money" className="text-primary underline">Connector Contract</Link> docs.
             </CardDescription>
           </CardHeader>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Download className="h-5 w-5 text-primary" /> Partner Onboarding Checklist
+            </CardTitle>
+            <CardDescription>
+              A printable kickoff checklist for partner engineering teams — covers network
+              egress, mTLS certificate request and rotation, SFTP file-feed conventions, the
+              webhook receiver contract, and the gates KOB uses to sign off go-live.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <a href="/downloads/partner-onboarding-checklist.md" download>
+                <Download className="h-4 w-4 mr-2" /> Download checklist (Markdown)
+              </a>
+            </Button>
+          </CardContent>
         </Card>
 
         <section className="grid md:grid-cols-2 gap-4">
