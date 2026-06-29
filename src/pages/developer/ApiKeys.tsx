@@ -271,10 +271,16 @@ export default function ApiKeys() {
               Manage your API credentials and monitor usage
             </p>
           </div>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create New App
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowSandboxDialog(true)}>
+              <FlaskConical className="mr-2 h-4 w-4" />
+              Create Sandbox OAuth Client
+            </Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create New App
+            </Button>
+          </div>
         </div>
 
         <GoLiveToggle entity="developer" />
