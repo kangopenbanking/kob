@@ -219,6 +219,21 @@ const isValid = await kob.verifyWebhookSignature(
 );
 ```
 
+Deterministic signed test fixtures for `charge.succeeded` and `account.updated`
+are published at
+[`/sdk-downloads/webhook-fixtures/`](https://kangopenbanking.com/sdk-downloads/webhook-fixtures/README.md)
+so you can prove your receiver accepts canonical events and rejects tampered
+ones without hitting the sandbox.
+
+## End-to-end PKCE example
+
+A runnable Node sample that performs OAuth 2.0 + PKCE (RFC 7636 §4) against
+the sandbox lives at
+[`examples/pkce-auth-code.ts`](./examples/pkce-auth-code.ts). It captures the
+redirect on `127.0.0.1`, exchanges the code at `/oauth/token`, and probes
+`/health` with the returned bearer.
+
+
 ## Error handling
 
 ```typescript
