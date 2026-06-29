@@ -1,11 +1,32 @@
 {
-  "apiVersion": "4.51.5",
+  "apiVersion": "4.51.6",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-06-29",
   "entries": [
     {
+      "version": "4.51.6",
+      "date": "2026-06-29",
+      "type": "patch",
+      "breaking_changes": false,
+      "summary": "Documented charge.succeeded and account.updated webhook events with deterministic signed test fixtures, and shipped runnable OAuth 2.0 + PKCE authorization_code samples for Node and Python. Additive only \u2014 no operationIds, schemas, security schemes, parameters, enums, or required arrays changed (Standing Orders 1, 2, 4).",
+      "highlights": [
+        "openapi.json / openapi.yaml: webhooks{} gains charge.succeeded and account.updated entries with example payloads. x-webhook-events list extended where missing.",
+        "public/sdk-downloads/webhook-fixtures/: signed sandbox payloads + headers + tampered counterexample for receiver / SDK verification.",
+        "packages/sdk-node/examples/pkce-auth-code.ts and packages/sdk-python/examples/pkce_auth_code.py: runnable end-to-end PKCE samples (public client, no client_secret).",
+        ".github/workflows/webhook-signature-smoke.yml: nightly + on-push verification that Node, Python, and PHP SDK verifiers accept canonical fixtures and reject tampered / wrong-secret payloads."
+      ],
+      "breaking": [],
+      "standard_citations": [
+        "Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)",
+        "RFC 7636 \u00a74 (PKCE)",
+        "RFC 6749 \u00a74.1 (Authorization Code Grant)",
+        "Internal: scripts/build-webhook-fixtures.mjs, scripts/verify-webhook-fixtures.mjs"
+      ]
+    },
+    {
       "version": "4.51.5",
+
       "date": "2026-06-25",
       "type": "patch",
       "breaking_changes": false,
