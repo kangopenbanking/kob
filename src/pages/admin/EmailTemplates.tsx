@@ -173,7 +173,7 @@ export default function EmailTemplates() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Send Test Email</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Send <span className="font-mono text-xs">{testTemplate?.template_key}</span> via Resend (with Lovable Email fallback) to verify rendering and delivery.</p>
+            <p className="text-sm text-muted-foreground">Send <span className="font-mono text-xs">{testTemplate?.template_key}</span> via Resend (with backup email provider fallback) to verify rendering and delivery.</p>
             <div>
               <Label>Recipient email</Label>
               <Input type="email" value={testRecipient} onChange={(e) => setTestRecipient(e.target.value)} placeholder="you@example.com" className="mt-1" />

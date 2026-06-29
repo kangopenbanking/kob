@@ -134,7 +134,7 @@ export default function AdminEmailProviderSettings() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Provider routing</CardTitle>
-          <CardDescription>Resend is sent first by default; Lovable Email is used as fallback.</CardDescription>
+          <CardDescription>Resend is sent first by default; the backup email provider is used as fallback.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function AdminEmailProviderSettings() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="resend">Resend</SelectItem>
-                <SelectItem value="lovable_email">Lovable Email</SelectItem>
+                <SelectItem value="lovable_email">Backup Email Provider</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -152,7 +152,7 @@ export default function AdminEmailProviderSettings() {
             <Select value={settings.fallback_provider} onValueChange={(v) => field("fallback_provider", v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="lovable_email">Lovable Email</SelectItem>
+                <SelectItem value="lovable_email">Backup Email Provider</SelectItem>
                 <SelectItem value="resend">Resend</SelectItem>
                 <SelectItem value="none">None (no fallback)</SelectItem>
               </SelectContent>
