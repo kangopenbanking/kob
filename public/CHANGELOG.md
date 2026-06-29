@@ -10,6 +10,25 @@ Current API version: **4.51.5** · Last updated: **2026-06-29**
 
 ---
 
+## 4.51.6 — 2026-06-29
+**Type:** patch · **Breaking changes:** none
+
+Documented charge.succeeded and account.updated webhook events with deterministic signed test fixtures, and shipped runnable OAuth 2.0 + PKCE authorization_code samples for Node and Python. Additive only — no operationIds, schemas, security schemes, parameters, enums, or required arrays changed (Standing Orders 1, 2, 4).
+
+### Highlights
+- openapi.json / openapi.yaml: webhooks{} gains charge.succeeded and account.updated entries with example payloads. x-webhook-events list extended where missing.
+- public/sdk-downloads/webhook-fixtures/: signed sandbox payloads + headers + tampered counterexample for receiver / SDK verification.
+- packages/sdk-node/examples/pkce-auth-code.ts and packages/sdk-python/examples/pkce_auth_code.py: runnable end-to-end PKCE samples (public client, no client_secret).
+- .github/workflows/webhook-signature-smoke.yml: nightly + on-push verification that Node, Python, and PHP SDK verifiers accept canonical fixtures and reject tampered / wrong-secret payloads.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- RFC 7636 §4 (PKCE)
+- RFC 6749 §4.1 (Authorization Code Grant)
+- Internal: scripts/build-webhook-fixtures.mjs, scripts/verify-webhook-fixtures.mjs
+
+---
+
 ## 4.51.5 — 2026-06-25
 **Type:** patch · **Breaking changes:** none
 
