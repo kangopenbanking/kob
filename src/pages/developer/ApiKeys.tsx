@@ -152,7 +152,52 @@ export default function ApiKeys() {
     }
   };
 
-  const copyToClipboard = (text: string, label: string) => {
+  const handleCreateSandbox = async () => {
+    if (!sandboxForm.client_name.trim()) {
+      toast({ title: "Name required", description: "Please enter a client name.", variant: "destructive" });
+      return;
+    }
+    setCreatingSandbox(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Authentication required", description: "Please sign in.", variant: "destructive" });
+        setCreatingSandbox(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('sandbox-create-oauth-client', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          client_name: sandboxForm.client_name.trim(),
+          redirect_uris: sandboxForm.redirect_uris.split(',').map(u => u.trim()).filter(Boolean),
+          developer_company: sandboxForm.developer_company || undefined,
+          developer_use_case: sandboxForm.developer_use_case || undefined,
+          scopes: ['openid', 'accounts', 'balances', 'transactions', 'payments', 'offline_access'],
+          grant_types: ['authorization_code', 'refresh_token', 'client_credentials'],
+        }
+      });
+      if (error) throw error;
+      setNewClientId(data.client_id);
+      setNewClientSecret(data.client_secret);
+      setShowSandboxDialog(false);
+      setShowSecretDialog(true);
+      toast({ title: "Sandbox client created", description: `Client ID: ${data.client_id}` });
+      await loadApiKeys();
+      setSandboxForm({
+        client_name: "",
+        redirect_uris: "https://ci.kangopenbanking.com/callback",
+        developer_company: "",
+        developer_use_case: "Sandbox PKCE testing"
+      });
+    } catch (err: any) {
+      console.error('Sandbox client creation failed:', err);
+      toast({ title: "Error", description: err?.message || "Failed to create sandbox client", variant: "destructive" });
+    } finally {
+      setCreatingSandbox(false);
+    }
+  };
+
+
     navigator.clipboard.writeText(text);
     toast({
       title: "Copied",
