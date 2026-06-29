@@ -22,10 +22,77 @@ Deno.serve(async (req) => {
   let payload: any;
   try { payload = JSON.parse(raw); } catch { return json({ error: "invalid_json" }, 400); }
 
-  const eventType = payload.eventType ?? payload.event ?? req.headers.get("x-nium-event") ?? "";
-  if (!String(eventType).toLowerCase().includes("payment_incoming")
-      && !String(eventType).toLowerCase().includes("credit")) {
-    // Ack and ignore unrelated events
+  const eventType = String(payload.eventType ?? payload.event ?? req.headers.get("x-nium-event") ?? "").toLowerCase();
+  const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  // --- Payout status events ---
+  if (eventType.includes("payout") || eventType.includes("transfer")) {
+    const transferId = payload.transactionId ?? payload.systemReferenceNumber ?? payload.id;
+    const status = String(payload.status ?? "").toLowerCase() || "processing";
+    if (!transferId) return json({ error: "missing_transfer_id" }, 400);
+    const map: Record<string, string> = {
+      success: "completed", completed: "completed", paid: "completed",
+      failed: "failed", rejected: "failed",
+      processing: "processing", pending: "processing", submitted: "submitted",
+    };
+    const mapped = map[status] ?? "processing";
+    const { error } = await svc.from("nium_payouts").update({
+      status: mapped,
+      failure_reason: mapped === "failed" ? (payload.failureReason ?? payload.reason ?? null) : null,
+      completed_at: mapped === "completed" ? new Date().toISOString() : null,
+    }).eq("nium_transfer_id", transferId);
+    if (error) console.warn("payout update failed", error.message);
+    return json({ received: true, kind: "payout", transfer_id: transferId, status: mapped });
+  }
+
+  // --- Conversion status events ---
+  if (eventType.includes("conversion") || eventType.includes("fx")) {
+    const convId = payload.conversionId ?? payload.id;
+    const status = String(payload.status ?? "").toLowerCase() || "completed";
+    if (!convId) return json({ error: "missing_conversion_id" }, 400);
+    const { error } = await svc.from("nium_conversions").update({
+      status: status.includes("fail") ? "failed" : (status.includes("pend") ? "pending" : "completed"),
+      completed_at: !status.includes("fail") && !status.includes("pend") ? new Date().toISOString() : null,
+    }).eq("nium_conversion_id", convId);
+    if (error) console.warn("conversion update failed", error.message);
+    return json({ received: true, kind: "conversion", conversion_id: convId });
+  }
+
+  // --- RFI (Request for Information) events ---
+  if (eventType.includes("rfi") || eventType.includes("compliance_request")) {
+    const rfiId = payload.rfiId ?? payload.id;
+    if (!rfiId) return json({ error: "missing_rfi_id" }, 400);
+    const subjectRef = payload.subjectReference ?? payload.referenceNumber ?? null;
+    const subjectType = payload.subjectType ?? (subjectRef?.startsWith("nium_txfr") ? "payout" : "account");
+
+    // Resolve user from subject (best effort)
+    let userId: string | null = null;
+    if (subjectType === "payout" && subjectRef) {
+      const { data } = await svc.from("nium_payouts").select("user_id").eq("nium_transfer_id", subjectRef).maybeSingle();
+      userId = data?.user_id ?? null;
+    } else if (subjectRef) {
+      const { data } = await svc.from("nium_global_accounts").select("user_id").eq("nium_account_id", subjectRef).maybeSingle();
+      userId = data?.user_id ?? null;
+    }
+
+    const { error } = await svc.from("nium_rfi").upsert({
+      nium_rfi_id: rfiId,
+      user_id: userId,
+      subject_type: subjectType,
+      subject_reference: subjectRef,
+      rfi_reason: payload.reason ?? "compliance_review",
+      rfi_details: payload.details ?? payload.message ?? null,
+      status: String(payload.status ?? "open").toLowerCase(),
+      due_by: payload.dueBy ?? null,
+      mode: "live",
+      metadata: payload,
+    }, { onConflict: "nium_rfi_id" });
+    if (error) console.warn("rfi upsert failed", error.message);
+    return json({ received: true, kind: "rfi", rfi_id: rfiId });
+  }
+
+  // --- Incoming payments (existing behavior) ---
+  if (!eventType.includes("payment_incoming") && !eventType.includes("credit")) {
     return json({ received: true, ignored_event: eventType }, 200);
   }
 
