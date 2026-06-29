@@ -1,103 +1,126 @@
+## Scope guardrails
+- No changes to business logic, compliance language, maturity tags, info.description, paths, operationIds, schema names, or response shapes.
+- Additive/cosmetic edits only: SDK metadata, doc version strings, one broken externalDocs URL, one stale Postman quickstart pointer, SDK README rewrites, and the runbook page already exists (verified, not recreated).
 
-# KOB Compliance & Production-Readiness Remediation — Execution Plan
+## What I found (audit results)
 
-This is a **multi-week, multi-phase** remediation. I will execute it strictly in order, stop at every decision gate, and never mark a phase complete without evidence (diffs, test output, or quoted removed text). Nothing existing will be renamed, removed, or reshaped.
+**SDK reality check — `info.x-sdk-libraries` in `public/openapi.json` v4.51.5:**
 
----
+| SDK | Listed package | Listed repo | Reality |
+|---|---|---|---|
+| node | `@kang/openbanking-node` v1.6.1 | `kangfinance/openbanking-node` | npm 403 (not published), repo 404. **Actually published**: `@kangopenbanking/sdk` v1.7.0 (npm 200). Local pkg repo `kangopenbanking/sdk-node` also 404. |
+| python | `kang-openbanking` v1.6.1 | `kangfinance/openbanking-python` | pypi 200 (legacy name); repo 404. Local pyproject ships as `kangopenbanking` v1.7.0 (pypi 200). |
+| php | `kang/openbanking-php` v1.6.1 | `kangfinance/openbanking-php` | packagist 404 ("Package not found"), repo 404. Local composer ships `kangopenbanking/sdk` v1.7.0 (packagist 200). |
+| java | "generated" v4.40.0 | `kangopenbanking/KangOpenBanking-KOB` | repo 404 → not publicly available. |
+| go | v1.6.1 | `kangopenbanking/sdk-go` | repo 404, pkg.go.dev 404, only a stub `go.mod` locally → not published. |
+| ruby | "community-guide" v1.0.0 | same KOB repo | repo 404. |
 
-## Guardrails I will enforce on every change
+**Other gaps:**
+- `tags[BankConnectors].externalDocs.url` = `/developer/banks/connector-runbook` → **404 route**. Real runbook page is `BankConnectorRunbook.tsx` mounted at `/developer/connectors/bank-connector-runbook` (already rich content — 4 phases, 9 statuses, simulator). No content work needed, only URL fix.
+- `ConnectorModeSelection.tsx` links to `/developer/bank-connector-runbook` (also 404 — missing `/connectors/` segment).
+- Postman pipeline is healthy (manifest + latest both at 4.51.5), but `manifest.json.collection.quickstart` is pinned to `v4.43.0` — stale pointer to retire or refresh.
+- SDK READMEs (`packages/sdk-node/README.md`, `sdk-python`, `sdk-php`) still say "v1 API (v1.2.0)" — drift from spec 4.51.5.
+- No "generated from spec vX.Y.Z" stamp on getting-started/quickstart pages.
 
-1. **Additive only.** No renames, no removed operationIds/schemas/fields/endpoints. If a fix would break shape, I stop and flag `BREAKING — REQUIRES HUMAN APPROVAL`.
-2. **No fabricated compliance claims.** Any "COBAC compliant", "BEAC compliant", "100/100", "financial-grade", "certifiable", "secure by default" language gets hedged to factual status ("designed with X requirements in mind; licensing in progress").
-3. **No self-referential changelog narration** in public surfaces. "Guardian", "Standing Order", "The Lock", per-version self-grading get moved out of `openapi.*` `info.description` and any rendered public doc into an internal `CHANGELOG_INTERNAL.md`.
-4. **No AI-assistant filler.** Merge markers, "Here is your fully polished…", placeholder badge/star requests get deleted.
-5. **Spec must match implementation.** If a feature is described but not actually wired end-to-end, the doc gets relabeled `Planned — not yet implemented` rather than the spec being "made true" by writing more prose.
-6. **Preserve sandbox contracts.** Before any auth/webhook/schema work in Phase 2+, I will produce a frozen inventory of every currently-shipping endpoint + field so we can confirm nothing changed shape.
+## Diff list (what will change)
 
----
+### 1. `public/openapi.json` + `public/openapi.yaml` — `info.x-sdk-libraries` rewrite
 
-## Phase 1 — Trust & Truthfulness Pass (no code logic changes)
+Rewrite ONLY this block. No other spec edits.
 
-Scope is documentation + spec metadata + README text only. No runtime behavior changes.
+- **node**: replace with real published package
+  - `name`: `@kangopenbanking/sdk`
+  - `version`: `1.7.0`
+  - `status`: `available`
+  - `package_manager`: `https://www.npmjs.com/package/@kangopenbanking/sdk`
+  - Remove `repository` (no public repo — repo url would 404).
+- **python**: keep available, point at the actually-installable name
+  - `name`: `kangopenbanking`
+  - `version`: `1.7.0`
+  - `status`: `available`
+  - `package_manager`: `https://pypi.org/project/kangopenbanking/`
+  - Remove `repository` (404).
+- **php**: switch to real package
+  - `name`: `kangopenbanking/sdk`
+  - `version`: `1.7.0`
+  - `status`: `available`
+  - `package_manager`: `https://packagist.org/packages/kangopenbanking/sdk`
+  - Remove `repository` (404).
+- **go**: demote to planned (no package, no repo)
+  - `status`: `planned`, keep `name` placeholder, remove `version`, `package_manager`, `repository` (or set to docs URL only).
+- **java**: demote to planned (repo 404)
+  - `status`: `planned`, remove `repository` and `package_manager`, keep `generator` + `docs` reference.
+- **ruby**: keep `status: community-guide` but remove broken `repository` URL.
 
-Deliverables:
+Also bump `public/openapi-sandbox.json` + `.yaml` `x-sdk-libraries` identically.
 
-- `TRUTH_AUDIT.md` at repo root with a single table:
-  `Claim | Location (file:line) | Status (Implemented / Partial / Planned / Not Started) | Evidence | Recommended Hedge`
-- Rewritten `public/openapi.json` + `public/openapi.yaml` `info.description` — factual, no Guardian/Standing Order/score language. Operations, paths, schemas, components, security: **untouched**.
-- Internal-only `CHANGELOG_INTERNAL.md` holding the moved narration (so nothing is lost).
-- Sweep of every SDK README (`packages/sdk-node`, `sdk-python`, `sdk-php`, `sdk-go`, `sdk-java`, plus `public/sdk-downloads/*README*`) for: AI artifacts, "secure by default", "financial-grade", unverified auth claims. Replaced with per-SDK status block (what auth actually works today, what is stubbed).
-- Sweep of landing page + `/developer` portal copy for "COBAC & BEAC compliant" → hedged language.
-- A short `PHASE_1_REPORT.md` with: files changed, **explicit list of files NOT changed and why**, and direct before/after quotes for every removed compliance claim.
+### 2. SDK READMEs (`packages/sdk-node`, `sdk-python`, `sdk-php`)
 
-I will not start Phase 2 until you review `TRUTH_AUDIT.md` and `PHASE_1_REPORT.md`.
+Replace the "v1 API (v1.2.0)" string with `KOB API v4.51.5`. Confirm Quick Start fields use snake_case + string monetary amounts as required by the live spec. No new API surface added. Mirror copy into `public/sdk-downloads/sdk-*-README.md` so what's served on the portal matches packages/.
 
----
+### 3. Bank connector externalDocs URL (1-line spec fix)
 
-## Phase 2 — Authentication Reality Check (DECISION GATE before starting)
+In `public/openapi.json` + `.yaml`, change:
+`tags[BankConnectors].externalDocs.url` from `/developer/banks/connector-runbook` → `/developer/connectors/bank-connector-runbook`.
 
-Before I touch auth code I need three answers from you (see Open Questions). Then:
+Page already exists with full runbook content (phases, statuses, sandbox simulator, mTLS/file-feed coverage). No content rewrite. If gaps are found while re-reading the page (e.g. mTLS rotation steps or push/pull/hybrid worked example missing), add them as additive sections only — no changes to the spec.
 
-- Produce a frozen `SANDBOX_CONTRACT_FREEZE.md` listing every currently-callable endpoint + every field shape, so any later change can be diffed against it.
-- Inventory what actually exists today in the auth edge functions for: `authorization_code`, PKCE, refresh-token rotation, refresh-token reuse detection, mTLS client auth, `private_key_jwt`, `token_endpoint_auth_method=none`.
-- Mark each as Implemented / Partial / Not Started with code references.
-- Add integration tests for the ones that already work (expired token rejection, replayed auth code rejection, reused refresh token → full session revoke).
-- For each that does not work end-to-end: either implement it for real, or relabel its public docs `Not yet implemented`. No silent "spec says yes, code says no".
-- Resolve `token_endpoint_auth_method=none` contradiction with one consistent, documented policy.
+### 4. Fix sibling broken link
 
----
+`src/pages/developer/ConnectorModeSelection.tsx` — change `to="/developer/bank-connector-runbook"` → `to="/developer/connectors/bank-connector-runbook"`.
 
-## Phase 3 — Scope Containment (additive `x-maturity` flag)
+### 5. Docs-to-spec version stamp
 
-- Add OpenAPI vendor extension `x-maturity: ga | beta | experimental | not-licensed` per tag.
-- `ga`: AISP, PISP only.
-- `not-licensed` / `experimental`: Loans, Savings, Ledger, Issuing/Virtual Cards, Interbank/ISO 20022, Credit Scoring, Escrow, Custodial Wallets.
-- Add a sandbox-only guard: production API keys calling a `not-licensed` route return a structured `403 not_licensed_in_production` (additive — no existing 2xx becomes a 4xx for sandbox keys).
-- Update `/developer` copy to reflect honest availability.
+Add a small `<p className="text-xs text-muted-foreground">Docs generated from API spec v{KOB_API_VERSION}</p>` line (sourced from `src/config/version.ts`) on:
+- `GettingStarted.tsx`
+- `QuickStart.tsx`
+- `gateway/GatewayQuickstart.tsx`
 
----
+So future drift is visible at a glance.
 
-## Phase 4 — PCI / Card Data Boundary
+### 6. Postman pipeline cleanup
 
-- Produce internal architecture doc tracing every code path that could touch a raw PAN.
-- If KOB never touches raw PAN (Kora tokenizes upstream): add the guarantee to spec + add a CI log-scan that fails on PAN-shaped strings in logs/stored fields.
-- If KOB does touch raw PAN anywhere: stop and flag `BREAKING — REQUIRES HUMAN APPROVAL — PCI SAQ D SCOPE`.
+In `public/postman/manifest.json`, drop the stale `collection.quickstart` field pinned to v4.43.0 (or repoint it to the current `Kang_Open_Banking_API_latest.postman_collection.json`). Do not touch the auto-generated versioned/latest pointers — those are already current.
 
----
+### 7. Dead-link sweep summary table (no code; included in report)
 
-## Phase 5 — Consistency & Hygiene
+After edits, re-run a curl pass on every URL in:
+- `info.contact`, `info.license`, `info.termsOfService`
+- every `x-sdk-libraries[*].{repository,package_manager,docs}`
+- every `tags[*].externalDocs.url`
 
-- Keep all deprecated float/PascalCase fields untouched; ensure **new** examples in docs use only canonical snake_case + string-minor-unit.
-- One money-consistency test per money-returning endpoint.
-- Verify rate-limit, webhook-retry, idempotency-key middleware match the spec with one test per claim.
-- Run Spectral against `openapi.json`, attach raw output. FAPI conformance suite only if Phase 2 confirmed an FAPI-eligible auth surface.
+Report `200/404/redirect` for each. Any remaining 404 outside the SDK block gets removed (not rewritten around).
 
----
+## Out of scope (explicitly NOT touching)
 
-## Technical notes (for the engineer reading this)
+- info.description licensing/compliance disclaimer
+- maturity (`x-maturity`) tags
+- Any operationId, schema name, path, or response shape
+- Standing Order locks (SO1–SO7, P1–P10)
+- Version bump of `info.version` — these are corrections to false metadata, not new API surface. If the version-sync gate (`scripts/check-version-sync.mjs`) requires a patch bump, I will only bump `4.51.5 → 4.51.6` and add a changelog entry titled "Developer-readiness corrections: SDK metadata + runbook link" — no other content.
 
-- All `openapi.*` edits go through additive JSON patching; `paths`, `components.schemas`, `components.securitySchemes`, `security`, `tags` arrays are not reordered or removed.
-- Moved narration lands in `CHANGELOG_INTERNAL.md` (not served, not linked from `/developer`, added to any docs allowlist as excluded).
-- SDK README rewrites do not touch package.json/version/exports — text only.
-- `x-maturity` is a vendor extension; no tool in the current pipeline rejects unknown `x-*` keys (verified before merging Phase 3).
-- Sandbox-only guard in Phase 3 is implemented in the existing edge-function request pipeline, not in client SDKs.
+## Final report shape (delivered after build)
 
----
+```
+REMOVED
+- info.x-sdk-libraries.node.repository (404)
+- info.x-sdk-libraries.python.repository (404)
+- info.x-sdk-libraries.php.repository (404)
+- info.x-sdk-libraries.ruby.repository (404)
+- public/postman/manifest.json.collection.quickstart (stale v4.43.0)
 
-## Open Questions (need answers before Phase 2; Phase 1 can start now)
+FIXED
+- node package: @kang/openbanking-node → @kangopenbanking/sdk (npm 200)
+- python package: kang-openbanking → kangopenbanking (pypi 200)
+- php package: kang/openbanking-php → kangopenbanking/sdk (packagist 200)
+- All four available SDK versions: 1.6.1 → 1.7.0 (matches packages/)
+- tag BankConnectors externalDocs URL → /developer/connectors/bank-connector-runbook
+- ConnectorModeSelection internal link → same
+- SDK READMEs: "v1 API (v1.2.0)" → "KOB API v4.51.5"
+- Added "Docs generated from API spec v4.51.5" stamp on 3 quickstart pages
 
-1. **Licensing reality** — Confirm in writing: are COBAC / BEAC licenses (a) granted, (b) applied for, or (c) not yet applied? I will hedge to whichever you confirm. Default if no answer: "licensing in progress".
-2. **FAPI target** — Is FAPI 1.0 Advanced the actual target for v1, or is baseline OAuth2 + PKCE sufficient for the first production cut? This decides whether `token_endpoint_auth_method=none` must be removed everywhere or is allowed for specific public clients.
-3. **PCI scope** — Best knowledge today: does any KOB-owned service ever receive a raw PAN, or is it 100% Kora-tokenized at the edge? (If you don't know, I will assume "must verify" and Phase 4 starts with a code trace, not a claim.)
-4. **Phase 1 authorization** — OK to proceed immediately with Phase 1 (docs/spec-description/README text only, zero runtime change) while you answer 1–3?
-
----
-
-## Recommended defaults if you don't want to decide each question
-
-- Q1: Hedge everything to "licensing in progress with COBAC/BEAC".
-- Q2: Target baseline OAuth2 + PKCE + refresh rotation for v1; mark FAPI 1.0 Advanced as `Planned`. This is the lowest-risk honest position.
-- Q3: Assume "must verify via code trace" and treat any PAN handling as a stop-and-escalate.
-- Q4: Yes, start Phase 1 now.
-
-If you reply "go with recommended defaults", I will start Phase 1 immediately and return with `TRUTH_AUDIT.md` + `PHASE_1_REPORT.md` for review before touching anything else.
+NOW PLANNED (no longer presented as available)
+- go SDK — status: planned, no install command shown
+- java SDK — status: planned, no repo/install shown
+- ruby SDK — kept community-guide, broken repo URL removed
+```
