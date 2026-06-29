@@ -34,3 +34,15 @@ export {
   type GlobalAccountStatus,
   type NiumMode,
 } from './global-accounts';
+export {
+  BeneficiariesResource,
+  PayoutsResource as NiumPayoutsResource,
+  ConversionsResource as NiumConversionsResource,
+  RfiResource as NiumRfiResource,
+  type NiumCurrency,
+  type NiumAccountKind,
+  type NiumBeneficiary,
+  type NiumPayout,
+  type NiumConversion,
+  type NiumRfi,
+} from './nium';
