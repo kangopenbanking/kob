@@ -17755,8 +17755,134 @@ export type Database = {
           },
         ]
       }
+      nium_beneficiaries: {
+        Row: {
+          beneficiary_account_number: string
+          beneficiary_bank_code: string | null
+          beneficiary_bank_name: string | null
+          beneficiary_country: string
+          beneficiary_name: string
+          created_at: string
+          destination_currency: string
+          id: string
+          metadata: Json
+          mode: string
+          nium_beneficiary_hash_id: string | null
+          routing_type: string
+          updated_at: string
+          user_id: string
+          verification_status: string
+        }
+        Insert: {
+          beneficiary_account_number: string
+          beneficiary_bank_code?: string | null
+          beneficiary_bank_name?: string | null
+          beneficiary_country: string
+          beneficiary_name: string
+          created_at?: string
+          destination_currency: string
+          id?: string
+          metadata?: Json
+          mode?: string
+          nium_beneficiary_hash_id?: string | null
+          routing_type?: string
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+        }
+        Update: {
+          beneficiary_account_number?: string
+          beneficiary_bank_code?: string | null
+          beneficiary_bank_name?: string | null
+          beneficiary_country?: string
+          beneficiary_name?: string
+          created_at?: string
+          destination_currency?: string
+          id?: string
+          metadata?: Json
+          mode?: string
+          nium_beneficiary_hash_id?: string | null
+          routing_type?: string
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
+      nium_conversions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          destination_amount: number | null
+          destination_currency: string
+          failure_reason: string | null
+          fx_rate: number | null
+          fx_spread_bps: number | null
+          id: string
+          idempotency_key: string
+          metadata: Json
+          mode: string
+          nium_conversion_id: string | null
+          source_account_id: string | null
+          source_amount: number
+          source_currency: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          destination_amount?: number | null
+          destination_currency: string
+          failure_reason?: string | null
+          fx_rate?: number | null
+          fx_spread_bps?: number | null
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          mode?: string
+          nium_conversion_id?: string | null
+          source_account_id?: string | null
+          source_amount: number
+          source_currency: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          destination_amount?: number | null
+          destination_currency?: string
+          failure_reason?: string | null
+          fx_rate?: number | null
+          fx_spread_bps?: number | null
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          mode?: string
+          nium_conversion_id?: string | null
+          source_account_id?: string | null
+          source_amount?: number
+          source_currency?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nium_conversions_source_account_id_fkey"
+            columns: ["source_account_id"]
+            isOneToOne: false
+            referencedRelation: "nium_global_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nium_global_accounts: {
         Row: {
+          account_kind: string
           account_number: string | null
           bank_address: string | null
           bank_name: string | null
@@ -17778,6 +17904,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_kind?: string
           account_number?: string | null
           bank_address?: string | null
           bank_name?: string | null
@@ -17799,6 +17926,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_kind?: string
           account_number?: string | null
           bank_address?: string | null
           bank_name?: string | null
@@ -17986,6 +18114,156 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nium_payouts: {
+        Row: {
+          beneficiary_id: string
+          completed_at: string | null
+          created_at: string
+          destination_amount: number | null
+          destination_currency: string
+          failure_reason: string | null
+          fx_rate: number | null
+          fx_spread_bps: number | null
+          id: string
+          idempotency_key: string
+          metadata: Json
+          mode: string
+          nium_transfer_id: string | null
+          pop_code: string
+          purpose_description: string | null
+          source_account_id: string | null
+          source_amount: number
+          source_currency: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          beneficiary_id: string
+          completed_at?: string | null
+          created_at?: string
+          destination_amount?: number | null
+          destination_currency: string
+          failure_reason?: string | null
+          fx_rate?: number | null
+          fx_spread_bps?: number | null
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          mode?: string
+          nium_transfer_id?: string | null
+          pop_code?: string
+          purpose_description?: string | null
+          source_account_id?: string | null
+          source_amount: number
+          source_currency: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          beneficiary_id?: string
+          completed_at?: string | null
+          created_at?: string
+          destination_amount?: number | null
+          destination_currency?: string
+          failure_reason?: string | null
+          fx_rate?: number | null
+          fx_spread_bps?: number | null
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          mode?: string
+          nium_transfer_id?: string | null
+          pop_code?: string
+          purpose_description?: string | null
+          source_account_id?: string | null
+          source_amount?: number
+          source_currency?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nium_payouts_beneficiary_id_fkey"
+            columns: ["beneficiary_id"]
+            isOneToOne: false
+            referencedRelation: "nium_beneficiaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nium_payouts_source_account_id_fkey"
+            columns: ["source_account_id"]
+            isOneToOne: false
+            referencedRelation: "nium_global_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nium_rfi: {
+        Row: {
+          created_at: string
+          due_by: string | null
+          id: string
+          metadata: Json
+          mode: string
+          nium_rfi_id: string | null
+          resolved_at: string | null
+          responded_at: string | null
+          responded_by: string | null
+          response_payload: Json | null
+          rfi_details: string | null
+          rfi_reason: string
+          status: string
+          subject_reference: string | null
+          subject_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_by?: string | null
+          id?: string
+          metadata?: Json
+          mode?: string
+          nium_rfi_id?: string | null
+          resolved_at?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_payload?: Json | null
+          rfi_details?: string | null
+          rfi_reason: string
+          status?: string
+          subject_reference?: string | null
+          subject_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          due_by?: string | null
+          id?: string
+          metadata?: Json
+          mode?: string
+          nium_rfi_id?: string | null
+          resolved_at?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_payload?: Json | null
+          rfi_details?: string | null
+          rfi_reason?: string
+          status?: string
+          subject_reference?: string | null
+          subject_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       njangi_contributions: {
         Row: {
