@@ -15,6 +15,7 @@ const VELOCITY_PROFILES: Record<string, { perMinute: number; perHour: number }> 
   "developer-register-app": { perMinute: 3, perHour: 20 },
   "sandbox-create-account": { perMinute: 3, perHour: 10 },
   "sandbox-create-api-key": { perMinute: 5, perHour: 30 },
+  "sandbox-create-oauth-client": { perMinute: 3, perHour: 10 },
 };
 
 /**
