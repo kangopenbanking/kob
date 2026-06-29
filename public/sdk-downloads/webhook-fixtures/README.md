@@ -24,6 +24,32 @@ JSON before verifying. Compare with a constant-time comparator
 | `account.updated.json` | Canonical `account.updated` body. |
 | `account.updated.headers.json` | Headers for that body. |
 | `tampered/charge.succeeded.json` | One field flipped. Verifiers MUST reject. |
+| `SHA256SUMS` | Per-file SHA-256 digests (verify with `sha256sum -c SHA256SUMS`). |
+
+## Versioned download
+
+The full fixture set is also published as a single deterministic zip so you can
+pin the exact byte-set in your CI:
+
+| URL | Purpose |
+| --- | --- |
+| `/sdk-downloads/webhook-fixtures-v<spec-version>.zip` | Immutable, version-pinned bundle. |
+| `/sdk-downloads/webhook-fixtures-v<spec-version>.zip.sha256` | SHA-256 of the zip. |
+| `/sdk-downloads/webhook-fixtures-latest.zip` | Always tracks the current spec version. |
+| `/sdk-downloads/webhook-fixtures-latest.zip.sha256` | SHA-256 of the latest zip. |
+
+```bash
+curl -fsSLO https://kangopenbanking.com/sdk-downloads/webhook-fixtures-latest.zip
+curl -fsSLO https://kangopenbanking.com/sdk-downloads/webhook-fixtures-latest.zip.sha256
+sha256sum -c webhook-fixtures-latest.zip.sha256
+unzip webhook-fixtures-latest.zip -d webhook-fixtures
+sha256sum -c webhook-fixtures/SHA256SUMS
+```
+
+The zip is reproducible: `scripts/package-webhook-fixtures.mjs` runs in CI
+(`fixture-bundle-check` job) and fails the build if the committed archive
+drifts from a fresh rebuild.
+
 
 ## Quick check
 

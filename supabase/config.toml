@@ -1105,3 +1105,5 @@ verify_jwt = false
 [functions.screenshot-guard-settings]
 verify_jwt = false
 
+[functions.oauth-sandbox-pkce-dryrun]
+verify_jwt = false

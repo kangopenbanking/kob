@@ -1,4 +1,4 @@
-# kangopenbanking
+# kangopenbanking — v0.0.1
 
 Official Python SDK for the **Kang Open Banking (KOB) API**.
 
