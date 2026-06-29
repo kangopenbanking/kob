@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
     beneficiary_name: nium.beneficiary_name,
     pop_code: popCode,
     mode: NIUM_MODE,
+    account_kind: accountKind,
     status: "active",
   }).select().single();
 
