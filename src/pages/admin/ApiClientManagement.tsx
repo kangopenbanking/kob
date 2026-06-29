@@ -52,6 +52,8 @@ export default function ApiClientManagement() {
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<ApiClient[]>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showSandboxCreateDialog, setShowSandboxCreateDialog] = useState(false);
+  const [filterEnv, setFilterEnv] = useState<'all' | 'sandbox' | 'production'>('all');
   const [newClientData, setNewClientData] = useState({
     client_name: '',
     redirect_uris: '',
@@ -59,7 +61,15 @@ export default function ApiClientManagement() {
     grant_types: ALL_GRANT_TYPES.map(g => g.value),
     institution_id: ''
   });
+  const [newSandboxClientData, setNewSandboxClientData] = useState({
+    client_name: '',
+    redirect_uris: 'https://ci.kangopenbanking.com/callback',
+    scopes: ALL_SCOPES.map(s => s.value),
+    grant_types: ['authorization_code', 'refresh_token'],
+    rate_limit_tier: 'sandbox'
+  });
   const [createdSecret, setCreatedSecret] = useState<{ client_id: string; client_secret: string } | null>(null);
+  const [sandboxCreatedSecret, setSandboxCreatedSecret] = useState<{ client_id: string; client_secret: string; api_environment: string } | null>(null);
   const [showSecret, setShowSecret] = useState(false);
 
   useEffect(() => {
