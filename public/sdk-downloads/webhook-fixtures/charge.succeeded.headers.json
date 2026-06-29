@@ -1,0 +1,6 @@
+{
+  "X-Kang-Signature": "8f2e63950fc19aeeaf9dd81e838829ed3662e8813e653312bfbfb101f4ac8e18",
+  "X-Kang-Event": "charge.succeeded",
+  "X-Kang-Event-Id": "evt_01J0FIXTURECHARGESUCCESS01",
+  "Content-Type": "application/json"
+}

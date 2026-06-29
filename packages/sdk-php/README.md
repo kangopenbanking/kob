@@ -183,6 +183,11 @@ $isValid = KangOpenBanking::verifyWebhookSignature(
 );
 ```
 
+Deterministic signed test fixtures for `charge.succeeded` and `account.updated`
+are published at
+[`/sdk-downloads/webhook-fixtures/`](https://kangopenbanking.com/sdk-downloads/webhook-fixtures/README.md)
+and are verified on every push and nightly by `.github/workflows/webhook-signature-smoke.yml`.
+
 ### Laravel middleware
 
 ```php

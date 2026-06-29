@@ -1,7 +1,16 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.51.5",
+  "current": "4.51.6",
   "versions": [
+    {
+      "version": "4.51.6",
+      "released_at": "2026-06-29T00:00:00Z",
+      "type": "patch",
+      "changelog": "/developer/changelog#v4-51-6",
+      "json": "openapi-4.51.6.json",
+      "yaml": "openapi-4.51.6.yaml",
+      "notes": "Webhooks section documents charge.succeeded and account.updated events with examples drawn from public signed fixtures."
+    },
     {
       "version": "4.51.5",
       "released_at": "2026-06-25T13:59:34.235Z",
@@ -28,91 +37,91 @@
       "released_at": "2026-05-29T03:27:09.582Z",
       "type": "snapshot",
       "file": "openapi-4.49.0.json",
-      "notes": "Phase 11 — integrator experience & governance. Adds enriched Postman environments (sandbox + production), admin send-test-webhook flow, institution API key admin console (create/rotate/suspend/revoke + usage), per-version OpenAPI export (JSON + YAML) with Postman 'Import Spec' UX, and ratchet tests for phases 10.2-10.5."
+      "notes": "Phase 11 \u2014 integrator experience & governance. Adds enriched Postman environments (sandbox + production), admin send-test-webhook flow, institution API key admin console (create/rotate/suspend/revoke + usage), per-version OpenAPI export (JSON + YAML) with Postman 'Import Spec' UX, and ratchet tests for phases 10.2-10.5."
     },
     {
       "version": "4.46.0",
       "released_at": "2026-05-29T02:59:39.362Z",
       "type": "snapshot",
       "file": "openapi-4.46.0.json",
-      "notes": "Phase 10.3 — Agent banking. Adds /v1/agents/* registry, float management, cash-in/cash-out and transaction history. Cites BIS Agent Banking Guidelines (2018), Mojaloop v1.1, GSMA Agent Network Management Toolkit v2."
+      "notes": "Phase 10.3 \u2014 Agent banking. Adds /v1/agents/* registry, float management, cash-in/cash-out and transaction history. Cites BIS Agent Banking Guidelines (2018), Mojaloop v1.1, GSMA Agent Network Management Toolkit v2."
     },
     {
       "version": "4.44.0",
       "released_at": "2026-05-29T02:47:48.208Z",
       "type": "snapshot",
       "file": "openapi-4.44.0.json",
-      "notes": "Phase 10.1 — CEMAC coverage & inclusion (additive). Closes audit gaps for mobile-money provider coverage, virtual-account regional examples, CEMAC identity verification, RTP SLA hints, credit-score data sources, bilingual error catalogue, and LoanScheduleItem deprecated-field cleanup."
+      "notes": "Phase 10.1 \u2014 CEMAC coverage & inclusion (additive). Closes audit gaps for mobile-money provider coverage, virtual-account regional examples, CEMAC identity verification, RTP SLA hints, credit-score data sources, bilingual error catalogue, and LoanScheduleItem deprecated-field cleanup."
     },
     {
       "version": "4.43.0",
       "released_at": "2026-05-29T00:47:13.699Z",
       "type": "snapshot",
       "file": "openapi-4.43.0.json",
-      "notes": "Phase 9 — High-priority gaps #6-#9 + per-tier rate limits. /v1/consents lifecycle façade, /v1/statements (camt.053.001.08), /v1/rate-limits, MobileMoneyErrorCode normalization, W3C Trace Context (traceparent/tracestate) on every operation."
+      "notes": "Phase 9 \u2014 High-priority gaps #6-#9 + per-tier rate limits. /v1/consents lifecycle fa\u00e7ade, /v1/statements (camt.053.001.08), /v1/rate-limits, MobileMoneyErrorCode normalization, W3C Trace Context (traceparent/tracestate) on every operation."
     },
     {
       "version": "4.40.0",
       "released_at": "2026-05-17T20:32:00.000Z",
       "type": "snapshot",
       "file": "openapi-4.40.0.json",
-      "notes": "Phase 8 — Scalability, DX & SDK Completeness. x-scalability vendor extension publishes the KV cache contract, typed SDK matrix (Node/Python/PHP/Go hand-tuned + TS/Py/Go/Java auto-generated), and k6 load harness SLOs."
+      "notes": "Phase 8 \u2014 Scalability, DX & SDK Completeness. x-scalability vendor extension publishes the KV cache contract, typed SDK matrix (Node/Python/PHP/Go hand-tuned + TS/Py/Go/Java auto-generated), and k6 load harness SLOs."
     },
     {
       "version": "4.39.0",
       "released_at": "2026-05-17T20:31:00.000Z",
       "type": "snapshot",
       "file": "openapi-4.39.0.json",
-      "notes": "Phase 7 — Fraud & Risk Enhancements. x-risk vendor extension publishes blocklist identifier types, merchant 30d baselines, and the configurable fail-closed threshold for high-value charges."
+      "notes": "Phase 7 \u2014 Fraud & Risk Enhancements. x-risk vendor extension publishes blocklist identifier types, merchant 30d baselines, and the configurable fail-closed threshold for high-value charges."
     },
     {
       "version": "4.38.0",
       "released_at": "2026-05-17T20:25:00.000Z",
       "type": "snapshot",
       "file": "openapi-4.38.0.json",
-      "notes": "Phase 6 — Compliance & Data Retention. x-data-retention vendor extension publishes seeded retention horizons (kyc 7y, transactions 10y, consent 7y, webhooks 1y)."
+      "notes": "Phase 6 \u2014 Compliance & Data Retention. x-data-retention vendor extension publishes seeded retention horizons (kyc 7y, transactions 10y, consent 7y, webhooks 1y)."
     },
     {
       "version": "4.37.0",
       "released_at": "2026-05-17T20:23:00.000Z",
       "type": "snapshot",
       "file": "openapi-4.37.0.json",
-      "notes": "Phase 4 — Payment Orchestration Layer (feature-flagged). x-payment-orchestrator vendor extension; charge_dlq + 24h idempotency_cache_extended tables."
+      "notes": "Phase 4 \u2014 Payment Orchestration Layer (feature-flagged). x-payment-orchestrator vendor extension; charge_dlq + 24h idempotency_cache_extended tables."
     },
     {
       "version": "4.36.0",
       "released_at": "2026-05-17T20:20:00.000Z",
       "type": "snapshot",
       "file": "openapi-4.36.0.json",
-      "notes": "Phase 5 — Observability & SLOs. X-Trace-Id response header on every operation; x-observability vendor extension publishes SLO targets and trace propagation contract."
+      "notes": "Phase 5 \u2014 Observability & SLOs. X-Trace-Id response header on every operation; x-observability vendor extension publishes SLO targets and trace propagation contract."
     },
     {
       "version": "4.35.0",
       "released_at": "2026-05-17T20:02:53.956Z",
       "type": "snapshot",
       "file": "openapi-4.35.0.json",
-      "notes": "Phase 3 — Reconciliation closeout. Canonical x-state-machine, audit-exports bucket, reconciliation_mismatches Kanban columns."
+      "notes": "Phase 3 \u2014 Reconciliation closeout. Canonical x-state-machine, audit-exports bucket, reconciliation_mismatches Kanban columns."
     },
     {
       "version": "4.34.0",
       "released_at": "2026-05-17T19:58:27.040Z",
       "type": "snapshot",
       "file": "openapi-4.34.0.json",
-      "notes": "Phase 2 — AuthZ scope matrix on bearerAuth, webhook circuit-breaker headers, X-Webhook-Replay header, webhook event registry page."
+      "notes": "Phase 2 \u2014 AuthZ scope matrix on bearerAuth, webhook circuit-breaker headers, X-Webhook-Replay header, webhook event registry page."
     },
     {
       "version": "4.33.0",
       "released_at": "2026-05-17T19:44:48.885Z",
       "type": "snapshot",
       "file": "openapi-4.33.0.json",
-      "notes": "Phase 1 API contract hardening — cursor pagination parity, RFC 7807 error normalization, and X-Request-ID correlation across all 405 operations."
+      "notes": "Phase 1 API contract hardening \u2014 cursor pagination parity, RFC 7807 error normalization, and X-Request-ID correlation across all 405 operations."
     },
     {
       "version": "4.32.0",
       "released_at": "2026-05-08T00:00:00Z",
       "type": "snapshot",
       "file": "openapi-4.32.0.json",
-      "notes": "Virtual Card Issuing v2 release — Kora middleware for Banks and Developers."
+      "notes": "Virtual Card Issuing v2 release \u2014 Kora middleware for Banks and Developers."
     },
     {
       "version": "4.27.3",

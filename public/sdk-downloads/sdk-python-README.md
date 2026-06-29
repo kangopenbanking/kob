@@ -208,10 +208,22 @@ kob.sandbox_tools.generate_data(data_type="transactions", count=50)
 ```python
 is_valid = KangOpenBanking.verify_webhook_signature(
     payload=raw_body,
-    signature=request.headers["X-KOB-Signature"],
+    signature=request.headers["X-Kang-Signature"],
     secret=os.environ["KOB_WEBHOOK_SECRET"],
 )
 ```
+
+Deterministic signed test fixtures for `charge.succeeded` and `account.updated`
+are published at
+[`/sdk-downloads/webhook-fixtures/`](https://kangopenbanking.com/sdk-downloads/webhook-fixtures/README.md).
+
+## End-to-end PKCE example
+
+A runnable sample that performs OAuth 2.0 + PKCE (RFC 7636 §4) against the
+sandbox lives at
+[`examples/pkce_auth_code.py`](./examples/pkce_auth_code.py). Standard library
+only — no third-party dependencies.
+
 
 ## Error handling
 

@@ -1,0 +1,37 @@
+name: Webhook Signature Smoke
+
+# Verifies that the published webhook test fixtures
+# (public/sdk-downloads/webhook-fixtures/) still validate under each SDK's
+# verifier and that tampered or wrong-secret payloads are rejected.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/sdk-node/**'
+      - 'packages/sdk-python/**'
+      - 'packages/sdk-php/**'
+      - 'public/sdk-downloads/webhook-fixtures/**'
+      - 'scripts/verify-webhook-fixtures.mjs'
+      - 'scripts/build-webhook-fixtures.mjs'
+      - '.github/workflows/webhook-signature-smoke.yml'
+  schedule:
+    - cron: '23 5 * * *'   # 05:23 UTC nightly
+  workflow_dispatch:
+
+jobs:
+  verify-fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Verify webhook fixtures across Node / Python / PHP
+        run: node scripts/verify-webhook-fixtures.mjs
