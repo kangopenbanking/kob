@@ -38,7 +38,9 @@ export default function ApiKeys() {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showSandboxDialog, setShowSandboxDialog] = useState(false);
   const [showSecretDialog, setShowSecretDialog] = useState(false);
+  const [creatingSandbox, setCreatingSandbox] = useState(false);
   const [newClientSecret, setNewClientSecret] = useState("");
   const [newClientId, setNewClientId] = useState("");
   const [showSecret, setShowSecret] = useState(false);
@@ -49,6 +51,12 @@ export default function ApiKeys() {
     developer_use_case: "",
     api_environment: "sandbox",
     rate_limit_tier: "free"
+  });
+  const [sandboxForm, setSandboxForm] = useState({
+    client_name: "",
+    redirect_uris: "https://ci.kangopenbanking.com/callback",
+    developer_company: "",
+    developer_use_case: "Sandbox PKCE testing"
   });
   const { toast } = useToast();
   const navigate = useNavigate();
