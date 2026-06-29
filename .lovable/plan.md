@@ -1,129 +1,126 @@
-## Goal
-Close the four gaps you selected without duplicating existing infrastructure (spec, SDK verifiers, sandbox smoke).
 
----
+# Nium Integration — Gap Closure Plan (Multi-Currency, Virtual + Global Accounts, E2E)
 
-## 1. PKCE auth_code runnable samples (Node + Python)
+## 1. What's there today
 
-New files, no edits to SDK source:
+| Area | State |
+|---|---|
+| Modes | `stub` / `sandbox` / `live` via `NIUM_MODE` — works |
+| Currencies | **Hard-locked to USD / EUR / GBP** in `NiumCurrency` type, SDK, OpenAPI, DB checks |
+| Account types | One concept (`global_account`) — Nium's **Virtual Accounts** (per-customer pay-in) and **Global Accounts** (client-pooled) are conflated |
+| FX | XAF only as destination; EUR pegged 655.957 (BEAC) ✓ |
+| PoP whitelist | Locked to Software/Digital + Royalties (BEAC §) ✓ — must stay |
+| Edge functions | create, list, payout-quote, payout-preference, name-correction, webhook, admin-fees |
+| Beneficiaries / Payouts / Conversions / Statements | **Missing** |
+| Webhook events | only incoming payment + name correction |
+| RFI / KYC remediation | **Missing** |
+| Admin UI | name-corrections + fee settings only |
+| E2E | one Playwright spec (`global-accounts.spec.ts`) — read-only |
 
-- `packages/sdk-node/examples/pkce-auth-code.ts`
-- `packages/sdk-python/examples/pkce_auth_code.py`
-- `packages/sdk-node/examples/README.md` and `packages/sdk-python/examples/README.md` (how to run, env vars)
+## 2. Gaps to close (Standing Order 4: additive only)
 
-Each sample:
-1. Generates `code_verifier` (43–128 char URL-safe) and S256 `code_challenge`.
-2. Builds the `/v1/oauth/authorize` URL with `response_type=code`, `client_id`, `redirect_uri`, `scope`, `state`, `code_challenge`, `code_challenge_method=S256`. Prints it for the operator to open.
-3. Starts a tiny localhost listener (`http://127.0.0.1:8765/callback`) to capture the `code`, validates `state`, then POSTs to `/v1/oauth/token` with `grant_type=authorization_code`, `code`, `code_verifier`, `client_id`, `redirect_uri`.
-4. Calls one secured endpoint (`/v1/accounts` or `/v1/health`) using the returned bearer.
+### G1 — Currency expansion
+Add to `NiumCurrency` (union + DB check + OpenAPI enum) per Nium's supported list:
+`USD, EUR, GBP, AUD, CAD, SGD, AED, JPY, INR, ZAR, HKD, CHF, NZD, SEK, NOK, DKK, CNY` — **17 currencies total**.
+XAF stays the **default destination currency** (Nium does not issue XAF VAs — documented in code + docs).
+Per-currency stub FX rates added to `STUB_RATES`. EUR peg unchanged.
 
-Env: `KOB_BASE`, `KOB_CLIENT_ID`, `KOB_REDIRECT_URI`, `KOB_SCOPE`. No client secret (public client). README cross-link added to each SDK's main `README.md` and to the matching `public/sdk-downloads/sdk-*-README.md` so the published download stays in sync.
+### G2 — Virtual Account vs Global Account split
+- Rename concept (additive only, keep old names as aliases):
+  - **Virtual Account** = per-customer pay-in (`/api/v2/client/{c}/customer/{customer}/virtualAccount`) — already implemented, keep
+  - **Global Account** = client-pooled receivables (`/api/v2/client/{c}/globalAccount`) — new
+- DB: add `account_kind enum('virtual','global')` column on `nium_accounts`, default `virtual`, backfill existing rows.
+- New edge functions: `nium-create-virtual-account` (alias to existing), `nium-create-global-pool-account`, `nium-list-virtual-accounts`, `nium-list-global-pool-accounts`.
 
-Pre-publish validator (`scripts/check-node-sdk-readme.mjs`, `scripts/check-python-sdk-readme.mjs`) is unaffected — examples sit in `examples/`, not in the README method table.
+### G3 — Missing Nium operations
+| Module | New edge function | Nium endpoint |
+|---|---|---|
+| Beneficiaries | `nium-beneficiary-ops` (create/list/delete) | `/api/v2/client/{c}/customer/{cu}/beneficiaries` |
+| Payouts | `nium-create-payout` | `/api/v2/client/{c}/customer/{cu}/transfer` |
+| FX Conversion | `nium-create-conversion` | `/api/v2/client/{c}/customer/{cu}/conversion` |
+| Statements | `nium-get-statement` | `/api/v2/client/{c}/customer/{cu}/statement` |
+| RFI (KYC remediation) | `nium-rfi-ops` (list + respond) | `/api/v1/client/{c}/customer/{cu}/rfi` |
 
----
+All gated by `assertAllowedNiumPopCode` for outbound flows. Idempotency-Key required (UUID v4) per project memory.
 
-## 2. Webhook test fixtures + verifier CI
+### G4 — Webhook coverage
+Extend `nium-webhook` to handle and persist:
+`PAYIN_RECEIVED` (exists), `PAYOUT_STATUS`, `CONVERSION_STATUS`, `RFI_REQUESTED`, `RFI_RESOLVED`, `BENEFICIARY_VERIFIED`, `ACCOUNT_STATUS_CHANGED`.
+HMAC-SHA256 verification already covered by `verifyWebhookSignature` (SDK + edge). Dedupe via `webhook_inbox.idempotency_key`.
 
-New fixture set under `public/sdk-downloads/webhook-fixtures/`:
+### G5 — Admin surfaces
+- `AdminNiumAccounts.tsx` — search / filter / suspend / reactivate accounts (virtual + global).
+- `AdminNiumRFIInbox.tsx` — open RFIs, respond with documents.
+- `AdminNiumPayouts.tsx` — payout monitor with retry + cancel.
+- All admin actions require step-up MFA (project standard).
 
-```text
-webhook-fixtures/
-  README.md
-  secret.txt                       # sandbox-only HMAC secret (clearly labelled)
-  charge.succeeded.json            # canonical payload body
-  charge.succeeded.headers.json    # { "X-KOB-Signature": "t=...,v1=...", "X-KOB-Event": "charge.succeeded", "X-KOB-Id": "evt_..." }
-  account.updated.json
-  account.updated.headers.json
-  tampered/charge.succeeded.json   # one byte flipped — verifier MUST reject
+### G6 — Consumer + Merchant UI
+- `GlobalReceivingAccount.tsx` — render the 17 currencies in the create-account picker; show per-currency wire instructions and limits.
+- New `VirtualAccountInbox.tsx` page on `/app/virtual-accounts` listing inbound payments by VA.
+
+### G7 — API + SDKs
+- Bump OpenAPI **4.51.6 → 4.52.0** (minor: new paths added) per Standing Order 6.
+- New paths under `/v1/gateway/nium/*` for each new function, with full request/response examples and Idempotency-Key headers (Standing Order 3 cites Nium API v2 §Virtual Accounts and §Payouts).
+- SDKs (Node, Python, PHP): add `NiumResource` extension methods `createConversion`, `createPayout`, `listBeneficiaries`, `getStatement`, `respondToRfi`. README method tables updated (CI gates `check-{node,python,php}-sdk-readme.mjs` re-run).
+- Postman collection regenerated; `webhook-fixtures-v4.52.0.zip` published with signed `payout.status` + `conversion.status` examples.
+
+### G8 — Permissions recommendation
+**Best-recommended option (apply by default):** keep current `SECURITY DEFINER` + `has_role()` pattern. Admin Nium screens gated by `nium_ops` app role (new `app_role` enum value). Consumer-facing endpoints stay scoped to `auth.uid()` via existing RLS on `nium_accounts`, `nium_incoming_payments`. New tables (`nium_beneficiaries`, `nium_payouts`, `nium_conversions`, `nium_rfi`) get the standard:
+```
+GRANT SELECT, INSERT, UPDATE ON public.<t> TO authenticated;
+GRANT ALL ON public.<t> TO service_role;
+ALTER TABLE ... ENABLE ROW LEVEL SECURITY;
+-- owner-scoped policy via auth.uid()
+-- admin-scoped policy via has_role(auth.uid(), 'nium_ops')
 ```
 
-Signature scheme matches what each SDK already implements (`t=<unix>,v1=<hex-hmac-sha256>` over `t + "." + raw_body`). Generated by a new helper `scripts/build-webhook-fixtures.mjs` (deterministic given fixed `t`, payload, secret) so fixtures are reproducible.
+## 3. E2E coverage (added in `e2e/nium/`)
 
-New CI workflow `.github/workflows/webhook-signature-smoke.yml`:
+Each test asserts: 200 + DB row + webhook fixture replay + UI state. **PASS report emitted to `NIUM_E2E_REPORT.md`** with per-step ✓/✗.
 
-- Loads each fixture in Node, Python, PHP.
-- Calls each SDK's existing verifier (`verifyWebhookSignature` / `verify_webhook_signature`) — must return `true` for the canonical pair and `false` for `tampered/` and for a wrong-secret case.
-- Runs on push to `packages/sdk-*/**`, `public/sdk-downloads/webhook-fixtures/**`, and nightly.
+| # | Spec | Covers |
+|---|---|---|
+| 1 | `nium-create-virtual-account.spec.ts` | 17 currencies × create → list → idempotent re-create |
+| 2 | `nium-create-global-account.spec.ts` | client-pooled account creation + suspend/reactivate |
+| 3 | `nium-payin-webhook.spec.ts` | signed `PAYIN_RECEIVED` → FX → wallet credit |
+| 4 | `nium-payout.spec.ts` | beneficiary create → payout → `PAYOUT_STATUS` webhook → ledger |
+| 5 | `nium-conversion.spec.ts` | USD→EUR conversion + spread parity vs `nium-quote-payout` |
+| 6 | `nium-rfi.spec.ts` | RFI requested → admin responds → resolved |
+| 7 | `nium-pop-guard.spec.ts` | forbidden PoP code rejected (BEAC lock) |
+| 8 | `nium-rls.spec.ts` | user A cannot read user B's accounts/payouts |
+| 9 | `nium-multi-currency-ui.spec.ts` | Playwright: 17-currency picker, XAF excluded as source, included as destination |
 
-`webhook-fixtures/README.md` documents the scheme, lists the headers, and shows a 5-line snippet per language pointing at the SDK helper. Linked from each SDK README under a new "Webhooks" section.
+CI: new workflow `.github/workflows/nium-e2e.yml` (nightly + on-push to Nium files).
 
----
+## 4. Sequencing (each step is its own commit, Surgeon Rule)
 
-## 3. OpenAPI spec change (patch bump → v4.51.6)
+1. **Migration** — `nium_accounts.account_kind`, new tables (beneficiaries, payouts, conversions, rfi), GRANTs, RLS, `nium_ops` role.
+2. **Shared lib** — expand `NiumCurrency` union + stub rates; add `assertNiumPayoutCurrency` helper.
+3. **Edge functions** — 5 new functions (G3) + webhook extension (G4).
+4. **OpenAPI v4.52.0** — additive paths, examples, history snapshot, changelog entry, version bump.
+5. **SDKs** — Node/Python/PHP method additions + README sync; run all 3 README check scripts.
+6. **Admin UI** — 3 new pages + step-up gates.
+7. **Consumer UI** — picker + VA inbox.
+8. **E2E suite** — 9 specs + workflow + `NIUM_E2E_REPORT.md` generator.
+9. **Verification** — run `pnpm test`, all README gates, `verify-webhook-fixtures.mjs`, Playwright. Final report attached.
 
-Strictly additive, Standing-Order compliant:
+## 5. Permissions / secrets needed from you
 
-- Bump `info.version` to `4.51.6` in `public/openapi.json` and `public/openapi.yaml` (and re-sign artifacts via existing `scripts/build-signing-key-updates.mjs` flow if signing is automated; otherwise leave `.sig` regeneration to the existing release workflow).
-- Under existing `oauth` tag, add a `/oauth/authorize` GET operation documenting PKCE params (`response_type`, `client_id`, `redirect_uri`, `scope`, `state`, `code_challenge`, `code_challenge_method`) with a `302` response and `x-maturity: ga`. Cite RFC 7636 §4 in `description`.
-- Extend the existing `/oauth/token` operation: add `authorization_code` to the `grant_type` enum (additive — already permitted by Ratchet) and document `code`, `redirect_uri`, `code_verifier` body params.
-- Add a top-level `webhooks:` section (OpenAPI 3.1) with two callback operations: `charge.succeeded` and `account.updated`, referencing two new schemas `ChargeSucceededEvent` and `AccountUpdatedEvent` plus a shared `WebhookEnvelope` (id, type, created, data). Document `X-KOB-Signature`, `X-KOB-Event`, `X-KOB-Id` headers with examples drawn from the fixture above. Cite "Standard Webhooks v1.0.0 §3".
-- Archive current spec under `public/openapi-history/openapi-4.51.6.{json,yaml}` and append a `manifest.json` entry.
-- Add a changelog entry in `public/changelog.json` and `docs/changelog.md` describing the additive changes and citing the standards.
+If you want to flip from `stub` → `sandbox` or `live` Nium now:
+- `NIUM_API_KEY` *(sandbox first, then live)*
+- `NIUM_CLIENT_ID`
+- `NIUM_BASE_URL` *(defaults to `https://gateway.nium.com`)*
+- `NIUM_WEBHOOK_SECRET` *(HMAC-SHA256)*
 
-No renames. No removals. No new required fields on existing schemas. Existing operationIds untouched.
+**Recommended:** keep `NIUM_MODE=stub` until steps 1–8 are merged, then move to `sandbox` for the E2E run, then `live` after the PASS report is signed off.
 
----
+## 6. Out of scope (will not touch)
 
-## 4. Extend sandbox CI quickstart with PKCE
-
-Add a fourth job `pkce-quickstart` to `.github/workflows/sdk-quickstart-smoke.yml` that:
-
-1. Runs the new Node example in headless mode (`--headless` flag added to the sample): instead of printing the authorize URL, it calls a sandbox-only helper endpoint `GET /v1/sandbox/oauth/authorize-test?client_id=...&code_challenge=...&scope=...` which returns `{ code, state }` directly when the caller is authenticated with sandbox creds. This avoids a browser in CI.
-2. Exchanges the code at `/v1/oauth/token` with the `code_verifier`.
-3. Calls `/v1/health` with the resulting bearer.
-4. Skips cleanly (exit 0) if `KOB_SANDBOX_CLIENT_ID` / `_SECRET` are not configured, matching the existing job pattern.
-
-The sandbox-only `authorize-test` endpoint is added behind the existing sandbox guard (no change to production routing) — see Technical section.
-
----
-
-## Technical / file inventory
-
-**New**
-
-- `packages/sdk-node/examples/pkce-auth-code.ts`
-- `packages/sdk-node/examples/README.md`
-- `packages/sdk-python/examples/pkce_auth_code.py`
-- `packages/sdk-python/examples/README.md`
-- `public/sdk-downloads/webhook-fixtures/` (6 files listed above)
-- `scripts/build-webhook-fixtures.mjs`
-- `scripts/verify-webhook-fixtures.mjs` (runs the three SDK verifiers in a single Node harness; PHP/Python verifiers shelled out)
-- `.github/workflows/webhook-signature-smoke.yml`
-- `public/openapi-history/openapi-4.51.6.json` + `.yaml` (archive copy)
-- `supabase/functions/oauth-sandbox-authorize-test/index.ts` (sandbox-only, returns synthetic auth code; guarded by `x-sandbox` header + existing sandbox client whitelist)
-
-**Edited**
-
-- `public/openapi.json`, `public/openapi.yaml` — additive only, version → 4.51.6
-- `public/openapi-history/manifest.json` — append entry
-- `public/changelog.json`, `docs/changelog.md` — add 4.51.6 entry
-- `packages/sdk-node/README.md`, `packages/sdk-python/README.md`, `packages/sdk-php/README.md` — add "Webhooks" + "PKCE example" link sections; mirror into `public/sdk-downloads/sdk-*-README.md`
-- `.github/workflows/sdk-quickstart-smoke.yml` — add `pkce-quickstart` job
-
-**Untouched**
-
-- SDK source under `packages/sdk-*/src/` (verifiers already correct).
-- Existing operationIds, required arrays, security schemes.
-- `worker/` (gateway already public-routes `/openapi.json` and `/docs`).
+- BEAC PoP whitelist values (locked).
+- EUR/XAF peg.
+- Existing function signatures (additive only).
+- Removing or renaming any current path / operationId (Standing Order 1).
 
 ---
 
-## Acceptance checks (run before closing)
-
-1. `bun run scripts/check-node-sdk-readme.mjs` — passes (README still matches source).
-2. `node scripts/check-python-sdk-readme.mjs` — passes.
-3. `node scripts/check-php-sdk-readme.mjs` — passes.
-4. `node scripts/verify-webhook-fixtures.mjs` — all 3 verifiers accept canonical fixtures, reject tampered + wrong-secret.
-5. OpenAPI parity workflow (`.github/workflows/openapi-parity.yml`) — green; no operationId churn.
-6. Spec lints clean (the existing `api-contract-gates.yml` job runs Spectral).
-7. `webhook-signature-smoke.yml` dry-run executes locally with `act` or a trial push.
-
----
-
-## Out of scope (call out so we don't drift)
-
-- No changes to production OAuth handlers, no new prod endpoints. The only new endpoint is sandbox-only.
-- No new SDK methods. Verifiers and OAuth helpers already exist.
-- No major version bump. All spec changes are additive and cite a standard, per Standing Orders 2, 3, 4, 6.
-- No edits to `src/integrations/supabase/client.ts`, Firebase config, Capacitor config, or any user-facing UI.
+**Deliverable on approval:** all 9 sequencing steps shipped, full `NIUM_E2E_REPORT.md` with step-by-step PASS, OpenAPI bumped to 4.52.0, SDK READMEs + Postman regenerated, CI green.

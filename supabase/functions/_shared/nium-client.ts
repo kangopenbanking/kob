@@ -3,7 +3,30 @@
 // NIUM_MODE=live  — calls Nium API using NIUM_API_KEY, NIUM_CLIENT_ID, NIUM_BASE_URL.
 // Switching to live requires no code change; just set the env vars.
 
-export type NiumCurrency = "USD" | "EUR" | "GBP";
+// 17 currencies supported by Nium for virtual/global accounts.
+// XAF is the platform's default DESTINATION currency (Cameroon / CEMAC) but
+// Nium does NOT issue XAF accounts — XAF only appears as a payout target via
+// MoMo / wallet credit after FX. Source list mirrors Nium API v2 reference.
+export type NiumCurrency =
+  | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED"
+  | "JPY" | "INR" | "ZAR" | "HKD" | "CHF" | "NZD"
+  | "SEK" | "NOK" | "DKK" | "CNY";
+
+export const NIUM_SUPPORTED_CURRENCIES: readonly NiumCurrency[] = Object.freeze([
+  "USD","EUR","GBP","AUD","CAD","SGD","AED","JPY","INR",
+  "ZAR","HKD","CHF","NZD","SEK","NOK","DKK","CNY",
+]);
+
+export const DEFAULT_DESTINATION_CURRENCY = "XAF" as const;
+
+export function assertNiumCurrency(value: unknown): NiumCurrency {
+  if (typeof value === "string" && (NIUM_SUPPORTED_CURRENCIES as readonly string[]).includes(value)) {
+    return value as NiumCurrency;
+  }
+  throw new Error(
+    `unsupported_currency: must be one of ${NIUM_SUPPORTED_CURRENCIES.join(",")} (XAF is destination only)`,
+  );
+}
 
 export interface NiumGlobalAccount {
   nium_customer_hash_id: string;
@@ -32,11 +55,58 @@ const API_KEY = Deno.env.get("NIUM_API_KEY") ?? "";
 const CLIENT_ID = Deno.env.get("NIUM_CLIENT_ID") ?? "";
 
 // Fixed reference XAF rates for stub/sandbox parity (FX engine peg).
+// Fixed reference XAF rates for stub/sandbox parity (FX engine peg).
+// EUR is pegged to BEAC reference 655.957. Others are sane reference rates
+// for deterministic CI; real sandbox rates come from Nium when MODE != stub.
 const STUB_RATES: Record<NiumCurrency, number> = {
   USD: 605.0,
-  EUR: 655.957, // EUR/XAF fixed peg
+  EUR: 655.957, // EUR/XAF fixed peg (BEAC)
   GBP: 760.0,
+  AUD: 395.0,
+  CAD: 445.0,
+  SGD: 450.0,
+  AED: 165.0,
+  JPY: 4.05,
+  INR: 7.25,
+  ZAR: 33.0,
+  HKD: 77.5,
+  CHF: 680.0,
+  NZD: 365.0,
+  SEK: 57.5,
+  NOK: 55.0,
+  DKK: 88.0,
+  CNY: 84.0,
 };
+
+// Per-currency stub profile (IBAN-style countries use `iban` prefix; others use `acctPrefix`).
+type StubProfile = {
+  iban?: string;
+  acctPrefix: string;
+  routing: string | null;
+  bic: string;
+  bank: string;
+  address: string;
+};
+const STUB_PROFILE: Record<NiumCurrency, StubProfile> = {
+  USD: { acctPrefix: "9",  routing: "021000021", bic: "CHASUS33", bank: "JPMorgan Chase (via Nium)", address: "383 Madison Ave, New York, NY 10179" },
+  EUR: { iban: "DE89370400440532013", acctPrefix: "", routing: null, bic: "COBADEFFXXX", bank: "Commerzbank (via Nium)", address: "Kaiserplatz, 60311 Frankfurt am Main, Germany" },
+  GBP: { acctPrefix: "8",  routing: "200000",    bic: "BARCGB22", bank: "Barclays (via Nium)", address: "1 Churchill Place, London E14 5HP" },
+  AUD: { acctPrefix: "7",  routing: "082-001",   bic: "NATAAU33", bank: "National Australia Bank (via Nium)", address: "395 Bourke St, Melbourne VIC 3000" },
+  CAD: { acctPrefix: "6",  routing: "00010",     bic: "ROYCCAT2", bank: "Royal Bank of Canada (via Nium)", address: "200 Bay St, Toronto, ON M5J 2J5" },
+  SGD: { acctPrefix: "5",  routing: "7171",      bic: "DBSSSGSG", bank: "DBS Bank (via Nium)", address: "12 Marina Blvd, Singapore 018982" },
+  AED: { iban: "AE070331234567890123", acctPrefix: "", routing: null, bic: "EBILAEAD", bank: "Emirates NBD (via Nium)", address: "Baniyas Rd, Deira, Dubai, UAE" },
+  JPY: { acctPrefix: "4",  routing: "0001",      bic: "BOTKJPJT", bank: "MUFG Bank (via Nium)", address: "2-7-1 Marunouchi, Chiyoda-ku, Tokyo 100-8388" },
+  INR: { acctPrefix: "3",  routing: "HDFC0000001", bic: "HDFCINBB", bank: "HDFC Bank (via Nium)", address: "Senapati Bapat Marg, Lower Parel, Mumbai 400013" },
+  ZAR: { acctPrefix: "2",  routing: "051001",    bic: "SBZAZAJJ", bank: "Standard Bank (via Nium)", address: "5 Simmonds St, Johannesburg 2001" },
+  HKD: { acctPrefix: "1",  routing: "004",       bic: "HSBCHKHH", bank: "HSBC (via Nium)", address: "1 Queen's Rd Central, Hong Kong" },
+  CHF: { iban: "CH9300762011623852957", acctPrefix: "", routing: null, bic: "UBSWCHZH80A", bank: "UBS (via Nium)", address: "Bahnhofstrasse 45, 8001 Zürich" },
+  NZD: { acctPrefix: "01", routing: "11-7700",   bic: "ANZBNZ22", bank: "ANZ Bank (via Nium)", address: "23-29 Albert St, Auckland 1010" },
+  SEK: { iban: "SE4550000000058398257466", acctPrefix: "", routing: null, bic: "ESSESESS", bank: "SEB (via Nium)", address: "Kungsträdgårdsgatan 8, 106 40 Stockholm" },
+  NOK: { iban: "NO9386011117947", acctPrefix: "", routing: null, bic: "DNBANOKK", bank: "DNB Bank (via Nium)", address: "Dronning Eufemias gate 30, 0191 Oslo" },
+  DKK: { iban: "DK5000400440116243", acctPrefix: "", routing: null, bic: "NDEADKKK", bank: "Nordea Bank (via Nium)", address: "Strandgade 3, 1401 København" },
+  CNY: { acctPrefix: "62", routing: "ICBKCNBJ", bic: "ICBKCNBJ", bank: "ICBC (via Nium)", address: "55 Fuxingmennei Ave, Xicheng, Beijing 100140" },
+};
+
 
 function deterministicId(prefix: string, seed: string): string {
   let h = 0;
@@ -88,12 +158,12 @@ export async function createGlobalAccount(params: {
     nium_customer_hash_id: deterministicId("nium_cust", params.user_id),
     nium_account_id: accId,
     currency: params.currency,
-    iban: params.currency === "EUR" ? `GB29NWBK6016133${last8.slice(0, 4)}9${last8.slice(4)}` : null,
-    account_number: params.currency === "USD" ? `9${last8}` : params.currency === "GBP" ? `8${last8}` : null,
-    routing_code: params.currency === "USD" ? "021000021" : params.currency === "GBP" ? "200000" : null,
-    bic: params.currency === "EUR" ? "NWBKGB2L" : params.currency === "USD" ? "CHASUS33" : "BARCGB22",
-    bank_name: params.currency === "USD" ? "JPMorgan Chase (via Nium)" : params.currency === "EUR" ? "NatWest (via Nium)" : "Barclays (via Nium)",
-    bank_address: params.currency === "USD" ? "383 Madison Ave, New York, NY 10179" : "1 Princes Street, London EC2R 8BP",
+    iban: STUB_PROFILE[params.currency].iban ? `${STUB_PROFILE[params.currency].iban}${last8}` : null,
+    account_number: STUB_PROFILE[params.currency].iban ? null : `${STUB_PROFILE[params.currency].acctPrefix}${last8}`,
+    routing_code: STUB_PROFILE[params.currency].routing,
+    bic: STUB_PROFILE[params.currency].bic,
+    bank_name: STUB_PROFILE[params.currency].bank,
+    bank_address: STUB_PROFILE[params.currency].address,
     beneficiary_name: params.beneficiary_name,
     mode: "stub",
   };
