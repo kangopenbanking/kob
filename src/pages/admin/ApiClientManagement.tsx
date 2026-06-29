@@ -193,6 +193,7 @@ export default function ApiClientManagement() {
     if (env === 'production') return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" /> Production</Badge>;
     return <Badge variant="outline">Default</Badge>;
   };
+  const toggleClientStatus = async (clientId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('api_clients')
