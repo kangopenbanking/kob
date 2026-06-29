@@ -197,19 +197,19 @@ info:
   x-sdk-libraries:
     node:
       name: '@kangopenbanking/sdk'
-      version: 1.7.0
+      version: 1.1.2
       status: available
       package_manager: https://www.npmjs.com/package/@kangopenbanking/sdk
       docs: https://kangopenbanking.com/developer/guides/sdks#node
     python:
       name: kangopenbanking
-      version: 1.7.0
-      status: available
+      version: 0.0.1
+      status: experimental
       package_manager: https://pypi.org/project/kangopenbanking/
       docs: https://kangopenbanking.com/developer/guides/sdks#python
     php:
       name: kangopenbanking/sdk
-      version: 1.7.0
+      version: 1.1.2
       status: available
       package_manager: https://packagist.org/packages/kangopenbanking/sdk
       docs: https://kangopenbanking.com/developer/guides/sdks#php
