@@ -1,4 +1,4 @@
-# kangopenbanking/sdk
+# kangopenbanking/sdk — v1.1.2
 
 Official PHP SDK for the **Kang Open Banking (KOB) API** with first-class Laravel support.
 
