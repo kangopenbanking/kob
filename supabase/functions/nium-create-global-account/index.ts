@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   if (claimsErr || !claims?.claims?.sub) return json({ error: "unauthorized" }, 401);
   const userId = claims.claims.sub as string;
 
-  let body: { currency?: NiumCurrency; pop_code?: string; beneficiary_name?: string };
+  let body: { currency?: string; pop_code?: string; beneficiary_name?: string; account_kind?: "virtual" | "global" };
   try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
 
   // COMPLIANCE CHECK: reject ANY free-text beneficiary override.
@@ -41,10 +41,11 @@ Deno.serve(async (req) => {
     }, 400);
   }
 
-  const currency = body.currency;
-  if (!currency || !["USD", "EUR", "GBP"].includes(currency)) {
-    return json({ error: "invalid_currency", message: "currency must be USD, EUR, or GBP" }, 400);
-  }
+  let currency: NiumCurrency;
+  try { currency = assertNiumCurrency(body.currency); }
+  catch (e) { return json({ error: "invalid_currency", message: String(e instanceof Error ? e.message : e) }, 400); }
+
+  const accountKind: "virtual" | "global" = body.account_kind === "global" ? "global" : "virtual";
 
   // COMPLIANCE CHECK: BEAC Purpose-of-Payment whitelist.
   const popCode = body.pop_code ?? DEFAULT_NIUM_POP_CODE;
