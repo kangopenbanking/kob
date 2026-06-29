@@ -105,7 +105,8 @@ Deno.serve(async (req) => {
     return json({ error: "missing_fields", required: ["transactionId", "accountId", "amount", "currency"] }, 400);
   }
 
-  const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  // svc already initialized above
+
 
   // Idempotency check
   const { data: dup } = await svc.from("nium_incoming_payments").select("id, status").eq("nium_transaction_id", niumTxId).maybeSingle();
