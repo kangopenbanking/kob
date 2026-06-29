@@ -56,12 +56,14 @@ check_endpoint "PROD /healthz"         "$PROD/healthz"         200 "production"
 check_endpoint "PROD /v1/health"       "$PROD/v1/health"       200 ""
 check_endpoint "PROD /openapi.json"    "$PROD/openapi.json"    200 ""
 check_endpoint "PROD /v1/.well-known/openid-configuration" "$PROD/v1/.well-known/openid-configuration" 200 ""
+check_endpoint "PROD /docs"            "$PROD/docs"            200 ""
 
 hr; echo "Sandbox gateway: $SANDBOX"; hr
 check_endpoint "SBX  /health"          "$SANDBOX/health"       200 "sandbox"
 check_endpoint "SBX  /healthz"         "$SANDBOX/healthz"      200 "sandbox"
 check_endpoint "SBX  /v1/health"       "$SANDBOX/v1/health"    200 ""
 check_endpoint "SBX  /openapi.json"    "$SANDBOX/openapi.json" 200 ""
+check_endpoint "SBX  /docs"            "$SANDBOX/docs"         200 ""
 
 hr; echo "Auth gate (must REJECT unauthenticated /v1/* writes)"; hr
 NOAUTH="$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 "$PROD/v1/accounts" || echo "000")"
