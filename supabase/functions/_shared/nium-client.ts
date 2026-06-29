@@ -105,6 +105,8 @@ const STUB_PROFILE: Record<NiumCurrency, StubProfile> = {
   NOK: { iban: "NO9386011117947", acctPrefix: "", routing: null, bic: "DNBANOKK", bank: "DNB Bank (via Nium)", address: "Dronning Eufemias gate 30, 0191 Oslo" },
   DKK: { iban: "DK5000400440116243", acctPrefix: "", routing: null, bic: "NDEADKKK", bank: "Nordea Bank (via Nium)", address: "Strandgade 3, 1401 København" },
   CNY: { acctPrefix: "62", routing: "ICBKCNBJ", bic: "ICBKCNBJ", bank: "ICBC (via Nium)", address: "55 Fuxingmennei Ave, Xicheng, Beijing 100140" },
+};
+
 
 function deterministicId(prefix: string, seed: string): string {
   let h = 0;
