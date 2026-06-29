@@ -1,12 +1,13 @@
 import { GuidePageShell, GuideStep, GuideCallout, GuideSectionBlock } from "@/components/developer/GuidePageShell";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { KOB_API_VERSION } from "@/config/version";
 
 export default function QuickStart() {
   return (
     <GuidePageShell
       eyebrow="Quickstart"
       title="Get Started in 5 Minutes"
-      description="Three simple steps from sign-up to your first authenticated API call against the live sandbox."
+      description={`Three simple steps from sign-up to your first authenticated API call against the live sandbox. Docs generated from API spec v${KOB_API_VERSION}.`}
       readTime="5 min read"
       level="Beginner"
       primaryCta={{ label: "Get an API key", to: "/developer/guides/first-api-key" }}

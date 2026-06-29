@@ -175,6 +175,7 @@ export default function GettingStarted() {
           <p className="text-xl text-muted-foreground">
             Make your first API call in under 5 minutes. No signup required -- use the sandbox credentials below to start immediately.
           </p>
+          <p className="text-xs text-muted-foreground mt-2">Docs generated from API spec v{KOB_API_VERSION}</p>
         </div>
 
         {/* Instant key generator */}

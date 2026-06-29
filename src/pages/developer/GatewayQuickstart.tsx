@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AutoDocNavigation } from "@/components/developer/AutoDocNavigation";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { KOB_API_VERSION } from "@/config/version";
 
 const GatewayQuickstart = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -18,6 +19,7 @@ const GatewayQuickstart = () => (
       <h1 className="text-3xl font-bold">Gateway Quickstart</h1>
       <p className="text-muted-foreground mt-2">Go from zero to your first payment in under 10 minutes. This guide uses the sandbox environment with test credentials.</p>
       <p className="text-sm text-muted-foreground mt-1">Last updated: 10 April 2026 | Contact: developers@kangopenbanking.com</p>
+      <p className="text-xs text-muted-foreground mt-1">Docs generated from API spec v{KOB_API_VERSION}</p>
     </div>
 
     <Card className="border-primary/30 bg-primary/5">
