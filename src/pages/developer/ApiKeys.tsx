@@ -554,6 +554,68 @@ export default function ApiKeys() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={showSandboxDialog} onOpenChange={setShowSandboxDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Sandbox OAuth 2.0 Client</DialogTitle>
+              <DialogDescription>
+                Issues an <code className="text-xs">sbx_*</code> client ID for PKCE testing against the sandbox environment. Free, rate-limited, and isolated from production.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label htmlFor="sbx_name">Client Name *</Label>
+                <Input
+                  id="sbx_name"
+                  value={sandboxForm.client_name}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, client_name: e.target.value })}
+                  placeholder="My Sandbox PKCE Tester"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sbx_redirect">Redirect URIs (comma-separated)</Label>
+                <Input
+                  id="sbx_redirect"
+                  value={sandboxForm.redirect_uris}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, redirect_uris: e.target.value })}
+                  placeholder="https://ci.kangopenbanking.com/callback"
+                />
+                <p className="text-xs text-muted-foreground">Default matches the CI smoke test redirect.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sbx_company">Company (optional)</Label>
+                <Input
+                  id="sbx_company"
+                  value={sandboxForm.developer_company}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, developer_company: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sbx_use_case">Use Case</Label>
+                <Textarea
+                  id="sbx_use_case"
+                  rows={2}
+                  value={sandboxForm.developer_use_case}
+                  onChange={(e) => setSandboxForm({ ...sandboxForm, developer_use_case: e.target.value })}
+                />
+              </div>
+              <Alert>
+                <AlertDescription className="text-xs">
+                  Includes scopes: openid, accounts, balances, transactions, payments, offline_access. Grant types: authorization_code (PKCE), refresh_token, client_credentials.
+                </AlertDescription>
+              </Alert>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSandboxDialog(false)} disabled={creatingSandbox}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateSandbox} disabled={creatingSandbox}>
+                {creatingSandbox ? "Creating..." : "Create Sandbox Client"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
   );
 }
