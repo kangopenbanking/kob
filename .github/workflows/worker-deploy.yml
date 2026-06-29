@@ -9,20 +9,23 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deploy target (production | sandbox)'
-        required: false
+        description: 'Deploy target'
+        required: true
         default: 'production'
+        type: choice
+        options:
+          - production
+          - sandbox
 
 jobs:
   deploy:
-    name: wrangler deploy
+    name: wrangler deploy (${{ github.event.inputs.environment || 'production' }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
-    defaults:
-      run:
-        working-directory: worker
+    env:
+      TARGET_ENV: ${{ github.event.inputs.environment || 'production' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +36,7 @@ jobs:
           cache-dependency-path: worker/package.json
 
       - name: Install worker deps
+        working-directory: worker
         run: npm install --no-audit --no-fund
 
       - name: Guard — ensure CLOUDFLARE_API_TOKEN is set
@@ -44,12 +48,78 @@ jobs:
             exit 1
           fi
 
-      - name: Deploy worker
+      - name: Resolve base URL for environment
+        id: target
+        run: |
+          if [ "$TARGET_ENV" = "sandbox" ]; then
+            echo "base=https://sandbox-api.kangopenbanking.com" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=https://api.kangopenbanking.com" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy worker (${{ env.TARGET_ENV }})
+        working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          ENV_INPUT="${{ github.event.inputs.environment }}"
-          ENV_INPUT="${ENV_INPUT:-production}"
           chmod +x ./scripts/redeploy.sh ./scripts/verify-deploy.sh
-          ./scripts/redeploy.sh "$ENV_INPUT"
+          ./scripts/redeploy.sh "$TARGET_ENV"
+
+      - name: Post-deploy — /openapi.json + /docs spec-version gate
+        run: node worker/scripts/check-spec-version.mjs "$TARGET_ENV"
+
+      - name: Post-deploy — verify /v1/health in ${{ env.TARGET_ENV }}
+        run: |
+          BASE="${{ steps.target.outputs.base }}"
+          STATUS=$(curl -sS -o /tmp/health.json -w "%{http_code}" --max-time 15 "$BASE/v1/health" || echo 000)
+          echo "GET $BASE/v1/health → $STATUS"
+          cat /tmp/health.json || true
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::/v1/health returned $STATUS in $TARGET_ENV (expected 200)"
+            exit 1
+          fi
+
+  oauth-quickstart-smoke:
+    name: OAuth quickstart smoke (post-deploy)
+    needs: deploy
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ENV: ${{ github.event.inputs.environment || 'production' }}
+      KOB_CLIENT_ID: ${{ secrets.KOB_SANDBOX_CLIENT_ID }}
+      KOB_CLIENT_SECRET: ${{ secrets.KOB_SANDBOX_CLIENT_SECRET }}
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Resolve gateway base for this environment
+        id: gw
+        run: |
+          if [ "$TARGET_ENV" = "sandbox" ]; then
+            echo "base=https://sandbox-api.kangopenbanking.com/v1" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=https://api.kangopenbanking.com/v1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: OAuth client_credentials → secured /health
+        env:
+          KOB_BASE: ${{ steps.gw.outputs.base }}
+        run: |
+          if [ -z "${KOB_CLIENT_ID:-}" ] || [ -z "${KOB_CLIENT_SECRET:-}" ]; then
+            echo "::notice::KOB_SANDBOX_CLIENT_ID/SECRET not configured — skipping OAuth smoke."
+            exit 0
+          fi
+          node <<'JS'
+          const base = process.env.KOB_BASE;
+          const id = process.env.KOB_CLIENT_ID, secret = process.env.KOB_CLIENT_SECRET;
+          const body = new URLSearchParams({ grant_type: 'client_credentials', scope: 'health:read' });
+          const tok = await fetch(`${base}/oauth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                       Authorization: 'Basic ' + Buffer.from(`${id}:${secret}`).toString('base64') },
+            body,
+          });
+          if (!tok.ok) { console.error('token failed', tok.status, await tok.text()); process.exit(1); }
+          const { access_token } = await tok.json();
+          const h = await fetch(`${base}/health`, { headers: { Authorization: `Bearer ${access_token}` }});
+          if (!h.ok) { console.error('secured /health failed', h.status, await h.text()); process.exit(1); }
+          console.log(`OAuth quickstart smoke OK against ${base}`);
+          JS
