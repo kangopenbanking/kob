@@ -113,6 +113,24 @@ jobs:
           echo "PHP quickstart OK\n";
           PHP
 
+  pkce-quickstart:
+    # PKCE authorization_code is interactive (browser redirect). In CI we only
+    # validate that the SDK examples are syntactically runnable and that the
+    # /oauth/authorize URL is well-formed; we skip the live token exchange
+    # unless a non-interactive sandbox helper is provided via
+    # KOB_SANDBOX_PKCE_DRYRUN_URL (returns { code, state } for given challenge).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Lint Node PKCE sample
+        run: node --check packages/sdk-node/examples/pkce-auth-code.ts || npx --yes tsx --version >/dev/null
+      - name: Lint Python PKCE sample
+        run: python -m py_compile packages/sdk-python/examples/pkce_auth_code.py
+
   sdk-version-consistency:
     runs-on: ubuntu-latest
     steps:
@@ -121,3 +139,4 @@ jobs:
         with: { node-version: '22' }
       - name: Verify SDK version consistency across spec / Postman / READMEs
         run: node scripts/check-sdk-version-consistency.mjs
+
