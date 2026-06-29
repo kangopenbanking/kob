@@ -83,6 +83,43 @@ jobs:
   oauth-quickstart-smoke:
     name: OAuth quickstart smoke (post-deploy)
     needs: deploy
-    if: ${{ (github.event.inputs.environment || 'production') == 'sandbox' }}
-    uses: ./.github/workflows/sdk-quickstart-smoke.yml
-    secrets: inherit
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ENV: ${{ github.event.inputs.environment || 'production' }}
+      KOB_CLIENT_ID: ${{ secrets.KOB_SANDBOX_CLIENT_ID }}
+      KOB_CLIENT_SECRET: ${{ secrets.KOB_SANDBOX_CLIENT_SECRET }}
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Resolve gateway base for this environment
+        id: gw
+        run: |
+          if [ "$TARGET_ENV" = "sandbox" ]; then
+            echo "base=https://sandbox-api.kangopenbanking.com/v1" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=https://api.kangopenbanking.com/v1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: OAuth client_credentials → secured /health
+        env:
+          KOB_BASE: ${{ steps.gw.outputs.base }}
+        run: |
+          if [ -z "${KOB_CLIENT_ID:-}" ] || [ -z "${KOB_CLIENT_SECRET:-}" ]; then
+            echo "::notice::KOB_SANDBOX_CLIENT_ID/SECRET not configured — skipping OAuth smoke."
+            exit 0
+          fi
+          node <<'JS'
+          const base = process.env.KOB_BASE;
+          const id = process.env.KOB_CLIENT_ID, secret = process.env.KOB_CLIENT_SECRET;
+          const body = new URLSearchParams({ grant_type: 'client_credentials', scope: 'health:read' });
+          const tok = await fetch(`${base}/oauth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                       Authorization: 'Basic ' + Buffer.from(`${id}:${secret}`).toString('base64') },
+            body,
+          });
+          if (!tok.ok) { console.error('token failed', tok.status, await tok.text()); process.exit(1); }
+          const { access_token } = await tok.json();
+          const h = await fetch(`${base}/health`, { headers: { Authorization: `Bearer ${access_token}` }});
+          if (!h.ok) { console.error('secured /health failed', h.status, await h.text()); process.exit(1); }
+          console.log(`OAuth quickstart smoke OK against ${base}`);
+          JS
