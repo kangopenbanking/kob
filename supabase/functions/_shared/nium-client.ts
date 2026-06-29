@@ -217,3 +217,145 @@ export async function verifyWebhookSignature(rawBody: string, signatureHeader: s
 }
 
 export const NIUM_MODE = MODE;
+
+// ============================================================
+// Beneficiaries / Payouts / Conversions — stub + live wrappers
+// All return deterministic IDs in stub mode for E2E determinism.
+// ============================================================
+
+export interface NiumBeneficiaryInput {
+  user_id: string;
+  beneficiary_name: string;
+  beneficiary_account_number: string;
+  beneficiary_bank_name?: string;
+  beneficiary_bank_code?: string;
+  beneficiary_country: string; // ISO2
+  destination_currency: NiumCurrency | "XAF";
+  routing_type?: "SWIFT" | "LOCAL" | "WALLET";
+}
+
+export interface NiumBeneficiaryResult {
+  nium_beneficiary_hash_id: string;
+  verification_status: "verified" | "pending" | "failed";
+  mode: "stub" | "sandbox" | "live";
+}
+
+export async function createNiumBeneficiary(p: NiumBeneficiaryInput): Promise<NiumBeneficiaryResult> {
+  if (MODE === "live" || MODE === "sandbox") {
+    if (!API_KEY || !CLIENT_ID) throw new Error("NIUM_API_KEY / NIUM_CLIENT_ID missing");
+    const res = await fetch(`${BASE_URL}/api/v2/client/${CLIENT_ID}/customer/${p.user_id}/beneficiaries`, {
+      method: "POST",
+      headers: { "x-api-key": API_KEY, "Content-Type": "application/json", "x-request-id": crypto.randomUUID() },
+      body: JSON.stringify({
+        beneficiaryDetail: { name: p.beneficiary_name },
+        payoutDetail: { destinationCurrency: p.destination_currency, destinationCountry: p.beneficiary_country, routingCodeType1: "BIC", routingCodeValue1: p.beneficiary_bank_code },
+        beneficiaryAccountDetail: { accountNumber: p.beneficiary_account_number, bankName: p.beneficiary_bank_name },
+      }),
+    });
+    if (!res.ok) throw new Error(`Nium createBeneficiary failed: ${res.status} ${await res.text()}`);
+    const j = await res.json();
+    return { nium_beneficiary_hash_id: j.beneficiaryHashId ?? j.id, verification_status: (j.status ?? "pending").toLowerCase(), mode: MODE };
+  }
+  return {
+    nium_beneficiary_hash_id: deterministicId("nium_ben", `${p.user_id}:${p.beneficiary_account_number}:${p.destination_currency}`),
+    verification_status: "verified",
+    mode: "stub",
+  };
+}
+
+export interface NiumPayoutInput {
+  user_id: string;
+  beneficiary_hash_id: string;
+  source_currency: NiumCurrency;
+  source_amount: number;
+  destination_currency: NiumCurrency | "XAF";
+  destination_amount: number;
+  fx_rate: number;
+  purpose_code: string;
+}
+
+export interface NiumPayoutResult {
+  nium_transfer_id: string;
+  status: "submitted" | "processing" | "completed" | "failed";
+  mode: "stub" | "sandbox" | "live";
+}
+
+export async function createNiumPayout(p: NiumPayoutInput): Promise<NiumPayoutResult> {
+  if (MODE === "live" || MODE === "sandbox") {
+    if (!API_KEY || !CLIENT_ID) throw new Error("NIUM_API_KEY / NIUM_CLIENT_ID missing");
+    const res = await fetch(`${BASE_URL}/api/v2/client/${CLIENT_ID}/customer/${p.user_id}/transfer`, {
+      method: "POST",
+      headers: { "x-api-key": API_KEY, "Content-Type": "application/json", "x-request-id": crypto.randomUUID() },
+      body: JSON.stringify({
+        beneficiaryHashId: p.beneficiary_hash_id,
+        sourceCurrencyCode: p.source_currency,
+        destinationCurrencyCode: p.destination_currency,
+        sourceAmount: p.source_amount,
+        destinationAmount: p.destination_amount,
+        exchangeRate: p.fx_rate,
+        purposeCode: p.purpose_code,
+      }),
+    });
+    if (!res.ok) throw new Error(`Nium createPayout failed: ${res.status} ${await res.text()}`);
+    const j = await res.json();
+    return { nium_transfer_id: j.systemReferenceNumber ?? j.id, status: (j.status ?? "submitted").toLowerCase(), mode: MODE };
+  }
+  return {
+    nium_transfer_id: deterministicId("nium_txfr", `${p.user_id}:${p.beneficiary_hash_id}:${Date.now()}`),
+    status: "submitted",
+    mode: "stub",
+  };
+}
+
+export interface NiumConversionInput {
+  user_id: string;
+  source_account_id: string;
+  source_currency: NiumCurrency;
+  source_amount: number;
+  destination_currency: NiumCurrency | "XAF";
+}
+
+export interface NiumConversionResult {
+  nium_conversion_id: string;
+  fx_rate: number;
+  destination_amount: number;
+  status: "completed" | "pending" | "failed";
+  mode: "stub" | "sandbox" | "live";
+}
+
+export async function createNiumConversion(p: NiumConversionInput): Promise<NiumConversionResult> {
+  // For stub/live both, derive rate via getFxQuote (XAF target supported by stub)
+  const quote = p.destination_currency === "XAF"
+    ? await getFxQuote(p.source_currency, p.source_amount)
+    : { rate: STUB_RATES[p.source_currency] / (STUB_RATES[p.destination_currency as NiumCurrency] ?? 1), source_currency: p.source_currency, target_currency: "XAF" as const, quote_id: "x" };
+
+  if (MODE === "live" || MODE === "sandbox") {
+    if (!API_KEY || !CLIENT_ID) throw new Error("NIUM_API_KEY / NIUM_CLIENT_ID missing");
+    const res = await fetch(`${BASE_URL}/api/v1/client/${CLIENT_ID}/customer/${p.user_id}/conversion`, {
+      method: "POST",
+      headers: { "x-api-key": API_KEY, "Content-Type": "application/json", "x-request-id": crypto.randomUUID() },
+      body: JSON.stringify({
+        sourceCurrencyCode: p.source_currency,
+        destinationCurrencyCode: p.destination_currency,
+        sourceAmount: p.source_amount,
+      }),
+    });
+    if (!res.ok) throw new Error(`Nium createConversion failed: ${res.status} ${await res.text()}`);
+    const j = await res.json();
+    return {
+      nium_conversion_id: j.conversionId ?? j.id,
+      fx_rate: Number(j.exchangeRate ?? quote.rate),
+      destination_amount: Number(j.destinationAmount ?? p.source_amount * quote.rate),
+      status: (j.status ?? "completed").toLowerCase(),
+      mode: MODE,
+    };
+  }
+  const destAmt = Math.round(p.source_amount * quote.rate * 100) / 100;
+  return {
+    nium_conversion_id: deterministicId("nium_conv", `${p.user_id}:${p.source_currency}->${p.destination_currency}:${Date.now()}`),
+    fx_rate: quote.rate,
+    destination_amount: destAmt,
+    status: "completed",
+    mode: "stub",
+  };
+}
