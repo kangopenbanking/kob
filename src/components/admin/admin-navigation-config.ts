@@ -120,6 +120,16 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Developer Ops",
+    items: [
+      { title: "Sandbox Management", path: "/admin/sandbox", icon: Database },
+      { title: "API Clients", path: "/admin/api-clients", icon: Key },
+      { title: "Developers", path: "/admin/developer-management", icon: Code2 },
+      { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: ShieldCheck },
+      { title: "Institution API Keys", path: "/admin/institution-api-keys", icon: Key },
+    ],
+  },
+  {
     title: "API & Performance",
     items: [
       { title: "API Testing", path: "/admin/api-testing", icon: Activity },
