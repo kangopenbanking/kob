@@ -196,41 +196,35 @@ info:
     maintenance_notice: 72 hours advance notice
   x-sdk-libraries:
     node:
-      name: '@kang/openbanking-node'
-      version: 1.6.1
-      repository: https://github.com/kangfinance/openbanking-node
-      package_manager: https://www.npmjs.com/package/@kang/openbanking-node
+      name: '@kangopenbanking/sdk'
+      version: 1.7.0
+      status: available
+      package_manager: https://www.npmjs.com/package/@kangopenbanking/sdk
+      docs: https://kangopenbanking.com/developer/guides/sdks#node
     python:
-      name: kang-openbanking
-      version: 1.6.1
-      repository: https://github.com/kangfinance/openbanking-python
-      package_manager: https://pypi.org/project/kang-openbanking/
+      name: kangopenbanking
+      version: 1.7.0
+      status: available
+      package_manager: https://pypi.org/project/kangopenbanking/
+      docs: https://kangopenbanking.com/developer/guides/sdks#python
     php:
-      name: kang/openbanking-php
-      version: 1.6.1
-      repository: https://github.com/kangfinance/openbanking-php
-      package_manager: https://packagist.org/packages/kang/openbanking-php
+      name: kangopenbanking/sdk
+      version: 1.7.0
+      status: available
+      package_manager: https://packagist.org/packages/kangopenbanking/sdk
+      docs: https://kangopenbanking.com/developer/guides/sdks#php
     java:
       name: com.kangopenbanking:kangopenbanking-sdk-typed
-      version: 4.28.1
-      status: generated
-      repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
-      package_manager: https://github.com/kangopenbanking/KangOpenBanking-KOB/actions/workflows/sdk-generate.yml
+      status: planned
       generator: openapi-generator-cli (java, okhttp-gson)
       docs: https://kangopenbanking.com/developer/guides/sdks#java
     go:
       name: github.com/kangopenbanking/sdk-go
-      version: 1.6.1
-      status: available
-      repository: https://github.com/kangopenbanking/sdk-go
-      package_manager: https://pkg.go.dev/github.com/kangopenbanking/sdk-go
+      status: planned
       docs: https://kangopenbanking.com/developer/guides/sdks#go
     ruby:
       name: kangopenbanking
-      version: 1.0.0
       status: community-guide
-      repository: https://github.com/kangopenbanking/KangOpenBanking-KOB
-      package_manager: https://rubygems.org/
       generator: openapi-generator-cli (ruby)
       docs: https://kangopenbanking.com/developer/guides/sdks#ruby
   x-postman-collection: https://www.postman.com/kangfinance/kang-open-banking-api
