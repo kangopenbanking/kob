@@ -78,6 +78,34 @@ const STUB_RATES: Record<NiumCurrency, number> = {
   CNY: 84.0,
 };
 
+// Per-currency stub profile (IBAN-style countries use `iban` prefix; others use `acctPrefix`).
+type StubProfile = {
+  iban?: string;
+  acctPrefix: string;
+  routing: string | null;
+  bic: string;
+  bank: string;
+  address: string;
+};
+const STUB_PROFILE: Record<NiumCurrency, StubProfile> = {
+  USD: { acctPrefix: "9",  routing: "021000021", bic: "CHASUS33", bank: "JPMorgan Chase (via Nium)", address: "383 Madison Ave, New York, NY 10179" },
+  EUR: { iban: "DE89370400440532013", acctPrefix: "", routing: null, bic: "COBADEFFXXX", bank: "Commerzbank (via Nium)", address: "Kaiserplatz, 60311 Frankfurt am Main, Germany" },
+  GBP: { acctPrefix: "8",  routing: "200000",    bic: "BARCGB22", bank: "Barclays (via Nium)", address: "1 Churchill Place, London E14 5HP" },
+  AUD: { acctPrefix: "7",  routing: "082-001",   bic: "NATAAU33", bank: "National Australia Bank (via Nium)", address: "395 Bourke St, Melbourne VIC 3000" },
+  CAD: { acctPrefix: "6",  routing: "00010",     bic: "ROYCCAT2", bank: "Royal Bank of Canada (via Nium)", address: "200 Bay St, Toronto, ON M5J 2J5" },
+  SGD: { acctPrefix: "5",  routing: "7171",      bic: "DBSSSGSG", bank: "DBS Bank (via Nium)", address: "12 Marina Blvd, Singapore 018982" },
+  AED: { iban: "AE070331234567890123", acctPrefix: "", routing: null, bic: "EBILAEAD", bank: "Emirates NBD (via Nium)", address: "Baniyas Rd, Deira, Dubai, UAE" },
+  JPY: { acctPrefix: "4",  routing: "0001",      bic: "BOTKJPJT", bank: "MUFG Bank (via Nium)", address: "2-7-1 Marunouchi, Chiyoda-ku, Tokyo 100-8388" },
+  INR: { acctPrefix: "3",  routing: "HDFC0000001", bic: "HDFCINBB", bank: "HDFC Bank (via Nium)", address: "Senapati Bapat Marg, Lower Parel, Mumbai 400013" },
+  ZAR: { acctPrefix: "2",  routing: "051001",    bic: "SBZAZAJJ", bank: "Standard Bank (via Nium)", address: "5 Simmonds St, Johannesburg 2001" },
+  HKD: { acctPrefix: "1",  routing: "004",       bic: "HSBCHKHH", bank: "HSBC (via Nium)", address: "1 Queen's Rd Central, Hong Kong" },
+  CHF: { iban: "CH9300762011623852957", acctPrefix: "", routing: null, bic: "UBSWCHZH80A", bank: "UBS (via Nium)", address: "Bahnhofstrasse 45, 8001 Zürich" },
+  NZD: { acctPrefix: "01", routing: "11-7700",   bic: "ANZBNZ22", bank: "ANZ Bank (via Nium)", address: "23-29 Albert St, Auckland 1010" },
+  SEK: { iban: "SE4550000000058398257466", acctPrefix: "", routing: null, bic: "ESSESESS", bank: "SEB (via Nium)", address: "Kungsträdgårdsgatan 8, 106 40 Stockholm" },
+  NOK: { iban: "NO9386011117947", acctPrefix: "", routing: null, bic: "DNBANOKK", bank: "DNB Bank (via Nium)", address: "Dronning Eufemias gate 30, 0191 Oslo" },
+  DKK: { iban: "DK5000400440116243", acctPrefix: "", routing: null, bic: "NDEADKKK", bank: "Nordea Bank (via Nium)", address: "Strandgade 3, 1401 København" },
+  CNY: { acctPrefix: "62", routing: "ICBKCNBJ", bic: "ICBKCNBJ", bank: "ICBC (via Nium)", address: "55 Fuxingmennei Ave, Xicheng, Beijing 100140" },
+
 function deterministicId(prefix: string, seed: string): string {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
