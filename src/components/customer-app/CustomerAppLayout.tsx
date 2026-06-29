@@ -10,7 +10,6 @@ import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
 import { CustomerAppAuthGuard } from '@/components/auth/CustomerAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { useAppCacheClear } from '@/hooks/useAppCacheClear';
-import { HealthBanner } from '@/components/HealthBanner';
 import { useConsumerWebhookEvents } from '@/hooks/useConsumerWebhookEvents';
 import { TranslationHarvester } from '@/components/i18n/TranslationHarvester';
 import { LanguagePrompt } from '@/components/i18n/LanguagePrompt';
@@ -53,7 +52,6 @@ const CustomerAppInner: React.FC = () => {
         '--pwa-body-color-dark': '#cccccc',
       } as React.CSSProperties}
     >
-      <HealthBanner />
       <ScreenshotGuard />
       <KYCStatusBanner verifyHref="/app/kyc" />
       <TranslationHarvester category="customer" />
