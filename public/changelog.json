@@ -835,7 +835,7 @@
       "highlights": [
         "docs/internal/final-report.md — Phase 6 production-readiness report with per-gate evidence, webhook live-probe results, public docs URL probes, and standing-order compliance matrix.",
         "Webhook ingestion: stripe / flutterwave / paypal receivers all return 401 invalid_signature to unsigned payloads, proving HMAC + verif-hash + transmission-sig verification are active in production.",
-        "Public docs URL verification: kob.lovable.app/openapi.json, /openapi.yaml, /developer/api-explorer, /developer/examples, /developer/examples/real-world all 200 OK.",
+        "Public docs URL verification: kangopenbanking.com/openapi.json, /openapi.yaml, /developer/api-explorer, /developer/examples, /developer/examples/real-world all 200 OK.",
         "Outstanding: user must click Publish to roll the frontend (published origin still on 4.16.4); add SANDBOX_BASE_URL + SANDBOX_API_KEY in GitHub repo secrets to enable live Postman contract job."
       ],
       "additions": [],

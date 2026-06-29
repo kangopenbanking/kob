@@ -293,7 +293,7 @@ export default function RegistrationFlowsDocs() {
           name="description"
           content="Reference for Personal, Business, Institution, and Developer (TPP) registration flows on Kang Open Banking, including required fields, state machines, and sequence diagrams."
         />
-        <link rel="canonical" href="https://kob.lovable.app/developer/registration-flows" />
+        <link rel="canonical" href="https://kangopenbanking.com/developer/registration-flows" />
       </Helmet>
 
       <header className="mb-10">
