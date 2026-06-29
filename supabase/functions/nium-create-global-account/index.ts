@@ -6,7 +6,7 @@
 // pulled from the verified KYC profile. Free-text overrides are FORBIDDEN.
 // COMPLIANCE CHECK (BEAC PoP): pop_code is locked to ALLOWED_NIUM_POP_CODES.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { createGlobalAccount, NIUM_MODE, type NiumCurrency } from "../_shared/nium-client.ts";
+import { createGlobalAccount, NIUM_MODE, assertNiumCurrency, type NiumCurrency } from "../_shared/nium-client.ts";
 import { DEFAULT_NIUM_POP_CODE, isAllowedNiumPopCode } from "../_shared/nium-compliance.ts";
 
 const corsHeaders = {
