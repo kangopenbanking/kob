@@ -77,8 +77,8 @@ describe("Global Accounts — Capacitor deep links (iOS + Android)", () => {
       void platform;
     });
 
-    it(`universal link https://kob.lovable.app/global-accounts resolves on ${platform}`, () => {
-      const u = new URL("https://kob.lovable.app/global-accounts");
+    it(`universal link https://kangopenbanking.com/global-accounts resolves on ${platform}`, () => {
+      const u = new URL("https://kangopenbanking.com/global-accounts");
       expect(u.pathname).toBe("/global-accounts");
       // Same redirect chain as the custom scheme.
       expect(APP_TSX).toContain('path="/global-accounts"');
