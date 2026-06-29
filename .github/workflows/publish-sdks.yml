@@ -38,17 +38,22 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/sdk-python
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Python SDK README matches source
+        run: node scripts/check-python-sdk-readme.mjs
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install build twine
+        working-directory: packages/sdk-python
       - run: python -m build
+        working-directory: packages/sdk-python
       - run: twine upload dist/*
+        working-directory: packages/sdk-python
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
