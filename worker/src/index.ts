@@ -112,6 +112,11 @@ export default {
       return handleOpenApi(env, request, "yaml");
     }
 
+    // Public Swagger UI — browser-visitable API docs, no auth required (P1 + P4).
+    if (url.pathname === "/docs" || url.pathname === "/docs/" || url.pathname === "/v1/docs") {
+      return handleSwaggerUi(env, url);
+    }
+
     let auth: AuthResult = { ok: true, clientId: "public", tier: "free", keyVersion: null };
     if (requiresApiKey(url.pathname)) {
       auth = await authenticateApiKey(request, env, ctx);
