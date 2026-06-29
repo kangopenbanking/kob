@@ -77,7 +77,7 @@ Multiple of the above?           → hybrid`}</pre>
 
       <p className="text-sm text-muted-foreground">
         For deployment, secrets and observability, see the{" "}
-        <Link to="/developer/bank-connector-runbook" className="text-primary underline">Bank Connector Runbook</Link>.
+        <Link to="/developer/connectors/bank-connector-runbook" className="text-primary underline">Bank Connector Runbook</Link>.
       </p>
     </div>
   );

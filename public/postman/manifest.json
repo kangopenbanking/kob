@@ -4,8 +4,7 @@
   "collection": {
     "versioned": "/postman/Kang_Open_Banking_API_v4.51.5.postman_collection.json",
     "latest": "/postman/Kang_Open_Banking_API_latest.postman_collection.json",
-    "legacy": "/postman/Kang_Open_Banking_API_v1.postman_collection.json",
-    "quickstart": "/postman/Kang_OpenBanking_QuickStart_v4.43.0.postman_collection.json"
+    "legacy": "/postman/Kang_Open_Banking_API_v1.postman_collection.json"
   },
   "environments": {
     "sandbox": "/postman/Kang_Open_Banking_Sandbox.postman_environment.json",
