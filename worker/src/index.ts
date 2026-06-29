@@ -75,9 +75,9 @@ const CORS_HEADERS: Record<string, string> = {
  *   /v1/sandbox/*                        — free sandbox surface (P3)
  */
 const PUBLIC_PREFIXES = [
-  "/openapi", "/health", "/healthz",
+  "/openapi", "/health", "/healthz", "/docs",
   "/v1/oauth", "/v1/.well-known", "/v1/sandbox",
-  "/v1/openapi", "/v1/public-api-spec",
+  "/v1/openapi", "/v1/public-api-spec", "/v1/docs",
 ];
 
 // Default per-tier limits (requests per 60s window)
