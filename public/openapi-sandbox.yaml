@@ -268,9 +268,9 @@ info:
       - tx_ref: err_blocked_card
         scenario: Triggers card_blocked error
   x-sdk-versions:
-    node: 1.6.1
-    python: 1.6.1
-    php: 1.6.1
+    node: 1.1.2
+    python: 0.0.1
+    php: 1.1.2
     go: 1.6.1
   x-phase-10-audit: https://kangopenbanking.com/developer/changelog#phase-10-cemac-coverage
 servers:
@@ -59429,17 +59429,17 @@ x-sandbox:
   guarantee: Sandbox keys are permanently free (Standing Order P3).
 x-sdks:
   - language: Node.js / TypeScript
-    package: '@kang/openbanking-node'
+    package: '@kangopenbanking/sdk'
     registry: npm
-    version: 1.6.1
+    version: 1.1.2
   - language: Python
-    package: kang-openbanking
+    package: kangopenbanking
     registry: PyPI
-    version: 1.6.1
+    version: 0.0.1
   - language: PHP / Laravel
-    package: kang/openbanking-php
+    package: kangopenbanking/sdk
     registry: Packagist
-    version: 1.6.1
+    version: 1.1.2
   - language: Postman
     url: https://kangopenbanking.com/developer/guides/postman
   - language: Java

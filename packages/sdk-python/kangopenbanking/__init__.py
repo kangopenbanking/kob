@@ -17,7 +17,7 @@ from .global_accounts import (
     GlobalAccountCurrency,
 )
 
-__version__ = "1.7.0"
+__version__ = "0.0.1"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",

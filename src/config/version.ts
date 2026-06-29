@@ -19,9 +19,9 @@ export const KOB_SPEC_DATE = "2026-06-25";
 
 /** Canonical SDK versions surfaced on the developer portal. */
 export const KOB_SDK_VERSIONS = {
-  node: "1.7.0",
-  python: "1.7.0",
-  php: "1.7.0",
+  node: "1.1.2",
+  python: "0.0.1",
+  php: "1.1.2",
   go: "1.6.1",
   java: KOB_API_VERSION,
   ruby: "community",

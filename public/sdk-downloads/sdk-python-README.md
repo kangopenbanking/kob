@@ -141,6 +141,7 @@ kob.pisp.submit_payment(
 
 ## Changelog
 
+- **0.0.1** — Current published registry version, compatible with OpenAPI v4.51.5.
 - **1.7.0** — Aligned to OpenAPI v4.51.5 (Promise to Pay lifecycle, outbound webhooks, delivery logs).
 - **1.6.1** — Aligned to OpenAPI v4.49.0 (Phase 10/11: USSD, agent banking,
   QR + offline payments, CEMAC remittance, integrator governance APIs).
