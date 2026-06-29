@@ -1,6 +1,17 @@
-# kangopenbanking — Python SDK
+# kangopenbanking
 
-Official Python SDK for the **Kang Open Banking (KOB) API v4.51.5**.
+Official Python SDK for the **Kang Open Banking (KOB) API**.
+
+- PyPI: https://pypi.org/project/kangopenbanking/
+- API docs: https://kangopenbanking.com/developer
+- OpenAPI spec: https://kangopenbanking.com/openapi.json
+- Sandbox spec: https://kangopenbanking.com/openapi-sandbox.json
+- Status: https://kangopenbanking.com/developer/status
+
+## Requirements
+
+- Python 3.8+
+- `httpx` 0.24+
 
 ## Installation
 
@@ -8,48 +19,106 @@ Official Python SDK for the **Kang Open Banking (KOB) API v4.51.5**.
 pip install kangopenbanking
 ```
 
-## Quick Start
+## Authentication
+
+The Kang Open Banking platform uses **OAuth 2.0** for production-track (`ga`)
+endpoints, matching what is documented at
+https://kangopenbanking.com/developer/getting-started:
+
+| Flow                                        | When to use                                  |
+| ------------------------------------------- | -------------------------------------------- |
+| `client_credentials`                        | Server-to-server (your backend ↔ KOB)        |
+| `authorization_code` + **PKCE** (S256)      | End-user delegated access (AISP / PISP)      |
+| Sandbox API key (`sbx_…`) via `X-API-Key`   | Quick sandbox testing only — never in prod   |
+
+### Server-to-server (`client_credentials`)
+
+When `client_secret` is provided, the SDK fetches, caches, and refreshes
+the access token automatically on the first API call:
 
 ```python
+import os
 from kangopenbanking import KangOpenBanking
 
-# Sandbox
+kob = KangOpenBanking(
+    client_id=os.environ["KOB_CLIENT_ID"],
+    client_secret=os.environ["KOB_CLIENT_SECRET"],
+    environment="production",
+)
+
+# First API call triggers the token fetch automatically.
+accounts = kob.accounts.list()
+```
+
+You can also fetch a token explicitly:
+
+```python
+token = kob.get_token(grant_type="client_credentials", scope="accounts payments")
+```
+
+### Authorization Code + PKCE (user-delegated)
+
+The SDK does **not** generate PKCE for you. Generate the verifier/challenge
+in your application and persist them alongside the user's session, then
+exchange the callback `code` for a token and hand it to the SDK:
+
+```python
+import base64
+import hashlib
+import secrets
+
+# 1. Generate PKCE in your app:
+verifier = base64.urlsafe_b64encode(secrets.token_bytes(64)).rstrip(b"=").decode()
+challenge = base64.urlsafe_b64encode(
+    hashlib.sha256(verifier.encode()).digest()
+).rstrip(b"=").decode()
+
+# 2. Redirect the user to:
+#    https://kangopenbanking.com/oauth/authorize
+#      ?client_id=...&redirect_uri=...&response_type=code
+#      &scope=openid+accounts+payments&state=...&code_challenge=<challenge>
+#      &code_challenge_method=S256
+
+# 3. On callback, exchange the code for an access token.
+token = kob.get_token(
+    grant_type="authorization_code",
+    code=callback_code,
+    redirect_uri="https://yourapp.com/callback",
+    code_verifier=verifier,
+)
+
+kob.set_access_token(token["access_token"], token.get("expires_in"))
+```
+
+### Sandbox API key
+
+For quick sandbox testing, skip OAuth by passing an `sbx_…` key. The SDK
+sends it as `X-API-Key`:
+
+```python
 kob = KangOpenBanking(
     client_id="your_client_id",
     api_key="sbx_your_sandbox_key",
     environment="sandbox",
 )
+```
 
-# Production
+## Quick start
+
+```python
+import os
+from kangopenbanking import KangOpenBanking
+
 kob = KangOpenBanking(
-    client_id="your_client_id",
-    client_secret="your_client_secret",
-    environment="production",
+    client_id=os.environ["KOB_CLIENT_ID"],
+    client_secret=os.environ["KOB_CLIENT_SECRET"],
+    environment="sandbox",
 )
-```
 
-## AISP — Account Information
-
-```python
-# List accounts
+# AISP — list a user's accounts
 accounts = kob.accounts.list()
-for acc in accounts:
-    print(f"{acc.account_holder_name} — {acc.currency}")
 
-# Get balances
-balances = kob.balances.get("account_uuid")
-
-# Get transactions
-txns = kob.transactions.list("account_uuid", from_date="2026-01-01")
-
-# Get beneficiaries
-beneficiaries = kob.beneficiaries.list("account_uuid")
-```
-
-## Gateway — Payments
-
-```python
-# Create a Mobile Money charge
+# Gateway — create a Mobile Money charge
 charge = kob.charges.create(
     merchant_id="mch_uuid",
     amount=5000,
@@ -58,19 +127,63 @@ charge = kob.charges.create(
     customer_phone="237677123456",
     tx_ref="order_001",
 )
-print(f"Charge {charge.id}: {charge.status}")
 
-# Verify charge
+# Verify the charge status
 verified = kob.charges.verify(charge.id)
+```
 
-# Estimate fees
-fees = kob.gateway.estimate_fee(amount=5000, channel="mobile_money")
-print(f"Fee: {fees.fee_amount} XAF")
+## Available resources
 
-# Create refund
-refund = kob.refunds.create(charge_id=charge.id, amount=2500)
+These match the public attributes exposed by `KangOpenBanking` (see
+`kangopenbanking/client.py`):
 
-# Create payout
+| Attribute               | Class                       |
+| ----------------------- | --------------------------- |
+| `kob.accounts`          | `_AccountsResource`         |
+| `kob.balances`          | `_BalancesResource`         |
+| `kob.transactions`      | `_TransactionsResource`     |
+| `kob.beneficiaries`     | `_BeneficiariesResource`    |
+| `kob.charges`           | `_ChargesResource`          |
+| `kob.refunds`           | `_RefundsResource`          |
+| `kob.payouts`           | `_PayoutsResource`          |
+| `kob.gateway`           | `_GatewayResource`          |
+| `kob.sandbox_tools`     | `_SandboxResource`          |
+| `kob.global_accounts`   | `GlobalAccountsResource`    |
+
+Additional helpers exported from the package top level: `MerchantOps` and
+`qr` (see `kangopenbanking/__init__.py`).
+
+## AISP — Account information
+
+```python
+accounts = kob.accounts.list()
+balances = kob.balances.get("account_uuid")
+txns = kob.transactions.list(
+    "account_uuid",
+    from_date="2026-01-01",
+    to_date="2026-03-20",
+    page=1,
+    per_page=50,
+)
+beneficiaries = kob.beneficiaries.list("account_uuid")
+```
+
+## Gateway — Payments
+
+```python
+charge = kob.charges.create(
+    merchant_id="mch_uuid",
+    amount=5000,
+    currency="XAF",
+    channel="mobile_money",
+    customer_phone="237677123456",
+    tx_ref="order_001",
+)
+
+fees = kob.gateway.estimate_fee(amount=5000, channel="mobile_money", currency="XAF")
+
+refund = kob.refunds.create(charge_id=charge.id, amount=2500, reason="Customer request")
+
 payout = kob.payouts.create(
     merchant_id="mch_uuid",
     amount=10000,
@@ -81,17 +194,26 @@ payout = kob.payouts.create(
 )
 ```
 
-## Webhook Verification
+## Sandbox tools
+
+```python
+account = kob.sandbox_tools.create_account(
+    account_holder_name="Test User", currency="XAF"
+)
+kob.sandbox_tools.generate_data(data_type="transactions", count=50)
+```
+
+## Webhook verification
 
 ```python
 is_valid = KangOpenBanking.verify_webhook_signature(
     payload=raw_body,
     signature=request.headers["X-KOB-Signature"],
-    secret="your_webhook_secret",
+    secret=os.environ["KOB_WEBHOOK_SECRET"],
 )
 ```
 
-## Error Handling
+## Error handling
 
 ```python
 from kangopenbanking import KOBError
@@ -99,53 +221,41 @@ from kangopenbanking import KOBError
 try:
     charge = kob.charges.create(...)
 except KOBError as e:
-    print(f"[{e.error_code}] {e} (ID: {e.error_id})")
-    print(f"HTTP {e.status_code}")
+    print(f"[{e.error_code}] {e} (id={e.error_id}, http={e.status_code})")
 ```
 
-## Context Manager
+## Context manager
 
 ```python
 with KangOpenBanking(client_id="id", api_key="sbx_key") as kob:
     accounts = kob.accounts.list()
 ```
 
-## Links
+## Rate limits
 
-- [API Documentation](https://kangopenbanking.com/developer)
-- [Getting Started](https://kangopenbanking.com/developer/getting-started)
-- [OpenAPI Spec](https://kangopenbanking.com/openapi.json)
-- [Sandbox Spec](https://kangopenbanking.com/openapi-sandbox.json)
-- [API Status](https://kangopenbanking.com/developer/status)
+| Endpoint group     | Limit                       |
+| ------------------ | --------------------------- |
+| Token endpoint     | 100 / hour per client       |
+| AISP endpoints     | 1,000 / hour per consent    |
+| PISP endpoints     | 500 / hour per client       |
+| Gateway endpoints  | 1,000 / hour per merchant   |
+
+HTTP 429 responses include a `Retry-After` header.
+
+## Other language SDKs
+
+Each SDK is versioned and released independently. Check each package page
+for its current status and version before depending on it:
+
+- Python (this package) — https://pypi.org/project/kangopenbanking/
+- Node.js — https://www.npmjs.com/package/@kangopenbanking/sdk
+- PHP — https://packagist.org/packages/kangopenbanking/sdk
+
+## Support
+
 - Email: developers@kangopenbanking.com
+- Docs: https://kangopenbanking.com/developer
 
 ## License
 
 MIT
-
-## PISP Payment Submission (v4.29.3)
-
-As of OpenAPI v4.29.3, `POST /v1/pisp/payment-submission` requires the full payment instruction.
-
-```python
-kob.pisp.submit_payment(
-    payment_id="pay_abc123",
-    consent_id="pisp_consent_xyz789",
-    amount="50000",
-    currency="XAF",
-    debtor_account="10005-00001-09876543210-45",
-    creditor_account="10005-00001-12345678901-23",
-    idempotency_key=str(uuid.uuid4()),
-)
-```
-
-## Changelog
-
-- **0.0.1** — Current published registry version, compatible with OpenAPI v4.51.5.
-- **1.7.0** — Aligned to OpenAPI v4.51.5 (Promise to Pay lifecycle, outbound webhooks, delivery logs).
-- **1.6.1** — Aligned to OpenAPI v4.49.0 (Phase 10/11: USSD, agent banking,
-  QR + offline payments, CEMAC remittance, integrator governance APIs).
-- **1.2.0** — Aligned to OpenAPI v4.29.3. `submit_payment` now requires
-  `payment_id`, `consent_id`, `amount`, `currency`, `debtor_account`,
-  `creditor_account`. Removed legacy `instructed_amount` / `risk` fields.
-- **1.1.0** — OpenAPI v4.28.x baseline.
