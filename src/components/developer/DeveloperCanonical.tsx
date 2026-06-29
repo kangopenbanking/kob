@@ -7,9 +7,8 @@ import { Helmet } from "react-helmet-async";
  *
  * Injects a canonical <link> on every /developer/* page so crawlers index the
  * single, no-trailing-slash URL on the production host, regardless of which
- * mirror domain (kangopenbanking.com / info.kangfintechsolutions.com /
- * kob.lovable.app) served the response or whether a 301 trailing-slash
- * normalisation occurred upstream.
+ * mirror domain (kangopenbanking.com / info.kangfintechsolutions.com) served
+ * the response or whether a 301 trailing-slash normalisation occurred upstream.
  *
  * This makes Lighthouse / generic SEO crawlers stop reporting "blank stub" for
  * pages they reached via a 301 redirect — the canonical points them straight
