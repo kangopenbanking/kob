@@ -197,7 +197,7 @@ export default function ApiKeys() {
     }
   };
 
-
+  const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast({
       title: "Copied",
