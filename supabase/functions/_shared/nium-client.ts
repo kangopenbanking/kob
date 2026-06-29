@@ -3,7 +3,30 @@
 // NIUM_MODE=live  — calls Nium API using NIUM_API_KEY, NIUM_CLIENT_ID, NIUM_BASE_URL.
 // Switching to live requires no code change; just set the env vars.
 
-export type NiumCurrency = "USD" | "EUR" | "GBP";
+// 17 currencies supported by Nium for virtual/global accounts.
+// XAF is the platform's default DESTINATION currency (Cameroon / CEMAC) but
+// Nium does NOT issue XAF accounts — XAF only appears as a payout target via
+// MoMo / wallet credit after FX. Source list mirrors Nium API v2 reference.
+export type NiumCurrency =
+  | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED"
+  | "JPY" | "INR" | "ZAR" | "HKD" | "CHF" | "NZD"
+  | "SEK" | "NOK" | "DKK" | "CNY";
+
+export const NIUM_SUPPORTED_CURRENCIES: readonly NiumCurrency[] = Object.freeze([
+  "USD","EUR","GBP","AUD","CAD","SGD","AED","JPY","INR",
+  "ZAR","HKD","CHF","NZD","SEK","NOK","DKK","CNY",
+]);
+
+export const DEFAULT_DESTINATION_CURRENCY = "XAF" as const;
+
+export function assertNiumCurrency(value: unknown): NiumCurrency {
+  if (typeof value === "string" && (NIUM_SUPPORTED_CURRENCIES as readonly string[]).includes(value)) {
+    return value as NiumCurrency;
+  }
+  throw new Error(
+    `unsupported_currency: must be one of ${NIUM_SUPPORTED_CURRENCIES.join(",")} (XAF is destination only)`,
+  );
+}
 
 export interface NiumGlobalAccount {
   nium_customer_hash_id: string;
