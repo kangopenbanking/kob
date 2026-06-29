@@ -55,10 +55,27 @@ const API_KEY = Deno.env.get("NIUM_API_KEY") ?? "";
 const CLIENT_ID = Deno.env.get("NIUM_CLIENT_ID") ?? "";
 
 // Fixed reference XAF rates for stub/sandbox parity (FX engine peg).
+// Fixed reference XAF rates for stub/sandbox parity (FX engine peg).
+// EUR is pegged to BEAC reference 655.957. Others are sane reference rates
+// for deterministic CI; real sandbox rates come from Nium when MODE != stub.
 const STUB_RATES: Record<NiumCurrency, number> = {
   USD: 605.0,
-  EUR: 655.957, // EUR/XAF fixed peg
+  EUR: 655.957, // EUR/XAF fixed peg (BEAC)
   GBP: 760.0,
+  AUD: 395.0,
+  CAD: 445.0,
+  SGD: 450.0,
+  AED: 165.0,
+  JPY: 4.05,
+  INR: 7.25,
+  ZAR: 33.0,
+  HKD: 77.5,
+  CHF: 680.0,
+  NZD: 365.0,
+  SEK: 57.5,
+  NOK: 55.0,
+  DKK: 88.0,
+  CNY: 84.0,
 };
 
 function deterministicId(prefix: string, seed: string): string {
