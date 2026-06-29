@@ -212,5 +212,7 @@ $kob->pisp->submitPayment([
 
 ## Changelog
 
+- **1.1.2** — Current published registry version, compatible with OpenAPI v4.51.5.
+
 - **1.6.1** — Aligned to OpenAPI v4.29.3 PISP submission schema.
 - **1.6.0** — OpenAPI v4.28.x baseline.

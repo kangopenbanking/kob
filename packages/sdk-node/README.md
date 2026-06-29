@@ -200,6 +200,8 @@ await kob.pisp.submitPayment({
 
 ## Changelog
 
+- **1.1.2** — Current published registry version, compatible with OpenAPI v4.51.5.
+
 - **1.6.1** — Aligned to OpenAPI v4.29.3. `submitPayment` requires `payment_id`,
   `consent_id`, `amount`, `currency`, `debtor_account`, `creditor_account`.
   Removed legacy `instructed_amount` / `risk` fields.
