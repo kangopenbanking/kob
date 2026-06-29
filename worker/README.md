@@ -51,7 +51,40 @@ Wrangler creates the route binding automatically because of the
 `custom_domain = true` declaration in `wrangler.toml`. Cloudflare provisions
 and renews the TLS certificate for you.
 
+## GitHub Actions deploy (`.github/workflows/worker-deploy.yml`)
+
+The workflow auto-runs on every push that touches `worker/**`, and is also
+manually dispatchable from **Actions → Deploy Cloudflare Worker → Run workflow**
+with an `environment` choice (`production` | `sandbox`).
+
+After `wrangler deploy` it runs three post-deploy gates and fails the job if
+any of them break:
+
+1. `worker/scripts/verify-deploy.sh` — header + status checks on both hostnames.
+2. `worker/scripts/check-spec-version.mjs <env>` — confirms `/openapi.json`
+   returns 200 JSON whose `info.version` matches `KOB_API_VERSION` in
+   `src/config/version.ts`, and that `/docs` serves the Swagger UI shell.
+3. `curl /v1/health` against the selected environment's gateway base.
+4. OAuth quickstart smoke — exchanges `client_credentials` for an access
+   token and calls the secured `/v1/health` against the just-deployed
+   environment (skips cleanly if sandbox credentials are not configured).
+
+### Required GitHub Actions secrets
+
+| Secret                          | Required | Purpose                                                                                          |
+| ------------------------------- | :------: | ------------------------------------------------------------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`          |   yes    | Auth for `wrangler deploy`. Token scopes: **Workers Scripts: Edit** + **Account Settings: Read** (add **Workers Routes: Edit** if you also manage routes from CI). |
+| `CLOUDFLARE_ACCOUNT_ID`         | optional | Only needed if the token belongs to multiple accounts. Wrangler auto-detects otherwise.          |
+| `KOB_SANDBOX_CLIENT_ID`         | optional | OAuth client id used by the post-deploy quickstart smoke (sandbox).                              |
+| `KOB_SANDBOX_CLIENT_SECRET`     | optional | OAuth client secret matched to `KOB_SANDBOX_CLIENT_ID`.                                          |
+
+Add them under **Repo → Settings → Secrets and variables → Actions → New
+repository secret**. The workflow itself only needs `permissions: contents:
+read`; no `id-token`, `packages`, or `deployments` permissions are required.
+
 ## Verification
+
+
 
 After every deploy, run the automated post-deploy gate:
 
