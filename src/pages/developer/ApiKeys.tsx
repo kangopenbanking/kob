@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Copy, CheckCircle, XCircle, Plus, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Key, Copy, CheckCircle, XCircle, Plus, Eye, EyeOff, Trash2, FlaskConical } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 import { GoLiveToggle } from "@/components/shared/GoLiveToggle";
