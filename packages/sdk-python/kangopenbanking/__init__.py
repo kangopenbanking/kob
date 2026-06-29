@@ -16,8 +16,16 @@ from .global_accounts import (
     PayoutPreference,
     GlobalAccountCurrency,
 )
+from .nium import (
+    BeneficiariesResource,
+    PayoutsResource as NiumPayoutsResource,
+    ConversionsResource as NiumConversionsResource,
+    RfiResource as NiumRfiResource,
+    NiumCurrency,
+    NiumAccountKind,
+)
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 __all__ = [
     "KangOpenBanking", "KOBError",
     "Account", "Balance", "Transaction", "Beneficiary",
@@ -28,4 +36,7 @@ __all__ = [
     "qr",
     "GlobalAccountsResource", "NiumGlobalAccount", "NiumIncomingPayment",
     "PayoutPreference", "GlobalAccountCurrency",
+    "BeneficiariesResource", "NiumPayoutsResource",
+    "NiumConversionsResource", "NiumRfiResource",
+    "NiumCurrency", "NiumAccountKind",
 ]
