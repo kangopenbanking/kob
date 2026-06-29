@@ -9,25 +9,44 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
-
-    // Verify user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { data: hasAdminRole } = await supabase.rpc('has_role', {
+    const token = authHeader.replace('Bearer ', '');
+    const adminSupabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Verify user is admin
+    const { data: { user }, error: authError } = await adminSupabase.auth.getUser(token);
+    if (authError || !user) {
+      console.warn('admin-create-client unauthorized request', {
+        reason: authError?.message || 'missing_user',
+      });
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: hasAdminRole, error: roleError } = await adminSupabase.rpc('has_role', {
       _user_id: user.id,
       _role: 'admin'
     });
+
+    if (roleError) {
+      console.error('admin-create-client role check failed:', roleError);
+      return new Response(
+        JSON.stringify({ error: 'Unable to verify admin role' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!hasAdminRole) {
       return new Response(
@@ -50,12 +69,6 @@ Deno.serve(async (req) => {
     
     // Hash the client secret before storing
     const client_secret_hash = await hashSecret(client_secret);
-
-    // Create API client
-    const adminSupabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
 
     const { data: client, error } = await adminSupabase
       .from('api_clients')

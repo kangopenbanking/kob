@@ -16,6 +16,7 @@ import { Plus, Key, Copy, Eye, EyeOff, RefreshCw, Ban, CheckCircle, Beaker } fro
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { extractEdgeFunctionError } from '@/lib/edge-function-error';
 
 const ALL_SCOPES = [
   { value: 'openid', label: 'OpenID Connect', description: 'Identity verification' },
@@ -65,7 +66,7 @@ export default function ApiClientManagement() {
     client_name: '',
     redirect_uris: 'https://ci.kangopenbanking.com/callback',
     scopes: ALL_SCOPES.map(s => s.value),
-    grant_types: ['authorization_code', 'refresh_token'],
+    grant_types: ALL_GRANT_TYPES.map(g => g.value),
     rate_limit_tier: 'sandbox'
   });
   const [createdSecret, setCreatedSecret] = useState<{ client_id: string; client_secret: string } | null>(null);
@@ -144,7 +145,7 @@ export default function ApiClientManagement() {
       });
     } catch (error) {
       logger.error('Error creating API client:', error);
-      toast.error('Failed to create API client');
+      toast.error(extractEdgeFunctionError(error, 'Failed to create API client'));
     }
   };
 
@@ -175,12 +176,12 @@ export default function ApiClientManagement() {
         client_name: '',
         redirect_uris: 'https://ci.kangopenbanking.com/callback',
         scopes: ALL_SCOPES.map(s => s.value),
-        grant_types: ['authorization_code', 'refresh_token'],
+        grant_types: ALL_GRANT_TYPES.map(g => g.value),
         rate_limit_tier: 'sandbox'
       });
     } catch (error) {
       logger.error('Error creating sandbox OAuth client:', error);
-      toast.error('Failed to create sandbox OAuth client');
+      toast.error(extractEdgeFunctionError(error, 'Failed to create sandbox OAuth client'));
     }
   };
 
