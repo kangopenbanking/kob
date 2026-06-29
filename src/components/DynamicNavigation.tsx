@@ -93,8 +93,8 @@ function NavMegaMenu({ label, items }: { label: string; items: NavItem[] }) {
             >
               <item.icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <h3 className="text-sm font-semibold group-hover:text-primary transition-colors">{item.label}</h3>
-                <p className="text-xs text-muted-foreground">{item.desc}</p>
+                <h3 className="text-sm font-semibold group-hover:text-white transition-colors">{item.label}</h3>
+                <p className="text-xs text-muted-foreground group-hover:text-white transition-colors">{item.desc}</p>
               </div>
             </Link>
           ))}
