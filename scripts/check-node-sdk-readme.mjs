@@ -48,7 +48,7 @@ for (const f of walk(SRC_DIR)) {
 // aren't part of the SDK surface — ignore.
 const KEYWORDS = new Set([
   "if", "for", "while", "switch", "catch", "return", "function",
-  "constructor", "new", "set", "get",
+  "constructor", "new",
 ]);
 for (const k of KEYWORDS) methods.delete(k);
 
