@@ -1,0 +1,1 @@
+{"id":"evt_01J0FIXTUREACCOUNTUPDATED01","type":"account.updated","created_at":"2026-06-29T12:05:00Z","livemode":false,"data":{"id":"acc_01J0FIXTUREACCOUNT00000001","iban":"CM21100010000123456789012345","currency":"XAF","balance":"125000","available_balance":"120000","status":"active","updated_at":"2026-06-29T12:05:00Z"}}
