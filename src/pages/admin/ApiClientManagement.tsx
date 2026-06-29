@@ -37,7 +37,7 @@ interface ApiClient {
   client_id: string;
   client_name: string;
   institution_id: string;
-  api_environment: 'sandbox' | 'production' | null;
+  api_environment: 'sandbox' | 'production' | string | null;
   scopes: any;
   grant_types: any;
   redirect_uris: any;
