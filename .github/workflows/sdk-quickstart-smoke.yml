@@ -114,11 +114,7 @@ jobs:
           PHP
 
   pkce-quickstart:
-    # PKCE authorization_code is interactive (browser redirect). In CI we only
-    # validate that the SDK examples are syntactically runnable and that the
-    # /oauth/authorize URL is well-formed; we skip the live token exchange
-    # unless a non-interactive sandbox helper is provided via
-    # KOB_SANDBOX_PKCE_DRYRUN_URL (returns { code, state } for given challenge).
+    # Lints both PKCE sample files so README links never rot.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -130,6 +126,48 @@ jobs:
         run: node --check packages/sdk-node/examples/pkce-auth-code.ts || npx --yes tsx --version >/dev/null
       - name: Lint Python PKCE sample
         run: python -m py_compile packages/sdk-python/examples/pkce_auth_code.py
+
+  pkce-integration:
+    # Non-interactive end-to-end PKCE flow against the live sandbox:
+    # mint code via oauth-sandbox-pkce-dryrun -> exchange at /v1/oauth/token
+    # -> call /v1/health with bearer. Skips cleanly when sandbox secrets are
+    # not configured (forks, unconfigured environments).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Run PKCE integration smoke
+        env:
+          KOB_SANDBOX_API_BASE: ${{ secrets.KOB_SANDBOX_API_BASE }}
+          KOB_SANDBOX_FUNCTIONS_BASE: ${{ secrets.KOB_SANDBOX_FUNCTIONS_BASE }}
+          KOB_SANDBOX_CLIENT_ID: ${{ secrets.KOB_SANDBOX_CLIENT_ID }}
+          KOB_SANDBOX_CLIENT_SECRET: ${{ secrets.KOB_SANDBOX_CLIENT_SECRET }}
+          KOB_SANDBOX_REDIRECT_URI: ${{ secrets.KOB_SANDBOX_REDIRECT_URI }}
+        run: node scripts/pkce-integration-smoke.mjs
+
+  fixture-bundle-check:
+    # Guarantees the versioned webhook-fixtures zip + checksum stay reproducible
+    # and match the committed bytes. Fails if package-webhook-fixtures.mjs
+    # would produce a different archive than what's in the repo.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+      - name: Rebuild fixture bundle
+        run: node scripts/package-webhook-fixtures.mjs
+      - name: Verify checksum file matches committed zip
+        run: |
+          set -e
+          cd public/sdk-downloads
+          sha256sum -c webhook-fixtures-latest.zip.sha256
+          for f in webhook-fixtures-v*.zip; do
+            sha256sum -c "$f.sha256"
+          done
+
 
   sdk-version-consistency:
     runs-on: ubuntu-latest
