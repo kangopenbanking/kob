@@ -9,7 +9,7 @@ import { KOB_API_VERSION_LABEL } from "@/config/version";
 const sdks = [
   {
     name: "Node.js / TypeScript",
-    install: "npm install @kang/openbanking-node",
+    install: "npm install @kangopenbanking/sdk",
     badge: "v1.1.0",
     status: "available",
     github: "https://github.com/kangfinance/openbanking-node",
@@ -18,7 +18,7 @@ const sdks = [
   },
   {
     name: "Python",
-    install: "pip install kang-openbanking",
+    install: "pip install kangopenbanking",
     badge: "v1.1.0",
     status: "available",
     github: "https://github.com/kangfinance/openbanking-python",
@@ -27,7 +27,7 @@ const sdks = [
   },
   {
     name: "PHP / Laravel",
-    install: "composer require kang/openbanking-php",
+    install: "composer require kangopenbanking/sdk",
     badge: "v1.1.0",
     status: "available",
     github: "https://github.com/kangfinance/openbanking-php",

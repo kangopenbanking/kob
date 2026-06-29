@@ -1,4 +1,4 @@
-# @kang/openbanking-node — changelog
+# @kangopenbanking/sdk — changelog
 
 Pinned in lockstep with the OpenAPI SSOT (`KOB_SDK_VERSIONS.node`). Verify
 your install with `https://kangopenbanking.com/SHA256SUMS.txt` and the

@@ -1,17 +1,17 @@
-# @kang/openbanking-node
+# @kangopenbanking/sdk
 
-Official Node.js / TypeScript SDK for the **Kang Open Banking (KOB) v1 API** (v1.7.0, aligned to OpenAPI v4.51.5).
+Official Node.js / TypeScript SDK for the **Kang Open Banking (KOB) API v4.51.5** (v1.7.0, aligned to OpenAPI v4.51.5).
 
 ## Installation
 
 ```bash
-npm install @kang/openbanking-node
+npm install @kangopenbanking/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { KangOpenBanking } from '@kang/openbanking-node';
+import { KangOpenBanking } from '@kangopenbanking/sdk';
 
 // Sandbox (API Key)
 const kob = new KangOpenBanking({
@@ -145,7 +145,7 @@ await kob.webhooks.register({
 ## Error Handling
 
 ```typescript
-import { KOBError } from '@kang/openbanking-node';
+import { KOBError } from '@kangopenbanking/sdk';
 
 try {
   const charge = await kob.charges.create({ ... });

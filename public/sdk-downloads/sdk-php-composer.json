@@ -1,5 +1,5 @@
 {
-  "name": "kang/openbanking-php",
+  "name": "kangopenbanking/sdk",
   "description": "Official Kang Open Banking (KOB) PHP SDK with Laravel support",
   "type": "library",
   "license": "MIT",
