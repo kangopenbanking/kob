@@ -1,6 +1,6 @@
 # kangopenbanking — Python SDK
 
-Official Python SDK for the **Kang Open Banking (KOB) v1 API**.
+Official Python SDK for the **Kang Open Banking (KOB) API v4.51.5**.
 
 ## Installation
 

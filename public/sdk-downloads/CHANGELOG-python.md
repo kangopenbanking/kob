@@ -1,4 +1,4 @@
-# kang-openbanking (Python) — changelog
+# kangopenbanking (Python) — changelog
 
 Pinned in lockstep with the OpenAPI SSOT (`KOB_SDK_VERSIONS.python`). Verify
 your install with `https://kangopenbanking.com/SHA256SUMS.txt` and the

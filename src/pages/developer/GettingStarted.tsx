@@ -24,7 +24,7 @@ curl -X POST https://api.kangopenbanking.com/v1/gateway-charges-router \\
     "tx_ref": "my_first_charge"
   }'`;
 
-const nodeFirstCall = `import { KangOpenBanking } from '@kang/openbanking-node';
+const nodeFirstCall = `import { KangOpenBanking } from '@kangopenbanking/sdk';
 
 // Initialize with sandbox credentials
 const kob = new KangOpenBanking({
@@ -233,9 +233,9 @@ export default function GettingStarted() {
           <CardContent className="space-y-4">
             <CodeBlock
               examples={[
-                { language: "bash", label: "Node.js", code: `npm install @kang/openbanking-node@${KOB_SDK_VERSIONS.node}\n# GitHub: https://github.com/kangfinance/openbanking-node` },
-                { language: "bash", label: "Python", code: `pip install kang-openbanking==${KOB_SDK_VERSIONS.python}\n# GitHub: https://github.com/kangfinance/openbanking-python` },
-                { language: "bash", label: "PHP", code: `composer require kang/openbanking-php:^${KOB_SDK_VERSIONS.php}\n# GitHub: https://github.com/kangfinance/openbanking-php` },
+                { language: "bash", label: "Node.js", code: `npm install @kangopenbanking/sdk@${KOB_SDK_VERSIONS.node}\n# GitHub: https://github.com/kangfinance/openbanking-node` },
+                { language: "bash", label: "Python", code: `pip install kangopenbanking==${KOB_SDK_VERSIONS.python}\n# GitHub: https://github.com/kangfinance/openbanking-python` },
+                { language: "bash", label: "PHP", code: `composer require kangopenbanking/sdk:^${KOB_SDK_VERSIONS.php}\n# GitHub: https://github.com/kangfinance/openbanking-php` },
                 { language: "bash", label: "Java", code: `<!-- Maven -->\n<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>${KOB_API_VERSION}</version>\n</dependency>\n<!-- GitHub: https://github.com/kangopenbanking/KangOpenBanking-KOB -->` },
                 { language: "bash", label: "Go", code: `go get github.com/kangopenbanking/sdk-go@v${KOB_SDK_VERSIONS.go}\n# pkg.go.dev: https://pkg.go.dev/github.com/kangopenbanking/sdk-go` },
                 { language: "bash", label: "Ruby", code: "# Community SDK — generated from the OpenAPI spec.\n# Not officially maintained by Kang Open Banking.\nopenapi-generator-cli generate -i https://kangopenbanking.com/openapi.json -g ruby -o ./kang-ruby-client" },

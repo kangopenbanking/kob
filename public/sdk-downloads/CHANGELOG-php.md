@@ -1,4 +1,4 @@
-# kang/openbanking-php — changelog
+# kangopenbanking/sdk — changelog
 
 Pinned in lockstep with the OpenAPI SSOT (`KOB_SDK_VERSIONS.php`). Verify
 your install with `https://kangopenbanking.com/SHA256SUMS.txt` and the

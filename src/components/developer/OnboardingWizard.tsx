@@ -62,7 +62,7 @@ function StepCredentials({ onNext }: StepProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "kang-openbanking.sandbox.env";
+    a.download = "kangopenbanking.sandbox.env";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -121,9 +121,9 @@ function StepInstallSDK({ onNext, onPrev }: StepProps) {
       </p>
       <CodeBlock
         examples={[
-          { language: "bash", label: "Node.js", code: "npm install @kang/openbanking-node" },
-          { language: "bash", label: "Python", code: "pip install kang-openbanking" },
-          { language: "bash", label: "PHP", code: "composer require kang/openbanking-php" },
+          { language: "bash", label: "Node.js", code: "npm install @kangopenbanking/sdk" },
+          { language: "bash", label: "Python", code: "pip install kangopenbanking" },
+          { language: "bash", label: "PHP", code: "composer require kangopenbanking/sdk" },
           { language: "bash", label: "Go", code: "go get github.com/kangopenbanking/sdk-go" },
           { language: "bash", label: "Java", code: `<dependency>\n  <groupId>com.kangopenbanking</groupId>\n  <artifactId>kangopenbanking-sdk-typed</artifactId>\n  <version>${KOB_SDK_VERSIONS.java}</version>\n</dependency>` },
         ]}
@@ -165,7 +165,7 @@ function StepFirstCall({ onNext, onPrev }: StepProps) {
           },
           {
             language: "javascript", label: "Node.js",
-            code: `import { KangOpenBanking } from '@kang/openbanking-node';
+            code: `import { KangOpenBanking } from '@kangopenbanking/sdk';
 
 const kob = new KangOpenBanking({
   apiKey: 'sk_test_sandbox_KangOB2026Demo',
@@ -297,7 +297,7 @@ function StepFirstTransfer({ onNext, onPrev }: StepProps) {
           },
           {
             language: "javascript", label: "Node.js",
-            code: `import { KangOpenBanking } from "@kang/openbanking-node";
+            code: `import { KangOpenBanking } from "@kangopenbanking/sdk";
 import { randomUUID } from "node:crypto";
 
 const kob = new KangOpenBanking({
