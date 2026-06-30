@@ -426,13 +426,23 @@ const schemas = {
   },
   GatewayVirtualAccount: {
     type: 'object',
+    description: 'Nium-issued dedicated receiving account. account_kind="virtual" returns local account coordinates; "global" returns IBAN/SWIFT details. All inbound funds auto-convert to XAF via the shared Nium FX engine.',
     properties: {
       id: { type: 'string', format: 'uuid' },
       merchant_id: { type: 'string', format: 'uuid' },
-      account_number: { type: 'string', example: '7825000123' },
-      bank_name: { type: 'string', example: 'Wema Bank' },
-      currency: { type: 'string', example: 'NGN' },
-      status: { type: 'string', enum: ['active', 'closed'] },
+      account_kind: { type: 'string', enum: ['virtual', 'global'], default: 'virtual', description: 'Nium account class. Virtual = local rails; Global = IBAN/SWIFT receiving.' },
+      account_number: { type: 'string', example: 'GB29NWBK60161331926819' },
+      iban: { type: 'string', nullable: true, example: 'GB29NWBK60161331926819' },
+      bic: { type: 'string', nullable: true, example: 'NWBKGB2L' },
+      routing_code: { type: 'string', nullable: true },
+      bank_name: { type: 'string', example: 'Citibank N.A. (via Nium)' },
+      bank_address: { type: 'string', nullable: true },
+      beneficiary_name: { type: 'string', description: 'Must match the KYC-verified legal name.' },
+      currency: { type: 'string', enum: ['USD','EUR','GBP','AUD','CAD','SGD','AED','JPY','INR','ZAR','HKD','CHF','NZD','SEK','NOK','DKK','CNY'], example: 'USD', description: 'Receiving currency. Funds settle to XAF by default.' },
+      destination_currency: { type: 'string', example: 'XAF', default: 'XAF' },
+      provider: { type: 'string', enum: ['nium'], default: 'nium' },
+      mode: { type: 'string', enum: ['stub', 'sandbox', 'live'] },
+      status: { type: 'string', enum: ['active', 'suspended', 'closed'] },
       email: { type: 'string' },
       expiry: { type: 'string', format: 'date-time' },
       created_at: { type: 'string', format: 'date-time' },
@@ -1657,14 +1667,18 @@ paths['/v1/gateway/charges/validate'] = {
   post: { tags: ['Payment Gateway'], summary: 'Validate charge with OTP', description: 'Submit an OTP to complete a pending mobile money or card charge that requires validation.', operationId: 'gatewayValidateCharge', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['charge_id', 'otp'], properties: { charge_id: { type: 'string', format: 'uuid' }, otp: { type: 'string', example: '123456' }, flw_ref: { type: 'string', description: 'Flutterwave reference (optional, auto-resolved from charge)' } } } } } }, responses: { '200': { description: 'Charge validation result', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, status: { type: 'string', enum: ['successful', 'failed'] }, message: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
-// ─── Virtual Accounts ───
+// ─── Virtual Accounts (Nium-powered) ───
+// Backed by the Nium global virtual account middleware. account_kind defaults
+// to "virtual"; pass "global" to receive IBAN/SWIFT credentials. Inbound
+// settlements auto-convert to XAF via the shared Nium FX engine
+// (_shared/nium-client.ts). BEAC PoP whitelist + KYC-name enforcement apply.
 paths['/v1/gateway/virtual-accounts'] = {
-  post: { tags: ['Payment Gateway'], summary: 'Create virtual account', description: 'Provision a dedicated virtual account number for pay-with-transfer collection.', operationId: 'gatewayCreateVirtualAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'email'], properties: { merchant_id: { type: 'string', format: 'uuid' }, email: { type: 'string' }, bvn: { type: 'string' }, currency: { type: 'string', default: 'NGN' }, is_permanent: { type: 'boolean', default: false }, narration: { type: 'string' } } } } } }, responses: { '201': { description: 'Virtual account created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } }, ...errorResponses } },
-  get: { tags: ['Payment Gateway'], summary: 'List virtual accounts', operationId: 'gatewayListVirtualAccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Virtual accounts list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } } } } }, ...errorResponses } },
+  post: { tags: ['Payment Gateway'], summary: 'Create virtual account (Nium)', description: 'Provision a dedicated Nium virtual receiving account. Supports 17 source currencies (USD, EUR, GBP, AUD, CAD, SGD, AED, JPY, INR, ZAR, HKD, CHF, NZD, SEK, NOK, DKK, CNY) with XAF as the locked destination currency. account_kind="global" returns IBAN/SWIFT details for cross-border collections.', operationId: 'gatewayCreateVirtualAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'email'], properties: { merchant_id: { type: 'string', format: 'uuid' }, email: { type: 'string' }, beneficiary_name: { type: 'string', description: 'Must match the KYC-verified legal name on file.' }, account_kind: { type: 'string', enum: ['virtual', 'global'], default: 'virtual' }, currency: { type: 'string', enum: ['USD','EUR','GBP','AUD','CAD','SGD','AED','JPY','INR','ZAR','HKD','CHF','NZD','SEK','NOK','DKK','CNY'], default: 'USD' }, pop_code: { type: 'string', description: 'BEAC Purpose-of-Payment code (whitelist enforced).' }, bvn: { type: 'string', deprecated: true, description: 'Legacy NGN-rail field. Ignored on Nium provisioning.' }, is_permanent: { type: 'boolean', default: true, description: 'Nium accounts are permanent by default.' }, narration: { type: 'string' } } } } } }, responses: { '201': { description: 'Virtual account created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List virtual accounts', description: 'List all Nium virtual / global accounts provisioned for the merchant.', operationId: 'gatewayListVirtualAccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }, { name: 'account_kind', in: 'query', required: false, schema: { type: 'string', enum: ['virtual', 'global'] } }], responses: { '200': { description: 'Virtual accounts list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/gateway/virtual-accounts/{accountId}'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Get virtual account', operationId: 'gatewayGetVirtualAccount', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Virtual account details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Get virtual account', description: 'Fetch the Nium-issued virtual account details (account number / IBAN / BIC, currency, status, KYC beneficiary name).', operationId: 'gatewayGetVirtualAccount', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Virtual account details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } }, ...errorResponses } },
 };
 
 // ─── Merchant Wallet / Balances ───
