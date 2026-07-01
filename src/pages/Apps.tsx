@@ -107,7 +107,7 @@ const apps: AppData[] = [
     status: 'live',
     color: 'hsl(271, 91%, 65%)',
     colorLight: 'hsl(271, 91%, 65% / 0.08)',
-    link: '/merchant',
+    link: '/merchant-register',
     image: kfsSendImg,
     features: [
       { icon: Monitor, label: 'POS Terminal', desc: 'Accept payments from any device' },
