@@ -186,12 +186,12 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
           >
-            <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-lg" asChild>
+            <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 text-base shadow-lg" asChild>
               <Link to="/bank/f493095b-037a-40cf-82bc-3a3ab74550dd">
                 Try Banking Demo <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base" asChild>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 h-12 text-base" asChild>
               <Link to="/register">Register Institution</Link>
             </Button>
           </motion.div>
@@ -201,7 +201,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.55 }}
-            className="mt-16 flex items-center justify-center gap-8 sm:gap-16"
+            className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-8 sm:gap-x-16 max-w-2xl mx-auto"
           >
             {[
               { value: '4', label: 'Apps' },
@@ -365,11 +365,11 @@ function AppSection({ app, index }: { app: AppData; index: number }) {
             </div>
 
             {/* Stats + CTA */}
-            <div className="mt-8 flex items-center gap-6 flex-wrap">
-              {app.status === 'live' && app.link && (
+            <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              {app.status === 'live' && app.link ? (
                 <Button
                   size="lg"
-                  className="rounded-full px-8 h-12 text-white shadow-lg"
+                  className="w-full sm:w-auto rounded-full px-8 h-12 text-white shadow-lg"
                   style={{ backgroundColor: app.color }}
                   asChild
                 >
@@ -377,16 +377,23 @@ function AppSection({ app, index }: { app: AppData; index: number }) {
                     Launch App <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
+              ) : (
+                <span
+                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-full px-8 h-12 text-sm font-semibold border border-border text-muted-foreground"
+                >
+                  Coming Soon
+                </span>
               )}
-              <div className="flex items-center gap-6">
+              <div className="grid grid-cols-3 sm:flex sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
                 {app.stats.map((s) => (
                   <div key={s.label} className="text-center">
                     <p className="text-lg font-bold text-foreground">{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{s.label}</p>
                   </div>
                 ))}
               </div>
             </div>
+
           </motion.div>
         </div>
       </div>
