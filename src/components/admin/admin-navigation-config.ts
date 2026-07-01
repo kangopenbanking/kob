@@ -76,6 +76,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Promise to Pay", path: "/admin/promise-to-pay", icon: CheckCircle2 },
       { title: "Savings Anomaly Queue", path: "/admin/savings-anomaly-queue", icon: CheckCircle2 },
       { title: "Name Correction Queue", path: "/admin/nium-name-corrections", icon: ShieldCheck },
+      { title: "Nium Webhook Secret", path: "/admin/nium-webhook-secret", icon: Key },
       { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: Key },
       { title: "Onboarding Queue", path: "/admin/onboarding-management", icon: CheckCircle2 },
     ],
