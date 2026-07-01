@@ -385,6 +385,78 @@ export default function GlobalReceivingAccount() {
       </header>
 
       <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+        {/* Accounts */}
+        <section className="space-y-4" aria-labelledby="accounts-heading">
+          <SectionTitle
+            id="accounts-heading"
+            title="Your accounts"
+            trailing={
+              accounts.length > 0 ? (
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {accounts.length} active
+                </span>
+              ) : null
+            }
+          />
+
+          {loading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-56 w-full rounded-3xl" />
+              <Skeleton className="h-56 w-full rounded-3xl" />
+            </div>
+          ) : accounts.length === 0 ? (
+            <Card className="border-dashed border-border/60">
+              <CardContent className="py-10 px-6 text-center">
+                <div
+                  className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
+                  aria-hidden="true"
+                >
+                  <Globe2 className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                </div>
+                <p className="mt-4 text-[15px] font-semibold">No accounts yet</p>
+                <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
+                  Create your first global account to start receiving money from abroad.
+                  It only takes a minute.
+                </p>
+                <ol className="mt-5 mx-auto max-w-sm text-left text-sm text-muted-foreground space-y-2">
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-foreground">1</span>
+                    <span>Pick a currency above (USD, EUR, GBP and more).</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-foreground">2</span>
+                    <span>Confirm your KYC name matches the sender's records.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-foreground">3</span>
+                    <span>Tap Generate account, then share the details with the sender.</span>
+                  </li>
+                </ol>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-6 rounded-full"
+                  onClick={() =>
+                    document
+                      .getElementById("new-heading")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }
+                >
+                  Create my first account
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" strokeWidth={1.75} />
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {accounts.map((a) => (
+                <AccountCard key={a.id} account={a} onCopy={copy} />
+              ))}
+            </div>
+          )}
+        </section>
+
+
         {/* Use-case cards — swipeable */}
         <section aria-label="Common use cases">
           <div
