@@ -302,6 +302,37 @@ export default function GlobalReceivingAccount() {
     toast({ title: "Exported", description: `${filteredPayments.length} rows downloaded.` });
   };
 
+  const globalAccountSteps: FlowStep[] = [
+    {
+      icon: Globe2,
+      title: "Choose your currency",
+      description: "Pick a Virtual account for local bank transfers or a Global account for IBAN/SWIFT payments. You can add multiple currencies.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: Building2,
+      title: "Share your account details",
+      description: "Copy the account number, IBAN, or BIC and give them to your employer, marketplace, or anyone sending you money.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: ArrowDownLeft,
+      title: "Receive the transfer",
+      description: "When the sender deposits money, it arrives on the account. We track it and apply the correct reference.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: Wallet,
+      title: "Settle in XAF",
+      description: "Funds are converted and sent to your Kang Wallet or Mobile Money in XAF. You can see every payment under Activity.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background antialiased">
       {/* Header */}
