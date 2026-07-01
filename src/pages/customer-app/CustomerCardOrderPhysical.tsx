@@ -63,7 +63,7 @@ const CustomerCardOrderPhysical: React.FC = () => {
         </div>
         <div>
           <h1 className="text-xl font-bold text-foreground">Order a physical card</h1>
-          <p className="text-xs text-muted-foreground">Nium manufactures and ships worldwide.</p>
+          <p className="text-xs text-muted-foreground">Manufactured and shipped to your address.</p>
         </div>
       </header>
 
