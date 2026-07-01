@@ -334,31 +334,36 @@ async function actionLifecycle(
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  try {
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-  let ctx: AuthCtx;
-  try { ctx = await resolveAuth(sb, req); }
-  catch (e: any) { return err("unauthorized", e?.message ?? "auth_failed", 401); }
+    let ctx: AuthCtx;
+    try { ctx = await resolveAuth(sb, req); }
+    catch (e: any) { return err("unauthorized", e?.message ?? "auth_failed", 401); }
 
-  let body: any = {};
-  try { body = await req.json(); } catch { /* empty ok */ }
-  const action = body.action ?? new URL(req.url).searchParams.get("action");
+    let body: any = {};
+    try { body = await req.json(); } catch { /* empty ok */ }
+    const action = body.action ?? new URL(req.url).searchParams.get("action");
 
-  switch (action) {
-    case "issue":           return actionIssue(sb, ctx, body);
-    case "list":            return actionList(sb, ctx);
-    case "freeze":          return actionLifecycle(sb, ctx, body, "freeze");
-    case "unfreeze":        return actionLifecycle(sb, ctx, body, "unfreeze");
-    case "terminate":       return actionLifecycle(sb, ctx, body, "terminate");
-    case "update_limits":   return actionUpdateLimits(sb, ctx, body);
-    case "fund":            return actionFundOrWithdraw(sb, ctx, body, "load");
-    case "withdraw":        return actionFundOrWithdraw(sb, ctx, body, "unload");
-    case "admin_list":      return actionAdminList(sb, ctx, body);
-    case "provider_health": return json(providerHealth());
-    default:                return err("invalid_action", `unknown action: ${action}`, 400);
+    switch (action) {
+      case "issue":           return await actionIssue(sb, ctx, body);
+      case "list":            return await actionList(sb, ctx);
+      case "freeze":          return await actionLifecycle(sb, ctx, body, "freeze");
+      case "unfreeze":        return await actionLifecycle(sb, ctx, body, "unfreeze");
+      case "terminate":       return await actionLifecycle(sb, ctx, body, "terminate");
+      case "update_limits":   return await actionUpdateLimits(sb, ctx, body);
+      case "fund":            return await actionFundOrWithdraw(sb, ctx, body, "load");
+      case "withdraw":        return await actionFundOrWithdraw(sb, ctx, body, "unload");
+      case "admin_list":      return await actionAdminList(sb, ctx, body);
+      case "provider_health": return json(providerHealth());
+      default:                return err("invalid_action", `unknown action: ${action}`, 400);
+    }
+  } catch (e: any) {
+    console.error("[cards-v3] unhandled", e?.stack ?? e);
+    return err("internal_error", e?.message ?? "unexpected error", 500);
   }
 });
 
@@ -481,30 +486,36 @@ async function actionAdminList(
   ctx: AuthCtx,
   p: any,
 ) {
-  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
-  const q = String(p.search ?? "").trim();
-  const status = p.status ? String(p.status) : null;
-  const provider = p.provider ? String(p.provider) : null;
-  const limit = Math.min(200, Number(p.limit ?? 50));
+  if (!ctx.isAdmin) return err("forbidden", "Admin access required.", 403);
+  try {
+    const q = String(p.search ?? "").trim();
+    const status = p.status ? String(p.status) : null;
+    const provider = p.provider ? String(p.provider) : null;
+    const limit = Math.min(200, Math.max(1, Number(p.limit ?? 50) || 50));
 
-  let query = sb
-    .from("virtual_cards")
-    .select("id,user_id,form_factor,brand,status,provider,nium_card_id,kora_card_id,balance_usd,spending_controls,created_at,frozen_at,terminated_at,metadata")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (status) query = query.eq("status", status);
-  if (provider) query = query.eq("provider", provider);
-  if (q) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
-    const parts: string[] = [
-      `nium_card_id.ilike.%${q}%`,
-      `kora_card_id.ilike.%${q}%`,
-    ];
-    if (isUuid) { parts.push(`id.eq.${q}`, `user_id.eq.${q}`); }
-    query = query.or(parts.join(","));
+    let query = sb
+      .from("virtual_cards")
+      .select("id,user_id,form_factor,brand,status,provider,nium_card_id,kora_card_id,balance_usd,spending_controls,created_at,frozen_at,terminated_at,metadata")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (status) query = query.eq("status", status);
+    if (provider) query = query.eq("provider", provider);
+    if (q) {
+      const safe = q.replace(/[,()]/g, "");
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(safe);
+      const parts: string[] = [
+        `nium_card_id.ilike.%${safe}%`,
+        `kora_card_id.ilike.%${safe}%`,
+      ];
+      if (isUuid) { parts.push(`id.eq.${safe}`, `user_id.eq.${safe}`); }
+      query = query.or(parts.join(","));
+    }
+    const { data, error } = await query;
+    if (error) return err("admin_list_failed", error.message, 500);
+    return json({ cards: data ?? [], count: data?.length ?? 0 });
+  } catch (e: any) {
+    console.error("[cards-v3] admin_list unhandled", e?.stack ?? e);
+    return err("admin_list_failed", e?.message ?? "Unable to load cards.", 500);
   }
-  const { data, error } = await query;
-  if (error) return err("admin_list_failed", error.message, 500);
-  return json({ cards: data ?? [] });
 }
 

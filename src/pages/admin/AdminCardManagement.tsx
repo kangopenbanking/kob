@@ -15,8 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CreditCard, Snowflake, Play, Ban, RefreshCw, Wallet } from "lucide-react";
+import { CreditCard, Snowflake, Play, Ban, RefreshCw, Wallet, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AdminCard {
   id: string;
@@ -59,9 +61,11 @@ export default function AdminCardManagement() {
   const [selected, setSelected] = useState<AdminCard | null>(null);
   const [feeEvents, setFeeEvents] = useState<FeeEvent[]>([]);
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
+    setLoadError(null);
     const { data, error } = await supabase.functions.invoke("cards-v3", {
       body: {
         action: "admin_list",
@@ -72,7 +76,13 @@ export default function AdminCardManagement() {
       },
     });
     setLoading(false);
-    if (error) { toast.error(error.message ?? "Failed to load cards"); return; }
+    if (error) {
+      const msg = extractEdgeFunctionError(error, "We couldn't load cards right now. Please try again.");
+      setLoadError(msg);
+      toast.error(msg);
+      setCards([]);
+      return;
+    }
     setCards(data?.cards ?? []);
   }
 
@@ -95,7 +105,10 @@ export default function AdminCardManagement() {
       body: { action, card_id: card.id },
     });
     setBusy(false);
-    if (error) { toast.error(error.message ?? `${action} failed`); return; }
+    if (error) {
+      toast.error(extractEdgeFunctionError(error, `We couldn't ${action} this card. Please try again.`));
+      return;
+    }
     toast.success(`Card ${action}d.`);
     await load();
     if (selected?.id === card.id) setSelected(null);
@@ -176,6 +189,19 @@ export default function AdminCardManagement() {
           </Button>
         </CardContent>
       </Card>
+
+      {loadError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Card list unavailable</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-4">
+            <span>{loadError}</span>
+            <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+              <RefreshCw className={`h-3 w-3 mr-2 ${loading ? "animate-spin" : ""}`} /> Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Cards ({cards.length})</CardTitle></CardHeader>
