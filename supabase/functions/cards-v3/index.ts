@@ -397,3 +397,110 @@ async function actionUpdateLimits(
   if (error) return err("card_update_failed", error.message, 500);
   return json({ card: updated });
 }
+
+// ---------- Fund / Withdraw ----------
+// Debits wallet on `load`, credits card.balance_usd; opposite on `unload`.
+// Also debits an admin-configurable per-transaction fee.
+async function actionFundOrWithdraw(
+  sb: ReturnType<typeof createClient>,
+  ctx: AuthCtx,
+  p: any,
+  action: "load" | "unload",
+) {
+  if (!p.card_id) return err("card_validation_failed", "card_id required", 422);
+  const amount = Number(p.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return err("card_validation_failed", "amount must be a positive number", 422);
+  }
+  const currency = "XAF";
+  const idem = p.idempotency_key ?? crypto.randomUUID();
+
+  // Idempotency short-circuit
+  const { data: existing } = await sb
+    .from("card_fee_events")
+    .select("id,card_id,amount")
+    .eq("idempotency_key", `${idem}:fund`)
+    .maybeSingle();
+  if (existing) {
+    const { data: card } = await sb.from("virtual_cards").select("*").eq("id", existing.card_id).maybeSingle();
+    return json({ card, replayed: true });
+  }
+
+  const { data: card } = await sb.from("virtual_cards").select("*").eq("id", p.card_id).maybeSingle();
+  if (!card) return err("card_not_found", "card not found", 404);
+  if (!ctx.isAdmin && card.user_id !== ctx.userId) return err("forbidden", "not your card", 403);
+  if (card.status !== "active") return err("card_not_active", "Card must be active to move funds.", 409);
+
+  const providerCardId = card.provider === "nium" ? card.nium_card_id : card.kora_card_id;
+  if (!providerCardId) return err("card_provider_id_missing", "no provider card id", 500);
+
+  // Per-transaction fee (admin-managed)
+  const feeCfg = await resolveCardFee(sb, "card_transaction_fee");
+  const feeAmount = computeFee(feeCfg, amount);
+  const totalDebit = action === "load" ? amount + feeAmount : feeAmount;
+
+  if (totalDebit > 0) {
+    const debit = await debitPrimaryWallet(sb, card.user_id, totalDebit, currency);
+    if (!debit.ok) return err("card_wallet_insufficient", "Not enough wallet balance to cover this move plus fees.", 402);
+    if (feeAmount > 0) {
+      await recordCardFeeLedger(sb, {
+        userId: card.user_id,
+        cardId: card.id,
+        feeType: "card_transaction_fee",
+        amount: feeAmount,
+        currency,
+        accountId: debit.account_id ?? null,
+        idempotencyKey: `${idem}:fund`,
+        note: `${action === "load" ? "Card top-up" : "Card withdrawal"} fee`,
+      });
+    }
+  }
+
+  // Provider call
+  try {
+    await loadCard(card.provider, providerCardId, amount, currency, action, `${idem}:${action}`);
+  } catch (e: any) {
+    return err("card_provider_unavailable", e?.message ?? "provider_load_failed", 502);
+  }
+
+  // Update card balance snapshot (XAF-cents shown as balance_usd column historically)
+  const nextBalance = Number(card.balance_usd ?? 0) + (action === "load" ? amount : -amount);
+  const { data: updated } = await sb
+    .from("virtual_cards")
+    .update({ balance_usd: nextBalance, updated_at: new Date().toISOString() })
+    .eq("id", card.id)
+    .select()
+    .single();
+
+  return json({ card: updated, fee_charged: feeAmount, currency });
+}
+
+// ---------- Admin: search + list ALL cards across tenants ----------
+async function actionAdminList(
+  sb: ReturnType<typeof createClient>,
+  ctx: AuthCtx,
+  p: any,
+) {
+  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
+  const q = String(p.search ?? "").trim();
+  const status = p.status ? String(p.status) : null;
+  const provider = p.provider ? String(p.provider) : null;
+  const limit = Math.min(200, Number(p.limit ?? 50));
+
+  let query = sb
+    .from("virtual_cards")
+    .select("id,user_id,form_factor,brand,status,provider,nium_card_id,kora_card_id,balance_usd,spending_controls,created_at,frozen_at,terminated_at,metadata")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (status) query = query.eq("status", status);
+  if (provider) query = query.eq("provider", provider);
+  if (q) {
+    query = query.or(
+      `id.eq.${q},user_id.eq.${q},nium_card_id.ilike.%${q}%,kora_card_id.ilike.%${q}%`,
+    );
+  }
+  const { data, error } = await query;
+  if (error) return err("admin_list_failed", error.message, 500);
+  return json({ cards: data ?? [] });
+}
+
