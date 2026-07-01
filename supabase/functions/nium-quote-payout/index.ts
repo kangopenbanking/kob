@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       source_amount: sourceAmount,
       source_currency: sourceCurrency,
       routing,
-    });
+    }, { allowReferenceFallback: true });
     return json({
       ...breakdown,
       expires_at: new Date(Date.now() + 60_000).toISOString(),
