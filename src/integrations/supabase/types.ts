@@ -18265,6 +18265,51 @@ export type Database = {
         }
         Relationships: []
       }
+      nium_webhook_audit: {
+        Row: {
+          body_bytes: number | null
+          client_ip: string | null
+          created_at: string
+          event_id: string | null
+          event_type: string | null
+          had_hmac_signature: boolean
+          had_signature_key: boolean
+          id: string
+          outcome: string
+          reason: string | null
+          status_code: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          body_bytes?: number | null
+          client_ip?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_type?: string | null
+          had_hmac_signature?: boolean
+          had_signature_key?: boolean
+          id?: string
+          outcome: string
+          reason?: string | null
+          status_code?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          body_bytes?: number | null
+          client_ip?: string | null
+          created_at?: string
+          event_id?: string | null
+          event_type?: string | null
+          had_hmac_signature?: boolean
+          had_signature_key?: boolean
+          id?: string
+          outcome?: string
+          reason?: string | null
+          status_code?: number | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       nium_webhook_secret_reveals: {
         Row: {
           action: string
