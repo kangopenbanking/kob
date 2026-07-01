@@ -35,6 +35,8 @@ import {
 import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
 import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectionDialog";
 import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
+import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
+import type { FlowStep } from "@/components/customer-app/HowItWorksFlow";
 
 type Currency =
   | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
