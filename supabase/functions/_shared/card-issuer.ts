@@ -224,8 +224,9 @@ export async function lifecycleAction(
     return;
   }
   // Kora fallback
-  const map = { freeze: "freeze", unfreeze: "unfreeze", terminate: "terminate" } as const;
-  await Kora.cardAction(providerCardId, map[action]);
+  if (action === "freeze") await Kora.freezeCard(providerCardId);
+  else if (action === "unfreeze") await Kora.unfreezeCard(providerCardId);
+  else await Kora.terminateCard(providerCardId);
 }
 
 export interface RevealTokenResult {
