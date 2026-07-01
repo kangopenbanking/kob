@@ -30,6 +30,11 @@ const faqsRaw = [
   { q: 'How do I change my PIN?', a: 'Go to More > Settings > Security > Change PIN. You will need to verify your current PIN first.', cat: 'Security' },
   { q: 'Is my money safe?', a: 'Yes. We use bank-grade encryption and your funds are held in regulated financial institutions.', cat: 'Security' },
   { q: 'How do I contact support?', a: 'You can use Live Chat or email us from this Help page.', cat: 'General' },
+  { q: 'How do I set up my first global account?', a: 'Pick a currency (USD, EUR, GBP and more), confirm your verified KYC name matches the sender\'s records, then tap Generate account. Details appear instantly and you can share them with your employer, marketplace or client.', cat: 'GlobalAccounts' },
+  { q: 'What fees apply to incoming transfers?', a: 'Opening an account is free. A small FX spread is applied when funds are converted to XAF, and a standard withdrawal fee applies if you route to Mobile Money. The exact breakdown is shown in the Transaction preview before you receive each payment.', cat: 'GlobalAccounts' },
+  { q: 'How long do transfers take to arrive?', a: 'Local transfers (ACH, SEPA, Faster Payments) usually settle the same business day. SWIFT wires can take 1–3 business days depending on the sending bank. You will see the payment in Activity as soon as it clears.', cat: 'GlobalAccounts' },
+  { q: 'Why must the sender use my exact KYC name?', a: 'Correspondent banks reject payments where the beneficiary name doesn\'t match. Always share the exact name shown on the account card, otherwise the sending bank may return the transfer and charge you a recall fee.', cat: 'GlobalAccounts' },
+  { q: 'Can I change where the money is deposited?', a: 'Yes. You can set a default (Kang Wallet or Mobile Money) for all accounts, or override the routing per account from the account card. Changes apply to future payments only.', cat: 'GlobalAccounts' },
 ];
 
 const CustomerHelp: React.FC = () => {
