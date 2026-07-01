@@ -46,6 +46,13 @@ import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectio
 import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
 import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
 import type { FlowStep } from "@/components/customer-app/HowItWorksFlow";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Briefcase, RotateCcw, Store, ExternalLink, ArrowRight } from "lucide-react";
 
 type Currency =
   | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
@@ -387,6 +394,54 @@ export default function GlobalReceivingAccount() {
           steps={globalAccountSteps}
         />
 
+        {/* Use-case cards */}
+        <section aria-label="Common use cases">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                icon: Briefcase,
+                title: "Salary payments",
+                desc: "Receive overseas payroll in USD, EUR or GBP straight to your wallet.",
+              },
+              {
+                icon: RotateCcw,
+                title: "Refunds",
+                desc: "Get refunds from foreign merchants without losing money on FX fees.",
+              },
+              {
+                icon: Store,
+                title: "Merchant payouts",
+                desc: "Collect marketplace, Adsense or freelance income and settle in XAF.",
+              },
+            ].map((u) => (
+              <Card key={u.title} className="border-border/60">
+                <CardContent className="p-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                    <u.icon className="h-4 w-4 text-foreground" strokeWidth={1.75} />
+                  </div>
+                  <div className="mt-3 text-sm font-semibold">{u.title}</div>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    {u.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-3">
+            <a
+              href="/developer/gateway/global-accounts"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground/80 hover:text-foreground underline underline-offset-4"
+            >
+              See integration details
+              <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
+            </a>
+          </div>
+        </section>
+
+
         {/* New account — list style */}
         <section className="space-y-4" aria-labelledby="new-heading">
           <SectionTitle id="new-heading" title="New account" />
@@ -604,17 +659,45 @@ export default function GlobalReceivingAccount() {
             </div>
           ) : accounts.length === 0 ? (
             <Card className="border-dashed border-border/60">
-              <CardContent className="py-14 text-center">
+              <CardContent className="py-10 px-6 text-center">
                 <div
                   className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
                   aria-hidden="true"
                 >
                   <Globe2 className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                 </div>
-                <p className="mt-4 text-[15px] font-medium">No accounts yet</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Generate one to start receiving.
+                <p className="mt-4 text-[15px] font-semibold">No accounts yet</p>
+                <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
+                  Create your first global account to start receiving money from abroad.
+                  It only takes a minute.
                 </p>
+                <ol className="mt-5 mx-auto max-w-sm text-left text-sm text-muted-foreground space-y-2">
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-foreground">1</span>
+                    <span>Pick a currency above (USD, EUR, GBP and more).</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-foreground">2</span>
+                    <span>Confirm your KYC name matches the sender's records.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-[11px] font-semibold text-foreground">3</span>
+                    <span>Tap Generate account, then share the details with the sender.</span>
+                  </li>
+                </ol>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-6 rounded-full"
+                  onClick={() =>
+                    document
+                      .getElementById("new-heading")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }
+                >
+                  Create my first account
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" strokeWidth={1.75} />
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -758,6 +841,69 @@ export default function GlobalReceivingAccount() {
         <section className="mt-6">
           <NameCorrectionUpdates userId={userId} />
         </section>
+
+        {/* FAQ */}
+        <section className="space-y-4" aria-labelledby="faq-heading">
+          <SectionTitle id="faq-heading" title="Frequently asked questions" />
+          <Card className="border-border/60">
+            <CardContent className="p-2 sm:p-3">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="setup">
+                  <AccordionTrigger className="text-left text-sm font-medium px-3">
+                    How do I set up my first global account?
+                  </AccordionTrigger>
+                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
+                    Pick a currency (USD, EUR, GBP and more), confirm your verified KYC name
+                    matches the sender's records, then tap Generate account. Details appear
+                    instantly and you can share them with your employer, marketplace or client.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="fees">
+                  <AccordionTrigger className="text-left text-sm font-medium px-3">
+                    What fees apply to incoming transfers?
+                  </AccordionTrigger>
+                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
+                    Opening an account is free. A small FX spread is applied when funds are
+                    converted to XAF, and a standard withdrawal fee applies if you route to
+                    Mobile Money. The exact breakdown is shown in the Transaction preview
+                    before you receive each payment.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="timing">
+                  <AccordionTrigger className="text-left text-sm font-medium px-3">
+                    How long do transfers take to arrive?
+                  </AccordionTrigger>
+                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
+                    Local transfers (ACH, SEPA, Faster Payments) usually settle the same
+                    business day. SWIFT wires can take 1–3 business days depending on the
+                    sending bank. You will see the payment in Activity as soon as it clears.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="name">
+                  <AccordionTrigger className="text-left text-sm font-medium px-3">
+                    Why must the sender use my exact KYC name?
+                  </AccordionTrigger>
+                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
+                    Correspondent banks reject payments where the beneficiary name doesn't
+                    match. Always share the exact name shown on the account card, otherwise
+                    the sending bank may return the transfer and charge you a recall fee.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="routing">
+                  <AccordionTrigger className="text-left text-sm font-medium px-3">
+                    Can I change where the money is deposited?
+                  </AccordionTrigger>
+                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
+                    Yes. You can set a default (Kang Wallet or Mobile Money) for all accounts,
+                    or override the routing per account from the account card. Changes apply
+                    to future payments only.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </section>
+
       </main>
 
       <NameCorrectionDialog
