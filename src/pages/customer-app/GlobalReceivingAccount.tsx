@@ -394,39 +394,58 @@ export default function GlobalReceivingAccount() {
           steps={globalAccountSteps}
         />
 
-        {/* Use-case cards */}
+        {/* Use-case cards — swipeable */}
         <section aria-label="Common use cases">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div
+            className="-mx-4 px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
             {[
               {
                 icon: Briefcase,
                 title: "Salary payments",
                 desc: "Receive overseas payroll in USD, EUR or GBP straight to your wallet.",
+                bg: "hsl(215, 65%, 32%)",
+                fg: "hsl(0, 0%, 100%)",
+                soft: "hsl(0, 0%, 100%, 0.18)",
               },
               {
                 icon: RotateCcw,
                 title: "Refunds",
                 desc: "Get refunds from foreign merchants without losing money on FX fees.",
+                bg: "hsl(174, 62%, 28%)",
+                fg: "hsl(0, 0%, 100%)",
+                soft: "hsl(0, 0%, 100%, 0.18)",
               },
               {
                 icon: Store,
                 title: "Merchant payouts",
                 desc: "Collect marketplace, Adsense or freelance income and settle in XAF.",
+                bg: "hsl(28, 78%, 44%)",
+                fg: "hsl(0, 0%, 100%)",
+                soft: "hsl(0, 0%, 100%, 0.18)",
               },
             ].map((u) => (
-              <Card key={u.title} className="border-border/60">
-                <CardContent className="p-4">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-                    <u.icon className="h-4 w-4 text-foreground" strokeWidth={1.75} />
-                  </div>
-                  <div className="mt-3 text-sm font-semibold">{u.title}</div>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    {u.desc}
-                  </p>
-                </CardContent>
-              </Card>
+              <div
+                key={u.title}
+                className="snap-start shrink-0 basis-[78%] sm:basis-[45%] rounded-2xl p-5 shadow-sm transition-transform active:scale-[0.98]"
+                style={{ backgroundColor: u.bg, color: u.fg }}
+              >
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-full"
+                  style={{ backgroundColor: u.soft }}
+                >
+                  <u.icon className="h-5 w-5" strokeWidth={1.75} style={{ color: u.fg }} />
+                </div>
+                <div className="mt-4 text-base font-semibold" style={{ color: u.fg }}>
+                  {u.title}
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed" style={{ color: u.fg, opacity: 0.9 }}>
+                  {u.desc}
+                </p>
+              </div>
             ))}
           </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Swipe to see more</p>
 
           <div className="mt-3">
             <a
