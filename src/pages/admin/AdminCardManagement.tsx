@@ -190,6 +190,19 @@ export default function AdminCardManagement() {
         </CardContent>
       </Card>
 
+      {loadError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Card list unavailable</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-4">
+            <span>{loadError}</span>
+            <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+              <RefreshCw className={`h-3 w-3 mr-2 ${loading ? "animate-spin" : ""}`} /> Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader><CardTitle className="text-base">Cards ({cards.length})</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
