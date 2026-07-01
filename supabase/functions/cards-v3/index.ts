@@ -127,11 +127,13 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
     ? { nium_card_id: issued.provider_card_id, nium_customer_hash_id: issued.provider_customer_id }
     : { kora_card_id: issued.provider_card_id, kora_cardholder_id: issued.provider_customer_id };
 
+  const stripeCardholderShellId = await ensureStripeCardholderShell(sb, ctx, ch);
+
   const { data: card, error: cardErr } = await sb
     .from("virtual_cards")
     .insert({
       user_id: ctx.userId,
-      cardholder_id: ch.id,
+      cardholder_id: stripeCardholderShellId,
       tenant_type: "platform",
       tenant_id: ctx.userId,
       customer_external_id: ch.customer_external_id,
