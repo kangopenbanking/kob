@@ -30,8 +30,21 @@ Deno.serve(async (req) => {
   if (claimsErr || !claims?.claims?.sub) return json({ error: "unauthorized" }, 401);
   const userId = claims.claims.sub as string;
 
-  let body: { currency?: string; pop_code?: string; beneficiary_name?: string; account_kind?: "virtual" | "global" };
+  let body: { currency?: string; pop_code?: string; beneficiary_name?: string; account_kind?: "virtual" | "global"; bvn?: string };
   try { body = await req.json(); } catch { return json({ error: "invalid_json" }, 400); }
+
+  // Deprecation warning: `bvn` is a legacy NGN-rail field, ignored on Nium
+  // provisioning. Accepted for backward compatibility but stripped from
+  // downstream calls and surfaced back to the caller.
+  const warnings: Array<{ field: string; code: string; message: string }> = [];
+  if (typeof body.bvn === "string" && body.bvn.trim() !== "") {
+    warnings.push({
+      field: "bvn",
+      code: "deprecated_field_ignored",
+      message: "`bvn` is deprecated. It is ignored on Nium provisioning; remove it from your requests. See https://kangopenbanking.com/developer/changelog#4.52.1",
+    });
+    delete body.bvn;
+  }
 
   // COMPLIANCE CHECK: reject ANY free-text beneficiary override.
   if (body.beneficiary_name !== undefined) {
