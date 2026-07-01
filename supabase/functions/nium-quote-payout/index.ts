@@ -38,8 +38,8 @@ Deno.serve(async (req) => {
   if (!Number.isFinite(sourceAmount) || sourceAmount <= 0) {
     return json({ error: "invalid_amount" }, 400);
   }
-  if (!["USD", "EUR", "GBP"].includes(sourceCurrency)) {
-    return json({ error: "invalid_currency" }, 400);
+  if (!(NIUM_SUPPORTED_CURRENCIES as readonly string[]).includes(sourceCurrency)) {
+    return json({ error: "invalid_currency", message: `must be one of ${NIUM_SUPPORTED_CURRENCIES.join(", ")}` }, 400);
   }
   if (!["KANG_WALLET", "MOBILE_MONEY"].includes(routing)) {
     return json({ error: "invalid_routing" }, 400);
