@@ -1107,3 +1107,12 @@ verify_jwt = false
 
 [functions.oauth-sandbox-pkce-dryrun]
 verify_jwt = false
+
+[functions.cards-v3]
+verify_jwt = false
+
+[functions.cards-v3-reveal]
+verify_jwt = false
+
+[functions.cards-v3-webhook]
+verify_jwt = false
