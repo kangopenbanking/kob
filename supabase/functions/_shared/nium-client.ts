@@ -193,27 +193,52 @@ export async function getFxQuote(source: NiumCurrency, _amount: number): Promise
   };
 }
 
-// Verify Nium webhook HMAC-SHA256 signature: header `x-nium-signature` = hex(hmac_sha256(secret, body))
-export async function verifyWebhookSignature(rawBody: string, signatureHeader: string | null): Promise<boolean> {
+// Constant-time string compare
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let m = 0;
+  for (let i = 0; i < a.length; i++) m |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return m === 0;
+}
+
+/**
+ * Verify a Nium inbound webhook.
+ *
+ * Nium's dashboard "Header Parameters" mechanism does NOT sign the body — it sends
+ * a caller-defined header (we register `x-nium-signature-key`) whose value is a
+ * static shared secret. We compare it in constant time to `NIUM_WEBHOOK_SECRET`.
+ *
+ * For forward compatibility we ALSO accept a genuine HMAC-SHA256 hex digest of
+ * the raw body supplied via `x-nium-signature` (should Nium enable body signing).
+ *
+ * If `NIUM_WEBHOOK_SECRET` is not configured we accept ONLY in stub mode.
+ */
+export async function verifyWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  staticKeyHeader?: string | null,
+): Promise<boolean> {
   const secret = Deno.env.get("NIUM_WEBHOOK_SECRET") ?? "";
-  if (!secret || !signatureHeader) {
-    // In stub mode without configured secret we accept (sandbox-only flag).
-    return MODE === "stub" && !secret;
+  if (!secret) return MODE === "stub";
+
+  // 1) Static shared-secret header (Nium "Header Parameters" model).
+  if (staticKeyHeader && timingSafeEqual(staticKeyHeader.trim(), secret)) return true;
+
+  // 2) Optional HMAC-SHA256 hex over the raw body.
+  if (signatureHeader) {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+    const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    if (timingSafeEqual(hex, signatureHeader.trim().toLowerCase())) return true;
   }
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
-  const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  // Constant-time-ish comparison
-  if (hex.length !== signatureHeader.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < hex.length; i++) mismatch |= hex.charCodeAt(i) ^ signatureHeader.charCodeAt(i);
-  return mismatch === 0;
+
+  return false;
 }
 
 export const NIUM_MODE = MODE;
