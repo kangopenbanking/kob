@@ -19,6 +19,7 @@ const faqCategoriesRaw = [
   { key: 'Payments', label: 'Payments', icon: <CreditCard className="h-4 w-4" strokeWidth={1.8} /> },
   { key: 'Security', label: 'Security', icon: <Shield className="h-4 w-4" strokeWidth={1.8} /> },
   { key: 'Account', label: 'Account', icon: <Smartphone className="h-4 w-4" strokeWidth={1.8} /> },
+  { key: 'GlobalAccounts', label: 'Global Accounts', icon: <Globe2 className="h-4 w-4" strokeWidth={1.8} /> },
   { key: 'General', label: 'General', icon: <HelpCircle className="h-4 w-4" strokeWidth={1.8} /> },
 ];
 
