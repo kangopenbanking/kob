@@ -365,11 +365,11 @@ function AppSection({ app, index }: { app: AppData; index: number }) {
             </div>
 
             {/* Stats + CTA */}
-            <div className="mt-8 flex items-center gap-6 flex-wrap">
-              {app.status === 'live' && app.link && (
+            <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              {app.status === 'live' && app.link ? (
                 <Button
                   size="lg"
-                  className="rounded-full px-8 h-12 text-white shadow-lg"
+                  className="w-full sm:w-auto rounded-full px-8 h-12 text-white shadow-lg"
                   style={{ backgroundColor: app.color }}
                   asChild
                 >
@@ -377,16 +377,23 @@ function AppSection({ app, index }: { app: AppData; index: number }) {
                     Launch App <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
+              ) : (
+                <span
+                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-full px-8 h-12 text-sm font-semibold border border-border text-muted-foreground"
+                >
+                  Coming Soon
+                </span>
               )}
-              <div className="flex items-center gap-6">
+              <div className="grid grid-cols-3 sm:flex sm:items-center gap-4 sm:gap-6 w-full sm:w-auto">
                 {app.stats.map((s) => (
                   <div key={s.label} className="text-center">
                     <p className="text-lg font-bold text-foreground">{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{s.label}</p>
                   </div>
                 ))}
               </div>
             </div>
+
           </motion.div>
         </div>
       </div>
