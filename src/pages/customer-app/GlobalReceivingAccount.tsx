@@ -1023,36 +1023,43 @@ function PreferenceTile({
       aria-label={title}
       onClick={onClick}
       className={cn(
-        "rounded-2xl border p-4 text-left transition-all",
+        "relative flex flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         active
-          ? "border-foreground/20 bg-muted/40"
-          : "border-border/60 hover:border-foreground/40",
+          ? cn("border-transparent text-white", accent)
+          : "border-border/60 bg-muted/30 hover:bg-muted/50",
       )}
     >
-      <div className="flex items-center gap-2">
-        <div
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full text-white",
-            active ? accent : "bg-muted text-muted-foreground",
-          )}
-          aria-hidden="true"
-        >
-          {icon}
-        </div>
-        {active && (
+      {active && (
+        <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white/20">
           <CheckCircle2
-            className="ml-auto h-4 w-4 text-foreground"
-            strokeWidth={1.75}
+            className="h-3.5 w-3.5 text-white"
+            strokeWidth={2}
             aria-hidden="true"
           />
+        </div>
+      )}
+      <div
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-full",
+          active ? "bg-white/20 text-white" : cn("text-white", accent),
         )}
+        aria-hidden="true"
+      >
+        {icon}
       </div>
-      <div className="mt-3 text-[15px] font-semibold tracking-tight">{title}</div>
-      <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+      <div className="min-w-0">
+        <div className={cn("text-[13px] font-semibold leading-tight", active ? "text-white" : "text-foreground")}>
+          {title}
+        </div>
+        <div className={cn("mt-0.5 text-[11px] leading-tight", active ? "text-white/85" : "text-muted-foreground")}>
+          {subtitle}
+        </div>
+      </div>
     </button>
   );
 }
+
 
 function AccountCard({
   account: a,
