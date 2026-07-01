@@ -10,6 +10,28 @@ Current API version: **4.52.1** · Last updated: **2026-07-01**
 
 ---
 
+## 4.53.0 — 2026-07-15
+**Type:** minor · **Breaking changes:** none
+
+Card Issuing v3 — Nium becomes the default virtual, digital and physical card issuer with Kora as automatic fallback. Adds cards-v3 (CRUD + lifecycle), cards-v3-reveal (step-up MFA PAN/CVV reveal, PCI SAQ-A compliant), and cards-v3-webhook (HMAC-verified normalized ingestion). Consumer PWA rebuilt with Nium-first UX, form-factor selection, physical card order & tracking. Homepage adds a dedicated Card Issuing section. Additive only — legacy virtual-cards and virtual-cards-v2 endpoints remain read-only for one minor version (Standing Orders 1, 2, 4, 6).
+
+### Highlights
+- New enum value on card_issuer_provider: 'nium' (Kora retained as fallback).
+- New card_form_factor enum: 'virtual' | 'digital' | 'physical' with nium_card_id + wallet_tokens columns on virtual_cards.
+- New card_shipments table with card_shipment_status enum for physical card tracking (manufacturing → shipped → delivered).
+- Edge functions: cards-v3 (issue/list/freeze/unfreeze/terminate), cards-v3-reveal (sca_challenges verified), cards-v3-webhook (Nium + Kora signature verification, idempotent on provider+event_id).
+- Consumer PWA: /app/cards rebuilt with three-form-factor issuance tiles, provider badge, HowItWorksFlow guide, and /app/cards/order-physical flow.
+- Homepage: new 'Card Issuing · Powered by Nium' section with interactive card visual, uptime badge, and links to /docs/cards and /api-docs#tag/cards.
+- PCI scope preserved at SAQ-A: card details never persisted; reveal returns short-lived provider token consumed client-side.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- PCI-DSS v4.0 SAQ-A (no PAN storage; tokenized reveal)
+- Nium Cards documentation (https://docs.nium.com/docs/cards)
+- Internal: supabase/functions/_shared/card-issuer.ts, supabase/functions/cards-v3*, src/pages/customer-app/CustomerCards.tsx
+
+---
+
 ## 4.52.1 — 2026-07-01
 **Type:** patch · **Breaking changes:** none
 
