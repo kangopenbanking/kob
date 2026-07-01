@@ -122,6 +122,13 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Card Issuing",
+    items: [
+      { title: "Card Management", path: "/admin/cards", icon: CreditCard },
+      { title: "Card Issuance Timeline", path: "/admin/card-issuance-timeline", icon: CreditCard },
+    ],
+  },
+  {
     title: "Developer Ops",
     items: [
       { title: "Sandbox Management", path: "/admin/sandbox", icon: Database },
@@ -129,8 +136,6 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Developers", path: "/admin/developer-management", icon: Code2 },
       { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: ShieldCheck },
       { title: "Institution API Keys", path: "/admin/institution-api-keys", icon: Key },
-      { title: "Card Management", path: "/admin/cards", icon: CreditCard },
-      { title: "Card Issuance Timeline", path: "/admin/card-issuance-timeline", icon: CreditCard },
     ],
   },
   {
