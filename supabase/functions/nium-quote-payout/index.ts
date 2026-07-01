@@ -6,7 +6,7 @@
 // gross → Nium FX → KOB spread → MoMo fee → Net XAF before confirming any cash-out.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { quoteBreakdown, type Routing } from "../_shared/nium-fx.ts";
-import type { NiumCurrency } from "../_shared/nium-client.ts";
+import { NIUM_SUPPORTED_CURRENCIES, type NiumCurrency } from "../_shared/nium-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,8 +38,8 @@ Deno.serve(async (req) => {
   if (!Number.isFinite(sourceAmount) || sourceAmount <= 0) {
     return json({ error: "invalid_amount" }, 400);
   }
-  if (!["USD", "EUR", "GBP"].includes(sourceCurrency)) {
-    return json({ error: "invalid_currency" }, 400);
+  if (!(NIUM_SUPPORTED_CURRENCIES as readonly string[]).includes(sourceCurrency)) {
+    return json({ error: "invalid_currency", message: `must be one of ${NIUM_SUPPORTED_CURRENCIES.join(", ")}` }, 400);
   }
   if (!["KANG_WALLET", "MOBILE_MONEY"].includes(routing)) {
     return json({ error: "invalid_routing" }, 400);
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       source_amount: sourceAmount,
       source_currency: sourceCurrency,
       routing,
-    });
+    }, { allowReferenceFallback: true });
     return json({
       ...breakdown,
       expires_at: new Date(Date.now() + 60_000).toISOString(),

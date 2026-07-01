@@ -9,6 +9,7 @@ import {
   type NiumPopCode,
 } from "@/constants/nium-compliance";
 import { cn } from "@/lib/utils";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 
 interface Breakdown {
   source_amount: number;
@@ -65,7 +66,7 @@ export function TransactionPreview({ currency, defaultRouting, sampleAmount = 10
       })
       .then(({ data, error }) => {
         if (cancel) return;
-        if (error) setError(error.message);
+        if (error) setError(extractEdgeFunctionError(error, "Preview temporarily unavailable. Please try again."));
         else setData(data as Breakdown);
         setLoading(false);
       });
