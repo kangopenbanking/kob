@@ -18265,6 +18265,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nium_webhook_secret_reveals: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          revealed_by: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          revealed_by: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          revealed_by?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       njangi_contributions: {
         Row: {
           amount: number
