@@ -126,6 +126,7 @@ const PISP = lazy(() => import("./pages/guides/PISP"));
 const Security = lazy(() => import("./pages/guides/Security"));
 const Webhooks = lazy(() => import("./pages/guides/Webhooks"));
 const Certificates = lazy(() => import("./pages/guides/Certificates"));
+const CardsGuide = lazy(() => import("./pages/docs/CardsGuide"));
 
 // Dashboard / Personal
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -902,6 +903,7 @@ function App() {
             <Route path="/guides/security" element={<Layout><Security /></Layout>} />
             <Route path="/guides/webhooks" element={<Layout><Webhooks /></Layout>} />
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
+            <Route path="/docs/cards" element={<Layout><CardsGuide /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
             <Route path="/daily-needs" element={<Layout><DailyNeedsMarketing /></Layout>} />
