@@ -35,6 +35,8 @@ import {
 import { TransactionPreview } from "@/components/global-accounts/TransactionPreview";
 import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectionDialog";
 import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
+import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
+import type { FlowStep } from "@/components/customer-app/HowItWorksFlow";
 
 type Currency =
   | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
@@ -300,6 +302,44 @@ export default function GlobalReceivingAccount() {
     toast({ title: "Exported", description: `${filteredPayments.length} rows downloaded.` });
   };
 
+  const globalAccountSteps: FlowStep[] = [
+    {
+      icon: Globe2,
+      title: "Choose your currency",
+      description: "Pick a Virtual account for local bank transfers or a Global account for IBAN/SWIFT payments. You can add multiple currencies.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: Building2,
+      title: "Share your account details",
+      description: "Copy the account number, IBAN, or BIC and give them to your employer, marketplace, or anyone sending you money.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: ArrowDownLeft,
+      title: "Receive the transfer",
+      description: "When the sender deposits money, it arrives on the account. We track it and apply the correct reference.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: Wallet,
+      title: "Settle in XAF",
+      description: "Funds are converted and sent to your Kang Wallet or Mobile Money in XAF. You can see every payment under Activity.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+    {
+      icon: CheckCircle2,
+      title: "Common uses",
+      description: "Freelance payments, marketplace payouts, overseas salary, family support, and business receipts from abroad.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background antialiased">
       {/* Header */}
@@ -330,7 +370,14 @@ export default function GlobalReceivingAccount() {
         </div>
       </header>
 
-      <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+    <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+        {/* How it works */}
+        <HowItWorksFlow
+          title="How Global Accounts work"
+          storageKey="global-accounts"
+          steps={globalAccountSteps}
+        />
+
         {/* New account — list style */}
         <section className="space-y-4" aria-labelledby="new-heading">
           <SectionTitle id="new-heading" title="New account" />
