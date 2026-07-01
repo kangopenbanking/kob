@@ -1234,6 +1234,69 @@ const Index = () => {
       </section>
       </ScrollReveal>
 
+      {/* Card Issuing Section */}
+      <ScrollReveal>
+      <section className="py-24 bg-gradient-to-b from-background via-muted/20 to-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
+                <span className="h-2 w-2 rounded-full bg-primary" /> CARD ISSUING · Powered by Nium
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+                Issue virtual, digital and physical cards through one API
+              </h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Kang Open Banking routes issuance through <strong>Nium</strong> (default) with <strong>Kora</strong> as
+                automatic fallback. Push-provision to Apple Pay and Google Pay, ship physical cards worldwide, and
+                stay PCI-DSS compliant — card data never touches your servers.
+              </p>
+              <ul className="space-y-3 mb-8 text-sm">
+                <li className="flex items-start gap-3"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" /> Instant virtual cards in 17+ currencies</li>
+                <li className="flex items-start gap-3"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" /> Digital cards for Apple Pay & Google Pay push-provisioning</li>
+                <li className="flex items-start gap-3"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" /> Physical cards shipped globally with tracking</li>
+                <li className="flex items-start gap-3"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" /> PCI-DSS SAQ-A scope · step-up MFA reveal · signed webhooks</li>
+              </ul>
+              <div className="flex flex-wrap gap-3">
+                <a href="/docs/cards" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition">
+                  Read the guide →
+                </a>
+                <a href="/api-docs#tag/cards" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border font-semibold hover:bg-muted transition">
+                  API reference
+                </a>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="relative rounded-3xl bg-gradient-to-br from-[hsl(225,50%,22%)] via-[hsl(225,50%,28%)] to-[hsl(210,60%,40%)] p-8 aspect-[1.586] shadow-2xl overflow-hidden">
+                <div className="absolute right-8 top-8 h-24 w-24 rounded-full border border-white/10" />
+                <div className="absolute right-14 top-14 h-16 w-16 rounded-full border border-white/10" />
+                <div className="flex items-start justify-between">
+                  <div className="text-white/80 text-xs font-semibold tracking-widest">KANG · NIUM</div>
+                  <div className="text-white/60 text-[10px] uppercase tracking-widest">Virtual</div>
+                </div>
+                <div className="mt-16 text-white font-mono tracking-[0.3em] text-lg">•••• •••• •••• 4291</div>
+                <div className="mt-4 flex justify-between text-white">
+                  <div>
+                    <div className="text-[9px] uppercase tracking-widest opacity-60">Cardholder</div>
+                    <div className="text-sm font-semibold">A. Ngassa</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[9px] uppercase tracking-widest opacity-60">Expires</div>
+                    <div className="text-sm font-semibold">08/29</div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -bottom-4 -right-4 rounded-2xl bg-card border border-border shadow-lg px-4 py-3 text-xs">
+                <div className="font-semibold text-primary">99.98% uptime</div>
+                <div className="text-muted-foreground">Nium + Kora dual-issuer routing</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      </ScrollReveal>
+
+
       {/* CTA Section */}
       <ScrollReveal>
       <section className="py-20 relative overflow-hidden text-primary-foreground">
