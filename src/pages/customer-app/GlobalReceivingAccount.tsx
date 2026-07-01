@@ -117,6 +117,7 @@ export default function GlobalReceivingAccount() {
     payout_channel: null,
   });
   const [newCurrency, setNewCurrency] = useState<Currency>("USD");
+  const [accountKind, setAccountKind] = useState<AccountKind>("virtual");
   const [popCode, setPopCode] = useState<NiumPopCode>(DEFAULT_NIUM_POP_CODE);
   const [kycName, setKycName] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
