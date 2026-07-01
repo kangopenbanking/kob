@@ -89,13 +89,56 @@ async function ensureStripeCardholderShell(sb: ReturnType<typeof createClient>, 
   return data.id as string;
 }
 
+// Structured log helper — one JSON line per step. Grep with `card_issue_step`.
+function logStep(idem: string, userId: string, step: string, meta: Record<string, unknown> = {}) {
+  console.log(JSON.stringify({
+    tag: "card_issue_step",
+    ts: new Date().toISOString(),
+    idempotency_key: idem,
+    user_id: userId,
+    step,
+    ...meta,
+  }));
+}
+
 async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
   const form_factor = (p.form_factor ?? "virtual") as CardFormFactor;
   if (!["virtual", "digital", "physical"].includes(form_factor)) {
-    return err("card_validation_failed", "form_factor must be virtual|digital|physical", 422);
+    return err("card_validation_failed", "Choose Virtual, Digital, or Physical to continue.", 422);
   }
   const idem = p.idempotency_key || crypto.randomUUID();
-  const ch = await ensureCardholder(sb, ctx, p);
+  const timeline: Array<{ step: string; at: string; note?: string }> = [];
+  const track = (step: string, note?: string) => {
+    const at = new Date().toISOString();
+    timeline.push({ step, at, note });
+    logStep(idem, ctx.userId, step, note ? { note } : {});
+  };
+
+  track("requested", form_factor);
+
+  // ---------- Idempotency short-circuit ----------
+  const { data: existing } = await sb
+    .from("virtual_cards")
+    .select("*")
+    .eq("user_id", ctx.userId)
+    .filter("metadata->>idempotency_key", "eq", idem)
+    .maybeSingle();
+  if (existing) {
+    logStep(idem, ctx.userId, "idempotent_replay", { card_id: existing.id });
+    return new Response(
+      JSON.stringify({ card: existing, provider: existing.provider, idempotent_replay: true }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "X-Idempotent-Replay": "true" } },
+    );
+  }
+
+  let ch;
+  try {
+    ch = await ensureCardholder(sb, ctx, p);
+    track("cardholder_ready");
+  } catch (e: any) {
+    track("cardholder_failed", e?.message);
+    return err("cardholder_setup_failed", "We couldn't prepare your cardholder profile. Please try again.", 500);
+  }
 
   const input: IssueCardInput = {
     customer_external_id: ch.customer_external_id,
@@ -118,8 +161,14 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
   let issued;
   try {
     issued = await issueCard(input);
+    track("provider_issued", issued.fallback_used ? "secondary_route" : "primary_route");
   } catch (e: any) {
-    return err("card_provider_unavailable", e?.message ?? "issue_failed", 502);
+    track("provider_failed", e?.message);
+    return err(
+      "card_provider_unavailable",
+      "Our card partner is temporarily unavailable. Please try again in a moment.",
+      502,
+    );
   }
 
   const cardName = p.card_name || `${ch.first_name} ${ch.last_name}`.trim();
@@ -153,18 +202,22 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
         daily_limit: input.daily_limit,
         monthly_limit: input.monthly_limit,
       },
-      metadata: { idempotency_key: idem, issued_via: "cards-v3" },
+      metadata: { idempotency_key: idem, issued_via: "cards-v3", timeline },
       ...providerColumn,
     })
     .select()
     .single();
-  if (cardErr) return err("card_persist_failed", cardErr.message, 500);
+  if (cardErr) {
+    track("persist_failed", cardErr.message);
+    return err("card_persist_failed", "Your card was created but we couldn't save it. Contact support.", 500);
+  }
+  track("persisted", card.id);
 
   // Physical → create shipment shell
   if (form_factor === "physical") {
     const addr = p.address;
     if (!addr?.line1 || !addr?.city || !addr?.country) {
-      return err("card_validation_failed", "physical cards require full shipping address", 422);
+      return err("card_validation_failed", "A full shipping address is required for physical cards.", 422);
     }
     await sb.from("card_shipments").insert({
       card_id: card.id,
@@ -178,9 +231,15 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
       postal_code: addr.postal_code ?? null,
       country: addr.country,
     });
+    track("shipment_created");
   }
 
-  return json({ card, provider: issued.provider, fallback_used: issued.fallback_used }, 201);
+  // Persist final timeline back onto the card metadata.
+  await sb.from("virtual_cards").update({
+    metadata: { idempotency_key: idem, issued_via: "cards-v3", timeline },
+  }).eq("id", card.id);
+
+  return json({ card: { ...card, metadata: { ...card.metadata, timeline } }, provider: issued.provider, fallback_used: issued.fallback_used, timeline }, 201);
 }
 
 async function actionList(sb: ReturnType<typeof createClient>, ctx: AuthCtx) {

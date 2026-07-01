@@ -60,36 +60,50 @@ const CustomerCards: React.FC = () => {
   const { data: cardTxns = [] } = useCardTransactions(user?.id, 5);
   const card = cards[activeCard];
 
-  const handleIssue = async (form_factor: 'virtual' | 'digital' | 'physical') => {
-    if (form_factor === 'physical') {
-      navigate('/app/cards/order-physical');
-      return;
-    }
+  // Preserve idempotency key across retries so repeat clicks never duplicate a card.
+  const [issueAttemptKeys, setIssueAttemptKeys] = useState<Record<string, string>>({});
+  const [lastTimeline, setLastTimeline] = useState<Array<{ step: string; at: string; note?: string }>>([]);
+
+  const runIssue = async (form_factor: 'virtual' | 'digital', idempotency_key: string) => {
     setIssuing(form_factor);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
       const res = await supabase.functions.invoke('cards-v3', {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: {
-          action: 'issue',
-          form_factor,
-          currency: 'XAF',
-          idempotency_key: crypto.randomUUID(),
-        },
+        body: { action: 'issue', form_factor, currency: 'XAF', idempotency_key },
       });
       if (res.error) throw res.error;
+      if (Array.isArray(res.data?.timeline)) setLastTimeline(res.data.timeline);
       toast.success(
-        form_factor === 'digital'
-          ? 'Digital card ready'
-          : 'Virtual card issued',
+        res.data?.idempotent_replay
+          ? 'Card already issued for this request'
+          : form_factor === 'digital' ? 'Digital card ready' : 'Virtual card issued',
       );
+      // Success — drop the key so the next click starts a fresh attempt.
+      setIssueAttemptKeys((prev) => {
+        const next = { ...prev }; delete next[form_factor]; return next;
+      });
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
     } catch (e: any) {
-      toast.error(extractEdgeFunctionError(e, 'Could not issue card'));
+      const msg = extractEdgeFunctionError(e, 'Could not issue card. Please try again.');
+      toast.error(msg, {
+        duration: 8000,
+        action: { label: 'Retry', onClick: () => runIssue(form_factor, idempotency_key) },
+      });
     } finally {
       setIssuing(null);
     }
+  };
+
+  const handleIssue = async (form_factor: 'virtual' | 'digital' | 'physical') => {
+    if (form_factor === 'physical') {
+      navigate('/app/cards/order-physical');
+      return;
+    }
+    const key = issueAttemptKeys[form_factor] ?? crypto.randomUUID();
+    setIssueAttemptKeys((prev) => ({ ...prev, [form_factor]: key }));
+    await runIssue(form_factor, key);
   };
 
   const handleFreezeUnfreeze = () => {
@@ -306,6 +320,27 @@ const CustomerCards: React.FC = () => {
             Add another card
           </Button>
         </>
+      )}
+
+      {lastTimeline.length > 0 && (
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Last issuance timeline
+          </p>
+          <ol className="space-y-2">
+            {lastTimeline.map((ev, i) => (
+              <li key={`${ev.step}-${i}`} className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-foreground">{ev.step.replace(/_/g, ' ')}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(ev.at).toLocaleTimeString()}{ev.note ? ` · ${ev.note}` : ''}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
