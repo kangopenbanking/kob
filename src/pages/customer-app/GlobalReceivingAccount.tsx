@@ -496,66 +496,7 @@ export default function GlobalReceivingAccount() {
 
           <Card className="border-border/60">
             <CardContent className="p-2 sm:p-3">
-              <ul
-                className="divide-y divide-border/60"
-                role="radiogroup"
-                aria-label="New global account currency"
-              >
-
-
-                {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
-                  const selected = newCurrency === c;
-                  const meta = CURRENCY_META[c];
-                  return (
-                    <li key={c}>
-                      <button
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        aria-label={`${meta.label} (${c})`}
-                        onClick={() => setNewCurrency(c)}
-                        className={cn(
-                          "group flex w-full items-center gap-4 rounded-xl p-3 sm:p-4 text-left transition-colors",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                          selected ? meta.soft : "hover:bg-muted/50",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white text-lg font-semibold shadow-sm",
-                            meta.bg,
-                          )}
-                          aria-hidden="true"
-                        >
-                          {meta.symbol}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[15px] font-semibold tracking-tight">
-                              {c}
-                            </span>
-                            <span className="text-sm text-muted-foreground truncate">
-                              · {meta.label}
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">{meta.region}</div>
-                        </div>
-                        <div
-                          className={cn(
-                            "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors",
-                            selected
-                              ? cn("border-transparent text-white", meta.bg)
-                              : "border-border",
-                          )}
-                          aria-hidden="true"
-                        >
-                          {selected && <Check className="h-3.5 w-3.5" strokeWidth={2.5} />}
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              <CurrencyCombobox value={newCurrency} onChange={setNewCurrency} />
               <div className="p-2 sm:p-3 pt-2">
                 <Button
                   onClick={createAccount}
