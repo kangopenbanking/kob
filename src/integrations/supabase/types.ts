@@ -31049,7 +31049,11 @@ export type Database = {
         | "completed"
         | "failed"
         | "cancelled"
-      card_issuer_provider: "kora" | "cardyfie_legacy" | "stripe_legacy"
+      card_issuer_provider:
+        | "kora"
+        | "cardyfie_legacy"
+        | "stripe_legacy"
+        | "nium"
       card_kyc_level: "none" | "tier1" | "tier2" | "tier3"
       card_status: "active" | "inactive" | "blocked" | "cancelled"
       card_tenant_type: "bank" | "developer" | "platform"
@@ -31449,7 +31453,12 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
-      card_issuer_provider: ["kora", "cardyfie_legacy", "stripe_legacy"],
+      card_issuer_provider: [
+        "kora",
+        "cardyfie_legacy",
+        "stripe_legacy",
+        "nium",
+      ],
       card_kyc_level: ["none", "tier1", "tier2", "tier3"],
       card_status: ["active", "inactive", "blocked", "cancelled"],
       card_tenant_type: ["bank", "developer", "platform"],
