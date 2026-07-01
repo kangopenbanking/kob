@@ -322,6 +322,27 @@ const CustomerCards: React.FC = () => {
         </>
       )}
 
+      {lastTimeline.length > 0 && (
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Last issuance timeline
+          </p>
+          <ol className="space-y-2">
+            {lastTimeline.map((ev, i) => (
+              <li key={`${ev.step}-${i}`} className="flex items-start gap-3">
+                <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-foreground">{ev.step.replace(/_/g, ' ')}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(ev.at).toLocaleTimeString()}{ev.note ? ` · ${ev.note}` : ''}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
     </div>
   );
