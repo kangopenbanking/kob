@@ -404,13 +404,40 @@ export default function GlobalReceivingAccount() {
             </AlertDescription>
           </Alert>
 
+
+          {/* Account kind (Virtual vs Global) — Nium v4.52.0 split */}
           <Card className="border-border/60">
-            <CardContent className="p-2 sm:p-3">
-              <ul
-                className="divide-y divide-border/60"
-                role="radiogroup"
-                aria-label="New global account currency"
-              >
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                Account type
+              </div>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Account kind">
+                {([
+                  { k: "virtual" as AccountKind, title: "Virtual", sub: "Local rails · account number" },
+                  { k: "global" as AccountKind, title: "Global",  sub: "IBAN / SWIFT · cross-border" },
+                ]).map((opt) => {
+                  const active = accountKind === opt.k;
+                  return (
+                    <button
+                      key={opt.k}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setAccountKind(opt.k)}
+                      className={cn(
+                        "rounded-xl border p-3 text-left transition-colors",
+                        active ? "border-foreground bg-muted/40" : "border-border/60 hover:bg-muted/30",
+                      )}
+                    >
+                      <div className="text-sm font-semibold">{opt.title}</div>
+                      <div className="text-[11px] text-muted-foreground">{opt.sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
                 {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
                   const selected = newCurrency === c;
                   const meta = CURRENCY_META[c];
