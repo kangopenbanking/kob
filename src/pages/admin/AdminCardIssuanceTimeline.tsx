@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -66,8 +66,7 @@ export default function AdminCardIssuanceTimeline() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-5xl">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <CreditCard className="h-6 w-6" /> Card Issuance Timeline
