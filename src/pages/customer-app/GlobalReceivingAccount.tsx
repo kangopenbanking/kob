@@ -661,7 +661,7 @@ export default function GlobalReceivingAccount() {
           <Card className="border-border/60">
             <CardContent className="p-4 sm:p-6 space-y-4">
               <div
-                className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+                className="grid grid-cols-2 gap-3"
                 role="radiogroup"
                 aria-label="Default cash-out preference"
               >
