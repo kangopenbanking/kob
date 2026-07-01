@@ -215,7 +215,44 @@ serve(async (req) => {
     case "freeze":          return actionLifecycle(sb, ctx, body, "freeze");
     case "unfreeze":        return actionLifecycle(sb, ctx, body, "unfreeze");
     case "terminate":       return actionLifecycle(sb, ctx, body, "terminate");
+    case "update_limits":   return actionUpdateLimits(sb, ctx, body);
     case "provider_health": return json(providerHealth());
     default:                return err("invalid_action", `unknown action: ${action}`, 400);
   }
 });
+
+async function actionUpdateLimits(
+  sb: ReturnType<typeof createClient>,
+  ctx: AuthCtx,
+  p: any,
+) {
+  if (!p.card_id) return err("card_validation_failed", "card_id required", 422);
+  const daily = p.daily_limit == null ? null : Number(p.daily_limit);
+  const monthly = p.monthly_limit == null ? null : Number(p.monthly_limit);
+  if (daily != null && (!Number.isFinite(daily) || daily < 0)) {
+    return err("card_validation_failed", "daily_limit must be a positive number", 422);
+  }
+  if (monthly != null && (!Number.isFinite(monthly) || monthly < 0)) {
+    return err("card_validation_failed", "monthly_limit must be a positive number", 422);
+  }
+  const { data: card } = await sb.from("virtual_cards").select("*").eq("id", p.card_id).maybeSingle();
+  if (!card) return err("card_not_found", "card not found", 404);
+  if (!ctx.isAdmin && card.user_id !== ctx.userId) return err("forbidden", "not your card", 403);
+
+  const existing = (card.spending_controls as Record<string, unknown> | null) ?? {};
+  const spending_controls = {
+    ...existing,
+    daily_limit: daily,
+    monthly_limit: monthly,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: updated, error } = await sb
+    .from("virtual_cards")
+    .update({ spending_controls, updated_at: new Date().toISOString() })
+    .eq("id", card.id)
+    .select()
+    .single();
+  if (error) return err("card_update_failed", error.message, 500);
+  return json({ card: updated });
+}
