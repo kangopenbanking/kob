@@ -109,7 +109,7 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
       user_id: ctx.userId,
       cardholder_id: ch.id,
       tenant_type: "platform",
-      tenant_id: null,
+      tenant_id: ctx.userId,
       customer_external_id: ch.customer_external_id,
       issued_by_user_id: ctx.userId,
       provider: issued.provider,
