@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, MessageCircle, Mail, Send, FileText,
   Users, ExternalLink, Headphones, Search, ChevronRight,
-  Shield, CreditCard, Smartphone, HelpCircle
+  Shield, CreditCard, Smartphone, HelpCircle, Globe2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
