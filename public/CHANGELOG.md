@@ -1,12 +1,32 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.52.0** · Last updated: **2026-06-29**
+Current API version: **4.52.1** · Last updated: **2026-07-01**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.52.1 — 2026-07-01
+**Type:** patch · **Breaking changes:** none
+
+Nium Virtual Accounts spec regeneration. Static public/openapi.json and public/openapi.yaml now expose account_kind ('virtual' | 'global'), IBAN/BIC/routing_code, provider='nium', destination_currency='XAF', and the full 17-currency enum on GatewayVirtualAccount. Legacy `bvn` request field is now explicitly deprecated with backward-compatible acceptance. Additive only — no operationIds, existing required[], or enums removed (Standing Orders 1, 2, 4, 6).
+
+### Highlights
+- GatewayVirtualAccount schema: adds account_kind, iban, bic, routing_code, beneficiary_name, provider, destination_currency, mode, and expanded currency enum.
+- POST /v1/gateway/virtual-accounts: request body adds account_kind, beneficiary_name, pop_code; `bvn` marked deprecated (accepted, stripped, echoed in meta.warnings[]).
+- GET /v1/gateway/virtual-accounts: new optional account_kind query filter.
+- nium-webhook edge function: adds handling for account.status_updated / account.suspended / account.closed events with idempotent nium_global_accounts.status writes.
+- scripts/nium-e2e-runner.mjs: full E2E audit — create virtual + global, list by account_kind, IBAN/BIC/routing_code + XAF destination validation.
+
+### Standards & citations
+- Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon), 6 (Version Gate)
+- BEAC Règlement n°02/18/CEMAC/UMAC/CM (relations financières extérieures)
+- RFC 7807 (Problem Details for HTTP APIs) — deprecation warnings surfaced via meta.warnings[]
+- Internal: scripts/patch-openapi-nium-va.mjs, supabase/functions/nium-webhook/index.ts
 
 ---
 
