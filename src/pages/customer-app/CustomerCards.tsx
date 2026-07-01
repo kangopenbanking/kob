@@ -1,24 +1,37 @@
 import React, { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2, Search, Store, ScanLine } from 'lucide-react';
-import { useMerchantDirectory, searchMerchants } from '@/hooks/useMerchantDirectory';
-import { Input } from '@/components/ui/input';
+import {
+  CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2,
+  Sparkles, ShieldCheck, Smartphone, Wallet, Truck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerCards, useCardTransactions } from '@/hooks/useCustomerData';
+import { useCardTransactions } from '@/hooks/useCustomerData';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
-import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
+import { HowItWorksFlow } from '@/components/customer-app/HowItWorksFlow';
 
 const cardColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(25,60%,35%)]'];
 
+const HOW_STEPS = [
+  { icon: Sparkles,     title: 'Pick a form factor',   description: 'Virtual instantly, digital for Apple / Google Pay, or physical shipped to you.', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,40%)]' },
+  { icon: ShieldCheck,  title: 'Nium issues the card', description: 'Kang Open Banking routes issuance through Nium (default) with Kora as automatic fallback.', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,50%,32%)]' },
+  { icon: Smartphone,   title: 'Reveal & pay online',  description: 'Reveal PAN with a step-up PIN. Card details never touch our database.', color: 'bg-[hsl(255,50%,93%)]', iconColor: 'text-[hsl(255,40%,42%)]' },
+  { icon: Wallet,       title: 'Add to your wallet',   description: 'Push provision to Apple Pay or Google Pay in one tap.', color: 'bg-[hsl(25,60%,90%)]',  iconColor: 'text-[hsl(25,60%,35%)]' },
+  { icon: Truck,        title: 'Track physical cards', description: 'Follow manufacturing, shipment and delivery from the Cards screen.', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,50%,38%)]' },
+];
+
+interface CardRow {
+  id: string; card_name: string; last4: string; exp_month: number; exp_year: number;
+  status: string; provider: string; form_factor: string; currency: string;
+}
+
 const CustomerCards: React.FC = () => {
-  const tr = useHarvestedT('customer');
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -27,23 +40,62 @@ const CustomerCards: React.FC = () => {
   const [showPin, setShowPin] = useState(false);
   const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
 
-  const { data: cards = [], isLoading } = useCustomerCards(user?.id);
+  const { data: cards = [], isLoading } = useQuery<CardRow[]>({
+    queryKey: ['customer-cards-v3', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      const res = await supabase.functions.invoke('cards-v3', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { action: 'list' },
+      });
+      if (res.error) throw res.error;
+      return (res.data?.cards ?? []) as CardRow[];
+    },
+  });
+
   const { data: cardTxns = [] } = useCardTransactions(user?.id, 5);
+  const card = cards[activeCard];
 
-  // Auto-fetched KOB merchant directory (refreshes every 5 min, realtime invalidated).
-  const { merchants: directory, isFetching: dirFetching } = useMerchantDirectory();
-  const [merchantQuery, setMerchantQuery] = useState('');
-  const filteredMerchants = useMemo(
-    () => searchMerchants(directory, merchantQuery).slice(0, 8),
-    [directory, merchantQuery]
-  );
-
-  const card = cards[activeCard] as any;
+  const handleIssue = async (form_factor: 'virtual' | 'digital' | 'physical') => {
+    if (form_factor === 'physical') {
+      navigate('/app/cards/order-physical');
+      return;
+    }
+    setIssuing(form_factor);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      const res = await supabase.functions.invoke('cards-v3', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: {
+          action: 'issue',
+          form_factor,
+          currency: 'XAF',
+          idempotency_key: crypto.randomUUID(),
+        },
+      });
+      if (res.error) throw res.error;
+      const provider = res.data?.provider ?? 'nium';
+      toast.success(
+        form_factor === 'digital'
+          ? `Digital card ready via ${provider.toUpperCase()}`
+          : `Virtual card issued via ${provider.toUpperCase()}`,
+      );
+      await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
+    } catch (e: any) {
+      toast.error(extractEdgeFunctionError(e, 'Could not issue card'));
+    } finally {
+      setIssuing(null);
+    }
+  };
 
   const handleFreezeUnfreeze = () => {
     if (!card) return;
-    setPendingAction(card.status === 'frozen' ? 'unfreeze' : 'freeze');
+    setPendingAction(card.status === 'inactive' ? 'unfreeze' : 'freeze');
     setShowPin(true);
   };
 
@@ -53,31 +105,33 @@ const CustomerCards: React.FC = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-
-      const newStatus = pendingAction === 'freeze' ? 'inactive' : 'active';
-      const idempotencyKey = `card_status_${card.id}_${newStatus}_${Date.now()}`;
-
-      const response = await supabase.functions.invoke('virtual-cards', {
+      const res = await supabase.functions.invoke('cards-v3', {
         headers: { Authorization: `Bearer ${session.access_token}` },
-        body: { card_id: card.id, status: newStatus, idempotency_key: idempotencyKey },
+        body: { action: pendingAction, card_id: card.id },
       });
-
-      if (response.error) throw response.error;
-
-      toast.success(pendingAction === 'freeze' ? 'Card frozen successfully' : 'Card activated successfully');
-      await queryClient.refetchQueries({ queryKey: ['customer-cards'] });
-    } catch (error: any) {
-      toast.error(extractEdgeFunctionError(error, 'Failed to update card status'));
+      if (res.error) throw res.error;
+      toast.success(pendingAction === 'freeze' ? 'Card frozen' : 'Card activated');
+      await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
+    } catch (e: any) {
+      toast.error(extractEdgeFunctionError(e, 'Failed to update card status'));
     } finally {
       setIsUpdatingStatus(false);
       setPendingAction(null);
     }
   };
 
+  const providerBadge = useMemo(() => {
+    if (!card) return null;
+    return (
+      <span className="rounded-full bg-[hsl(0,0%,100%)]/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-[hsl(0,0%,100%)]">
+        {card.provider} · {card.form_factor}
+      </span>
+    );
+  }, [card]);
+
   if (isLoading) {
     return (
       <div className="p-4 space-y-4">
-        <Skeleton className="h-44 w-full rounded-3xl" />
         <Skeleton className="h-44 w-full rounded-3xl" />
         <div className="grid grid-cols-2 gap-3">
           <Skeleton className="h-20 rounded-2xl" />
@@ -89,70 +143,119 @@ const CustomerCards: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <h1 className="text-xl font-bold text-foreground">{tr('Cards')}</h1>
+      <HowItWorksFlow steps={HOW_STEPS} title="How Kang Cards work" storageKey="cards-v3" />
+
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Cards</h1>
+          <p className="text-xs text-muted-foreground">
+            Powered by Nium · Kora fallback for resilience
+          </p>
+        </div>
+      </header>
 
       {cards.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-16">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-            <CreditCard className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
+        <section className="rounded-3xl border border-border bg-card p-6">
+          <div className="flex flex-col items-center gap-3 py-4 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <CreditCard className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="text-sm font-semibold text-foreground">You don't have a card yet</p>
+            <p className="text-xs text-muted-foreground">Choose the type that fits how you pay.</p>
           </div>
-          <p className="text-sm font-semibold text-muted-foreground">{tr('No cards yet')}</p>
-          <p className="text-xs text-muted-foreground text-center">{tr('Add a virtual card to start making payments')}</p>
-          <Button variant="outline" className="rounded-2xl" onClick={() => navigate('/virtual-cards')}>
-            <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
-          </Button>
-        </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3">
+            <IssueTile
+              form="virtual"
+              title="Virtual card"
+              subtitle="Instant, best for online payments"
+              icon={CreditCard}
+              accent="bg-[hsl(210,80%,93%)]"
+              iconAccent="text-[hsl(210,60%,40%)]"
+              onClick={() => handleIssue('virtual')}
+              loading={issuing === 'virtual'}
+            />
+            <IssueTile
+              form="digital"
+              title="Digital card"
+              subtitle="Add to Apple Pay or Google Pay"
+              icon={Smartphone}
+              accent="bg-[hsl(150,40%,90%)]"
+              iconAccent="text-[hsl(150,50%,32%)]"
+              onClick={() => handleIssue('digital')}
+              loading={issuing === 'digital'}
+            />
+            <IssueTile
+              form="physical"
+              title="Physical card"
+              subtitle="Shipped worldwide by Nium"
+              icon={Truck}
+              accent="bg-[hsl(25,60%,90%)]"
+              iconAccent="text-[hsl(25,60%,35%)]"
+              onClick={() => handleIssue('physical')}
+              loading={issuing === 'physical'}
+            />
+          </div>
+        </section>
       ) : (
         <>
-          {/* Card Carousel */}
           <div className="relative">
             <AnimatePresence mode="wait">
               {card && (
-                <motion.div key={activeCard} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
+                <motion.div
+                  key={activeCard}
+                  initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
                   className={`rounded-2xl ${cardColors[activeCard % cardColors.length]} p-6 relative overflow-hidden`}
-                  style={{ aspectRatio: '1.586', maxHeight: '220px' }}>
+                  style={{ aspectRatio: '1.586', maxHeight: '220px' }}
+                >
                   <div className="absolute right-6 top-6 h-20 w-20 rounded-full border border-[hsl(0,0%,100%)]/10" />
                   <div className="absolute right-10 top-10 h-14 w-14 rounded-full border border-[hsl(0,0%,100%)]/10" />
 
                   <div className="relative flex items-center justify-between">
                     <CreditCard className="h-8 w-8 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
                     <div className="flex items-center gap-2">
-                      {card.status === 'frozen' && <Snowflake className="h-4 w-4 text-[hsl(210,80%,75%)]" strokeWidth={1.5} />}
+                      {providerBadge}
+                      {card.status === 'inactive' && <Snowflake className="h-4 w-4 text-[hsl(210,80%,75%)]" strokeWidth={1.5} />}
                       <Lock className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} />
                     </div>
                   </div>
+
                   <p className="relative mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
-                    {showNumber ? `**** **** ****` : '**** **** ****'} {card.last4}
+                    **** **** **** {card.last4}
                   </p>
+
                   <div className="relative mt-4 flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">{tr('Card Name')}</p>
+                      <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Card Name</p>
                       <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{card.card_name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">{tr('Expires')}</p>
-                      <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}</p>
+                      <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Expires</p>
+                      <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">
+                        {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="mt-3 flex justify-center gap-1.5">
-              {cards.map((_: any, i: number) => (
-                <button key={i} onClick={() => setActiveCard(i)}
-                  className={`h-2 rounded-full transition-all ${i === activeCard ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'}`} />
-              ))}
-            </div>
+            {cards.length > 1 && (
+              <div className="mt-3 flex justify-center gap-1.5">
+                {cards.map((_, i) => (
+                  <button key={i} onClick={() => setActiveCard(i)}
+                    className={`h-2 rounded-full transition-all ${i === activeCard ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'}`} />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Card Controls */}
           <div className="grid grid-cols-3 gap-3">
             <button onClick={() => setShowNumber(!showNumber)} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(210,70%,85%)]">
                 {showNumber ? <EyeOff className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} /> : <Eye className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} />}
               </div>
-              <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Show'}</span>
+              <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Reveal'}</span>
             </button>
             <button
               onClick={handleFreezeUnfreeze}
@@ -164,21 +267,24 @@ const CustomerCards: React.FC = () => {
                   ? <Loader2 className="h-5 w-5 animate-spin text-[hsl(200,50%,38%)]" strokeWidth={1.5} />
                   : <Snowflake className="h-5 w-5 text-[hsl(200,50%,38%)]" strokeWidth={1.5} />}
               </div>
-              <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
+              <span className="text-[10px] font-bold text-foreground">
+                {card?.status === 'inactive' ? 'Unfreeze' : 'Freeze'}
+              </span>
             </button>
-            <button onClick={() => navigate('/virtual-cards')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+            <button onClick={() => navigate('/app/cards/settings')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
                 <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
               </div>
-              <span className="text-[10px] font-bold text-foreground">{tr('Settings')}</span>
+              <span className="text-[10px] font-bold text-foreground">Controls</span>
             </button>
           </div>
 
-          {/* Card Transactions */}
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{tr('Card Transactions')}</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Recent card activity
+            </p>
             {cardTxns.length === 0 ? (
-              <p className="py-6 text-center text-xs text-muted-foreground">{tr('No card transactions yet')}</p>
+              <p className="py-6 text-center text-xs text-muted-foreground">No transactions yet</p>
             ) : (
               <div className="space-y-2">
                 {cardTxns.map((tx: any) => (
@@ -196,71 +302,42 @@ const CustomerCards: React.FC = () => {
             )}
           </div>
 
-          <Button variant="outline" className="w-full rounded-2xl" onClick={() => navigate('/virtual-cards')}>
-            <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
+          <Button variant="outline" className="w-full rounded-2xl" onClick={() => handleIssue('virtual')} disabled={!!issuing}>
+            {issuing === 'virtual' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} /> : <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} />}
+            Add another card
           </Button>
         </>
       )}
-
-      {/* Pay a KOB merchant — auto-discovered from the public directory */}
-      <section className="rounded-2xl bg-card p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Store className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Pay a KOB Merchant
-            </p>
-          </div>
-          {dirFetching && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
-        </div>
-
-        <div className="relative mb-3">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-          <Input
-            value={merchantQuery}
-            onChange={(e) => setMerchantQuery(e.target.value)}
-            placeholder="Search verified merchants"
-            className="pl-9 rounded-xl"
-          />
-        </div>
-
-        {filteredMerchants.length === 0 ? (
-          <p className="py-4 text-center text-xs text-muted-foreground">
-            {merchantQuery ? 'No merchants match your search.' : 'No verified merchants available yet.'}
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {filteredMerchants.map((m) => (
-              <button
-                key={m.merchant_id}
-                onClick={() => navigate(`/scan?merchant=${m.merchant_id}`)}
-                className="flex w-full items-center justify-between rounded-xl border border-border bg-background p-3 text-left transition hover:border-primary/40"
-              >
-                <div className="flex items-center gap-3">
-                  {m.logo_url ? (
-                    <img src={m.logo_url} alt="" className="h-9 w-9 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-                      <Store className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{m.name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {m.country ?? '—'} · MCC {m.mcc ?? '----'}
-                    </p>
-                  </div>
-                </div>
-                <ScanLine className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
     </div>
   );
 };
+
+const IssueTile: React.FC<{
+  form: string;
+  title: string;
+  subtitle: string;
+  icon: React.ElementType;
+  accent: string;
+  iconAccent: string;
+  onClick: () => void;
+  loading: boolean;
+}> = ({ title, subtitle, icon: Icon, accent, iconAccent, onClick, loading }) => (
+  <button
+    onClick={onClick}
+    disabled={loading}
+    className={`flex items-center gap-3 rounded-2xl ${accent} p-4 text-left transition disabled:opacity-60`}
+  >
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/60">
+      {loading ? <Loader2 className={`h-5 w-5 animate-spin ${iconAccent}`} strokeWidth={1.5} /> : <Icon className={`h-5 w-5 ${iconAccent}`} strokeWidth={1.5} />}
+    </div>
+    <div className="flex-1">
+      <p className="text-sm font-bold text-foreground">{title}</p>
+      <p className="text-[11px] text-foreground/70">{subtitle}</p>
+    </div>
+    <Plus className={`h-4 w-4 ${iconAccent}`} strokeWidth={1.5} />
+  </button>
+);
 
 export default CustomerCards;
