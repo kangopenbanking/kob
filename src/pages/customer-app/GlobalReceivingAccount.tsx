@@ -395,6 +395,54 @@ export default function GlobalReceivingAccount() {
           steps={globalAccountSteps}
         />
 
+        {/* Use-case cards */}
+        <section aria-label="Common use cases">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                icon: Briefcase,
+                title: "Salary payments",
+                desc: "Receive overseas payroll in USD, EUR or GBP straight to your wallet.",
+              },
+              {
+                icon: RotateCcw,
+                title: "Refunds",
+                desc: "Get refunds from foreign merchants without losing money on FX fees.",
+              },
+              {
+                icon: Store,
+                title: "Merchant payouts",
+                desc: "Collect marketplace, Adsense or freelance income and settle in XAF.",
+              },
+            ].map((u) => (
+              <Card key={u.title} className="border-border/60">
+                <CardContent className="p-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                    <u.icon className="h-4 w-4 text-foreground" strokeWidth={1.75} />
+                  </div>
+                  <div className="mt-3 text-sm font-semibold">{u.title}</div>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    {u.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-3">
+            <a
+              href="/developer/gateway/global-accounts"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground/80 hover:text-foreground underline underline-offset-4"
+            >
+              See integration details
+              <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
+            </a>
+          </div>
+        </section>
+
+
         {/* New account — list style */}
         <section className="space-y-4" aria-labelledby="new-heading">
           <SectionTitle id="new-heading" title="New account" />
