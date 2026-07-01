@@ -6,7 +6,7 @@
 // gross → Nium FX → KOB spread → MoMo fee → Net XAF before confirming any cash-out.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { quoteBreakdown, type Routing } from "../_shared/nium-fx.ts";
-import type { NiumCurrency } from "../_shared/nium-client.ts";
+import { NIUM_SUPPORTED_CURRENCIES, type NiumCurrency } from "../_shared/nium-client.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
