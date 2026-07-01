@@ -9,6 +9,7 @@ import {
   type NiumPopCode,
 } from "@/constants/nium-compliance";
 import { cn } from "@/lib/utils";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 
 interface Breakdown {
   source_amount: number;
