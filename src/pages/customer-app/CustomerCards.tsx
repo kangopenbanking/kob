@@ -148,7 +148,7 @@ const CustomerCards: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-foreground">Cards</h1>
           <p className="text-xs text-muted-foreground">
-            Powered by Nium · Kora fallback for resilience
+            Secure cards for everyday spending
           </p>
         </div>
       </header>
