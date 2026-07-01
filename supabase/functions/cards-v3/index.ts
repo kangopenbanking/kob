@@ -495,9 +495,13 @@ async function actionAdminList(
   if (status) query = query.eq("status", status);
   if (provider) query = query.eq("provider", provider);
   if (q) {
-    query = query.or(
-      `id.eq.${q},user_id.eq.${q},nium_card_id.ilike.%${q}%,kora_card_id.ilike.%${q}%`,
-    );
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
+    const parts: string[] = [
+      `nium_card_id.ilike.%${q}%`,
+      `kora_card_id.ilike.%${q}%`,
+    ];
+    if (isUuid) { parts.push(`id.eq.${q}`, `user_id.eq.${q}`); }
+    query = query.or(parts.join(","));
   }
   const { data, error } = await query;
   if (error) return err("admin_list_failed", error.message, 500);
