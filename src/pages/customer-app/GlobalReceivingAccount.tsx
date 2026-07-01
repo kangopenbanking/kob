@@ -1051,11 +1051,11 @@ function Stat({
   unit?: string;
 }) {
   return (
-    <div className="px-3 sm:px-4 py-3 sm:py-4">
+    <div className="px-2 sm:px-4 py-3 sm:py-4 text-center">
       <dt className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </dt>
-      <dd className="mt-1.5 flex items-baseline gap-1 text-xl sm:text-2xl font-semibold tabular-nums tracking-tight">
+      <dd className="mt-1 flex items-baseline justify-center gap-1 text-xl sm:text-2xl font-semibold tabular-nums tracking-tight">
         {value}
         {unit && (
           <span className="text-[11px] font-medium text-muted-foreground">{unit}</span>
