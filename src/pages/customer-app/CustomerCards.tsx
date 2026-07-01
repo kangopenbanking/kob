@@ -20,9 +20,9 @@ const cardColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(2
 
 const HOW_STEPS = [
   { icon: Sparkles,     title: 'Pick a form factor',   description: 'Virtual instantly, digital for Apple / Google Pay, or physical shipped to you.', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,40%)]' },
-  { icon: ShieldCheck,  title: 'Nium issues the card', description: 'Kang Open Banking routes issuance through Nium (default) with Kora as automatic fallback.', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,50%,32%)]' },
-  { icon: Smartphone,   title: 'Reveal & pay online',  description: 'Reveal PAN with a step-up PIN. Card details never touch our database.', color: 'bg-[hsl(255,50%,93%)]', iconColor: 'text-[hsl(255,40%,42%)]' },
-  { icon: Wallet,       title: 'Add to your wallet',   description: 'Push provision to Apple Pay or Google Pay in one tap.', color: 'bg-[hsl(25,60%,90%)]',  iconColor: 'text-[hsl(25,60%,35%)]' },
+  { icon: ShieldCheck,  title: 'We issue securely',    description: 'Your card is provisioned through our regulated banking partners with bank-grade encryption.', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,50%,32%)]' },
+  { icon: Smartphone,   title: 'Reveal & pay online',  description: 'Reveal your card with a step-up PIN. Card details never touch our database.', color: 'bg-[hsl(255,50%,93%)]', iconColor: 'text-[hsl(255,40%,42%)]' },
+  { icon: Wallet,       title: 'Add to your wallet',   description: 'Push to Apple Pay or Google Pay in one tap.', color: 'bg-[hsl(25,60%,90%)]',  iconColor: 'text-[hsl(25,60%,35%)]' },
   { icon: Truck,        title: 'Track physical cards', description: 'Follow manufacturing, shipment and delivery from the Cards screen.', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,50%,38%)]' },
 ];
 
