@@ -172,17 +172,37 @@ export async function createGlobalAccount(params: {
 
 export async function getFxQuote(source: NiumCurrency, _amount: number): Promise<NiumFxQuote> {
   if (MODE === "live" || MODE === "sandbox") {
-    if (!API_KEY || !CLIENT_ID) throw new Error("NIUM_API_KEY / NIUM_CLIENT_ID missing");
-    const res = await fetch(`${BASE_URL}/api/v1/client/${CLIENT_ID}/exchangeRate?sourceCurrencyCode=${source}&destinationCurrencyCode=XAF`, {
-      headers: { "x-api-key": API_KEY },
-    });
-    if (!res.ok) throw new Error(`Nium getFxQuote failed: ${res.status}`);
-    const j = await res.json();
+    if (API_KEY && CLIENT_ID) {
+      try {
+        const res = await fetch(`${BASE_URL}/api/v1/client/${CLIENT_ID}/exchangeRate?sourceCurrencyCode=${source}&destinationCurrencyCode=XAF`, {
+          headers: { "x-api-key": API_KEY },
+        });
+        if (res.ok) {
+          const j = await res.json();
+          const rate = Number(j.exchangeRate ?? j.rate);
+          if (Number.isFinite(rate) && rate > 0) {
+            return {
+              rate,
+              source_currency: source,
+              target_currency: "XAF",
+              quote_id: j.quoteId ?? crypto.randomUUID(),
+            };
+          }
+        } else {
+          console.warn(`Nium getFxQuote returned ${res.status}; falling back to reference rate for ${source}`);
+        }
+      } catch (e) {
+        console.warn(`Nium getFxQuote error: ${e instanceof Error ? e.message : String(e)}; falling back to reference rate for ${source}`);
+      }
+    } else {
+      console.warn(`NIUM_API_KEY/CLIENT_ID missing in ${MODE} mode; using reference rate for ${source}`);
+    }
+    // Fail-open with reference rate. Callers must treat this as indicative only.
     return {
-      rate: Number(j.exchangeRate ?? j.rate),
+      rate: STUB_RATES[source],
       source_currency: source,
       target_currency: "XAF",
-      quote_id: j.quoteId ?? crypto.randomUUID(),
+      quote_id: `ref_quote_${Date.now().toString(36)}`,
     };
   }
   return {
