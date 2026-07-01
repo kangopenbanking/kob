@@ -136,6 +136,6 @@ export default function AdminCardIssuanceTimeline() {
           );
         })}
       </div>
-    </AdminLayout>
+    </div>
   );
 }
