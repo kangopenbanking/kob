@@ -495,6 +495,7 @@ const BankIssuingPage = lazy(() => import("./pages/issuing/BankIssuingPage"));
 const DeveloperIssuingPage = lazy(() => import("./pages/issuing/DeveloperIssuingPage"));
 const AdminIssuingPage = lazy(() => import("./pages/issuing/AdminIssuingPage"));
 const AdminCardIssuanceTimeline = lazy(() => import("./pages/admin/AdminCardIssuanceTimeline"));
+const AdminCardManagement = lazy(() => import("./pages/admin/AdminCardManagement"));
 const IssuingReference = lazy(() => import("./pages/developer/IssuingReference"));
 
 // Widgets
