@@ -66,7 +66,7 @@ export function TransactionPreview({ currency, defaultRouting, sampleAmount = 10
       })
       .then(({ data, error }) => {
         if (cancel) return;
-        if (error) setError(error.message);
+        if (error) setError(extractEdgeFunctionError(error, "Preview temporarily unavailable. Please try again."));
         else setData(data as Breakdown);
         setLoading(false);
       });
