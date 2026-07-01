@@ -52,7 +52,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Briefcase, RotateCcw, Store, ExternalLink, ArrowRight } from "lucide-react";
+import { Briefcase, RotateCcw, Store, ArrowRight } from "lucide-react";
 
 type Currency =
   | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
@@ -447,17 +447,6 @@ export default function GlobalReceivingAccount() {
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">Swipe to see more</p>
 
-          <div className="mt-3">
-            <a
-              href="/developer/gateway/global-accounts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground/80 hover:text-foreground underline underline-offset-4"
-            >
-              See integration details
-              <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
-            </a>
-          </div>
         </section>
 
 
