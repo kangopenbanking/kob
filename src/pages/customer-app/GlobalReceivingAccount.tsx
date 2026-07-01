@@ -332,7 +332,14 @@ export default function GlobalReceivingAccount() {
         </div>
       </header>
 
-      <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+    <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
+        {/* How it works */}
+        <HowItWorksFlow
+          title="How Global Accounts work"
+          storageKey="global-accounts"
+          steps={globalAccountSteps}
+        />
+
         {/* New account — list style */}
         <section className="space-y-4" aria-labelledby="new-heading">
           <SectionTitle id="new-heading" title="New account" />
