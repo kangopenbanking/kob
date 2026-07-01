@@ -148,6 +148,25 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
     return err("cardholder_setup_failed", "We couldn't prepare your cardholder profile. Please try again.", 500);
   }
 
+  // ---------- Card issuance fee (admin-managed, wallet-debited) ----------
+  const walletCurrency = "XAF";
+  const issuanceFee = await resolveCardFee(sb, "card_issuance_fee");
+  const issuanceFeeAmount = computeFee(issuanceFee, 0);
+  let feeWalletAccountId: string | null = null;
+  if (issuanceFeeAmount > 0) {
+    const debit = await debitPrimaryWallet(sb, ctx.userId, issuanceFeeAmount, walletCurrency);
+    if (!debit.ok) {
+      track("issuance_fee_debit_failed", debit.reason);
+      return err(
+        "card_wallet_insufficient",
+        "Your wallet balance is not enough to cover the card issuance fee. Please top up and try again.",
+        402,
+      );
+    }
+    feeWalletAccountId = debit.account_id ?? null;
+    track("issuance_fee_charged", `${issuanceFeeAmount} ${walletCurrency}`);
+  }
+
   const input: IssueCardInput = {
     customer_external_id: ch.customer_external_id,
     cardholder: {
