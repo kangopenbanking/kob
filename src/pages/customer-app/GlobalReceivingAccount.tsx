@@ -331,6 +331,13 @@ export default function GlobalReceivingAccount() {
       color: "hsl(215, 80%, 93%)",
       iconColor: "hsl(215, 60%, 45%)",
     },
+    {
+      icon: CheckCircle2,
+      title: "Common uses",
+      description: "Freelance payments, marketplace payouts, overseas salary, family support, and business receipts from abroad.",
+      color: "hsl(215, 80%, 93%)",
+      iconColor: "hsl(215, 60%, 45%)",
+    },
   ];
 
   return (
