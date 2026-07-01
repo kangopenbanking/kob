@@ -15,8 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CreditCard, Snowflake, Play, Ban, RefreshCw, Wallet } from "lucide-react";
+import { CreditCard, Snowflake, Play, Ban, RefreshCw, Wallet, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface AdminCard {
   id: string;
