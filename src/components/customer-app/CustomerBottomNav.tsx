@@ -27,7 +27,10 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
     location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-50 border-t bg-background transform-gpu will-change-transform"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-1">
         {items.map((item) => {
           const path = resolvePath(item.path);
