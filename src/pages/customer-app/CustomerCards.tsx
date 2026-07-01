@@ -20,9 +20,9 @@ const cardColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(2
 
 const HOW_STEPS = [
   { icon: Sparkles,     title: 'Pick a form factor',   description: 'Virtual instantly, digital for Apple / Google Pay, or physical shipped to you.', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,40%)]' },
-  { icon: ShieldCheck,  title: 'Nium issues the card', description: 'Kang Open Banking routes issuance through Nium (default) with Kora as automatic fallback.', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,50%,32%)]' },
-  { icon: Smartphone,   title: 'Reveal & pay online',  description: 'Reveal PAN with a step-up PIN. Card details never touch our database.', color: 'bg-[hsl(255,50%,93%)]', iconColor: 'text-[hsl(255,40%,42%)]' },
-  { icon: Wallet,       title: 'Add to your wallet',   description: 'Push provision to Apple Pay or Google Pay in one tap.', color: 'bg-[hsl(25,60%,90%)]',  iconColor: 'text-[hsl(25,60%,35%)]' },
+  { icon: ShieldCheck,  title: 'We issue securely',    description: 'Your card is provisioned through our regulated banking partners with bank-grade encryption.', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,50%,32%)]' },
+  { icon: Smartphone,   title: 'Reveal & pay online',  description: 'Reveal your card with a step-up PIN. Card details never touch our database.', color: 'bg-[hsl(255,50%,93%)]', iconColor: 'text-[hsl(255,40%,42%)]' },
+  { icon: Wallet,       title: 'Add to your wallet',   description: 'Push to Apple Pay or Google Pay in one tap.', color: 'bg-[hsl(25,60%,90%)]',  iconColor: 'text-[hsl(25,60%,35%)]' },
   { icon: Truck,        title: 'Track physical cards', description: 'Follow manufacturing, shipment and delivery from the Cards screen.', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,50%,38%)]' },
 ];
 
@@ -79,11 +79,10 @@ const CustomerCards: React.FC = () => {
         },
       });
       if (res.error) throw res.error;
-      const provider = res.data?.provider ?? 'nium';
       toast.success(
         form_factor === 'digital'
-          ? `Digital card ready via ${provider.toUpperCase()}`
-          : `Virtual card issued via ${provider.toUpperCase()}`,
+          ? 'Digital card ready'
+          : 'Virtual card issued',
       );
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
     } catch (e: any) {
@@ -124,7 +123,7 @@ const CustomerCards: React.FC = () => {
     if (!card) return null;
     return (
       <span className="rounded-full bg-[hsl(0,0%,100%)]/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-[hsl(0,0%,100%)]">
-        {card.provider} · {card.form_factor}
+        {card.form_factor}
       </span>
     );
   }, [card]);
@@ -149,7 +148,7 @@ const CustomerCards: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-foreground">Cards</h1>
           <p className="text-xs text-muted-foreground">
-            Powered by Nium · Kora fallback for resilience
+            Secure cards for everyday spending
           </p>
         </div>
       </header>
@@ -188,7 +187,7 @@ const CustomerCards: React.FC = () => {
             <IssueTile
               form="physical"
               title="Physical card"
-              subtitle="Shipped worldwide by Nium"
+              subtitle="Shipped to your address"
               icon={Truck}
               accent="bg-[hsl(25,60%,90%)]"
               iconAccent="text-[hsl(25,60%,35%)]"

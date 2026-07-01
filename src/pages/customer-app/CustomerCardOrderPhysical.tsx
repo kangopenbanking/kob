@@ -63,7 +63,7 @@ const CustomerCardOrderPhysical: React.FC = () => {
         </div>
         <div>
           <h1 className="text-xl font-bold text-foreground">Order a physical card</h1>
-          <p className="text-xs text-muted-foreground">Nium manufactures and ships worldwide.</p>
+          <p className="text-xs text-muted-foreground">Manufactured and shipped to your address.</p>
         </div>
       </header>
 
@@ -90,7 +90,7 @@ const CustomerCardOrderPhysical: React.FC = () => {
       </Button>
 
       <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Kang Open Banking issues cards through Nium (default) with Kora as automatic fallback for resilience. Card details are never stored on our servers.
+        Cards are issued securely through our regulated banking partners. Card details are never stored on our servers.
       </p>
     </div>
   );

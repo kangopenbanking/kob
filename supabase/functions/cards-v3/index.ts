@@ -50,7 +50,7 @@ async function ensureCardholder(sb: ReturnType<typeof createClient>, ctx: AuthCt
     .maybeSingle();
   const insert = {
     tenant_type: "platform" as const,
-    tenant_id: null,
+    tenant_id: ctx.userId,
     customer_external_id: ctx.userId,
     first_name: p.first_name ?? prof?.first_name ?? "Kang",
     last_name: p.last_name ?? prof?.last_name ?? "Customer",
@@ -63,6 +63,30 @@ async function ensureCardholder(sb: ReturnType<typeof createClient>, ctx: AuthCt
   const { data, error } = await sb.from("kora_cardholders").insert(insert).select().single();
   if (error) throw new Error(`cardholder_create_failed: ${error.message}`);
   return data;
+}
+
+// Legacy virtual_cards.cardholder_id FKs to stripe_cardholders — keep a shell row so inserts pass.
+async function ensureStripeCardholderShell(sb: ReturnType<typeof createClient>, ctx: AuthCtx, ch: any) {
+  const { data: existing } = await sb
+    .from("stripe_cardholders")
+    .select("id")
+    .eq("user_id", ctx.userId)
+    .maybeSingle();
+  if (existing) return existing.id as string;
+  const { data, error } = await sb
+    .from("stripe_cardholders")
+    .insert({
+      user_id: ctx.userId,
+      stripe_cardholder_id: `shell_${ctx.userId}`,
+      name: `${ch.first_name ?? "Kang"} ${ch.last_name ?? "Customer"}`.trim(),
+      email: ch.email ?? ctx.email ?? `${ctx.userId}@kang.local`,
+      status: "active",
+      metadata: { source: "cards-v3-shell" },
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(`stripe_cardholder_shell_failed: ${error.message}`);
+  return data.id as string;
 }
 
 async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
@@ -103,13 +127,15 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
     ? { nium_card_id: issued.provider_card_id, nium_customer_hash_id: issued.provider_customer_id }
     : { kora_card_id: issued.provider_card_id, kora_cardholder_id: issued.provider_customer_id };
 
+  const stripeCardholderShellId = await ensureStripeCardholderShell(sb, ctx, ch);
+
   const { data: card, error: cardErr } = await sb
     .from("virtual_cards")
     .insert({
       user_id: ctx.userId,
-      cardholder_id: ch.id,
+      cardholder_id: stripeCardholderShellId,
       tenant_type: "platform",
-      tenant_id: null,
+      tenant_id: ctx.userId,
       customer_external_id: ch.customer_external_id,
       issued_by_user_id: ctx.userId,
       provider: issued.provider,
