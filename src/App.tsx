@@ -903,6 +903,7 @@ function App() {
             <Route path="/guides/security" element={<Layout><Security /></Layout>} />
             <Route path="/guides/webhooks" element={<Layout><Webhooks /></Layout>} />
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
+            <Route path="/docs/cards" element={<Layout><CardsGuide /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
             <Route path="/daily-needs" element={<Layout><DailyNeedsMarketing /></Layout>} />
