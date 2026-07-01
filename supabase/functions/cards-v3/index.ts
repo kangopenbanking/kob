@@ -240,6 +240,18 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
     metadata: { idempotency_key: idem, issued_via: "cards-v3", timeline },
   }).eq("id", card.id);
 
+  // Fan-out card.issue.persisted webhook (available/ready milestone).
+  await dispatchCardWebhook(sb, "card.issue.persisted", {
+    card_id: card.id,
+    user_id: ctx.userId,
+    form_factor,
+    currency: input.currency,
+    status: card.status ?? "active",
+    last4: card.last4 ?? null,
+    idempotency_key: idem,
+    data: { timeline, provider_neutral: true },
+  });
+
   return json({ card: { ...card, metadata: { ...card.metadata, timeline } }, provider: issued.provider, fallback_used: issued.fallback_used, timeline }, 201);
 }
 
