@@ -486,30 +486,36 @@ async function actionAdminList(
   ctx: AuthCtx,
   p: any,
 ) {
-  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
-  const q = String(p.search ?? "").trim();
-  const status = p.status ? String(p.status) : null;
-  const provider = p.provider ? String(p.provider) : null;
-  const limit = Math.min(200, Number(p.limit ?? 50));
+  if (!ctx.isAdmin) return err("forbidden", "Admin access required.", 403);
+  try {
+    const q = String(p.search ?? "").trim();
+    const status = p.status ? String(p.status) : null;
+    const provider = p.provider ? String(p.provider) : null;
+    const limit = Math.min(200, Math.max(1, Number(p.limit ?? 50) || 50));
 
-  let query = sb
-    .from("virtual_cards")
-    .select("id,user_id,form_factor,brand,status,provider,nium_card_id,kora_card_id,balance_usd,spending_controls,created_at,frozen_at,terminated_at,metadata")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (status) query = query.eq("status", status);
-  if (provider) query = query.eq("provider", provider);
-  if (q) {
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(q);
-    const parts: string[] = [
-      `nium_card_id.ilike.%${q}%`,
-      `kora_card_id.ilike.%${q}%`,
-    ];
-    if (isUuid) { parts.push(`id.eq.${q}`, `user_id.eq.${q}`); }
-    query = query.or(parts.join(","));
+    let query = sb
+      .from("virtual_cards")
+      .select("id,user_id,form_factor,brand,status,provider,nium_card_id,kora_card_id,balance_usd,spending_controls,created_at,frozen_at,terminated_at,metadata")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (status) query = query.eq("status", status);
+    if (provider) query = query.eq("provider", provider);
+    if (q) {
+      const safe = q.replace(/[,()]/g, "");
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(safe);
+      const parts: string[] = [
+        `nium_card_id.ilike.%${safe}%`,
+        `kora_card_id.ilike.%${safe}%`,
+      ];
+      if (isUuid) { parts.push(`id.eq.${safe}`, `user_id.eq.${safe}`); }
+      query = query.or(parts.join(","));
+    }
+    const { data, error } = await query;
+    if (error) return err("admin_list_failed", error.message, 500);
+    return json({ cards: data ?? [], count: data?.length ?? 0 });
+  } catch (e: any) {
+    console.error("[cards-v3] admin_list unhandled", e?.stack ?? e);
+    return err("admin_list_failed", e?.message ?? "Unable to load cards.", 500);
   }
-  const { data, error } = await query;
-  if (error) return err("admin_list_failed", error.message, 500);
-  return json({ cards: data ?? [] });
 }
 
