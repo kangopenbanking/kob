@@ -1072,6 +1072,7 @@ function App() {
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="developer-management" element={<DeveloperManagement />} />
               <Route path="issuing" element={<AdminIssuingPage />} />
+              <Route path="card-issuance-timeline" element={<AdminCardIssuanceTimeline />} />
               <Route path="qr-payments-audit" element={<QRPaymentsAudit />} />
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />
