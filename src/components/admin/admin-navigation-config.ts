@@ -129,6 +129,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Developers", path: "/admin/developer-management", icon: Code2 },
       { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: ShieldCheck },
       { title: "Institution API Keys", path: "/admin/institution-api-keys", icon: Key },
+      { title: "Card Issuance Timeline", path: "/admin/card-issuance-timeline", icon: CreditCard },
     ],
   },
   {
