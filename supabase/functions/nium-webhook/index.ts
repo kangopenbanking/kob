@@ -7,7 +7,7 @@ import { verifyWebhookSignature, getFxQuote, type NiumCurrency } from "../_share
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-nium-signature, x-nium-event",
+  "Access-Control-Allow-Headers": "content-type, x-nium-signature, x-nium-signature-key, x-nium-event",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -16,8 +16,18 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   const raw = await req.text();
-  const sigOk = await verifyWebhookSignature(raw, req.headers.get("x-nium-signature"));
-  if (!sigOk) return json({ error: "invalid_signature" }, 401);
+  const sigOk = await verifyWebhookSignature(
+    raw,
+    req.headers.get("x-nium-signature"),
+    req.headers.get("x-nium-signature-key"),
+  );
+  if (!sigOk) {
+    console.warn("nium-webhook: signature rejected", {
+      has_hmac: !!req.headers.get("x-nium-signature"),
+      has_key: !!req.headers.get("x-nium-signature-key"),
+    });
+    return json({ error: "invalid_signature" }, 401);
+  }
 
   let payload: any;
   try { payload = JSON.parse(raw); } catch { return json({ error: "invalid_json" }, 400); }
