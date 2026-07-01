@@ -26,7 +26,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, ChevronsUpDown } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   ALLOWED_NIUM_POP_CODES,
   DEFAULT_NIUM_POP_CODE,
@@ -487,66 +496,7 @@ export default function GlobalReceivingAccount() {
 
           <Card className="border-border/60">
             <CardContent className="p-2 sm:p-3">
-              <ul
-                className="divide-y divide-border/60"
-                role="radiogroup"
-                aria-label="New global account currency"
-              >
-
-
-                {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
-                  const selected = newCurrency === c;
-                  const meta = CURRENCY_META[c];
-                  return (
-                    <li key={c}>
-                      <button
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        aria-label={`${meta.label} (${c})`}
-                        onClick={() => setNewCurrency(c)}
-                        className={cn(
-                          "group flex w-full items-center gap-4 rounded-xl p-3 sm:p-4 text-left transition-colors",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                          selected ? meta.soft : "hover:bg-muted/50",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white text-lg font-semibold shadow-sm",
-                            meta.bg,
-                          )}
-                          aria-hidden="true"
-                        >
-                          {meta.symbol}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[15px] font-semibold tracking-tight">
-                              {c}
-                            </span>
-                            <span className="text-sm text-muted-foreground truncate">
-                              · {meta.label}
-                            </span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">{meta.region}</div>
-                        </div>
-                        <div
-                          className={cn(
-                            "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-colors",
-                            selected
-                              ? cn("border-transparent text-white", meta.bg)
-                              : "border-border",
-                          )}
-                          aria-hidden="true"
-                        >
-                          {selected && <Check className="h-3.5 w-3.5" strokeWidth={2.5} />}
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              <CurrencyCombobox value={newCurrency} onChange={setNewCurrency} />
               <div className="p-2 sm:p-3 pt-2">
                 <Button
                   onClick={createAccount}
@@ -818,6 +768,101 @@ export default function GlobalReceivingAccount() {
         onSubmitted={() => setPendingCorrection(true)}
       />
     </div>
+  );
+}
+
+function CurrencyCombobox({
+  value,
+  onChange,
+}: {
+  value: Currency;
+  onChange: (c: Currency) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const meta = CURRENCY_META[value];
+  const currencies = Object.keys(CURRENCY_META) as Currency[];
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          aria-label="Select currency"
+          className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-background p-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white text-base font-semibold shadow-sm",
+              meta.bg,
+            )}
+            aria-hidden="true"
+          >
+            {meta.symbol}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[15px] font-semibold tracking-tight">{value}</span>
+              <span className="text-sm text-muted-foreground truncate">· {meta.label}</span>
+            </div>
+            <div className="text-xs text-muted-foreground truncate">{meta.region}</div>
+          </div>
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0 w-[calc(100vw-2rem)] sm:w-[420px]"
+        align="start"
+        sideOffset={6}
+      >
+        <Command>
+          <CommandInput placeholder="Search currency, code, or country…" />
+          <CommandList>
+            <CommandEmpty>No currency found.</CommandEmpty>
+            <CommandGroup>
+              {currencies.map((c) => {
+                const m = CURRENCY_META[c];
+                const selected = c === value;
+                return (
+                  <CommandItem
+                    key={c}
+                    value={`${c} ${m.label} ${m.region}`}
+                    onSelect={() => {
+                      onChange(c);
+                      setOpen(false);
+                    }}
+                    className="gap-3"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white text-sm font-semibold",
+                        m.bg,
+                      )}
+                      aria-hidden="true"
+                    >
+                      {m.symbol}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">{c}</span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          · {m.label}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {m.region}
+                      </div>
+                    </div>
+                    {selected && <Check className="h-4 w-4 text-foreground" />}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 
