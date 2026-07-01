@@ -65,6 +65,30 @@ async function ensureCardholder(sb: ReturnType<typeof createClient>, ctx: AuthCt
   return data;
 }
 
+// Legacy virtual_cards.cardholder_id FKs to stripe_cardholders — keep a shell row so inserts pass.
+async function ensureStripeCardholderShell(sb: ReturnType<typeof createClient>, ctx: AuthCtx, ch: any) {
+  const { data: existing } = await sb
+    .from("stripe_cardholders")
+    .select("id")
+    .eq("user_id", ctx.userId)
+    .maybeSingle();
+  if (existing) return existing.id as string;
+  const { data, error } = await sb
+    .from("stripe_cardholders")
+    .insert({
+      user_id: ctx.userId,
+      stripe_cardholder_id: `shell_${ctx.userId}`,
+      name: `${ch.first_name ?? "Kang"} ${ch.last_name ?? "Customer"}`.trim(),
+      email: ch.email ?? ctx.email ?? `${ctx.userId}@kang.local`,
+      status: "active",
+      metadata: { source: "cards-v3-shell" },
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(`stripe_cardholder_shell_failed: ${error.message}`);
+  return data.id as string;
+}
+
 async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
   const form_factor = (p.form_factor ?? "virtual") as CardFormFactor;
   if (!["virtual", "digital", "physical"].includes(form_factor)) {
