@@ -123,7 +123,7 @@ const CustomerCards: React.FC = () => {
     if (!card) return null;
     return (
       <span className="rounded-full bg-[hsl(0,0%,100%)]/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-[hsl(0,0%,100%)]">
-        {card.provider} · {card.form_factor}
+        {card.form_factor}
       </span>
     );
   }, [card]);
