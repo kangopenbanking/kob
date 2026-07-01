@@ -105,7 +105,10 @@ export default function AdminCardManagement() {
       body: { action, card_id: card.id },
     });
     setBusy(false);
-    if (error) { toast.error(error.message ?? `${action} failed`); return; }
+    if (error) {
+      toast.error(extractEdgeFunctionError(error, `We couldn't ${action} this card. Please try again.`));
+      return;
+    }
     toast.success(`Card ${action}d.`);
     await load();
     if (selected?.id === card.id) setSelected(null);
