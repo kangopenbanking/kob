@@ -126,6 +126,7 @@ const PISP = lazy(() => import("./pages/guides/PISP"));
 const Security = lazy(() => import("./pages/guides/Security"));
 const Webhooks = lazy(() => import("./pages/guides/Webhooks"));
 const Certificates = lazy(() => import("./pages/guides/Certificates"));
+const CardsGuide = lazy(() => import("./pages/docs/CardsGuide"));
 
 // Dashboard / Personal
 const Dashboard = lazy(() => import("./pages/Dashboard"));
