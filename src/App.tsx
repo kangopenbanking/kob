@@ -592,6 +592,7 @@ const AdminTurnstileMonitor = lazy(() => import("./pages/admin/AdminTurnstileMon
 const AdminStatementFees = lazy(() => import("./pages/admin/AdminStatementFees"));
 const AdminNiumFeeSettings = lazy(() => import("./pages/admin/AdminNiumFeeSettings"));
 const AdminNiumNameCorrections = lazy(() => import("./pages/admin/AdminNiumNameCorrections"));
+const NiumWebhookSecret = lazy(() => import("./pages/admin/NiumWebhookSecret"));
 
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
 const PromiseToPayAdmin = lazy(() => import("./pages/admin/PromiseToPayAdmin"));
@@ -1114,6 +1115,7 @@ function App() {
               <Route path="statement-fees" element={<AdminStatementFees />} />
               <Route path="nium-fee-settings" element={<AdminNiumFeeSettings />} />
               <Route path="nium-name-corrections" element={<AdminNiumNameCorrections />} />
+              <Route path="nium-webhook-secret" element={<NiumWebhookSecret />} />
 
               <Route path="institution-api-keys" element={<AdminInstitutionApiKeys />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
