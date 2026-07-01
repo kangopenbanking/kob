@@ -254,23 +254,13 @@ function AppSection({ app, index }: { app: AppData; index: number }) {
             className="flex-1 w-full max-w-lg"
           >
             <div className="relative">
-              {/* Background card shape */}
-              <div
-                className="absolute inset-4 rounded-3xl -rotate-3"
-                style={{ backgroundColor: app.colorLight }}
-              />
-              <div
-                className="absolute inset-4 rounded-3xl rotate-2 opacity-60"
-                style={{ backgroundColor: app.colorLight }}
-              />
-
               {/* Phone mockup */}
               <div className="relative mx-auto w-64 sm:w-72">
-                <div className="relative aspect-[9/18] rounded-[2.5rem] border-[3px] border-foreground/10 bg-card p-3 shadow-2xl">
+                <div className="relative aspect-[9/18] rounded-[2.5rem] border-[3px] border-foreground/10 p-3 shadow-2xl">
                   {/* Notch */}
                   <div className="absolute left-1/2 top-3 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-foreground/10" />
                   
-                  <div className="h-full rounded-[2rem] overflow-hidden bg-muted/50">
+                  <div className="h-full rounded-[2rem] overflow-hidden">
                     <img
                       src={app.image}
                       alt={`${app.title} app screenshot`}
