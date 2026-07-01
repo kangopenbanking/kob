@@ -15,25 +15,75 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
+  const clientIp =
+    req.headers.get("cf-connecting-ip") ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    null;
+  const userAgent = req.headers.get("user-agent") || null;
+  const hadKey = !!req.headers.get("x-nium-signature-key");
+  const hadHmac = !!req.headers.get("x-nium-signature");
+
+  const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  const audit = async (
+    outcome: "accepted" | "rejected" | "duplicate",
+    reason: string,
+    status_code: number,
+    event_id: string | null,
+    event_type: string | null,
+    body_bytes: number,
+  ) => {
+    try {
+      await svc.from("nium_webhook_audit").insert({
+        event_id, event_type, outcome, reason, status_code,
+        client_ip: clientIp, user_agent: userAgent,
+        had_signature_key: hadKey, had_hmac_signature: hadHmac,
+        body_bytes,
+      });
+    } catch (e) { console.warn("audit insert failed", e); }
+  };
+
   const raw = await req.text();
+  const bodyBytes = raw.length;
+
   const sigOk = await verifyWebhookSignature(
     raw,
     req.headers.get("x-nium-signature"),
     req.headers.get("x-nium-signature-key"),
   );
   if (!sigOk) {
-    console.warn("nium-webhook: signature rejected", {
-      has_hmac: !!req.headers.get("x-nium-signature"),
-      has_key: !!req.headers.get("x-nium-signature-key"),
-    });
+    await audit("rejected", "invalid_signature", 401, null, null, bodyBytes);
     return json({ error: "invalid_signature" }, 401);
   }
 
   let payload: any;
-  try { payload = JSON.parse(raw); } catch { return json({ error: "invalid_json" }, 400); }
+  try { payload = JSON.parse(raw); } catch {
+    await audit("rejected", "invalid_json", 400, null, null, bodyBytes);
+    return json({ error: "invalid_json" }, 400);
+  }
 
   const eventType = String(payload.eventType ?? payload.event ?? req.headers.get("x-nium-event") ?? "").toLowerCase();
-  const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const eventId = String(
+    payload.eventId ?? payload.event_id ?? payload.transactionId ?? payload.systemReferenceNumber ?? payload.id ?? "",
+  ) || null;
+
+  // --- Replay protection: dedupe by (source=nium, event_id) with 24h TTL ---
+  if (eventId) {
+    const replay = await checkAndRegisterWebhook(svc, {
+      source: "nium",
+      event_id: eventId,
+      payload,
+      signature: req.headers.get("x-nium-signature-key") ? "static-key" : (req.headers.get("x-nium-signature") ?? undefined),
+    });
+    if (replay.duplicate) {
+      await audit("duplicate", "duplicate_within_ttl", 200, eventId, eventType || null, bodyBytes);
+      return json({ received: true, duplicate: true, event_id: eventId }, 200);
+    }
+  }
+
+  await audit("accepted", "signature_valid", 200, eventId, eventType || null, bodyBytes);
+
 
   // --- Payout status events ---
   if (eventType.includes("payout") || eventType.includes("transfer")) {
