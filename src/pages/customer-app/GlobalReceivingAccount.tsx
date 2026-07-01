@@ -359,22 +359,19 @@ export default function GlobalReceivingAccount() {
   return (
     <div className="min-h-screen bg-background antialiased">
       {/* Header */}
-      <header className="border-b border-border/60 bg-gradient-to-b from-card to-background">
-        <div className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-14">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            <Globe2 className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
-            Global Accounts
+      <header className="border-b border-border/60 bg-card">
+        <div className="container max-w-3xl px-4 sm:px-6 py-6 sm:py-10">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              <Globe2 className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
+              Global Accounts
+            </div>
           </div>
-          <h1 className="mt-4 text-3xl sm:text-5xl font-semibold tracking-[-0.022em] text-foreground">
-            Receive worldwide.
-            <br />
-            <span className="text-muted-foreground">Settle in XAF.</span>
+          <h1 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-[-0.018em] text-foreground">
+            Receive worldwide. Settle in XAF.
           </h1>
-          <p className="mt-3 sm:mt-4 max-w-lg text-sm sm:text-[15px] leading-relaxed text-muted-foreground">
-            Real bank accounts in USD, EUR and GBP. Funds arrive in your wallet instantly.
-          </p>
 
-          <dl className="mt-8 sm:mt-10 grid grid-cols-3 divide-x divide-border/60 rounded-2xl border border-border/60 bg-background overflow-hidden">
+          <dl className="mt-6 sm:mt-8 grid grid-cols-3 divide-x divide-border/60 rounded-2xl border border-border/60 bg-background overflow-hidden shadow-sm">
             <Stat label="Accounts" value={String(accounts.length)} />
             <Stat label="Inflows" value={String(payments.length)} />
             <Stat
