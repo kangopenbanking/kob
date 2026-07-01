@@ -116,20 +116,16 @@ export async function recordCardFeeLedger(
     note?: string;
   },
 ) {
-  // Store as a card_funding_transactions row so it appears in card history + admin audit.
-  await sb.from("card_funding_transactions").insert({
-    virtual_card_id: args.cardId,
+  await sb.from("card_fee_events").insert({
+    user_id: args.userId,
+    card_id: args.cardId,
+    fee_type: args.feeType,
     amount: args.amount,
     currency: args.currency,
-    transaction_type: "fee",
-    status: "completed",
-    source_account_id: args.accountId ?? null,
-    metadata: {
-      fee_type: args.feeType,
-      idempotency_key: args.idempotencyKey,
-      note: args.note ?? null,
-      source: "cards-v3",
-    },
+    wallet_account_id: args.accountId ?? null,
+    idempotency_key: args.idempotencyKey,
+    note: args.note ?? null,
+    metadata: { source: "cards-v3" },
   });
   console.log(JSON.stringify({
     tag: "card_fee_charged",
@@ -141,4 +137,5 @@ export async function recordCardFeeLedger(
     idempotency_key: args.idempotencyKey,
   }));
 }
+
 
