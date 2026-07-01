@@ -52,7 +52,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Link } from "react-router-dom";
 import { Briefcase, RotateCcw, Store, ExternalLink, ArrowRight } from "lucide-react";
 
 type Currency =
