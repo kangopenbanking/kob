@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
   // Idempotency: if user already has an account in this currency, return it.
   const { data: existing } = await svc.from("nium_global_accounts").select("*")
     .eq("user_id", userId).eq("currency", currency).eq("status", "active").maybeSingle();
-  if (existing) return json({ account: existing, reused: true }, 200);
+  if (existing) return json({ account: existing, reused: true, meta: { warnings } }, 200);
 
   let nium;
   try {
