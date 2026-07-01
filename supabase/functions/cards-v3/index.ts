@@ -50,7 +50,7 @@ async function ensureCardholder(sb: ReturnType<typeof createClient>, ctx: AuthCt
     .maybeSingle();
   const insert = {
     tenant_type: "platform" as const,
-    tenant_id: null,
+    tenant_id: ctx.userId,
     customer_external_id: ctx.userId,
     first_name: p.first_name ?? prof?.first_name ?? "Kang",
     last_name: p.last_name ?? prof?.last_name ?? "Customer",
