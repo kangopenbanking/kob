@@ -201,7 +201,7 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.55 }}
-            className="mt-16 flex items-center justify-center gap-8 sm:gap-16"
+            className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-y-6 gap-x-8 sm:gap-x-16 max-w-2xl mx-auto"
           >
             {[
               { value: '4', label: 'Apps' },
