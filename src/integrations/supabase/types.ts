@@ -5459,6 +5459,56 @@ export type Database = {
         }
         Relationships: []
       }
+      card_fee_events: {
+        Row: {
+          amount: number
+          card_id: string | null
+          created_at: string
+          currency: string
+          fee_type: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          note: string | null
+          user_id: string
+          wallet_account_id: string | null
+        }
+        Insert: {
+          amount: number
+          card_id?: string | null
+          created_at?: string
+          currency?: string
+          fee_type: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          note?: string | null
+          user_id: string
+          wallet_account_id?: string | null
+        }
+        Update: {
+          amount?: number
+          card_id?: string | null
+          created_at?: string
+          currency?: string
+          fee_type?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          note?: string | null
+          user_id?: string
+          wallet_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_fee_events_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_funding_transactions: {
         Row: {
           amount_source_currency: number

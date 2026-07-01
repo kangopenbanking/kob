@@ -12,6 +12,7 @@ export const REQUIRED_TRANSACTION_TYPES: string[] = [
   "byo_mobile_money_routing", "byo_fallback_charge",
   "bank_transfer", "intra_bank_transfer", "inter_bank_transfer",
   "card_payment", "virtual_card_topup", "qr_payment",
+  "card_issuance_fee", "card_maintenance_fee", "card_transaction_fee",
   "piggybank_deposit", "piggybank_withdrawal",
   "njangi_contribution", "njangi_payout",
   "rent_payment",

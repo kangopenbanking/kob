@@ -269,3 +269,37 @@ export function providerHealth(): { primary: CardProvider; nium_configured: bool
     mode: NIUM_MODE,
   };
 }
+
+// ------------------------------------------------------------
+// Load / unload — deposit or withdraw funds from a card.
+// Nium: POST /card/{id}/load  |  Kora: fundCard/withdrawFromCard
+// Stub mode returns { ok: true } for local/preview flows.
+// ------------------------------------------------------------
+export async function loadCard(
+  provider: CardProvider,
+  providerCardId: string,
+  amount: number,
+  currency: string,
+  action: "load" | "unload",
+  idempotencyKey: string,
+): Promise<{ ok: true; provider_ref?: string }> {
+  if (amount <= 0) throw new Error("amount_must_be_positive");
+  if (provider === "nium") {
+    if (NIUM_MODE === "stub" || !NIUM_API_KEY || !NIUM_CLIENT_ID) {
+      return { ok: true, provider_ref: `nium_stub_${action}_${crypto.randomUUID()}` };
+    }
+    const path = action === "load"
+      ? `/api/v2/client/${NIUM_CLIENT_ID}/card/${providerCardId}/load`
+      : `/api/v2/client/${NIUM_CLIENT_ID}/card/${providerCardId}/unload`;
+    const res = await niumRequest(path, "POST", {
+      amount,
+      currencyCode: currency === "XAF" ? "USD" : currency,
+    }, idempotencyKey);
+    return { ok: true, provider_ref: res?.transactionId ?? res?.id };
+  }
+  // Kora fallback
+  if (action === "load") await Kora.fundCard(providerCardId, amount, currency, idempotencyKey);
+  else await Kora.withdrawFromCard(providerCardId, amount, currency, idempotencyKey);
+  return { ok: true };
+}
+
