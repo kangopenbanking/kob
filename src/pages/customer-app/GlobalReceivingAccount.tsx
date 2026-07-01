@@ -844,8 +844,6 @@ export default function GlobalReceivingAccount() {
       </main>
 
       <NameCorrectionDialog
-
-      <NameCorrectionDialog
         open={nameDialogOpen}
         onOpenChange={setNameDialogOpen}
         userId={userId}
