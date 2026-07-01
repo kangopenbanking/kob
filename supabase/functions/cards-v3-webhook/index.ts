@@ -86,6 +86,7 @@ serve(async (req) => {
     provider,
     event_type: eventType,
     payload,
+    signature_verified: true,
     related_card_id: relatedCardId,
     processed_at: new Date().toISOString(),
   });
