@@ -61,9 +61,11 @@ export default function AdminCardManagement() {
   const [selected, setSelected] = useState<AdminCard | null>(null);
   const [feeEvents, setFeeEvents] = useState<FeeEvent[]>([]);
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
+    setLoadError(null);
     const { data, error } = await supabase.functions.invoke("cards-v3", {
       body: {
         action: "admin_list",
@@ -74,7 +76,13 @@ export default function AdminCardManagement() {
       },
     });
     setLoading(false);
-    if (error) { toast.error(error.message ?? "Failed to load cards"); return; }
+    if (error) {
+      const msg = extractEdgeFunctionError(error, "We couldn't load cards right now. Please try again.");
+      setLoadError(msg);
+      toast.error(msg);
+      setCards([]);
+      return;
+    }
     setCards(data?.cards ?? []);
   }
 
