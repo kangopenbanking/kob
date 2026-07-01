@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
   }).select().single();
 
   if (insErr) return json({ error: "persist_failed", message: insErr.message }, 500);
-  return json({ account: inserted, reused: false }, 201);
+  return json({ account: inserted, reused: false, meta: { warnings } }, 201);
 });
 
 function json(b: unknown, status = 200) {
