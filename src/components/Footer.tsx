@@ -207,13 +207,23 @@ export const Footer = () => {
             </div>
           </div>
 
-          <div className="border-t pt-4 text-xs text-muted-foreground/80 leading-relaxed">
-            <p className="mb-2">
-              Kang Open Banking (KOB) is a product of <span className="font-medium">Kang Consultancy Co Ltd</span>, registered under the Canada Business Corporations Act (CBCA) (s. 19 and 106) (Reg. No. 1381210-3) with offices in Port Dover, ON, Canada.
-            </p>
-            <p>
-              In Cameroon, it is registered under Reg. No. RCBDA2021B000451, regulated by the Ministry of Small and Medium-Sized Enterprises, and accredited by the Management Centre (CGA/AMC) (Tax Reg. M102116572371B).
-            </p>
+          <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-muted-foreground/80 leading-relaxed">
+            <div>
+              <p className="mb-2">
+                Kang Open Banking (KOB) is a trading name of <span className="font-medium">Kang Consultancy Co Ltd</span>, an electronic money institution. Banking services are provided in partnership with licensed credit institutions in each jurisdiction we operate. Card issuing is provided by our authorised card programme partners.
+              </p>
+              <p>
+                Eligible customer funds are safeguarded in accordance with applicable local regulations. Investment and lending products are not offered; deposits are not covered by government deposit-insurance schemes unless expressly stated for a specific product. Please read the terms of service, privacy notice and cardholder agreement before opening an account.
+              </p>
+            </div>
+            <div>
+              <p className="mb-2">
+                Kang Open Banking (KOB) is a product of <span className="font-medium">Kang Consultancy Co Ltd</span>, registered under the Canada Business Corporations Act (CBCA) (s. 19 and 106) (Reg. No. 1381210-3) with offices in Port Dover, ON, Canada.
+              </p>
+              <p>
+                In Cameroon, it is registered under Reg. No. RCBDA2021B000451, regulated by the Ministry of Small and Medium-Sized Enterprises, and accredited by the Management Centre (CGA/AMC) (Tax Reg. M102116572371B).
+              </p>
+            </div>
           </div>
         </div>
       </div>
