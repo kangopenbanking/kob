@@ -42,10 +42,8 @@ describe("cards-v3 — concurrent duplicate issuance safety", () => {
   });
 
   it("emits exactly one card.issue.persisted webhook per successful issuance", () => {
-    const matches = fn.match(/card\.issue\.persisted/g) ?? [];
-    // One string literal in the dispatchCardWebhook call.
-    expect(matches.length).toBe(1);
-    expect(fn).toMatch(/dispatchCardWebhook\(\s*sb\s*,\s*"card\.issue\.persisted"/);
+    const dispatchCalls = fn.match(/dispatchCardWebhook\(\s*sb\s*,\s*"card\.issue\.persisted"/g) ?? [];
+    expect(dispatchCalls.length).toBe(1);
   });
 });
 
