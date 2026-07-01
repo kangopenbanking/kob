@@ -1,0 +1,1 @@
+ALTER TYPE card_issuer_provider ADD VALUE IF NOT EXISTS 'nium';

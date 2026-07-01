@@ -5600,6 +5600,83 @@ export type Database = {
         }
         Relationships: []
       }
+      card_shipments: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          card_id: string
+          city: string
+          country: string
+          courier: string | null
+          created_at: string
+          delivered_at: string | null
+          id: string
+          metadata: Json
+          postal_code: string | null
+          provider: Database["public"]["Enums"]["card_issuer_provider"]
+          recipient_name: string
+          region: string | null
+          requested_at: string
+          shipped_at: string | null
+          status: Database["public"]["Enums"]["card_shipment_status"]
+          tracking_number: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          card_id: string
+          city: string
+          country: string
+          courier?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          metadata?: Json
+          postal_code?: string | null
+          provider?: Database["public"]["Enums"]["card_issuer_provider"]
+          recipient_name: string
+          region?: string | null
+          requested_at?: string
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["card_shipment_status"]
+          tracking_number?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          card_id?: string
+          city?: string
+          country?: string
+          courier?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          id?: string
+          metadata?: Json
+          postal_code?: string | null
+          provider?: Database["public"]["Enums"]["card_issuer_provider"]
+          recipient_name?: string
+          region?: string | null
+          requested_at?: string
+          shipped_at?: string | null
+          status?: Database["public"]["Enums"]["card_shipment_status"]
+          tracking_number?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_shipments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_transactions: {
         Row: {
           amount_usd: number
@@ -29300,6 +29377,8 @@ export type Database = {
           customer_external_id: string | null
           exp_month: number
           exp_year: number
+          fallback_reason: string | null
+          form_factor: Database["public"]["Enums"]["card_form_factor"]
           frozen_at: string | null
           id: string
           issued_by_user_id: string | null
@@ -29307,6 +29386,8 @@ export type Database = {
           kora_cardholder_id: string | null
           last4: string
           metadata: Json | null
+          nium_card_id: string | null
+          nium_customer_hash_id: string | null
           program_id: string | null
           provider: Database["public"]["Enums"]["card_issuer_provider"]
           spending_controls: Json | null
@@ -29317,6 +29398,7 @@ export type Database = {
           terminated_at: string | null
           updated_at: string | null
           user_id: string
+          wallet_tokens: Json
         }
         Insert: {
           balance_usd?: number | null
@@ -29328,6 +29410,8 @@ export type Database = {
           customer_external_id?: string | null
           exp_month: number
           exp_year: number
+          fallback_reason?: string | null
+          form_factor?: Database["public"]["Enums"]["card_form_factor"]
           frozen_at?: string | null
           id?: string
           issued_by_user_id?: string | null
@@ -29335,6 +29419,8 @@ export type Database = {
           kora_cardholder_id?: string | null
           last4: string
           metadata?: Json | null
+          nium_card_id?: string | null
+          nium_customer_hash_id?: string | null
           program_id?: string | null
           provider?: Database["public"]["Enums"]["card_issuer_provider"]
           spending_controls?: Json | null
@@ -29345,6 +29431,7 @@ export type Database = {
           terminated_at?: string | null
           updated_at?: string | null
           user_id: string
+          wallet_tokens?: Json
         }
         Update: {
           balance_usd?: number | null
@@ -29356,6 +29443,8 @@ export type Database = {
           customer_external_id?: string | null
           exp_month?: number
           exp_year?: number
+          fallback_reason?: string | null
+          form_factor?: Database["public"]["Enums"]["card_form_factor"]
           frozen_at?: string | null
           id?: string
           issued_by_user_id?: string | null
@@ -29363,6 +29452,8 @@ export type Database = {
           kora_cardholder_id?: string | null
           last4?: string
           metadata?: Json | null
+          nium_card_id?: string | null
+          nium_customer_hash_id?: string | null
           program_id?: string | null
           provider?: Database["public"]["Enums"]["card_issuer_provider"]
           spending_controls?: Json | null
@@ -29373,6 +29464,7 @@ export type Database = {
           terminated_at?: string | null
           updated_at?: string | null
           user_id?: string
+          wallet_tokens?: Json
         }
         Relationships: [
           {
@@ -31043,14 +31135,26 @@ export type Database = {
         | "executed"
         | "cancelled"
       bottom_nav_app: "customer" | "business" | "banking"
+      card_form_factor: "virtual" | "digital" | "physical"
       card_funding_status:
         | "pending"
         | "processing"
         | "completed"
         | "failed"
         | "cancelled"
-      card_issuer_provider: "kora" | "cardyfie_legacy" | "stripe_legacy"
+      card_issuer_provider:
+        | "kora"
+        | "cardyfie_legacy"
+        | "stripe_legacy"
+        | "nium"
       card_kyc_level: "none" | "tier1" | "tier2" | "tier3"
+      card_shipment_status:
+        | "requested"
+        | "manufacturing"
+        | "shipped"
+        | "delivered"
+        | "returned"
+        | "cancelled"
       card_status: "active" | "inactive" | "blocked" | "cancelled"
       card_tenant_type: "bank" | "developer" | "platform"
       card_transaction_type: "authorization" | "capture" | "refund" | "reversal"
@@ -31442,6 +31546,7 @@ export const Constants = {
         "cancelled",
       ],
       bottom_nav_app: ["customer", "business", "banking"],
+      card_form_factor: ["virtual", "digital", "physical"],
       card_funding_status: [
         "pending",
         "processing",
@@ -31449,8 +31554,21 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
-      card_issuer_provider: ["kora", "cardyfie_legacy", "stripe_legacy"],
+      card_issuer_provider: [
+        "kora",
+        "cardyfie_legacy",
+        "stripe_legacy",
+        "nium",
+      ],
       card_kyc_level: ["none", "tier1", "tier2", "tier3"],
+      card_shipment_status: [
+        "requested",
+        "manufacturing",
+        "shipped",
+        "delivered",
+        "returned",
+        "cancelled",
+      ],
       card_status: ["active", "inactive", "blocked", "cancelled"],
       card_tenant_type: ["bank", "developer", "platform"],
       card_transaction_type: ["authorization", "capture", "refund", "reversal"],
