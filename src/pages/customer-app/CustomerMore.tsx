@@ -45,7 +45,7 @@ const utilityItems = [
 
 // Pre-register strings for the harvester (must be literal calls so the scanner picks them up).
 const _harvest = (t: (s: string) => string) => [
-  t('Transfer'), t('Request'), t('Scan'), t('Bills'), t('Cash Out'), t('Accounts'), t('Global Accounts'),
+  t('Transfer'), t('Request'), t('Scan'), t('Bills'), t('Cash Out'), t('Accounts'), t('Global Accounts'), t('Cards'),
   t('Marketplace'), t('Daily Needs'), t('Driver Hub'),
   t('Send Abroad'), t('Remittances'), t('Loyalty'), t('Wishlist'),
   t('Reviews'), t('My Orders'), t('Disputes'), t('Support Chat'), t('Settings'),
