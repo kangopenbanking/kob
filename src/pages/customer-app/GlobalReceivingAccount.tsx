@@ -658,55 +658,68 @@ export default function GlobalReceivingAccount() {
             title="Cash-out"
             hint="Where incoming funds land."
           />
-          <Card className="border-border/60">
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              <div
-                className="grid grid-cols-2 gap-3"
-                role="radiogroup"
-                aria-label="Default cash-out preference"
-              >
-                <PreferenceTile
-                  active={defaults.payout_preference === "KANG_WALLET"}
-                  onClick={() => saveUserDefaults("KANG_WALLET", null)}
-                  icon={<Wallet className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
-                  title="Kang Wallet"
-                  subtitle="XAF · instant"
-                  accent="bg-primary"
-                />
-                <PreferenceTile
-                  active={defaults.payout_preference === "MOBILE_MONEY"}
-                  onClick={() => {
-                    const phone =
-                      defaults.payout_channel ??
-                      prompt("Mobile Money phone (e.g. 237677123456)") ??
-                      "";
-                    if (phone) saveUserDefaults("MOBILE_MONEY", phone);
-                  }}
-                  icon={<Smartphone className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
-                  title="Mobile Money"
-                  subtitle="MTN · Orange"
-                  accent="bg-amber-500"
-                />
-              </div>
-
-              {defaults.payout_preference === "MOBILE_MONEY" && (
-                <div className="grid gap-2 pt-1">
-                  <Label htmlFor="def-phone" className="text-xs">
-                    Phone
-                  </Label>
-                  <Input
-                    id="def-phone"
-                    placeholder="237677123456"
-                    defaultValue={defaults.payout_channel ?? ""}
-                    onBlur={(e) =>
-                      e.target.value && saveUserDefaults("MOBILE_MONEY", e.target.value)
-                    }
-                    className="h-11 rounded-xl"
+          {loading ? (
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
+            </div>
+          ) : (
+            <Card className="border-border/60">
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                <div
+                  className="grid grid-cols-2 gap-3"
+                  role="radiogroup"
+                  aria-label="Default cash-out preference"
+                >
+                  <PreferenceTile
+                    active={defaults.payout_preference === "KANG_WALLET"}
+                    onClick={() => saveUserDefaults("KANG_WALLET", null)}
+                    icon={<Wallet className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
+                    title="Kang Wallet"
+                    subtitle="XAF · instant"
+                    accent="bg-primary"
+                  />
+                  <PreferenceTile
+                    active={defaults.payout_preference === "MOBILE_MONEY"}
+                    onClick={() => {
+                      const phone =
+                        defaults.payout_channel ??
+                        prompt("Mobile Money phone (e.g. 237677123456)") ??
+                        "";
+                      if (phone) saveUserDefaults("MOBILE_MONEY", phone);
+                    }}
+                    icon={<Smartphone className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
+                    title="Mobile Money"
+                    subtitle="MTN · Orange"
+                    accent="bg-amber-500"
                   />
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {defaults.payout_preference === "MOBILE_MONEY" && !defaults.payout_channel && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Add your Mobile Money phone number below so payouts can be delivered.
+                  </p>
+                )}
+
+                {defaults.payout_preference === "MOBILE_MONEY" && (
+                  <div className="grid gap-2 pt-1">
+                    <Label htmlFor="def-phone" className="text-xs">
+                      Phone
+                    </Label>
+                    <Input
+                      id="def-phone"
+                      placeholder="237677123456"
+                      defaultValue={defaults.payout_channel ?? ""}
+                      onBlur={(e) =>
+                        e.target.value && saveUserDefaults("MOBILE_MONEY", e.target.value)
+                      }
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </section>
 
 
