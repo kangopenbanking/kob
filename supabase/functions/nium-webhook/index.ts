@@ -91,6 +91,34 @@ Deno.serve(async (req) => {
     return json({ received: true, kind: "rfi", rfi_id: rfiId });
   }
 
+  // --- Virtual / Global account status update events ---
+  if (
+    eventType.includes("account.status") ||
+    eventType === "account.suspended" ||
+    eventType === "account.closed" ||
+    eventType === "account.reactivated" ||
+    eventType === "account.status_updated"
+  ) {
+    const accountId = payload.accountId ?? payload.beneficiaryAccountId ?? payload.id;
+    if (!accountId) return json({ error: "missing_account_id" }, 400);
+    const raw = String(payload.status ?? payload.newStatus ?? "").toLowerCase();
+    const statusMap: Record<string, string> = {
+      active: "active", enabled: "active", reactivated: "active",
+      suspended: "suspended", frozen: "suspended", blocked: "suspended",
+      closed: "closed", terminated: "closed", deleted: "closed",
+    };
+    const mapped = statusMap[raw] ?? "active";
+    const { data: updated, error } = await svc.from("nium_global_accounts")
+      .update({ status: mapped, updated_at: new Date().toISOString() })
+      .eq("nium_account_id", accountId)
+      .select("id, user_id, account_kind, status").maybeSingle();
+    if (error) console.warn("account status update failed", error.message);
+    return json({
+      received: true, kind: "account_status",
+      nium_account_id: accountId, status: mapped, account_id: updated?.id ?? null,
+    });
+  }
+
   // --- Incoming payments (existing behavior) ---
   if (!eventType.includes("payment_incoming") && !eventType.includes("credit")) {
     return json({ received: true, ignored_event: eventType }, 200);
