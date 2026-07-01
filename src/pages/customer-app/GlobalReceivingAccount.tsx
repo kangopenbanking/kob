@@ -46,6 +46,14 @@ import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectio
 import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
 import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
 import type { FlowStep } from "@/components/customer-app/HowItWorksFlow";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Link } from "react-router-dom";
+import { Briefcase, RotateCcw, Store, ExternalLink, ArrowRight } from "lucide-react";
 
 type Currency =
   | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
