@@ -66,9 +66,10 @@ export function computeMomoFee(xafAfterSpread: number, feeRow: FeeRow | null): n
 export async function quoteBreakdown(
   svc: any,
   params: { source_amount: number; source_currency: NiumCurrency; routing: Routing },
+  opts: { allowReferenceFallback?: boolean } = {},
 ): Promise<FxBreakdown> {
   const spreadBps = await loadSpreadBps(svc);
-  const quote = await getFxQuote(params.source_currency, params.source_amount);
+  const quote = await getFxQuote(params.source_currency, params.source_amount, opts);
   const xafGross = Math.round(params.source_amount * quote.rate);
   const xafSpreadRevenue = Math.round((xafGross * spreadBps) / 10000);
   const xafAfterSpread = xafGross - xafSpreadRevenue;
