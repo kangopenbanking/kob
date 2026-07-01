@@ -170,7 +170,11 @@ export async function createGlobalAccount(params: {
   return stub;
 }
 
-export async function getFxQuote(source: NiumCurrency, _amount: number): Promise<NiumFxQuote> {
+export async function getFxQuote(
+  source: NiumCurrency,
+  _amount: number,
+  opts: { allowReferenceFallback?: boolean } = {},
+): Promise<NiumFxQuote> {
   if (MODE === "live" || MODE === "sandbox") {
     if (API_KEY && CLIENT_ID) {
       try {
@@ -188,16 +192,21 @@ export async function getFxQuote(source: NiumCurrency, _amount: number): Promise
               quote_id: j.quoteId ?? crypto.randomUUID(),
             };
           }
+          if (!opts.allowReferenceFallback) throw new Error(`Nium getFxQuote invalid_rate for ${source}`);
+        } else if (!opts.allowReferenceFallback) {
+          throw new Error(`Nium getFxQuote failed: ${res.status}`);
         } else {
-          console.warn(`Nium getFxQuote returned ${res.status}; falling back to reference rate for ${source}`);
+          console.warn(`Nium getFxQuote ${res.status}; using reference rate for ${source}`);
         }
       } catch (e) {
-        console.warn(`Nium getFxQuote error: ${e instanceof Error ? e.message : String(e)}; falling back to reference rate for ${source}`);
+        if (!opts.allowReferenceFallback) throw e;
+        console.warn(`Nium getFxQuote error: ${e instanceof Error ? e.message : String(e)}; using reference rate for ${source}`);
       }
+    } else if (!opts.allowReferenceFallback) {
+      throw new Error("NIUM_API_KEY / NIUM_CLIENT_ID missing");
     } else {
       console.warn(`NIUM_API_KEY/CLIENT_ID missing in ${MODE} mode; using reference rate for ${source}`);
     }
-    // Fail-open with reference rate. Callers must treat this as indicative only.
     return {
       rate: STUB_RATES[source],
       source_currency: source,
