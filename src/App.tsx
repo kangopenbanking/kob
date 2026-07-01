@@ -593,6 +593,7 @@ const AdminStatementFees = lazy(() => import("./pages/admin/AdminStatementFees")
 const AdminNiumFeeSettings = lazy(() => import("./pages/admin/AdminNiumFeeSettings"));
 const AdminNiumNameCorrections = lazy(() => import("./pages/admin/AdminNiumNameCorrections"));
 const NiumWebhookSecret = lazy(() => import("./pages/admin/NiumWebhookSecret"));
+const NiumWebhookAudit = lazy(() => import("./pages/admin/NiumWebhookAudit"));
 
 const AdminLoanReviewQueue = lazy(() => import("./pages/admin/AdminLoanReviewQueue"));
 const PromiseToPayAdmin = lazy(() => import("./pages/admin/PromiseToPayAdmin"));
