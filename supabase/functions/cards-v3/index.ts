@@ -10,11 +10,18 @@ import { corsHeaders } from "../_shared/cors.ts";
 import {
   issueCard,
   lifecycleAction,
+  loadCard,
   providerHealth,
   type CardFormFactor,
   type IssueCardInput,
 } from "../_shared/card-issuer.ts";
 import { dispatchCardWebhook } from "../_shared/card-webhook.ts";
+import {
+  computeFee,
+  debitPrimaryWallet,
+  recordCardFeeLedger,
+  resolveCardFee,
+} from "../_shared/card-fees.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
