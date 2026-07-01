@@ -79,11 +79,10 @@ const CustomerCards: React.FC = () => {
         },
       });
       if (res.error) throw res.error;
-      const provider = res.data?.provider ?? 'nium';
       toast.success(
         form_factor === 'digital'
-          ? `Digital card ready via ${provider.toUpperCase()}`
-          : `Virtual card issued via ${provider.toUpperCase()}`,
+          ? 'Digital card ready'
+          : 'Virtual card issued',
       );
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
     } catch (e: any) {
