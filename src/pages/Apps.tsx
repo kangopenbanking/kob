@@ -186,12 +186,12 @@ function HeroSection() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
           >
-            <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-lg" asChild>
+            <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 text-base shadow-lg" asChild>
               <Link to="/bank/f493095b-037a-40cf-82bc-3a3ab74550dd">
                 Try Banking Demo <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base" asChild>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 h-12 text-base" asChild>
               <Link to="/register">Register Institution</Link>
             </Button>
           </motion.div>
