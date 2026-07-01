@@ -240,6 +240,20 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
   }
   track("persisted", card.id);
 
+  // Record issuance fee in ledger now that we have a card_id.
+  if (issuanceFeeAmount > 0) {
+    await recordCardFeeLedger(sb, {
+      userId: ctx.userId,
+      cardId: card.id,
+      feeType: "card_issuance_fee",
+      amount: issuanceFeeAmount,
+      currency: walletCurrency,
+      accountId: feeWalletAccountId,
+      idempotencyKey: `${idem}:issuance-fee`,
+      note: `Card issuance (${form_factor})`,
+    });
+  }
+
   // Physical → create shipment shell
   if (form_factor === "physical") {
     const addr = p.address;
