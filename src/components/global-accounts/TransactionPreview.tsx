@@ -35,7 +35,7 @@ const Row = ({ label, value, accent }: { label: string; value: string; accent?: 
 );
 
 interface Props {
-  currency: "USD" | "EUR" | "GBP";
+  currency: string;
   defaultRouting: "KANG_WALLET" | "MOBILE_MONEY";
   sampleAmount?: number;
 }
