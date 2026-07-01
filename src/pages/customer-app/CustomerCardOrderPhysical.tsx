@@ -13,14 +13,14 @@ const CustomerCardOrderPhysical: React.FC = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [submitting, setSubmitting] = useState(false);
+  const [idemKey, setIdemKey] = useState<string>(() => crypto.randomUUID());
   const [form, setForm] = useState({
     recipient_name: '', line1: '', line2: '', city: '', region: '', postal_code: '', country: 'Cameroon',
   });
 
   const canSubmit = form.recipient_name && form.line1 && form.city && form.country;
 
-  const submit = async () => {
-    if (!canSubmit) return;
+  const attempt = async (key: string) => {
     setSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -37,19 +37,30 @@ const CustomerCardOrderPhysical: React.FC = () => {
             city: form.city, region: form.region || undefined,
             postal_code: form.postal_code || undefined, country: form.country,
           },
-          idempotency_key: crypto.randomUUID(),
+          idempotency_key: key,
         },
       });
       if (res.error) throw res.error;
-      toast.success('Physical card ordered. Track delivery from Cards.');
+      toast.success(
+        res.data?.idempotent_replay
+          ? 'Order already placed. Track delivery from Cards.'
+          : 'Physical card ordered. Track delivery from Cards.',
+      );
+      setIdemKey(crypto.randomUUID());
       await qc.refetchQueries({ queryKey: ['customer-cards-v3'] });
       navigate('/app/cards');
     } catch (e: any) {
-      toast.error(extractEdgeFunctionError(e, 'Could not order card'));
+      const msg = extractEdgeFunctionError(e, 'Could not order card. Please try again.');
+      toast.error(msg, {
+        duration: 8000,
+        action: { label: 'Retry', onClick: () => attempt(key) },
+      });
     } finally {
       setSubmitting(false);
     }
   };
+
+  const submit = () => canSubmit && attempt(idemKey);
 
   return (
     <div className="flex flex-col gap-5 p-5">
