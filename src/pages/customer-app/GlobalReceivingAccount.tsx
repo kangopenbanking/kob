@@ -438,6 +438,15 @@ export default function GlobalReceivingAccount() {
             </CardContent>
           </Card>
 
+          <Card className="border-border/60">
+            <CardContent className="p-2 sm:p-3">
+              <ul
+                className="divide-y divide-border/60"
+                role="radiogroup"
+                aria-label="New global account currency"
+              >
+
+
                 {(Object.keys(CURRENCY_META) as Currency[]).map((c) => {
                   const selected = newCurrency === c;
                   const meta = CURRENCY_META[c];
