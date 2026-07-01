@@ -23,6 +23,7 @@ const allQuickActions = [
   { key: 'marketplace', label: 'Marketplace', icon: Store, color: 'bg-[hsl(30,70%,90%)]', iconColor: 'text-[hsl(30,60%,40%)]' },
   { key: 'daily_needs', label: 'Daily Needs', icon: Store, color: 'bg-[hsl(160,60%,90%)]', iconColor: 'text-[hsl(160,50%,35%)]' },
   { key: 'driver_hub', label: 'Driver Hub', icon: Users, color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
+  { key: 'cards', label: 'Cards', icon: CreditCard, color: 'bg-[hsl(220,60%,92%)]', iconColor: 'text-[hsl(220,60%,40%)]', featureKey: 'cards' },
   { key: 'promise_to_pay', label: 'Promise to Pay', icon: HandCoins, color: 'bg-[hsl(265,55%,92%)]', iconColor: 'text-[hsl(265,55%,40%)]', featureKey: 'loans' },
 ];
 
