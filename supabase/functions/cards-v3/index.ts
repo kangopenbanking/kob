@@ -334,31 +334,36 @@ async function actionLifecycle(
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-  const sb = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  try {
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-  let ctx: AuthCtx;
-  try { ctx = await resolveAuth(sb, req); }
-  catch (e: any) { return err("unauthorized", e?.message ?? "auth_failed", 401); }
+    let ctx: AuthCtx;
+    try { ctx = await resolveAuth(sb, req); }
+    catch (e: any) { return err("unauthorized", e?.message ?? "auth_failed", 401); }
 
-  let body: any = {};
-  try { body = await req.json(); } catch { /* empty ok */ }
-  const action = body.action ?? new URL(req.url).searchParams.get("action");
+    let body: any = {};
+    try { body = await req.json(); } catch { /* empty ok */ }
+    const action = body.action ?? new URL(req.url).searchParams.get("action");
 
-  switch (action) {
-    case "issue":           return actionIssue(sb, ctx, body);
-    case "list":            return actionList(sb, ctx);
-    case "freeze":          return actionLifecycle(sb, ctx, body, "freeze");
-    case "unfreeze":        return actionLifecycle(sb, ctx, body, "unfreeze");
-    case "terminate":       return actionLifecycle(sb, ctx, body, "terminate");
-    case "update_limits":   return actionUpdateLimits(sb, ctx, body);
-    case "fund":            return actionFundOrWithdraw(sb, ctx, body, "load");
-    case "withdraw":        return actionFundOrWithdraw(sb, ctx, body, "unload");
-    case "admin_list":      return actionAdminList(sb, ctx, body);
-    case "provider_health": return json(providerHealth());
-    default:                return err("invalid_action", `unknown action: ${action}`, 400);
+    switch (action) {
+      case "issue":           return await actionIssue(sb, ctx, body);
+      case "list":            return await actionList(sb, ctx);
+      case "freeze":          return await actionLifecycle(sb, ctx, body, "freeze");
+      case "unfreeze":        return await actionLifecycle(sb, ctx, body, "unfreeze");
+      case "terminate":       return await actionLifecycle(sb, ctx, body, "terminate");
+      case "update_limits":   return await actionUpdateLimits(sb, ctx, body);
+      case "fund":            return await actionFundOrWithdraw(sb, ctx, body, "load");
+      case "withdraw":        return await actionFundOrWithdraw(sb, ctx, body, "unload");
+      case "admin_list":      return await actionAdminList(sb, ctx, body);
+      case "provider_health": return json(providerHealth());
+      default:                return err("invalid_action", `unknown action: ${action}`, 400);
+    }
+  } catch (e: any) {
+    console.error("[cards-v3] unhandled", e?.stack ?? e);
+    return err("internal_error", e?.message ?? "unexpected error", 500);
   }
 });
 
