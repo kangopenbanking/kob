@@ -46,12 +46,6 @@ import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectio
 import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
 import { HowItWorksFlow } from "@/components/customer-app/HowItWorksFlow";
 import type { FlowStep } from "@/components/customer-app/HowItWorksFlow";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Briefcase, RotateCcw, Store, ArrowRight } from "lucide-react";
 
 type Currency =
@@ -847,69 +841,9 @@ export default function GlobalReceivingAccount() {
           <NameCorrectionUpdates userId={userId} />
         </section>
 
-        {/* FAQ */}
-        <section className="space-y-4" aria-labelledby="faq-heading">
-          <SectionTitle id="faq-heading" title="Frequently asked questions" />
-          <Card className="border-border/60">
-            <CardContent className="p-2 sm:p-3">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="setup">
-                  <AccordionTrigger className="text-left text-sm font-medium px-3">
-                    How do I set up my first global account?
-                  </AccordionTrigger>
-                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
-                    Pick a currency (USD, EUR, GBP and more), confirm your verified KYC name
-                    matches the sender's records, then tap Generate account. Details appear
-                    instantly and you can share them with your employer, marketplace or client.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="fees">
-                  <AccordionTrigger className="text-left text-sm font-medium px-3">
-                    What fees apply to incoming transfers?
-                  </AccordionTrigger>
-                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
-                    Opening an account is free. A small FX spread is applied when funds are
-                    converted to XAF, and a standard withdrawal fee applies if you route to
-                    Mobile Money. The exact breakdown is shown in the Transaction preview
-                    before you receive each payment.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="timing">
-                  <AccordionTrigger className="text-left text-sm font-medium px-3">
-                    How long do transfers take to arrive?
-                  </AccordionTrigger>
-                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
-                    Local transfers (ACH, SEPA, Faster Payments) usually settle the same
-                    business day. SWIFT wires can take 1–3 business days depending on the
-                    sending bank. You will see the payment in Activity as soon as it clears.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="name">
-                  <AccordionTrigger className="text-left text-sm font-medium px-3">
-                    Why must the sender use my exact KYC name?
-                  </AccordionTrigger>
-                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
-                    Correspondent banks reject payments where the beneficiary name doesn't
-                    match. Always share the exact name shown on the account card, otherwise
-                    the sending bank may return the transfer and charge you a recall fee.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="routing">
-                  <AccordionTrigger className="text-left text-sm font-medium px-3">
-                    Can I change where the money is deposited?
-                  </AccordionTrigger>
-                  <AccordionContent className="px-3 text-sm text-muted-foreground leading-relaxed">
-                    Yes. You can set a default (Kang Wallet or Mobile Money) for all accounts,
-                    or override the routing per account from the account card. Changes apply
-                    to future payments only.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-        </section>
-
       </main>
+
+      <NameCorrectionDialog
 
       <NameCorrectionDialog
         open={nameDialogOpen}
