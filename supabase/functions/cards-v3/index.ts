@@ -354,6 +354,9 @@ serve(async (req) => {
     case "unfreeze":        return actionLifecycle(sb, ctx, body, "unfreeze");
     case "terminate":       return actionLifecycle(sb, ctx, body, "terminate");
     case "update_limits":   return actionUpdateLimits(sb, ctx, body);
+    case "fund":            return actionFundOrWithdraw(sb, ctx, body, "load");
+    case "withdraw":        return actionFundOrWithdraw(sb, ctx, body, "unload");
+    case "admin_list":      return actionAdminList(sb, ctx, body);
     case "provider_health": return json(providerHealth());
     default:                return err("invalid_action", `unknown action: ${action}`, 400);
   }
