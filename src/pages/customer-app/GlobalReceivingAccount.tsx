@@ -52,7 +52,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Briefcase, RotateCcw, Store, ExternalLink, ArrowRight } from "lucide-react";
+import { Briefcase, RotateCcw, Store, ArrowRight } from "lucide-react";
 
 type Currency =
   | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
