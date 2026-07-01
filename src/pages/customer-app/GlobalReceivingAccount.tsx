@@ -36,11 +36,16 @@ import { TransactionPreview } from "@/components/global-accounts/TransactionPrev
 import { NameCorrectionDialog } from "@/components/global-accounts/NameCorrectionDialog";
 import { NameCorrectionUpdates } from "@/components/global-accounts/NameCorrectionUpdates";
 
-type Currency = "USD" | "EUR" | "GBP";
+type Currency =
+  | "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "SGD" | "AED" | "JPY"
+  | "INR" | "ZAR" | "HKD" | "CHF" | "NZD" | "SEK" | "NOK" | "DKK" | "CNY";
+
+type AccountKind = "virtual" | "global";
 
 type GlobalAccount = {
   id: string;
   currency: Currency;
+  account_kind?: AccountKind;
   iban: string | null;
   account_number: string | null;
   routing_code: string | null;
@@ -75,7 +80,6 @@ type CurrencyMeta = {
   symbol: string;
   label: string;
   region: string;
-  // Solid Tailwind color classes (HSL-backed in tailwind palette)
   bg: string;
   ring: string;
   text: string;
@@ -83,33 +87,23 @@ type CurrencyMeta = {
 };
 
 const CURRENCY_META: Record<Currency, CurrencyMeta> = {
-  USD: {
-    symbol: "$",
-    label: "US Dollar",
-    region: "United States",
-    bg: "bg-emerald-600",
-    ring: "ring-emerald-600",
-    text: "text-emerald-700 dark:text-emerald-400",
-    soft: "bg-emerald-50 dark:bg-emerald-950/40",
-  },
-  EUR: {
-    symbol: "€",
-    label: "Euro",
-    region: "Eurozone",
-    bg: "bg-sky-600",
-    ring: "ring-sky-600",
-    text: "text-sky-700 dark:text-sky-400",
-    soft: "bg-sky-50 dark:bg-sky-950/40",
-  },
-  GBP: {
-    symbol: "£",
-    label: "British Pound",
-    region: "United Kingdom",
-    bg: "bg-violet-600",
-    ring: "ring-violet-600",
-    text: "text-violet-700 dark:text-violet-400",
-    soft: "bg-violet-50 dark:bg-violet-950/40",
-  },
+  USD: { symbol: "$",  label: "US Dollar",         region: "United States",        bg: "bg-emerald-600", ring: "ring-emerald-600", text: "text-emerald-700 dark:text-emerald-400", soft: "bg-emerald-50 dark:bg-emerald-950/40" },
+  EUR: { symbol: "€",  label: "Euro",              region: "Eurozone",             bg: "bg-sky-600",     ring: "ring-sky-600",     text: "text-sky-700 dark:text-sky-400",         soft: "bg-sky-50 dark:bg-sky-950/40" },
+  GBP: { symbol: "£",  label: "British Pound",     region: "United Kingdom",       bg: "bg-violet-600",  ring: "ring-violet-600",  text: "text-violet-700 dark:text-violet-400",   soft: "bg-violet-50 dark:bg-violet-950/40" },
+  AUD: { symbol: "A$", label: "Australian Dollar", region: "Australia",            bg: "bg-amber-600",   ring: "ring-amber-600",   text: "text-amber-700 dark:text-amber-400",     soft: "bg-amber-50 dark:bg-amber-950/40" },
+  CAD: { symbol: "C$", label: "Canadian Dollar",   region: "Canada",               bg: "bg-red-600",     ring: "ring-red-600",     text: "text-red-700 dark:text-red-400",         soft: "bg-red-50 dark:bg-red-950/40" },
+  SGD: { symbol: "S$", label: "Singapore Dollar",  region: "Singapore",            bg: "bg-rose-600",    ring: "ring-rose-600",    text: "text-rose-700 dark:text-rose-400",       soft: "bg-rose-50 dark:bg-rose-950/40" },
+  AED: { symbol: "د.إ", label: "UAE Dirham",        region: "United Arab Emirates", bg: "bg-teal-600",    ring: "ring-teal-600",    text: "text-teal-700 dark:text-teal-400",       soft: "bg-teal-50 dark:bg-teal-950/40" },
+  JPY: { symbol: "¥",  label: "Japanese Yen",      region: "Japan",                bg: "bg-fuchsia-600", ring: "ring-fuchsia-600", text: "text-fuchsia-700 dark:text-fuchsia-400", soft: "bg-fuchsia-50 dark:bg-fuchsia-950/40" },
+  INR: { symbol: "₹",  label: "Indian Rupee",      region: "India",                bg: "bg-orange-600",  ring: "ring-orange-600",  text: "text-orange-700 dark:text-orange-400",   soft: "bg-orange-50 dark:bg-orange-950/40" },
+  ZAR: { symbol: "R",  label: "South African Rand",region: "South Africa",         bg: "bg-lime-600",    ring: "ring-lime-600",    text: "text-lime-700 dark:text-lime-400",       soft: "bg-lime-50 dark:bg-lime-950/40" },
+  HKD: { symbol: "HK$",label: "Hong Kong Dollar",  region: "Hong Kong",            bg: "bg-pink-600",    ring: "ring-pink-600",    text: "text-pink-700 dark:text-pink-400",       soft: "bg-pink-50 dark:bg-pink-950/40" },
+  CHF: { symbol: "CHF",label: "Swiss Franc",       region: "Switzerland",          bg: "bg-slate-600",   ring: "ring-slate-600",   text: "text-slate-700 dark:text-slate-400",     soft: "bg-slate-50 dark:bg-slate-950/40" },
+  NZD: { symbol: "NZ$",label: "New Zealand Dollar",region: "New Zealand",          bg: "bg-cyan-600",    ring: "ring-cyan-600",    text: "text-cyan-700 dark:text-cyan-400",       soft: "bg-cyan-50 dark:bg-cyan-950/40" },
+  SEK: { symbol: "kr", label: "Swedish Krona",     region: "Sweden",               bg: "bg-blue-600",    ring: "ring-blue-600",    text: "text-blue-700 dark:text-blue-400",       soft: "bg-blue-50 dark:bg-blue-950/40" },
+  NOK: { symbol: "kr", label: "Norwegian Krone",   region: "Norway",               bg: "bg-indigo-600",  ring: "ring-indigo-600",  text: "text-indigo-700 dark:text-indigo-400",   soft: "bg-indigo-50 dark:bg-indigo-950/40" },
+  DKK: { symbol: "kr", label: "Danish Krone",      region: "Denmark",              bg: "bg-purple-600",  ring: "ring-purple-600",  text: "text-purple-700 dark:text-purple-400",   soft: "bg-purple-50 dark:bg-purple-950/40" },
+  CNY: { symbol: "¥",  label: "Chinese Yuan",      region: "China",                bg: "bg-yellow-600",  ring: "ring-yellow-600",  text: "text-yellow-700 dark:text-yellow-400",   soft: "bg-yellow-50 dark:bg-yellow-950/40" },
 };
 
 export default function GlobalReceivingAccount() {
