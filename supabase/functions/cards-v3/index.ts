@@ -14,6 +14,7 @@ import {
   type CardFormFactor,
   type IssueCardInput,
 } from "../_shared/card-issuer.ts";
+import { dispatchCardWebhook } from "../_shared/card-webhook.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
