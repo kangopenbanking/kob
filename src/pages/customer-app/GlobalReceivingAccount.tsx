@@ -355,7 +355,14 @@ export default function GlobalReceivingAccount() {
       {/* Header */}
       <header className="border-b border-border/60 bg-card">
         <div className="container max-w-3xl px-4 sm:px-6 py-6 sm:py-10">
-          <div className="flex items-center justify-between">
+          {/* How it works — placed above the page title */}
+          <HowItWorksFlow
+            title="How Global Accounts work"
+            storageKey="global-accounts"
+            steps={globalAccountSteps}
+          />
+
+          <div className="mt-4 flex items-center justify-between">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
               <Globe2 className="h-3 w-3" strokeWidth={1.75} aria-hidden="true" />
               Global Accounts
@@ -377,14 +384,7 @@ export default function GlobalReceivingAccount() {
         </div>
       </header>
 
-    <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
-        {/* How it works */}
-        <HowItWorksFlow
-          title="How Global Accounts work"
-          storageKey="global-accounts"
-          steps={globalAccountSteps}
-        />
-
+      <main className="container max-w-3xl px-4 sm:px-6 py-8 sm:py-10 space-y-8 sm:space-y-10">
         {/* Use-case cards — swipeable */}
         <section aria-label="Common use cases">
           <div
