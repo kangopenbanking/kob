@@ -1703,6 +1703,7 @@ function App() {
               <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />
               <Route path="fund" element={<CustomerFundWallet />} />
               <Route path="global-accounts" element={<GlobalReceivingAccount />} />
+              <Route path="virtual-accounts" element={<VirtualAccounts />} />
               <Route path="travel" element={<CustomerTravelCategories />} />
               <Route path="travel/:category" element={<CustomerTravelAgencies />} />
               <Route path="travel/:category/:serviceId" element={<CustomerTravelTrips />} />
