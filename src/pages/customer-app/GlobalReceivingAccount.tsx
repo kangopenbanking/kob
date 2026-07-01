@@ -174,7 +174,7 @@ export default function GlobalReceivingAccount() {
     setCreating(true);
     // COMPLIANCE CHECK: do NOT send beneficiary_name (server pulls from KYC).
     const { data, error } = await supabase.functions.invoke("nium-create-global-account", {
-      body: { currency: newCurrency, pop_code: popCode },
+      body: { currency: newCurrency, pop_code: popCode, account_kind: accountKind },
     });
     setCreating(false);
     if (error)
@@ -183,8 +183,17 @@ export default function GlobalReceivingAccount() {
         description: error.message,
         variant: "destructive",
       });
+    const warnings: Array<{ message: string }> = data?.meta?.warnings ?? [];
+    if (warnings.length > 0) {
+      toast({
+        title: "Request accepted with warnings",
+        description: warnings.map((w) => w.message).join(" · "),
+      });
+    }
     toast({
-      title: data?.reused ? "Account already exists" : `${newCurrency} account ready`,
+      title: data?.reused
+        ? `${newCurrency} ${accountKind} account already exists`
+        : `${newCurrency} ${accountKind} account ready`,
     });
     load();
   };
