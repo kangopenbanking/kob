@@ -187,7 +187,7 @@ const CustomerCards: React.FC = () => {
             <IssueTile
               form="physical"
               title="Physical card"
-              subtitle="Shipped worldwide by Nium"
+              subtitle="Shipped to your address"
               icon={Truck}
               accent="bg-[hsl(25,60%,90%)]"
               iconAccent="text-[hsl(25,60%,35%)]"
