@@ -5581,6 +5581,54 @@ export type Database = {
           },
         ]
       }
+      card_issuance_requests: {
+        Row: {
+          created_at: string
+          currency: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_note: string | null
+          form_factor: string
+          fulfilled_card_id: string | null
+          id: string
+          params: Json
+          reason: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          form_factor: string
+          fulfilled_card_id?: string | null
+          id?: string
+          params?: Json
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_note?: string | null
+          form_factor?: string
+          fulfilled_card_id?: string | null
+          id?: string
+          params?: Json
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       card_payment_transactions: {
         Row: {
           amount: number
