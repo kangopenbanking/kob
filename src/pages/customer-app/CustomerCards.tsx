@@ -62,6 +62,22 @@ const CustomerCards: React.FC = () => {
   const { data: cardTxns = [] } = useCardTransactions(user?.id, 5);
   const card = cards[activeCard];
 
+  const { data: requests = [], refetch: refetchRequests } = useQuery<any[]>({
+    queryKey: ['customer-card-requests', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      const res = await supabase.functions.invoke('cards-v3', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { action: 'list_requests' },
+      });
+      if (res.error) return [];
+      return res.data?.requests ?? [];
+    },
+  });
+
+
   // Preserve idempotency key across retries so repeat clicks never duplicate a card.
   const [issueAttemptKeys, setIssueAttemptKeys] = useState<Record<string, string>>({});
   const [lastTimeline, setLastTimeline] = useState<Array<{ step: string; at: string; note?: string }>>([]);
