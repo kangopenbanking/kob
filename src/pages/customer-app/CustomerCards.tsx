@@ -3,8 +3,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2,
-  Sparkles, ShieldCheck, Smartphone, Wallet, Truck,
+  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle,
 } from 'lucide-react';
+
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
