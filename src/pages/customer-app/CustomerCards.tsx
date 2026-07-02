@@ -167,7 +167,7 @@ const CustomerCards: React.FC = () => {
     if (!hasPin) {
       toast.error('Set your transaction PIN to reveal card details.', {
         duration: 6000,
-        action: { label: 'Set PIN', onClick: () => navigate('/app/pin-setup') },
+        action: { label: 'Set PIN', onClick: () => navigate('/setup-pin') },
       });
       return;
     }
