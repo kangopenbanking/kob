@@ -361,6 +361,19 @@ const CustomerCards: React.FC = () => {
             </button>
           </div>
 
+          {card && card.status !== 'cancelled' && (
+            <Button
+              variant="outline"
+              className="w-full rounded-2xl border-destructive/40 text-destructive hover:bg-destructive/5"
+              onClick={handleDeactivate}
+              disabled={isUpdatingStatus}
+            >
+              <PowerOff className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              Deactivate card permanently
+            </Button>
+          )}
+
+
           <div>
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               Recent card activity
