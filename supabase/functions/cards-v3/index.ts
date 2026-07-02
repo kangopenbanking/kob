@@ -442,18 +442,24 @@ serve(async (req) => {
     const action = body.action ?? new URL(req.url).searchParams.get("action");
 
     switch (action) {
-      case "issue":           return await actionIssue(sb, ctx, body);
-      case "list":            return await actionList(sb, ctx);
-      case "freeze":          return await actionLifecycle(sb, ctx, body, "freeze");
-      case "unfreeze":        return await actionLifecycle(sb, ctx, body, "unfreeze");
-      case "terminate":       return await actionLifecycle(sb, ctx, body, "terminate");
-      case "update_limits":   return await actionUpdateLimits(sb, ctx, body);
-      case "fund":            return await actionFundOrWithdraw(sb, ctx, body, "load");
-      case "withdraw":        return await actionFundOrWithdraw(sb, ctx, body, "unload");
-      case "admin_list":      return await actionAdminList(sb, ctx, body);
-      case "provider_health": return json(providerHealth());
-      default:                return err("invalid_action", `unknown action: ${action}`, 400);
+      case "issue":                 return await actionIssue(sb, ctx, body);
+      case "list":                  return await actionList(sb, ctx);
+      case "freeze":                return await actionLifecycle(sb, ctx, body, "freeze");
+      case "unfreeze":              return await actionLifecycle(sb, ctx, body, "unfreeze");
+      case "terminate":
+      case "deactivate":            return await actionLifecycle(sb, ctx, body, "terminate");
+      case "update_limits":         return await actionUpdateLimits(sb, ctx, body);
+      case "fund":                  return await actionFundOrWithdraw(sb, ctx, body, "load");
+      case "withdraw":              return await actionFundOrWithdraw(sb, ctx, body, "unload");
+      case "admin_list":            return await actionAdminList(sb, ctx, body);
+      case "list_requests":         return await actionListRequests(sb, ctx);
+      case "cancel_request":        return await actionCancelRequest(sb, ctx, body);
+      case "admin_list_requests":   return await actionAdminListRequests(sb, ctx, body);
+      case "admin_decide_request":  return await actionAdminDecideRequest(sb, ctx, body);
+      case "provider_health":       return json(providerHealth());
+      default:                      return err("invalid_action", `unknown action: ${action}`, 400);
     }
+
   } catch (e: any) {
     console.error("[cards-v3] unhandled", e?.stack ?? e);
     return err("internal_error", e?.message ?? "unexpected error", 500);
