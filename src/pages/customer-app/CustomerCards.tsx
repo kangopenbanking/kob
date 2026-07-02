@@ -330,11 +330,26 @@ const CustomerCards: React.FC = () => {
                 <motion.div
                   key={activeCard}
                   initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-                  className={`rounded-2xl ${cardColors[activeCard % cardColors.length]} p-6 relative overflow-hidden`}
+                  className={`rounded-2xl ${cardBg ? '' : cardColors[activeCard % cardColors.length]} p-6 relative overflow-hidden`}
                   style={{ aspectRatio: '1.586', maxHeight: '220px' }}
                 >
-                  <div className="absolute right-6 top-6 h-20 w-20 rounded-full border border-[hsl(0,0%,100%)]/10" />
-                  <div className="absolute right-10 top-10 h-14 w-14 rounded-full border border-[hsl(0,0%,100%)]/10" />
+                  {cardBg && (
+                    <>
+                      <img
+                        src={cardBg}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-[hsl(0,0%,0%)]/35" />
+                    </>
+                  )}
+                  {!cardBg && (
+                    <>
+                      <div className="absolute right-6 top-6 h-20 w-20 rounded-full border border-[hsl(0,0%,100%)]/10" />
+                      <div className="absolute right-10 top-10 h-14 w-14 rounded-full border border-[hsl(0,0%,100%)]/10" />
+                    </>
+                  )}
 
                   <div className="relative flex items-center justify-between">
                     <CreditCard className="h-8 w-8 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
@@ -343,17 +358,28 @@ const CustomerCards: React.FC = () => {
                       {card.status === 'inactive' && <Snowflake className="h-4 w-4 text-[hsl(210,80%,75%)]" strokeWidth={1.5} />}
                       <button
                         type="button"
-                        onClick={handleFreezeUnfreeze}
-                        disabled={isUpdatingStatus || card?.status === 'cancelled'}
-                        aria-label={card.status === 'inactive' ? 'Unlock card' : 'Lock card'}
-                        className="rounded-full p-1 transition hover:bg-[hsl(0,0%,100%)]/10 disabled:opacity-50"
+                        onClick={() => setBgPickerOpen(true)}
+                        aria-label="Change card background"
+                        className="rounded-full p-1 transition hover:bg-[hsl(0,0%,100%)]/10"
                       >
-                        {isUpdatingStatus
-                          ? <Loader2 className="h-4 w-4 animate-spin text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
-                          : <Lock className={`h-4 w-4 ${card.status === 'inactive' ? 'text-[hsl(0,0%,100%)]' : 'text-[hsl(0,0%,100%)]/60'}`} strokeWidth={1.5} />}
+                        <Palette className="h-4 w-4 text-[hsl(0,0%,100%)]/80" strokeWidth={1.5} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRevealToggle}
+                        disabled={card?.status === 'cancelled'}
+                        aria-label={showNumber ? 'Hide card details' : 'Reveal card details'}
+                        aria-pressed={showNumber}
+                        className="rounded-full p-1 transition hover:bg-[hsl(0,0%,100%)]/10 disabled:opacity-50"
+                        title={!hasPin ? 'Set a transaction PIN to reveal' : undefined}
+                      >
+                        {showNumber
+                          ? <LockOpen className="h-4 w-4 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
+                          : <Lock className={`h-4 w-4 ${hasPin ? 'text-[hsl(0,0%,100%)]' : 'text-[hsl(0,0%,100%)]/40'}`} strokeWidth={1.5} />}
                       </button>
                     </div>
                   </div>
+
 
                   {(() => {
                     const rawBrand = String(card.brand ?? '').toLowerCase();
