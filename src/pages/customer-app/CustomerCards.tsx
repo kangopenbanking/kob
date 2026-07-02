@@ -436,7 +436,7 @@ const CustomerCards: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={() => setShowNumber(!showNumber)} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
+            <button onClick={handleRevealToggle} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(210,70%,85%)]">
                 {showNumber ? <EyeOff className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} /> : <Eye className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} />}
               </div>
