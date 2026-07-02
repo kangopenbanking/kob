@@ -62,6 +62,32 @@ export default function AdminCardManagement() {
   const [feeEvents, setFeeEvents] = useState<FeeEvent[]>([]);
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [requestFilter, setRequestFilter] = useState<string>("pending");
+
+  async function loadRequests() {
+    const { data, error } = await supabase.functions.invoke("cards-v3", {
+      body: { action: "admin_list_requests", status: requestFilter, limit: 100 },
+    });
+    if (error) return;
+    setRequests(data?.requests ?? []);
+  }
+
+  async function decideRequest(id: string, decision: "approve" | "reject") {
+    const note = decision === "reject"
+      ? window.prompt("Reason for rejection (optional):") ?? undefined
+      : undefined;
+    const { error } = await supabase.functions.invoke("cards-v3", {
+      body: { action: "admin_decide_request", request_id: id, decision, note },
+    });
+    if (error) {
+      toast.error(extractEdgeFunctionError(error, `Could not ${decision} request.`));
+      return;
+    }
+    toast.success(`Request ${decision}d.`);
+    await loadRequests();
+  }
+
 
   async function load() {
     setLoading(true);
