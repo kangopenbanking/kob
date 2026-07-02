@@ -151,6 +151,7 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
   track("requested", form_factor);
 
   // ---------- Category cap + approval workflow ----------
+  let approvedRequestId: string | null = null;
   if (!ctx.isAdmin && !p.admin_bypass) {
     const eligibility = await assessIssuanceEligibility(sb, ctx.userId, form_factor);
     if (eligibility.reason === "cap_reached") {
@@ -161,34 +162,50 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
       );
     }
     if (eligibility.reason === "requires_approval") {
-      // Auto-create a pending request and return 202.
-      const { data: existingReq } = await sb
+      // Look for an already-approved request first — that unlocks this issue.
+      const { data: approved } = await sb
         .from("card_issuance_requests")
-        .select("id,status")
+        .select("id")
         .eq("user_id", ctx.userId)
         .eq("form_factor", form_factor)
-        .eq("status", "pending")
+        .eq("status", "approved")
+        .order("decided_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
-      const req = existingReq ?? (await sb
-        .from("card_issuance_requests")
-        .insert({
-          user_id: ctx.userId,
-          form_factor,
-          currency: p.currency ?? "XAF",
-          reason: p.reason ?? "Re-issue after prior deactivation",
-          params: { card_name: p.card_name ?? null, address: p.address ?? null },
-        })
-        .select("id,status")
-        .single()).data;
-      track("approval_required", req?.id);
-      return json({
-        pending_approval: true,
-        request_id: req?.id,
-        message:
-          "You previously deactivated a card in this category. An admin needs to approve your new card request.",
-      }, 202);
+      if (approved) {
+        approvedRequestId = approved.id;
+        track("approval_honored", approved.id);
+      } else {
+        // Auto-create a pending request and return 202.
+        const { data: existingReq } = await sb
+          .from("card_issuance_requests")
+          .select("id,status")
+          .eq("user_id", ctx.userId)
+          .eq("form_factor", form_factor)
+          .eq("status", "pending")
+          .maybeSingle();
+        const req = existingReq ?? (await sb
+          .from("card_issuance_requests")
+          .insert({
+            user_id: ctx.userId,
+            form_factor,
+            currency: p.currency ?? "XAF",
+            reason: p.reason ?? "Re-issue after prior deactivation",
+            params: { card_name: p.card_name ?? null, address: p.address ?? null },
+          })
+          .select("id,status")
+          .single()).data;
+        track("approval_required", req?.id);
+        return json({
+          pending_approval: true,
+          request_id: req?.id,
+          message:
+            "You previously deactivated a card in this category. An admin needs to approve your new card request.",
+        }, 202);
+      }
     }
   }
+
 
 
   // ---------- Idempotency short-circuit ----------
