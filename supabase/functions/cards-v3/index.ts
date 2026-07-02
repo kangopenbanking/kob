@@ -109,6 +109,32 @@ function logStep(idem: string, userId: string, step: string, meta: Record<string
   }));
 }
 
+// Category cap: max 2 non-cancelled cards per form_factor per user.
+const CARDS_PER_CATEGORY_CAP = 2;
+
+async function assessIssuanceEligibility(
+  sb: ReturnType<typeof createClient>,
+  userId: string,
+  form_factor: CardFormFactor,
+): Promise<{ ok: boolean; reason?: string; active_count: number; ever_deactivated: boolean }> {
+  const { data: rows, error } = await sb
+    .from("virtual_cards")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("form_factor", form_factor);
+  if (error) return { ok: false, reason: "lookup_failed", active_count: 0, ever_deactivated: false };
+  const list = rows ?? [];
+  const active_count = list.filter((c: any) => c.status !== "cancelled").length;
+  const ever_deactivated = list.some((c: any) => c.status === "cancelled");
+  if (active_count >= CARDS_PER_CATEGORY_CAP) {
+    return { ok: false, reason: "cap_reached", active_count, ever_deactivated };
+  }
+  if (ever_deactivated) {
+    return { ok: false, reason: "requires_approval", active_count, ever_deactivated };
+  }
+  return { ok: true, active_count, ever_deactivated };
+}
+
 async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
   const form_factor = (p.form_factor ?? "virtual") as CardFormFactor;
   if (!["virtual", "digital", "physical"].includes(form_factor)) {
@@ -123,6 +149,64 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
   };
 
   track("requested", form_factor);
+
+  // ---------- Category cap + approval workflow ----------
+  let approvedRequestId: string | null = null;
+  if (!ctx.isAdmin && !p.admin_bypass) {
+    const eligibility = await assessIssuanceEligibility(sb, ctx.userId, form_factor);
+    if (eligibility.reason === "cap_reached") {
+      return err(
+        "card_cap_reached",
+        `You can only hold ${CARDS_PER_CATEGORY_CAP} ${form_factor} cards. Deactivate one before requesting a new card.`,
+        409,
+      );
+    }
+    if (eligibility.reason === "requires_approval") {
+      // Look for an already-approved request first — that unlocks this issue.
+      const { data: approved } = await sb
+        .from("card_issuance_requests")
+        .select("id")
+        .eq("user_id", ctx.userId)
+        .eq("form_factor", form_factor)
+        .eq("status", "approved")
+        .order("decided_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (approved) {
+        approvedRequestId = approved.id;
+        track("approval_honored", approved.id);
+      } else {
+        // Auto-create a pending request and return 202.
+        const { data: existingReq } = await sb
+          .from("card_issuance_requests")
+          .select("id,status")
+          .eq("user_id", ctx.userId)
+          .eq("form_factor", form_factor)
+          .eq("status", "pending")
+          .maybeSingle();
+        const req = existingReq ?? (await sb
+          .from("card_issuance_requests")
+          .insert({
+            user_id: ctx.userId,
+            form_factor,
+            currency: p.currency ?? "XAF",
+            reason: p.reason ?? "Re-issue after prior deactivation",
+            params: { card_name: p.card_name ?? null, address: p.address ?? null },
+          })
+          .select("id,status")
+          .single()).data;
+        track("approval_required", req?.id);
+        return json({
+          pending_approval: true,
+          request_id: req?.id,
+          message:
+            "You previously deactivated a card in this category. An admin needs to approve your new card request.",
+        }, 202);
+      }
+    }
+  }
+
+
 
   // ---------- Idempotency short-circuit ----------
   const { data: existing } = await sb
@@ -280,6 +364,15 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
     metadata: { idempotency_key: idem, issued_via: "cards-v3", timeline },
   }).eq("id", card.id);
 
+  // If this issuance was unlocked by an approved request, mark it fulfilled.
+  if (approvedRequestId) {
+    await sb.from("card_issuance_requests")
+      .update({ status: "fulfilled", fulfilled_card_id: card.id })
+      .eq("id", approvedRequestId);
+    track("request_fulfilled", approvedRequestId);
+  }
+
+
   // Fan-out card.issue.persisted webhook (available/ready milestone).
   await dispatchCardWebhook(sb, "card.issue.persisted", {
     card_id: card.id,
@@ -349,18 +442,24 @@ serve(async (req) => {
     const action = body.action ?? new URL(req.url).searchParams.get("action");
 
     switch (action) {
-      case "issue":           return await actionIssue(sb, ctx, body);
-      case "list":            return await actionList(sb, ctx);
-      case "freeze":          return await actionLifecycle(sb, ctx, body, "freeze");
-      case "unfreeze":        return await actionLifecycle(sb, ctx, body, "unfreeze");
-      case "terminate":       return await actionLifecycle(sb, ctx, body, "terminate");
-      case "update_limits":   return await actionUpdateLimits(sb, ctx, body);
-      case "fund":            return await actionFundOrWithdraw(sb, ctx, body, "load");
-      case "withdraw":        return await actionFundOrWithdraw(sb, ctx, body, "unload");
-      case "admin_list":      return await actionAdminList(sb, ctx, body);
-      case "provider_health": return json(providerHealth());
-      default:                return err("invalid_action", `unknown action: ${action}`, 400);
+      case "issue":                 return await actionIssue(sb, ctx, body);
+      case "list":                  return await actionList(sb, ctx);
+      case "freeze":                return await actionLifecycle(sb, ctx, body, "freeze");
+      case "unfreeze":              return await actionLifecycle(sb, ctx, body, "unfreeze");
+      case "terminate":
+      case "deactivate":            return await actionLifecycle(sb, ctx, body, "terminate");
+      case "update_limits":         return await actionUpdateLimits(sb, ctx, body);
+      case "fund":                  return await actionFundOrWithdraw(sb, ctx, body, "load");
+      case "withdraw":              return await actionFundOrWithdraw(sb, ctx, body, "unload");
+      case "admin_list":            return await actionAdminList(sb, ctx, body);
+      case "list_requests":         return await actionListRequests(sb, ctx);
+      case "cancel_request":        return await actionCancelRequest(sb, ctx, body);
+      case "admin_list_requests":   return await actionAdminListRequests(sb, ctx, body);
+      case "admin_decide_request":  return await actionAdminDecideRequest(sb, ctx, body);
+      case "provider_health":       return json(providerHealth());
+      default:                      return err("invalid_action", `unknown action: ${action}`, 400);
     }
+
   } catch (e: any) {
     console.error("[cards-v3] unhandled", e?.stack ?? e);
     return err("internal_error", e?.message ?? "unexpected error", 500);
@@ -519,3 +618,93 @@ async function actionAdminList(
   }
 }
 
+
+// =============================================================
+// Card issuance requests — approval workflow
+// =============================================================
+async function actionListRequests(sb: ReturnType<typeof createClient>, ctx: AuthCtx) {
+  const { data, error } = await sb
+    .from("card_issuance_requests")
+    .select("*")
+    .eq("user_id", ctx.userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) return err("list_requests_failed", error.message, 500);
+  return json({ requests: data ?? [] });
+}
+
+async function actionCancelRequest(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!p.request_id) return err("card_validation_failed", "request_id required", 422);
+  const { data: req } = await sb
+    .from("card_issuance_requests")
+    .select("*")
+    .eq("id", p.request_id)
+    .maybeSingle();
+  if (!req) return err("request_not_found", "request not found", 404);
+  if (req.user_id !== ctx.userId) return err("forbidden", "not your request", 403);
+  if (req.status !== "pending") return err("request_not_cancellable", "Only pending requests can be cancelled.", 409);
+  const { data: updated, error } = await sb
+    .from("card_issuance_requests")
+    .update({ status: "cancelled" })
+    .eq("id", req.id)
+    .select()
+    .single();
+  if (error) return err("request_update_failed", error.message, 500);
+  return json({ request: updated });
+}
+
+async function actionAdminListRequests(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
+  const status = typeof p?.status === "string" ? p.status : null;
+  const limit = Math.min(Math.max(Number(p?.limit) || 100, 1), 500);
+  let q = sb.from("card_issuance_requests").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (status && status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) return err("admin_list_requests_failed", error.message, 500);
+  return json({ requests: data ?? [] });
+}
+
+async function actionAdminDecideRequest(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
+  if (!p.request_id) return err("card_validation_failed", "request_id required", 422);
+  const decision = p.decision;
+  if (!["approve", "reject"].includes(decision)) {
+    return err("card_validation_failed", "decision must be approve or reject", 422);
+  }
+  const { data: req } = await sb
+    .from("card_issuance_requests")
+    .select("*")
+    .eq("id", p.request_id)
+    .maybeSingle();
+  if (!req) return err("request_not_found", "request not found", 404);
+  if (req.status !== "pending") return err("request_already_decided", `request is already ${req.status}`, 409);
+
+  const nextStatus = decision === "approve" ? "approved" : "rejected";
+  const { data: updated, error } = await sb
+    .from("card_issuance_requests")
+    .update({
+      status: nextStatus,
+      decided_by: ctx.userId,
+      decided_at: new Date().toISOString(),
+      decision_note: p.note ?? null,
+    })
+    .eq("id", req.id)
+    .select()
+    .single();
+  if (error) return err("request_update_failed", error.message, 500);
+
+  // Notify customer
+  try {
+    await sb.from("app_notifications").insert({
+      user_id: req.user_id,
+      type: "card_request_decision",
+      title: decision === "approve" ? "Card request approved" : "Card request declined",
+      body: decision === "approve"
+        ? `Your ${req.form_factor} card request has been approved. You can now issue the card from the Cards screen.`
+        : `Your ${req.form_factor} card request has been declined.${p.note ? ` Note: ${p.note}` : ""}`,
+      metadata: { request_id: req.id, form_factor: req.form_factor, decision },
+    });
+  } catch (_) { /* non-fatal */ }
+
+  return json({ request: updated });
+}

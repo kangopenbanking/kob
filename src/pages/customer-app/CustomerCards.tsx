@@ -3,8 +3,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2,
-  Sparkles, ShieldCheck, Smartphone, Wallet, Truck,
+  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle,
 } from 'lucide-react';
+
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -38,9 +39,10 @@ const CustomerCards: React.FC = () => {
   const [activeCard, setActiveCard] = useState(0);
   const [showNumber, setShowNumber] = useState(false);
   const [showPin, setShowPin] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | 'deactivate' | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
+
 
   const { data: cards = [], isLoading } = useQuery<CardRow[]>({
     queryKey: ['customer-cards-v3', user?.id],
@@ -60,6 +62,22 @@ const CustomerCards: React.FC = () => {
   const { data: cardTxns = [] } = useCardTransactions(user?.id, 5);
   const card = cards[activeCard];
 
+  const { data: requests = [], refetch: refetchRequests } = useQuery<any[]>({
+    queryKey: ['customer-card-requests', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      const res = await supabase.functions.invoke('cards-v3', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: { action: 'list_requests' },
+      });
+      if (res.error) return [];
+      return res.data?.requests ?? [];
+    },
+  });
+
+
   // Preserve idempotency key across retries so repeat clicks never duplicate a card.
   const [issueAttemptKeys, setIssueAttemptKeys] = useState<Record<string, string>>({});
   const [lastTimeline, setLastTimeline] = useState<Array<{ step: string; at: string; note?: string }>>([]);
@@ -75,16 +93,21 @@ const CustomerCards: React.FC = () => {
       });
       if (res.error) throw res.error;
       if (Array.isArray(res.data?.timeline)) setLastTimeline(res.data.timeline);
+      if (res.data?.pending_approval) {
+        toast.info(res.data.message ?? 'Your card request is awaiting admin approval.', { duration: 8000 });
+        await refetchRequests();
+        return;
+      }
       toast.success(
         res.data?.idempotent_replay
           ? 'Card already issued for this request'
           : form_factor === 'digital' ? 'Digital card ready' : 'Virtual card issued',
       );
-      // Success — drop the key so the next click starts a fresh attempt.
       setIssueAttemptKeys((prev) => {
         const next = { ...prev }; delete next[form_factor]; return next;
       });
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
+      await refetchRequests();
     } catch (e: any) {
       const msg = extractEdgeFunctionError(e, 'Could not issue card. Please try again.');
       toast.error(msg, {
@@ -112,6 +135,15 @@ const CustomerCards: React.FC = () => {
     setShowPin(true);
   };
 
+  const handleDeactivate = () => {
+    if (!card) return;
+    if (!window.confirm(
+      'Deactivate this card permanently? You will not be able to use it again. Issuing a new card in this category will require admin approval.',
+    )) return;
+    setPendingAction('deactivate');
+    setShowPin(true);
+  };
+
   const handlePinConfirmed = async () => {
     if (!card || !pendingAction) return;
     setIsUpdatingStatus(true);
@@ -123,7 +155,11 @@ const CustomerCards: React.FC = () => {
         body: { action: pendingAction, card_id: card.id },
       });
       if (res.error) throw res.error;
-      toast.success(pendingAction === 'freeze' ? 'Card frozen' : 'Card activated');
+      toast.success(
+        pendingAction === 'freeze' ? 'Card frozen'
+          : pendingAction === 'unfreeze' ? 'Card activated'
+          : 'Card deactivated',
+      );
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
     } catch (e: any) {
       toast.error(extractEdgeFunctionError(e, 'Failed to update card status'));
@@ -132,6 +168,10 @@ const CustomerCards: React.FC = () => {
       setPendingAction(null);
     }
   };
+
+  const pendingRequests = requests.filter((r: any) => r.status === 'pending');
+  const approvedRequests = requests.filter((r: any) => r.status === 'approved');
+
 
   const providerBadge = useMemo(() => {
     if (!card) return null;
@@ -166,6 +206,35 @@ const CustomerCards: React.FC = () => {
           </p>
         </div>
       </header>
+
+      {(pendingRequests.length > 0 || approvedRequests.length > 0) && (
+        <section className="space-y-2">
+          {pendingRequests.map((r: any) => (
+            <div key={r.id} className="flex items-start gap-3 rounded-2xl border border-border bg-[hsl(45,90%,96%)] p-3">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(35,80%,40%)]" strokeWidth={1.5} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">Awaiting admin approval</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Your request for a new {r.form_factor} card is being reviewed. We'll notify you once decided.
+                </p>
+              </div>
+            </div>
+          ))}
+          {approvedRequests.map((r: any) => (
+            <div key={r.id} className="flex items-start gap-3 rounded-2xl border border-border bg-[hsl(150,60%,95%)] p-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(150,55%,32%)]" strokeWidth={1.5} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">Request approved</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Tap "Add another card" below to issue your approved {r.form_factor} card.
+                </p>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+
 
       {cards.length === 0 ? (
         <section className="rounded-3xl border border-border bg-card p-6">
@@ -291,6 +360,19 @@ const CustomerCards: React.FC = () => {
               <span className="text-[10px] font-bold text-foreground">Controls</span>
             </button>
           </div>
+
+          {card && card.status !== 'cancelled' && (
+            <Button
+              variant="outline"
+              className="w-full rounded-2xl border-destructive/40 text-destructive hover:bg-destructive/5"
+              onClick={handleDeactivate}
+              disabled={isUpdatingStatus}
+            >
+              <PowerOff className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              Deactivate card permanently
+            </Button>
+          )}
+
 
           <div>
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
