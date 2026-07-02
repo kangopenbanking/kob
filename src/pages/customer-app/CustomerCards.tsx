@@ -29,7 +29,7 @@ const HOW_STEPS = [
 
 interface CardRow {
   id: string; card_name: string; last4: string; exp_month: number; exp_year: number;
-  status: string; provider: string; form_factor: string; currency: string;
+  status: string; provider: string; form_factor: string; currency: string; brand?: string;
 }
 
 const CustomerCards: React.FC = () => {
