@@ -40,9 +40,25 @@ const CustomerCards: React.FC = () => {
   const [activeCard, setActiveCard] = useState(0);
   const [showNumber, setShowNumber] = useState(false);
   const [showPin, setShowPin] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | 'deactivate' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | 'deactivate' | 'reveal' | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const [bgVersion, setBgVersion] = useState(0);
+
+  // Whether the signed-in customer has a transaction PIN set.
+  const { data: hasPin = false } = useQuery<boolean>({
+    queryKey: ['customer-has-pin', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('pin_code_hash')
+        .eq('id', user!.id)
+        .maybeSingle();
+      return !!(data as any)?.pin_code_hash;
+    },
+  });
 
 
   const { data: cards = [], isLoading } = useQuery<CardRow[]>({
