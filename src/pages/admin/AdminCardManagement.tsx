@@ -185,6 +185,73 @@ export default function AdminCardManagement() {
       </div>
 
       <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">Card issuance requests</CardTitle>
+          <Select value={requestFilter} onValueChange={setRequestFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="fulfilled">Fulfilled</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          {requests.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No {requestFilter === "all" ? "" : requestFilter} requests.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {requests.map((r: any) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-mono text-xs">{r.user_id.slice(0, 8)}…</TableCell>
+                    <TableCell><Badge variant="outline">{r.form_factor}</Badge></TableCell>
+                    <TableCell className="max-w-xs truncate text-xs">{r.reason || "—"}</TableCell>
+                    <TableCell className="text-xs">{new Date(r.created_at).toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge className={STATUS_COLORS[r.status] ?? ""} variant="outline">{r.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      {r.status === "pending" ? (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => decideRequest(r.id, "approve")}>
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => decideRequest(r.id, "reject")}>
+                            Reject
+                          </Button>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {r.decided_at ? new Date(r.decided_at).toLocaleDateString() : "—"}
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+
         <CardHeader><CardTitle className="text-base">Search</CardTitle></CardHeader>
         <CardContent className="flex flex-col md:flex-row gap-3">
           <Input
