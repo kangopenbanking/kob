@@ -207,6 +207,35 @@ const CustomerCards: React.FC = () => {
         </div>
       </header>
 
+      {(pendingRequests.length > 0 || approvedRequests.length > 0) && (
+        <section className="space-y-2">
+          {pendingRequests.map((r: any) => (
+            <div key={r.id} className="flex items-start gap-3 rounded-2xl border border-border bg-[hsl(45,90%,96%)] p-3">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(35,80%,40%)]" strokeWidth={1.5} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">Awaiting admin approval</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Your request for a new {r.form_factor} card is being reviewed. We'll notify you once decided.
+                </p>
+              </div>
+            </div>
+          ))}
+          {approvedRequests.map((r: any) => (
+            <div key={r.id} className="flex items-start gap-3 rounded-2xl border border-border bg-[hsl(150,60%,95%)] p-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(150,55%,32%)]" strokeWidth={1.5} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">Request approved</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Tap "Add another card" below to issue your approved {r.form_factor} card.
+                </p>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+
+
       {cards.length === 0 ? (
         <section className="rounded-3xl border border-border bg-card p-6">
           <div className="flex flex-col items-center gap-3 py-4 text-center">
