@@ -528,7 +528,24 @@ const CustomerCards: React.FC = () => {
         </section>
       )}
 
-      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
+      <PinConfirmDialog
+        open={showPin}
+        onOpenChange={(o) => { setShowPin(o); if (!o) setPendingAction(null); }}
+        onConfirmed={handlePinConfirmed}
+        title={pendingAction === 'reveal' ? 'Confirm PIN to reveal card' : 'Enter Transaction PIN'}
+        description={pendingAction === 'reveal'
+          ? 'Your PIN unlocks card number and expiry details for this session.'
+          : 'Enter your 6-digit PIN to authorize this action'}
+      />
+      {card && (
+        <CardBackgroundPicker
+          open={bgPickerOpen}
+          onOpenChange={setBgPickerOpen}
+          cardId={card.id}
+          currentUrl={cardBg}
+          onChange={() => setBgVersion((v) => v + 1)}
+        />
+      )}
     </div>
   );
 };
