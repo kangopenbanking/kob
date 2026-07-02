@@ -161,8 +161,27 @@ const CustomerCards: React.FC = () => {
     setShowPin(true);
   };
 
+  const handleRevealToggle = () => {
+    if (!card) return;
+    if (showNumber) { setShowNumber(false); return; }
+    if (!hasPin) {
+      toast.error('Set your transaction PIN to reveal card details.', {
+        duration: 6000,
+        action: { label: 'Set PIN', onClick: () => navigate('/app/pin-setup') },
+      });
+      return;
+    }
+    setPendingAction('reveal');
+    setShowPin(true);
+  };
+
   const handlePinConfirmed = async () => {
     if (!card || !pendingAction) return;
+    if (pendingAction === 'reveal') {
+      setShowNumber(true);
+      setPendingAction(null);
+      return;
+    }
     setIsUpdatingStatus(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -185,6 +204,13 @@ const CustomerCards: React.FC = () => {
       setPendingAction(null);
     }
   };
+
+  // Per-card background (local device). bgVersion re-reads after picker changes.
+  const cardBg = useMemo(
+    () => (card ? getCardBackground(card.id) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [card?.id, bgVersion],
+  );
 
   const pendingRequests = requests.filter((r: any) => r.status === 'pending');
   const approvedRequests = requests.filter((r: any) => r.status === 'approved');
