@@ -167,3 +167,49 @@ describe("Customer Cards UI — deactivate + approval banners", () => {
     expect(src).toMatch(/awaiting admin approval/i);
   });
 });
+
+describe("Customer Cards UI — reveal PIN gating & backgrounds", () => {
+  const src = fs.readFileSync(
+    path.join(root, "src/pages/customer-app/CustomerCards.tsx"),
+    "utf8",
+  );
+  const picker = fs.readFileSync(
+    path.join(root, "src/components/customer-app/CardBackgroundPicker.tsx"),
+    "utf8",
+  );
+
+  it("checks whether the customer has a transaction PIN before revealing", () => {
+    expect(src).toMatch(/customer-has-pin/);
+    expect(src).toMatch(/pin_code_hash/);
+    expect(src).toMatch(/handleRevealToggle/);
+  });
+
+  it("blocks reveal and points to PIN setup when no PIN is set", () => {
+    expect(src).toMatch(/Set your transaction PIN to reveal card details/);
+    expect(src).toMatch(/\/setup-pin/);
+  });
+
+  it("routes reveal through PinConfirmDialog with a reveal-specific title", () => {
+    expect(src).toMatch(/pendingAction === 'reveal'/);
+    expect(src).toMatch(/Confirm PIN to reveal card/);
+  });
+
+  it("wires the top-right lock icon to the reveal toggle (not freeze)", () => {
+    expect(src).toMatch(/onClick=\{handleRevealToggle\}/);
+    expect(src).toMatch(/aria-label=\{showNumber \? 'Hide card details' : 'Reveal card details'\}/);
+  });
+
+  it("exposes a background picker with preset + upload options", () => {
+    expect(src).toMatch(/CardBackgroundPicker/);
+    expect(src).toMatch(/setBgPickerOpen/);
+    expect(picker).toMatch(/PRESET_BACKGROUNDS/);
+    expect(picker).toMatch(/Upload image/);
+    expect(picker).toMatch(/readAsDataURL/);
+  });
+
+  it("renders the selected background as a full-cover image with a legibility overlay", () => {
+    expect(src).toMatch(/object-cover/);
+    expect(src).toMatch(/bg-\[hsl\(0,0%,0%\)\]\/35/);
+  });
+});
+

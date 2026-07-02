@@ -2,9 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import {
-  CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2,
-  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle,
+  CreditCard, Plus, Lock, LockOpen, Snowflake, Eye, EyeOff, Settings, Loader2,
+  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle, Palette,
 } from 'lucide-react';
+import { CardBackgroundPicker, getCardBackground } from '@/components/customer-app/CardBackgroundPicker';
 
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,9 +40,25 @@ const CustomerCards: React.FC = () => {
   const [activeCard, setActiveCard] = useState(0);
   const [showNumber, setShowNumber] = useState(false);
   const [showPin, setShowPin] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | 'deactivate' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | 'deactivate' | 'reveal' | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
+  const [bgPickerOpen, setBgPickerOpen] = useState(false);
+  const [bgVersion, setBgVersion] = useState(0);
+
+  // Whether the signed-in customer has a transaction PIN set.
+  const { data: hasPin = false } = useQuery<boolean>({
+    queryKey: ['customer-has-pin', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('pin_code_hash')
+        .eq('id', user!.id)
+        .maybeSingle();
+      return !!(data as any)?.pin_code_hash;
+    },
+  });
 
 
   const { data: cards = [], isLoading } = useQuery<CardRow[]>({
@@ -144,8 +161,27 @@ const CustomerCards: React.FC = () => {
     setShowPin(true);
   };
 
+  const handleRevealToggle = () => {
+    if (!card) return;
+    if (showNumber) { setShowNumber(false); return; }
+    if (!hasPin) {
+      toast.error('Set your transaction PIN to reveal card details.', {
+        duration: 6000,
+        action: { label: 'Set PIN', onClick: () => navigate('/setup-pin') },
+      });
+      return;
+    }
+    setPendingAction('reveal');
+    setShowPin(true);
+  };
+
   const handlePinConfirmed = async () => {
     if (!card || !pendingAction) return;
+    if (pendingAction === 'reveal') {
+      setShowNumber(true);
+      setPendingAction(null);
+      return;
+    }
     setIsUpdatingStatus(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -168,6 +204,13 @@ const CustomerCards: React.FC = () => {
       setPendingAction(null);
     }
   };
+
+  // Per-card background (local device). bgVersion re-reads after picker changes.
+  const cardBg = useMemo(
+    () => (card ? getCardBackground(card.id) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [card?.id, bgVersion],
+  );
 
   const pendingRequests = requests.filter((r: any) => r.status === 'pending');
   const approvedRequests = requests.filter((r: any) => r.status === 'approved');
@@ -287,11 +330,26 @@ const CustomerCards: React.FC = () => {
                 <motion.div
                   key={activeCard}
                   initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-                  className={`rounded-2xl ${cardColors[activeCard % cardColors.length]} p-6 relative overflow-hidden`}
+                  className={`rounded-2xl ${cardBg ? '' : cardColors[activeCard % cardColors.length]} p-6 relative overflow-hidden`}
                   style={{ aspectRatio: '1.586', maxHeight: '220px' }}
                 >
-                  <div className="absolute right-6 top-6 h-20 w-20 rounded-full border border-[hsl(0,0%,100%)]/10" />
-                  <div className="absolute right-10 top-10 h-14 w-14 rounded-full border border-[hsl(0,0%,100%)]/10" />
+                  {cardBg && (
+                    <>
+                      <img
+                        src={cardBg}
+                        alt=""
+                        aria-hidden="true"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-[hsl(0,0%,0%)]/35" />
+                    </>
+                  )}
+                  {!cardBg && (
+                    <>
+                      <div className="absolute right-6 top-6 h-20 w-20 rounded-full border border-[hsl(0,0%,100%)]/10" />
+                      <div className="absolute right-10 top-10 h-14 w-14 rounded-full border border-[hsl(0,0%,100%)]/10" />
+                    </>
+                  )}
 
                   <div className="relative flex items-center justify-between">
                     <CreditCard className="h-8 w-8 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
@@ -300,17 +358,28 @@ const CustomerCards: React.FC = () => {
                       {card.status === 'inactive' && <Snowflake className="h-4 w-4 text-[hsl(210,80%,75%)]" strokeWidth={1.5} />}
                       <button
                         type="button"
-                        onClick={handleFreezeUnfreeze}
-                        disabled={isUpdatingStatus || card?.status === 'cancelled'}
-                        aria-label={card.status === 'inactive' ? 'Unlock card' : 'Lock card'}
-                        className="rounded-full p-1 transition hover:bg-[hsl(0,0%,100%)]/10 disabled:opacity-50"
+                        onClick={() => setBgPickerOpen(true)}
+                        aria-label="Change card background"
+                        className="rounded-full p-1 transition hover:bg-[hsl(0,0%,100%)]/10"
                       >
-                        {isUpdatingStatus
-                          ? <Loader2 className="h-4 w-4 animate-spin text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
-                          : <Lock className={`h-4 w-4 ${card.status === 'inactive' ? 'text-[hsl(0,0%,100%)]' : 'text-[hsl(0,0%,100%)]/60'}`} strokeWidth={1.5} />}
+                        <Palette className="h-4 w-4 text-[hsl(0,0%,100%)]/80" strokeWidth={1.5} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRevealToggle}
+                        disabled={card?.status === 'cancelled'}
+                        aria-label={showNumber ? 'Hide card details' : 'Reveal card details'}
+                        aria-pressed={showNumber}
+                        className="rounded-full p-1 transition hover:bg-[hsl(0,0%,100%)]/10 disabled:opacity-50"
+                        title={!hasPin ? 'Set a transaction PIN to reveal' : undefined}
+                      >
+                        {showNumber
+                          ? <LockOpen className="h-4 w-4 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
+                          : <Lock className={`h-4 w-4 ${hasPin ? 'text-[hsl(0,0%,100%)]' : 'text-[hsl(0,0%,100%)]/40'}`} strokeWidth={1.5} />}
                       </button>
                     </div>
                   </div>
+
 
                   {(() => {
                     const rawBrand = String(card.brand ?? '').toLowerCase();
@@ -367,7 +436,7 @@ const CustomerCards: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={() => setShowNumber(!showNumber)} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
+            <button onClick={handleRevealToggle} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(210,70%,85%)]">
                 {showNumber ? <EyeOff className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} /> : <Eye className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} />}
               </div>
@@ -459,7 +528,24 @@ const CustomerCards: React.FC = () => {
         </section>
       )}
 
-      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePinConfirmed} />
+      <PinConfirmDialog
+        open={showPin}
+        onOpenChange={(o) => { setShowPin(o); if (!o) setPendingAction(null); }}
+        onConfirmed={handlePinConfirmed}
+        title={pendingAction === 'reveal' ? 'Confirm PIN to reveal card' : 'Enter Transaction PIN'}
+        description={pendingAction === 'reveal'
+          ? 'Your PIN unlocks card number and expiry details for this session.'
+          : 'Enter your 6-digit PIN to authorize this action'}
+      />
+      {card && (
+        <CardBackgroundPicker
+          open={bgPickerOpen}
+          onOpenChange={setBgPickerOpen}
+          cardId={card.id}
+          currentUrl={cardBg}
+          onChange={() => setBgVersion((v) => v + 1)}
+        />
+      )}
     </div>
   );
 };
