@@ -93,16 +93,21 @@ const CustomerCards: React.FC = () => {
       });
       if (res.error) throw res.error;
       if (Array.isArray(res.data?.timeline)) setLastTimeline(res.data.timeline);
+      if (res.data?.pending_approval) {
+        toast.info(res.data.message ?? 'Your card request is awaiting admin approval.', { duration: 8000 });
+        await refetchRequests();
+        return;
+      }
       toast.success(
         res.data?.idempotent_replay
           ? 'Card already issued for this request'
           : form_factor === 'digital' ? 'Digital card ready' : 'Virtual card issued',
       );
-      // Success — drop the key so the next click starts a fresh attempt.
       setIssueAttemptKeys((prev) => {
         const next = { ...prev }; delete next[form_factor]; return next;
       });
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
+      await refetchRequests();
     } catch (e: any) {
       const msg = extractEdgeFunctionError(e, 'Could not issue card. Please try again.');
       toast.error(msg, {
@@ -130,6 +135,15 @@ const CustomerCards: React.FC = () => {
     setShowPin(true);
   };
 
+  const handleDeactivate = () => {
+    if (!card) return;
+    if (!window.confirm(
+      'Deactivate this card permanently? You will not be able to use it again. Issuing a new card in this category will require admin approval.',
+    )) return;
+    setPendingAction('deactivate');
+    setShowPin(true);
+  };
+
   const handlePinConfirmed = async () => {
     if (!card || !pendingAction) return;
     setIsUpdatingStatus(true);
@@ -141,7 +155,11 @@ const CustomerCards: React.FC = () => {
         body: { action: pendingAction, card_id: card.id },
       });
       if (res.error) throw res.error;
-      toast.success(pendingAction === 'freeze' ? 'Card frozen' : 'Card activated');
+      toast.success(
+        pendingAction === 'freeze' ? 'Card frozen'
+          : pendingAction === 'unfreeze' ? 'Card activated'
+          : 'Card deactivated',
+      );
       await queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
     } catch (e: any) {
       toast.error(extractEdgeFunctionError(e, 'Failed to update card status'));
@@ -150,6 +168,10 @@ const CustomerCards: React.FC = () => {
       setPendingAction(null);
     }
   };
+
+  const pendingRequests = requests.filter((r: any) => r.status === 'pending');
+  const approvedRequests = requests.filter((r: any) => r.status === 'approved');
+
 
   const providerBadge = useMemo(() => {
     if (!card) return null;
