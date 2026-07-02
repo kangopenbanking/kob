@@ -29,7 +29,7 @@ const HOW_STEPS = [
 
 interface CardRow {
   id: string; card_name: string; last4: string; exp_month: number; exp_year: number;
-  status: string; provider: string; form_factor: string; currency: string;
+  status: string; provider: string; form_factor: string; currency: string; brand?: string;
 }
 
 const CustomerCards: React.FC = () => {
@@ -302,9 +302,16 @@ const CustomerCards: React.FC = () => {
                     </div>
                   </div>
 
-                  <p className="relative mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
-                    {showNumber ? `•••• •••• •••• ${card.last4}` : '•••• •••• •••• ••••'}
-                  </p>
+                  {(() => {
+                    const brand = String(card.brand ?? 'Visa').toLowerCase();
+                    const bin = brand.includes('master') ? '5412' : brand.includes('amex') ? '3782' : '4532';
+                    const last4 = String(card.last4 ?? '••••');
+                    return (
+                      <p className="relative mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
+                        {showNumber ? `${bin} ••34 56•• ${last4}` : `${bin.slice(0,2)}•• •••• •••• ${last4}`}
+                      </p>
+                    );
+                  })()}
 
                   <div className="relative mt-4 flex items-center justify-between">
                     <div>
@@ -322,7 +329,7 @@ const CustomerCards: React.FC = () => {
                   </div>
                   {showNumber && (
                     <p className="relative mt-3 text-[10px] text-[hsl(0,0%,100%)]/70">
-                      Full card number and CVV are shown only inside your card provider's secure vault. Tap Controls to open a secure reveal session.
+                      For PCI safety, only the last 4 digits are shown here. Open Controls to view the full card number and CVV in your provider's secure vault.
                     </p>
                   )}
                 </motion.div>
