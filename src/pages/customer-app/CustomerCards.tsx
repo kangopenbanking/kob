@@ -39,9 +39,10 @@ const CustomerCards: React.FC = () => {
   const [activeCard, setActiveCard] = useState(0);
   const [showNumber, setShowNumber] = useState(false);
   const [showPin, setShowPin] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'freeze' | 'unfreeze' | 'deactivate' | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
+
 
   const { data: cards = [], isLoading } = useQuery<CardRow[]>({
     queryKey: ['customer-cards-v3', user?.id],
