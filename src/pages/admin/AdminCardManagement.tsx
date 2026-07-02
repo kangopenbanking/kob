@@ -113,6 +113,8 @@ export default function AdminCardManagement() {
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { loadRequests(); /* eslint-disable-next-line */ }, [requestFilter]);
+
 
   async function openDetails(card: AdminCard) {
     setSelected(card);
