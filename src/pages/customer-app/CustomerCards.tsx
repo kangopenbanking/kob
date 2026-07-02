@@ -320,15 +320,15 @@ const CustomerCards: React.FC = () => {
                               : '4532';
                     const rawLast4 = String(card.last4 ?? '').replace(/\D/g, '');
                     const last4 = rawLast4.length === 4 ? rawLast4 : '••••';
-                    // Deterministic middle digits from card id — fallback pattern when data missing.
+                    // Deterministic middle digits from card id — used only in revealed state.
                     const seed = String(card.id ?? '').replace(/\D/g, '').padEnd(8, '7');
                     const mid1 = seed.slice(0, 4);
                     const mid2 = seed.slice(4, 8);
-                    const fullMasked = `${bin.slice(0,2)}•• •••• •••• ${last4}`;
-                    const fullRevealed = `${bin} ${mid1} ${mid2} ${last4}`;
+                    const hiddenNumber = `•••• •••• •••• ${last4}`;
+                    const revealedNumber = `${bin} ${mid1} ${mid2} ${last4}`;
                     return (
                       <p className="relative mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
-                        {showNumber ? fullRevealed : fullMasked}
+                        {showNumber ? revealedNumber : hiddenNumber}
                       </p>
                     );
                   })()}
