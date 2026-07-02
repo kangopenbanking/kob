@@ -303,7 +303,7 @@ const CustomerCards: React.FC = () => {
                   </div>
 
                   <p className="relative mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
-                    **** **** **** {card.last4}
+                    {showNumber ? `•••• •••• •••• ${card.last4}` : '•••• •••• •••• ••••'}
                   </p>
 
                   <div className="relative mt-4 flex items-center justify-between">
@@ -314,10 +314,17 @@ const CustomerCards: React.FC = () => {
                     <div className="text-right">
                       <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Expires</p>
                       <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">
-                        {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}
+                        {showNumber
+                          ? `${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}`
+                          : '••/••'}
                       </p>
                     </div>
                   </div>
+                  {showNumber && (
+                    <p className="relative mt-3 text-[10px] text-[hsl(0,0%,100%)]/70">
+                      Full card number and CVV are shown only inside your card provider's secure vault. Tap Controls to open a secure reveal session.
+                    </p>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
