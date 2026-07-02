@@ -618,3 +618,93 @@ async function actionAdminList(
   }
 }
 
+
+// =============================================================
+// Card issuance requests — approval workflow
+// =============================================================
+async function actionListRequests(sb: ReturnType<typeof createClient>, ctx: AuthCtx) {
+  const { data, error } = await sb
+    .from("card_issuance_requests")
+    .select("*")
+    .eq("user_id", ctx.userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) return err("list_requests_failed", error.message, 500);
+  return json({ requests: data ?? [] });
+}
+
+async function actionCancelRequest(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!p.request_id) return err("card_validation_failed", "request_id required", 422);
+  const { data: req } = await sb
+    .from("card_issuance_requests")
+    .select("*")
+    .eq("id", p.request_id)
+    .maybeSingle();
+  if (!req) return err("request_not_found", "request not found", 404);
+  if (req.user_id !== ctx.userId) return err("forbidden", "not your request", 403);
+  if (req.status !== "pending") return err("request_not_cancellable", "Only pending requests can be cancelled.", 409);
+  const { data: updated, error } = await sb
+    .from("card_issuance_requests")
+    .update({ status: "cancelled" })
+    .eq("id", req.id)
+    .select()
+    .single();
+  if (error) return err("request_update_failed", error.message, 500);
+  return json({ request: updated });
+}
+
+async function actionAdminListRequests(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
+  const status = typeof p?.status === "string" ? p.status : null;
+  const limit = Math.min(Math.max(Number(p?.limit) || 100, 1), 500);
+  let q = sb.from("card_issuance_requests").select("*").order("created_at", { ascending: false }).limit(limit);
+  if (status && status !== "all") q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) return err("admin_list_requests_failed", error.message, 500);
+  return json({ requests: data ?? [] });
+}
+
+async function actionAdminDecideRequest(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!ctx.isAdmin) return err("forbidden", "admin only", 403);
+  if (!p.request_id) return err("card_validation_failed", "request_id required", 422);
+  const decision = p.decision;
+  if (!["approve", "reject"].includes(decision)) {
+    return err("card_validation_failed", "decision must be approve or reject", 422);
+  }
+  const { data: req } = await sb
+    .from("card_issuance_requests")
+    .select("*")
+    .eq("id", p.request_id)
+    .maybeSingle();
+  if (!req) return err("request_not_found", "request not found", 404);
+  if (req.status !== "pending") return err("request_already_decided", `request is already ${req.status}`, 409);
+
+  const nextStatus = decision === "approve" ? "approved" : "rejected";
+  const { data: updated, error } = await sb
+    .from("card_issuance_requests")
+    .update({
+      status: nextStatus,
+      decided_by: ctx.userId,
+      decided_at: new Date().toISOString(),
+      decision_note: p.note ?? null,
+    })
+    .eq("id", req.id)
+    .select()
+    .single();
+  if (error) return err("request_update_failed", error.message, 500);
+
+  // Notify customer
+  try {
+    await sb.from("app_notifications").insert({
+      user_id: req.user_id,
+      type: "card_request_decision",
+      title: decision === "approve" ? "Card request approved" : "Card request declined",
+      body: decision === "approve"
+        ? `Your ${req.form_factor} card request has been approved. You can now issue the card from the Cards screen.`
+        : `Your ${req.form_factor} card request has been declined.${p.note ? ` Note: ${p.note}` : ""}`,
+      metadata: { request_id: req.id, form_factor: req.form_factor, decision },
+    });
+  } catch (_) { /* non-fatal */ }
+
+  return json({ request: updated });
+}
