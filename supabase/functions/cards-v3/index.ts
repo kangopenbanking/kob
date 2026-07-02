@@ -364,6 +364,15 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
     metadata: { idempotency_key: idem, issued_via: "cards-v3", timeline },
   }).eq("id", card.id);
 
+  // If this issuance was unlocked by an approved request, mark it fulfilled.
+  if (approvedRequestId) {
+    await sb.from("card_issuance_requests")
+      .update({ status: "fulfilled", fulfilled_card_id: card.id })
+      .eq("id", approvedRequestId);
+    track("request_fulfilled", approvedRequestId);
+  }
+
+
   // Fan-out card.issue.persisted webhook (available/ready milestone).
   await dispatchCardWebhook(sb, "card.issue.persisted", {
     card_id: card.id,
