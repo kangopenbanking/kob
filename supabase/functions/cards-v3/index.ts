@@ -109,6 +109,32 @@ function logStep(idem: string, userId: string, step: string, meta: Record<string
   }));
 }
 
+// Category cap: max 2 non-cancelled cards per form_factor per user.
+const CARDS_PER_CATEGORY_CAP = 2;
+
+async function assessIssuanceEligibility(
+  sb: ReturnType<typeof createClient>,
+  userId: string,
+  form_factor: CardFormFactor,
+): Promise<{ ok: boolean; reason?: string; active_count: number; ever_deactivated: boolean }> {
+  const { data: rows, error } = await sb
+    .from("virtual_cards")
+    .select("id,status")
+    .eq("user_id", userId)
+    .eq("form_factor", form_factor);
+  if (error) return { ok: false, reason: "lookup_failed", active_count: 0, ever_deactivated: false };
+  const list = rows ?? [];
+  const active_count = list.filter((c: any) => c.status !== "cancelled").length;
+  const ever_deactivated = list.some((c: any) => c.status === "cancelled");
+  if (active_count >= CARDS_PER_CATEGORY_CAP) {
+    return { ok: false, reason: "cap_reached", active_count, ever_deactivated };
+  }
+  if (ever_deactivated) {
+    return { ok: false, reason: "requires_approval", active_count, ever_deactivated };
+  }
+  return { ok: true, active_count, ever_deactivated };
+}
+
 async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
   const form_factor = (p.form_factor ?? "virtual") as CardFormFactor;
   if (!["virtual", "digital", "physical"].includes(form_factor)) {
@@ -123,6 +149,47 @@ async function actionIssue(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p:
   };
 
   track("requested", form_factor);
+
+  // ---------- Category cap + approval workflow ----------
+  if (!ctx.isAdmin && !p.admin_bypass) {
+    const eligibility = await assessIssuanceEligibility(sb, ctx.userId, form_factor);
+    if (eligibility.reason === "cap_reached") {
+      return err(
+        "card_cap_reached",
+        `You can only hold ${CARDS_PER_CATEGORY_CAP} ${form_factor} cards. Deactivate one before requesting a new card.`,
+        409,
+      );
+    }
+    if (eligibility.reason === "requires_approval") {
+      // Auto-create a pending request and return 202.
+      const { data: existingReq } = await sb
+        .from("card_issuance_requests")
+        .select("id,status")
+        .eq("user_id", ctx.userId)
+        .eq("form_factor", form_factor)
+        .eq("status", "pending")
+        .maybeSingle();
+      const req = existingReq ?? (await sb
+        .from("card_issuance_requests")
+        .insert({
+          user_id: ctx.userId,
+          form_factor,
+          currency: p.currency ?? "XAF",
+          reason: p.reason ?? "Re-issue after prior deactivation",
+          params: { card_name: p.card_name ?? null, address: p.address ?? null },
+        })
+        .select("id,status")
+        .single()).data;
+      track("approval_required", req?.id);
+      return json({
+        pending_approval: true,
+        request_id: req?.id,
+        message:
+          "You previously deactivated a card in this category. An admin needs to approve your new card request.",
+      }, 202);
+    }
+  }
+
 
   // ---------- Idempotency short-circuit ----------
   const { data: existing } = await sb
