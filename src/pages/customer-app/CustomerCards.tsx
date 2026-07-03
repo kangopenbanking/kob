@@ -96,6 +96,44 @@ const CustomerCards: React.FC = () => {
     },
   });
 
+  // Auto-sync trigger: whenever the customer's wallet balance changes, ask the
+  // server to top up any cards that have auto-sync enabled. Server enforces
+  // per-card enabled + threshold + hourly idempotency, so this is safe to call.
+  const autoSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    const runAutoSync = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const res = await supabase.functions.invoke('cards-v3', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: { action: 'auto_sync_run' },
+        });
+        const funded = (res.data?.results ?? []).filter((r: any) => r.funded);
+        if (funded.length > 0) {
+          queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
+        }
+      } catch { /* non-fatal */ }
+    };
+    const schedule = () => {
+      if (autoSyncTimer.current) clearTimeout(autoSyncTimer.current);
+      autoSyncTimer.current = setTimeout(runAutoSync, 2500);
+    };
+    // Run once on mount, then on every wallet balance change.
+    schedule();
+    const channel = supabase
+      .channel(`cards-autosync-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'account_balances' }, schedule)
+      .subscribe();
+    return () => {
+      if (autoSyncTimer.current) clearTimeout(autoSyncTimer.current);
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
+
+
+
 
   // Preserve idempotency key across retries so repeat clicks never duplicate a card.
   const [issueAttemptKeys, setIssueAttemptKeys] = useState<Record<string, string>>({});
