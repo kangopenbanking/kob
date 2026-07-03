@@ -3,9 +3,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, Lock, LockOpen, Snowflake, Eye, EyeOff, Settings, Loader2,
-  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle, Palette,
+  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle, Palette, Plus as PlusIcon,
 } from 'lucide-react';
 import { CardBackgroundPicker, getCardBackground } from '@/components/customer-app/CardBackgroundPicker';
+import { AddFundsDialog } from '@/components/customer-app/AddFundsDialog';
 
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
