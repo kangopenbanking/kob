@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, Lock, LockOpen, Snowflake, Eye, EyeOff, Settings, Loader2,
-  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle, Palette,
+  Sparkles, ShieldCheck, Smartphone, Wallet, Truck, PowerOff, Clock, CheckCircle2, XCircle, Palette, Plus as PlusIcon,
 } from 'lucide-react';
 import { CardBackgroundPicker, getCardBackground } from '@/components/customer-app/CardBackgroundPicker';
+import { AddFundsDialog } from '@/components/customer-app/AddFundsDialog';
 
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,6 +46,7 @@ const CustomerCards: React.FC = () => {
   const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [bgVersion, setBgVersion] = useState(0);
+  const [fundsOpen, setFundsOpen] = useState(false);
 
   // Whether the signed-in customer has a transaction PIN set.
   const { data: hasPin = false } = useQuery<boolean>({
@@ -93,6 +95,44 @@ const CustomerCards: React.FC = () => {
       return res.data?.requests ?? [];
     },
   });
+
+  // Auto-sync trigger: whenever the customer's wallet balance changes, ask the
+  // server to top up any cards that have auto-sync enabled. Server enforces
+  // per-card enabled + threshold + hourly idempotency, so this is safe to call.
+  const autoSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    const runAutoSync = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const res = await supabase.functions.invoke('cards-v3', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          body: { action: 'auto_sync_run' },
+        });
+        const funded = (res.data?.results ?? []).filter((r: any) => r.funded);
+        if (funded.length > 0) {
+          queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] });
+        }
+      } catch { /* non-fatal */ }
+    };
+    const schedule = () => {
+      if (autoSyncTimer.current) clearTimeout(autoSyncTimer.current);
+      autoSyncTimer.current = setTimeout(runAutoSync, 2500);
+    };
+    // Run once on mount, then on every wallet balance change.
+    schedule();
+    const channel = supabase
+      .channel(`cards-autosync-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'account_balances' }, schedule)
+      .subscribe();
+    return () => {
+      if (autoSyncTimer.current) clearTimeout(autoSyncTimer.current);
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
+
+
 
 
   // Preserve idempotency key across retries so repeat clicks never duplicate a card.
@@ -435,12 +475,22 @@ const CustomerCards: React.FC = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             <button onClick={handleRevealToggle} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(210,70%,85%)]">
                 {showNumber ? <EyeOff className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} /> : <Eye className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} />}
               </div>
               <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Reveal'}</span>
+            </button>
+            <button
+              onClick={() => setFundsOpen(true)}
+              disabled={!card || card.status !== 'active'}
+              className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(150,40%,90%)] p-4 disabled:opacity-50"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(150,45%,80%)]">
+                <PlusIcon className="h-5 w-5 text-[hsl(150,55%,30%)]" strokeWidth={1.5} />
+              </div>
+              <span className="text-[10px] font-bold text-foreground">Add funds</span>
             </button>
             <button
               onClick={handleFreezeUnfreeze}
@@ -463,6 +513,7 @@ const CustomerCards: React.FC = () => {
               <span className="text-[10px] font-bold text-foreground">Controls</span>
             </button>
           </div>
+
 
           {card && card.status !== 'cancelled' && (
             <Button
@@ -546,9 +597,16 @@ const CustomerCards: React.FC = () => {
           onChange={() => setBgVersion((v) => v + 1)}
         />
       )}
+      <AddFundsDialog
+        open={fundsOpen}
+        onOpenChange={setFundsOpen}
+        card={card}
+        onFunded={() => queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] })}
+      />
     </div>
   );
 };
+
 
 const IssueTile: React.FC<{
   form: string;
