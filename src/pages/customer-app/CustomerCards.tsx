@@ -46,6 +46,7 @@ const CustomerCards: React.FC = () => {
   const [issuing, setIssuing] = useState<null | 'virtual' | 'digital' | 'physical'>(null);
   const [bgPickerOpen, setBgPickerOpen] = useState(false);
   const [bgVersion, setBgVersion] = useState(0);
+  const [fundsOpen, setFundsOpen] = useState(false);
 
   // Whether the signed-in customer has a transaction PIN set.
   const { data: hasPin = false } = useQuery<boolean>({
