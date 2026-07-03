@@ -711,3 +711,79 @@ async function actionAdminDecideRequest(sb: ReturnType<typeof createClient>, ctx
 
   return json({ request: updated });
 }
+
+// ---------- Auto-sync: save per-card preference ----------
+// Persists { enabled, top_up_to, threshold } into virtual_cards.metadata.auto_sync.
+// - enabled:    turn wallet → card auto top-ups on/off
+// - top_up_to:  desired card balance target in XAF (card is topped up to this level)
+// - threshold:  only top up when card balance drops below this level (defaults to top_up_to)
+async function actionSetAutoSync(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  if (!p.card_id) return err("card_validation_failed", "card_id required", 422);
+  const { data: card } = await sb
+    .from("virtual_cards")
+    .select("id,user_id,metadata")
+    .eq("id", p.card_id)
+    .maybeSingle();
+  if (!card) return err("card_not_found", "card not found", 404);
+  if (!ctx.isAdmin && card.user_id !== ctx.userId) return err("forbidden", "not your card", 403);
+
+  const enabled = !!p.enabled;
+  const top_up_to = Math.max(0, Math.floor(Number(p.top_up_to ?? 0)));
+  const threshold = Math.max(0, Math.floor(Number(p.threshold ?? top_up_to)));
+  if (enabled && top_up_to <= 0) {
+    return err("card_validation_failed", "top_up_to must be a positive amount when enabling auto-sync", 422);
+  }
+
+  const nextMeta = {
+    ...(card.metadata as any ?? {}),
+    auto_sync: {
+      enabled,
+      top_up_to,
+      threshold,
+      updated_at: new Date().toISOString(),
+      updated_by: ctx.userId,
+    },
+  };
+  const { data: updated } = await sb
+    .from("virtual_cards")
+    .update({ metadata: nextMeta, updated_at: new Date().toISOString() })
+    .eq("id", card.id)
+    .select()
+    .single();
+  return json({ card: updated, auto_sync: nextMeta.auto_sync });
+}
+
+// ---------- Auto-sync: run top-ups for the caller's eligible cards ----------
+// Iterates the caller's active cards where metadata.auto_sync.enabled = true,
+// and for any card whose balance is below `threshold`, tops it up to `top_up_to`
+// by reusing the same fund path (wallet debit + fees + provider load).
+async function actionAutoSyncRun(sb: ReturnType<typeof createClient>, ctx: AuthCtx, p: any) {
+  const targetUserId = ctx.isAdmin && p.user_id ? p.user_id : ctx.userId;
+  const { data: cards } = await sb
+    .from("virtual_cards")
+    .select("id,status,balance_usd,metadata,user_id")
+    .eq("user_id", targetUserId)
+    .eq("status", "active");
+  const results: Array<{ card_id: string; funded?: number; skipped?: string; error?: string }> = [];
+  for (const c of cards ?? []) {
+    const cfg = (c.metadata as any)?.auto_sync;
+    if (!cfg?.enabled) { results.push({ card_id: c.id, skipped: "not_enabled" }); continue; }
+    const target = Math.max(0, Math.floor(Number(cfg.top_up_to ?? 0)));
+    const thresh = Math.max(0, Math.floor(Number(cfg.threshold ?? target)));
+    const cur = Math.max(0, Math.floor(Number(c.balance_usd ?? 0)));
+    if (cur >= thresh || target <= cur) { results.push({ card_id: c.id, skipped: "above_threshold" }); continue; }
+    const amount = target - cur;
+    const idem = `autosync:${c.id}:${new Date().toISOString().slice(0, 13)}`; // hourly key
+    const res = await actionFundOrWithdraw(sb, { ...ctx, userId: c.user_id as string }, {
+      card_id: c.id, amount, idempotency_key: idem,
+    }, "load");
+    if (res.status >= 200 && res.status < 300) {
+      results.push({ card_id: c.id, funded: amount });
+    } else {
+      let detail = "load_failed";
+      try { detail = (await res.clone().json())?.detail ?? detail; } catch { /* ignore */ }
+      results.push({ card_id: c.id, error: detail });
+    }
+  }
+  return json({ ran_at: new Date().toISOString(), results });
+}
