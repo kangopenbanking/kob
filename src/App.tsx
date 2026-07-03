@@ -1213,6 +1213,8 @@ function App() {
             <Route path="/fee-management" element={<Navigate to="/admin/fee-management" replace />} />
             <Route path="/communications" element={<Navigate to="/admin/communications" replace />} />
             <Route path="/compliance-dashboard" element={<Navigate to="/admin/compliance-dashboard" replace />} />
+            <Route path="/api-docs" element={<Navigate to="/developer/api-explorer" replace />} />
+            <Route path="/api-documentation" element={<Navigate to="/developer/api-explorer" replace />} />
             
             {/* Public Developer Documentation — no auth required */}
             <Route path="/developer" element={<PublicDeveloperLayout />}>
