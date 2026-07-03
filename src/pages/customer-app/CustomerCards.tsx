@@ -559,9 +559,16 @@ const CustomerCards: React.FC = () => {
           onChange={() => setBgVersion((v) => v + 1)}
         />
       )}
+      <AddFundsDialog
+        open={fundsOpen}
+        onOpenChange={setFundsOpen}
+        card={card}
+        onFunded={() => queryClient.refetchQueries({ queryKey: ['customer-cards-v3'] })}
+      />
     </div>
   );
 };
+
 
 const IssueTile: React.FC<{
   form: string;
