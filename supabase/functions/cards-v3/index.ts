@@ -456,8 +456,11 @@ serve(async (req) => {
       case "cancel_request":        return await actionCancelRequest(sb, ctx, body);
       case "admin_list_requests":   return await actionAdminListRequests(sb, ctx, body);
       case "admin_decide_request":  return await actionAdminDecideRequest(sb, ctx, body);
+      case "set_auto_sync":         return await actionSetAutoSync(sb, ctx, body);
+      case "auto_sync_run":         return await actionAutoSyncRun(sb, ctx, body);
       case "provider_health":       return json(providerHealth());
       default:                      return err("invalid_action", `unknown action: ${action}`, 400);
+
     }
 
   } catch (e: any) {
