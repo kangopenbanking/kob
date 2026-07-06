@@ -66,15 +66,30 @@ Deno.serve(async (req) => {
     const failureRate = total > 0 ? failures / total : 0;
 
     // ---- 4. Bounce / complaint rate over last 24h ----
+    // Exclude bounces caused by synthetic / undeliverable pseudo-emails
+    // (phone-signup placeholders, reserved test domains). Those are a data
+    // quality issue, not a sender reputation issue. The send function now
+    // blocks these upfront, but historical rows must still be filtered here.
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data: deliveryWindow } = await admin
       .from("email_send_log")
-      .select("status")
+      .select("status, recipient_email")
       .gte("created_at", twentyFourHoursAgo)
       .in("status", ["sent", "bounced", "complained"]);
-    const deliveryTotal = deliveryWindow?.length || 0;
-    const bounces = (deliveryWindow || []).filter((r) => r.status === "bounced").length;
-    const complaints = (deliveryWindow || []).filter((r) => r.status === "complained").length;
+    const SYNTHETIC_SUFFIXES = ["@phone.kob.cm", "@kang.id", "@no-email.local"];
+    const RESERVED_DOMAINS = new Set(["example.com", "example.org", "example.net", "test", "invalid", "localhost", "local"]);
+    const isSynthetic = (e: string | null) => {
+      const v = (e || "").toLowerCase().trim();
+      if (!v) return false;
+      if (v.endsWith(".local")) return true;
+      if (SYNTHETIC_SUFFIXES.some((s) => v.endsWith(s))) return true;
+      const d = v.split("@")[1] || "";
+      return RESERVED_DOMAINS.has(d);
+    };
+    const realDeliveries = (deliveryWindow || []).filter((r: any) => !isSynthetic(r.recipient_email));
+    const deliveryTotal = realDeliveries.length;
+    const bounces = realDeliveries.filter((r: any) => r.status === "bounced").length;
+    const complaints = realDeliveries.filter((r: any) => r.status === "complained").length;
     const bounceRate = deliveryTotal > 0 ? (bounces + complaints) / deliveryTotal : 0;
 
     const triggered: string[] = [];

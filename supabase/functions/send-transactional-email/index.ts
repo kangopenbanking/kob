@@ -130,6 +130,43 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // 1a. Synthetic / undeliverable recipient guard.
+  // Prevents wasted sends (and permanent bounces that skew our bounce-rate
+  // alert threshold) for phone-signup pseudo-emails, reserved test domains,
+  // and obvious typos. See docs/audit/2026-07-06-email-bounce-alert.md.
+  const SYNTHETIC_EMAIL_SUFFIXES = [
+    '@phone.kob.cm',
+    '@kang.id',
+    '@no-email.local',
+  ]
+  const RESERVED_EMAIL_DOMAINS = new Set([
+    'example.com', 'example.org', 'example.net',
+    'test', 'invalid', 'localhost', 'local',
+  ])
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+  const lowered = effectiveRecipient.toLowerCase().trim()
+  const domain = lowered.split('@')[1] || ''
+  const looksSynthetic =
+    !EMAIL_REGEX.test(lowered) ||
+    lowered.endsWith('.local') ||
+    SYNTHETIC_EMAIL_SUFFIXES.some((s) => lowered.endsWith(s)) ||
+    RESERVED_EMAIL_DOMAINS.has(domain)
+
+  if (looksSynthetic) {
+    await supabase.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: templateName,
+      recipient_email: effectiveRecipient,
+      status: 'suppressed',
+      error_message: 'synthetic_recipient: pseudo-email or reserved domain, not deliverable',
+    })
+    console.log('Email skipped — synthetic recipient', { effectiveRecipient, templateName })
+    return new Response(
+      JSON.stringify({ success: false, reason: 'synthetic_recipient' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
   // 1b. Per-recipient rate limit (hourly cap per template).
   // Defaults to 10/hour; override per template via PER_TEMPLATE_RATE_LIMIT.
   // Auth-flow templates get a higher cap because retries are expected.
