@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     skipped += (profiles.length - deliverable.length);
 
 
-    for (const p of profiles as any[]) {
+    for (const p of deliverable as any[]) {
       try {
         // Skip if user has an approved verification
         const { count: approvedCount } = await supabase
