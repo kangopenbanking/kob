@@ -43,6 +43,24 @@ Deno.serve(async (req) => {
     if (error) { console.error("profiles page error", error); break; }
     if (!profiles?.length) break;
 
+    // Filter synthetic / undeliverable pseudo-emails BEFORE any per-user work.
+    // These addresses (phone-signup placeholders, reserved test domains) generate
+    // permanent bounces which spike the email_bounce_rate_high alert.
+    const SYNTHETIC_SUFFIXES = ["@phone.kob.cm", "@kang.id", "@no-email.local"];
+    const RESERVED_DOMAINS = new Set(["example.com", "example.org", "example.net", "test", "invalid", "localhost", "local"]);
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const deliverable = (profiles as any[]).filter((p) => {
+      const e = (p.email || "").toLowerCase().trim();
+      if (!e || !EMAIL_RE.test(e)) return false;
+      if (e.endsWith(".local")) return false;
+      if (SYNTHETIC_SUFFIXES.some((s) => e.endsWith(s))) return false;
+      const d = e.split("@")[1] || "";
+      if (RESERVED_DOMAINS.has(d)) return false;
+      return true;
+    });
+    skipped += (profiles.length - deliverable.length);
+
+
     for (const p of profiles as any[]) {
       try {
         // Skip if user has an approved verification
