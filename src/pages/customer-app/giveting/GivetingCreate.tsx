@@ -28,6 +28,9 @@ export const GivetingCreate: React.FC = () => {
   const nav = useNavigate();
   const [step, setStep] = useState<Step>('category');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [coverMode, setCoverMode] = useState<'upload' | 'url'>('upload');
+  const fileRef = useRef<HTMLInputElement>(null);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
 
   const [form, setForm] = useState({
