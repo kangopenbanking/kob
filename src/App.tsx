@@ -706,6 +706,18 @@ const CustomerRecurring = lazy(() => import("./pages/customer-app/CustomerRecurr
 const CustomerRewards = lazy(() => import("./pages/customer-app/CustomerRewards"));
 const CustomerPiggyBank = lazy(() => import("./pages/customer-app/CustomerPiggyBank"));
 const CustomerNjangi = lazy(() => import("./pages/customer-app/CustomerNjangi"));
+const GivetingLayout = lazy(() => import("./pages/customer-app/giveting/GivetingLayout"));
+const GivetingHome = lazy(() => import("./pages/customer-app/giveting/GivetingHome"));
+const GivetingDiscover = lazy(() => import("./pages/customer-app/giveting/GivetingDiscover"));
+const GivetingCreate = lazy(() => import("./pages/customer-app/giveting/GivetingCreate"));
+const GivetingCampaign = lazy(() => import("./pages/customer-app/giveting/GivetingCampaign"));
+const GivetingManage = lazy(() => import("./pages/customer-app/giveting/GivetingManage"));
+const GivetingDonate = lazy(() => import("./pages/customer-app/giveting/GivetingDonate"));
+const GivetingDonations = lazy(() => import("./pages/customer-app/giveting/GivetingDonations"));
+const GivetingUpdateNew = lazy(() => import("./pages/customer-app/giveting/GivetingUpdateNew"));
+const GivetingWithdraw = lazy(() => import("./pages/customer-app/giveting/GivetingWithdraw"));
+const GivetingNotifications = lazy(() => import("./pages/customer-app/giveting/GivetingNotifications"));
+const GivetingProfile = lazy(() => import("./pages/customer-app/giveting/GivetingProfile"));
 const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRentReporting"));
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
 const GlobalReceivingAccount = lazy(() => import("./pages/customer-app/GlobalReceivingAccount"));
@@ -1700,6 +1712,19 @@ function App() {
               <Route path="rewards" element={<CustomerRewards />} />
               <Route path="piggybank" element={<CustomerPiggyBank />} />
               <Route path="njangi" element={<CustomerNjangi />} />
+              <Route path="giveting" element={<GivetingLayout />}>
+                <Route index element={<GivetingHome />} />
+                <Route path="discover" element={<GivetingDiscover />} />
+                <Route path="notifications" element={<GivetingNotifications />} />
+                <Route path="profile" element={<GivetingProfile />} />
+                <Route path="new" element={<GivetingCreate />} />
+                <Route path="c/:slug" element={<GivetingCampaign />} />
+                <Route path="c/:slug/manage" element={<GivetingManage />} />
+                <Route path="c/:slug/donate" element={<GivetingDonate />} />
+                <Route path="c/:slug/donations" element={<GivetingDonations />} />
+                <Route path="c/:slug/updates/new" element={<GivetingUpdateNew />} />
+                <Route path="c/:slug/withdraw" element={<GivetingWithdraw />} />
+              </Route>
               <Route path="savings-vault" element={<CustomerSavingsVault />} />
               <Route path="rent-reporting" element={<CustomerRentReporting />} />
               <Route path="credit" element={<CustomerCreditScore />} />
