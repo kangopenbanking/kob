@@ -24,25 +24,38 @@ export interface StepUpDetectionResult {
   message?: string;
 }
 
-/** Detects a STEP_UP_REQUIRED response from a Supabase edge function call. */
-export function detectStepUp(payload: { data?: any; error?: any } | unknown): StepUpDetectionResult {
+/**
+ * Detects a STEP_UP_REQUIRED response from a Supabase edge function call.
+ *
+ * Supabase JS v2 exposes the raw `Response` (not the parsed body) on
+ * `FunctionsHttpError.context`. The previous `error.context.body` lookup
+ * was always `undefined`, so step-up challenges surfaced as a generic
+ * "Edge Function returned a non-2xx status code" toast instead of opening
+ * the MFA dialog. We now read the body from the Response directly.
+ */
+export async function detectStepUp(payload: { data?: any; error?: any } | unknown): Promise<StepUpDetectionResult> {
   const obj = payload as { data?: any; error?: any };
-  // Successful 200 with `code` in the body (functions.invoke unwraps body).
   const dataCode = obj?.data?.code ?? obj?.data?.error;
   if (dataCode === STEP_UP_CODE || obj?.data?.error === "step_up_required") {
     return { triggered: true, reason: obj.data?.reason, message: obj.data?.message };
   }
-  // Non-2xx surfaces in error.context.body (string or object).
-  const ctxBody = obj?.error?.context?.body;
-  if (ctxBody) {
-    try {
-      const parsed = typeof ctxBody === "string" ? JSON.parse(ctxBody) : ctxBody;
-      if (parsed?.code === STEP_UP_CODE || parsed?.error === "step_up_required") {
-        return { triggered: true, reason: parsed?.reason, message: parsed?.message };
-      }
-    } catch {
-      // ignore parse errors
+  const ctx = obj?.error?.context;
+  if (!ctx) return { triggered: false };
+  try {
+    let parsed: any = null;
+    if (typeof ctx === "string") {
+      parsed = JSON.parse(ctx);
+    } else if (typeof ctx?.clone === "function" && typeof ctx?.text === "function") {
+      const txt = await ctx.clone().text();
+      parsed = txt ? JSON.parse(txt) : null;
+    } else if (ctx?.body) {
+      parsed = typeof ctx.body === "string" ? JSON.parse(ctx.body) : ctx.body;
     }
+    if (parsed?.code === STEP_UP_CODE || parsed?.error === "step_up_required") {
+      return { triggered: true, reason: parsed?.reason, message: parsed?.message };
+    }
+  } catch {
+    // ignore parse errors
   }
   return { triggered: false };
 }
