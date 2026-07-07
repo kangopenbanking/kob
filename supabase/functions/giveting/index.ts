@@ -435,10 +435,11 @@ async function handleWithdraw(req: Request, body: any) {
   const available = Number(campaign.total_raised_minor) - alreadyOut;
   if (amount_minor > available) return jsonRes(400, { error: 'exceeds_available', available });
 
-  // Fee: 2.9% + 100 XAF equivalent in campaign currency
-  const feePctMinor = Math.round(amount_minor * 0.029);
-  // Convert 100 XAF fixed fee to campaign currency
-  const { converted: fixedFeeMinor } = convertBetween(10000, 'XAF', campaign.currency); // 100 XAF = 10000 minor
+  // Fee = pct_bps of amount + fixed_minor_xaf (converted to campaign currency).
+  // Config is admin-tunable via system_config.giveting.withdrawal_fee.
+  const { pct_bps, fixed_minor_xaf } = await getWithdrawalFeeConfig();
+  const feePctMinor = Math.round((amount_minor * pct_bps) / 10000);
+  const { converted: fixedFeeMinor } = convertBetween(fixed_minor_xaf, 'XAF', campaign.currency);
   const fee_minor = feePctMinor + fixedFeeMinor;
   const net_minor = amount_minor - fee_minor;
   if (net_minor <= 0) return jsonRes(400, { error: 'amount_below_fee' });
