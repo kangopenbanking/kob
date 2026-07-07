@@ -11,41 +11,54 @@
 
 const DEFAULT_MESSAGE = 'Something went wrong. Please try again or contact support.';
 
-export function extractEdgeFunctionError(
+export async function extractEdgeFunctionError(
   error: any,
   fallback?: string
-): string {
+): Promise<string> {
   if (!error) return fallback || DEFAULT_MESSAGE;
 
-  // 1. Try to extract from error.context.body (Supabase FunctionsHttpError)
+  // 1. Supabase v2 FunctionsHttpError: error.context is a Response — read body.
   try {
-    const body = error.context?.body;
-    if (body) {
-      const parsed = typeof body === 'string' ? JSON.parse(body) : body;
-      if (parsed?.error && typeof parsed.error === 'string') {
-        return parsed.error;
-      }
-      if (parsed?.message && typeof parsed.message === 'string') {
-        return parsed.message;
+    const ctx = error.context;
+    if (ctx && typeof ctx.clone === "function" && typeof ctx.text === "function") {
+      const txt = await ctx.clone().text();
+      if (txt) {
+        try {
+          const parsed = JSON.parse(txt);
+          if (parsed?.error && typeof parsed.error === "string") return parsed.error;
+          if (parsed?.message && typeof parsed.message === "string") return parsed.message;
+        } catch {
+          // not JSON, fall through
+        }
+        if (txt.length < 300) return txt;
       }
     }
   } catch {
-    // JSON parse failed, continue to next strategy
+    // ignore, continue
   }
 
-  // 2. If error.message is the generic Supabase message, return fallback
+  // 2. Legacy shape: error.context.body already parsed/stringified.
+  try {
+    const body = error.context?.body;
+    if (body) {
+      const parsed = typeof body === "string" ? JSON.parse(body) : body;
+      if (parsed?.error && typeof parsed.error === "string") return parsed.error;
+      if (parsed?.message && typeof parsed.message === "string") return parsed.message;
+    }
+  } catch {
+    // continue
+  }
+
   if (
-    typeof error.message === 'string' &&
-    error.message.includes('Edge Function returned a non-2xx status code')
+    typeof error.message === "string" &&
+    error.message.includes("Edge Function returned a non-2xx status code")
   ) {
     return fallback || DEFAULT_MESSAGE;
   }
 
-  // 3. Use error.message if it's a meaningful string
-  if (typeof error.message === 'string' && error.message.length > 0) {
+  if (typeof error.message === "string" && error.message.length > 0) {
     return error.message;
   }
 
-  // 4. Last resort
   return fallback || DEFAULT_MESSAGE;
 }
