@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { giveting, GIVETING_CATEGORIES, GIVETING_CURRENCIES, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { cn } from '@/lib/utils';
 
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number; color?: string }>> = {
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
   medical: HeartPulse, emergencies: LifeBuoy, memorial: Flower, education: GraduationCap,
   community: Users, animals: PawPrint, business: Briefcase, faith: Church, family: Home,
   sports: Trophy, travel: Plane, volunteer: HandHeart, wishes: Sparkles, competitions: Medal,
