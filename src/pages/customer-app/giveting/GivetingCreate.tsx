@@ -84,18 +84,16 @@ export const GivetingCreate: React.FC = () => {
         location_country: form.location_country || null,
         location_city: form.location_city || null,
       });
-      await giveting('publish', { id: res.campaign.id });
       setCreatedSlug(res.campaign.slug);
+      setPendingKyc(!!res.kyc_required);
       setStep('ready');
-      toast.success('Your fundraiser is live!');
-    } catch (e: any) {
-      const m = e.message || '';
-      if (m === 'kyc_required') {
-        toast.error('Complete identity verification to launch a fundraiser.');
-        nav('/app/kyc');
+      if (res.kyc_required) {
+        toast.info('Saved. Complete identity verification to make it live.');
       } else {
-        toast.error(m || 'Could not publish');
+        toast.success('Your fundraiser is live!');
       }
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not save fundraiser');
     } finally {
       setLoading(false);
     }
