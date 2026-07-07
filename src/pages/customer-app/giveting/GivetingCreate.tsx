@@ -100,6 +100,26 @@ export const GivetingCreate: React.FC = () => {
     }
   };
 
+  const onFilePicked = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadGivetingCover(file);
+      set('cover_media_url', url);
+      toast.success('Cover image uploaded');
+    } catch (e: any) {
+      const m = e?.message || '';
+      if (m === 'image_too_large') toast.error('Image is larger than 8 MB. Please choose a smaller file.');
+      else if (m === 'unsupported_image_type') toast.error('Only PNG, JPEG, WebP or GIF images are supported.');
+      else if (m === 'not_authenticated') toast.error('Please sign in again to upload images.');
+      else toast.error(m || 'Could not upload image');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+
   return (
     <div className={cn(
       'flex min-h-[calc(100vh-8rem)] flex-col',
