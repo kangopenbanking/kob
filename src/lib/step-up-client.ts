@@ -87,7 +87,7 @@ export function useStepUp() {
 
   const runWithStepUp = useCallback(async <T,>(runner: Runner<T>): Promise<T> => {
     const first = await runner();
-    const detection = detectStepUp(first);
+    const detection = await detectStepUp(first);
     if (!detection.triggered) return first;
     return await new Promise<T>((resolve, reject) => {
       setPending({ resolve, reject, runner: runner as Runner<any>, detection });
