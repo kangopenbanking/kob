@@ -927,6 +927,7 @@ function App() {
             <Route path="/daily-needs" element={<Layout><DailyNeedsMarketing /></Layout>} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/store/:merchantId" element={<PublicStorefront />} />
+            <Route path="/g/:slug" element={<GivetingPublicCampaign />} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
             <Route path="/fund-account" element={<Layout><ProtectedRoute><NonInstitutionRoute><CustomerFundAccount /></NonInstitutionRoute></ProtectedRoute></Layout>} />
