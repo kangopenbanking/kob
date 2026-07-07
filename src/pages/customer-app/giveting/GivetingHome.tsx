@@ -107,7 +107,7 @@ export const GivetingHome: React.FC = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="line-clamp-1 text-base font-semibold">{c.title}</h3>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{c.status}</span>
+                      <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide', STATUS_STYLES[c.status] ?? 'bg-muted text-muted-foreground')}>{c.status === 'pending' ? 'Pending KYC' : c.status}</span>
                     </div>
                     <p className="mt-1 text-sm font-semibold text-foreground">
                       {formatMoney(c.total_raised_minor, c.currency)}
