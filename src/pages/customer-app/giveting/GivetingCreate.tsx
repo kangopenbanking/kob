@@ -117,20 +117,40 @@ export const GivetingCreate: React.FC = () => {
             <h1 className="mb-1 text-2xl font-bold">What are you raising for?</h1>
             <p className="mb-6 text-sm text-muted-foreground">Pick a category. You can change it later.</p>
             <div className="grid grid-cols-2 gap-3">
-              {GIVETING_CATEGORIES.map((c) => (
-                <button
-                  key={c.slug}
-                  onClick={() => set('category_slug', c.slug)}
-                  className={cn(
-                    'rounded-2xl border p-4 text-left transition-all',
-                    form.category_slug === c.slug
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border/60 hover:border-primary/40'
-                  )}
-                >
-                  <span className="text-sm font-semibold text-foreground">{c.label}</span>
-                </button>
-              ))}
+              {GIVETING_CATEGORIES.map((c) => {
+                const Icon = CATEGORY_ICONS[c.slug] ?? Megaphone;
+                const selected = form.category_slug === c.slug;
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => set('category_slug', c.slug)}
+                    style={{ ['--cat' as any]: c.hsl }}
+                    className={cn(
+                      'flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all',
+                      selected
+                        ? 'border-transparent bg-[hsl(var(--cat)/0.12)] shadow-sm ring-2 ring-[hsl(var(--cat))]'
+                        : 'border-border/60 bg-card hover:border-[hsl(var(--cat))]/50'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
+                        selected ? 'bg-[hsl(var(--cat))] text-white' : 'bg-[hsl(var(--cat)/0.12)]'
+                      )}
+                    >
+                      <Icon
+                        className="h-5 w-5"
+                        strokeWidth={2}
+                        color={selected ? '#fff' : `hsl(${c.hsl})`}
+                      />
+                    </span>
+                    <span className={cn('text-sm font-semibold', selected ? 'text-[hsl(var(--cat))]' : 'text-foreground')}>
+                      {c.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
