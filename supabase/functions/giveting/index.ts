@@ -667,6 +667,8 @@ Deno.serve(async (req) => {
       case 'admin-list': return handleAdminList(req, body);
       case 'admin-update': return handleAdminUpdate(req, body);
       case 'admin-set-status': return handleAdminSetStatus(req, body);
+      case 'get-fee-config': return handleGetFeeConfig();
+      case 'admin-set-fee-config': return handleAdminSetFeeConfig(req, body);
       default: return jsonRes(400, { error: `unknown_action: ${action}` });
     }
   } catch (err: any) {
