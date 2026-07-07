@@ -501,7 +501,52 @@ async function handleCategories() {
   return jsonRes(200, { categories: data ?? [] });
 }
 
+// ─── Fee configuration ───
+
+type FeeConfig = { pct_bps: number; fixed_minor_xaf: number };
+
+const DEFAULT_FEE: FeeConfig = { pct_bps: 290, fixed_minor_xaf: 10000 };
+
+async function getWithdrawalFeeConfig(): Promise<FeeConfig> {
+  try {
+    const supabase = svcClient();
+    const { data } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'giveting.withdrawal_fee')
+      .maybeSingle();
+    const v = (data?.value ?? {}) as Partial<FeeConfig>;
+    const pct = Number.isFinite(v.pct_bps as number) ? Math.max(0, Math.min(5000, Number(v.pct_bps))) : DEFAULT_FEE.pct_bps;
+    const fx = Number.isFinite(v.fixed_minor_xaf as number) ? Math.max(0, Math.min(10_000_000, Number(v.fixed_minor_xaf))) : DEFAULT_FEE.fixed_minor_xaf;
+    return { pct_bps: pct, fixed_minor_xaf: fx };
+  } catch {
+    return DEFAULT_FEE;
+  }
+}
+
+async function handleGetFeeConfig() {
+  const cfg = await getWithdrawalFeeConfig();
+  return jsonRes(200, { config: cfg });
+}
+
+async function handleAdminSetFeeConfig(req: Request, body: any) {
+  await assertAdmin(req);
+  const supabase = svcClient();
+  const pct = Number(body?.pct_bps);
+  const fx = Number(body?.fixed_minor_xaf);
+  if (!Number.isFinite(pct) || pct < 0 || pct > 5000) return jsonRes(400, { error: 'invalid_pct_bps' });
+  if (!Number.isFinite(fx) || fx < 0 || fx > 10_000_000) return jsonRes(400, { error: 'invalid_fixed_minor_xaf' });
+  const value = { pct_bps: Math.round(pct), fixed_minor_xaf: Math.round(fx) };
+  const { error } = await supabase
+    .from('system_config')
+    .upsert({ key: 'giveting.withdrawal_fee', value, category: 'giveting', description: 'Withdrawal fee for Giveting fundraisers.' }, { onConflict: 'key' });
+  if (error) return jsonRes(500, { error: error.message });
+  return jsonRes(200, { config: value });
+}
+
 // ─── Admin management ───
+
+
 
 async function assertAdmin(req: Request) {
   const { user, supabase } = await getAuthUser(req);
