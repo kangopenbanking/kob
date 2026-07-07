@@ -1712,6 +1712,19 @@ function App() {
               <Route path="rewards" element={<CustomerRewards />} />
               <Route path="piggybank" element={<CustomerPiggyBank />} />
               <Route path="njangi" element={<CustomerNjangi />} />
+              <Route path="giveting" element={<GivetingLayout />}>
+                <Route index element={<GivetingHome />} />
+                <Route path="discover" element={<GivetingDiscover />} />
+                <Route path="notifications" element={<GivetingNotifications />} />
+                <Route path="profile" element={<GivetingProfile />} />
+                <Route path="new" element={<GivetingCreate />} />
+                <Route path="c/:slug" element={<GivetingCampaign />} />
+                <Route path="c/:slug/manage" element={<GivetingManage />} />
+                <Route path="c/:slug/donate" element={<GivetingDonate />} />
+                <Route path="c/:slug/donations" element={<GivetingDonations />} />
+                <Route path="c/:slug/updates/new" element={<GivetingUpdateNew />} />
+                <Route path="c/:slug/withdraw" element={<GivetingWithdraw />} />
+              </Route>
               <Route path="savings-vault" element={<CustomerSavingsVault />} />
               <Route path="rent-reporting" element={<CustomerRentReporting />} />
               <Route path="credit" element={<CustomerCreditScore />} />
