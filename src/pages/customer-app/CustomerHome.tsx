@@ -25,6 +25,7 @@ import { SecureField } from '@/components/security/SecureField';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Store, Briefcase } from 'lucide-react';
+import { GivetingHomeCarousel } from '@/components/customer-app/giveting/GivetingHomeCarousel';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
