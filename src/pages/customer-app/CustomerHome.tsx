@@ -839,6 +839,11 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
+      {/* ─── Giveting fundraisers carousel ─── */}
+      <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.175 }}>
+        <GivetingHomeCarousel />
+      </motion.div>
+
       {/* ─── Recent Activities (Live) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.18 }}>
         <div className="mb-3 flex items-center justify-between">
