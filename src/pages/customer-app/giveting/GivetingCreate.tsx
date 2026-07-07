@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Megaphone } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Megaphone, Upload, Link2,
+  HeartPulse, LifeBuoy, Flower, GraduationCap, Users, PawPrint, Briefcase,
+  Church, Home, Trophy, Plane, HandHeart, Sparkles, Medal, Palette, Calendar, Leaf,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { giveting, GIVETING_CATEGORIES, GIVETING_CURRENCIES, toMinor } from '@/lib/giveting';
+import { giveting, GIVETING_CATEGORIES, GIVETING_CURRENCIES, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { cn } from '@/lib/utils';
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  medical: HeartPulse, emergencies: LifeBuoy, memorial: Flower, education: GraduationCap,
+  community: Users, animals: PawPrint, business: Briefcase, faith: Church, family: Home,
+  sports: Trophy, travel: Plane, volunteer: HandHeart, wishes: Sparkles, competitions: Medal,
+  creative: Palette, events: Calendar, environment: Leaf,
+};
 
 type Step = 'category' | 'beneficiary' | 'goal' | 'story' | 'cover' | 'review' | 'ready';
 
@@ -17,6 +28,9 @@ export const GivetingCreate: React.FC = () => {
   const nav = useNavigate();
   const [step, setStep] = useState<Step>('category');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [coverMode, setCoverMode] = useState<'upload' | 'url'>('upload');
+  const fileRef = useRef<HTMLInputElement>(null);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
 
   const [form, setForm] = useState({
@@ -86,6 +100,26 @@ export const GivetingCreate: React.FC = () => {
     }
   };
 
+  const onFilePicked = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadGivetingCover(file);
+      set('cover_media_url', url);
+      toast.success('Cover image uploaded');
+    } catch (e: any) {
+      const m = e?.message || '';
+      if (m === 'image_too_large') toast.error('Image is larger than 8 MB. Please choose a smaller file.');
+      else if (m === 'unsupported_image_type') toast.error('Only PNG, JPEG, WebP or GIF images are supported.');
+      else if (m === 'not_authenticated') toast.error('Please sign in again to upload images.');
+      else toast.error(m || 'Could not upload image');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+
   return (
     <div className={cn(
       'flex min-h-[calc(100vh-8rem)] flex-col',
@@ -106,20 +140,40 @@ export const GivetingCreate: React.FC = () => {
             <h1 className="mb-1 text-2xl font-bold">What are you raising for?</h1>
             <p className="mb-6 text-sm text-muted-foreground">Pick a category. You can change it later.</p>
             <div className="grid grid-cols-2 gap-3">
-              {GIVETING_CATEGORIES.map((c) => (
-                <button
-                  key={c.slug}
-                  onClick={() => set('category_slug', c.slug)}
-                  className={cn(
-                    'rounded-2xl border p-4 text-left transition-all',
-                    form.category_slug === c.slug
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border/60 hover:border-primary/40'
-                  )}
-                >
-                  <span className="text-sm font-semibold text-foreground">{c.label}</span>
-                </button>
-              ))}
+              {GIVETING_CATEGORIES.map((c) => {
+                const Icon = CATEGORY_ICONS[c.slug] ?? Megaphone;
+                const selected = form.category_slug === c.slug;
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => set('category_slug', c.slug)}
+                    style={{ ['--cat' as any]: c.hsl }}
+                    className={cn(
+                      'flex flex-col items-start gap-2 rounded-2xl border p-4 text-left transition-all',
+                      selected
+                        ? 'border-transparent bg-[hsl(var(--cat)/0.12)] shadow-sm ring-2 ring-[hsl(var(--cat))]'
+                        : 'border-border/60 bg-card hover:border-[hsl(var(--cat))]/50'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'flex h-9 w-9 items-center justify-center rounded-full transition-colors',
+                        selected ? 'bg-[hsl(var(--cat))] text-white' : 'bg-[hsl(var(--cat)/0.12)]'
+                      )}
+                    >
+                      <Icon
+                        className="h-5 w-5"
+                        strokeWidth={2}
+                        color={selected ? '#fff' : `hsl(${c.hsl})`}
+                      />
+                    </span>
+                    <span className={cn('text-sm font-semibold', selected ? 'text-[hsl(var(--cat))]' : 'text-foreground')}>
+                      {c.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
@@ -226,20 +280,74 @@ export const GivetingCreate: React.FC = () => {
           <>
             <h1 className="mb-1 text-2xl font-bold">Add a cover image</h1>
             <p className="mb-6 text-sm text-muted-foreground">A good photo helps donors connect. You can add one later too.</p>
+
+            <div className="mb-4 inline-flex rounded-full border border-border bg-muted p-1">
+              <button
+                type="button"
+                onClick={() => setCoverMode('upload')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors',
+                  coverMode === 'upload' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+                )}
+              >
+                <Upload className="h-3.5 w-3.5" /> Upload
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverMode('url')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors',
+                  coverMode === 'url' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+                )}
+              >
+                <Link2 className="h-3.5 w-3.5" /> Paste link
+              </button>
+            </div>
+
             <div className="space-y-3">
-              <Label>Image URL</Label>
-              <Input
-                value={form.cover_media_url}
-                onChange={(e) => set('cover_media_url', e.target.value)}
-                placeholder="https://…"
-                className="h-12"
-              />
-              {form.cover_media_url && (
+              {coverMode === 'upload' ? (
+                <>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => onFilePicked(e.target.files?.[0] ?? null)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="h-12 w-full rounded-full"
+                  >
+                    {uploading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>
+                    ) : form.cover_media_url ? (
+                      <><ImagePlus className="mr-2 h-4 w-4" /> Replace image</>
+                    ) : (
+                      <><Upload className="mr-2 h-4 w-4" /> Choose from device</>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">PNG, JPEG, WebP or GIF. Up to 8 MB.</p>
+                </>
+              ) : (
+                <>
+                  <Label>Image URL</Label>
+                  <Input
+                    value={form.cover_media_url}
+                    onChange={(e) => set('cover_media_url', e.target.value)}
+                    placeholder="https://…"
+                    className="h-12"
+                  />
+                </>
+              )}
+
+              {form.cover_media_url ? (
                 <div className="overflow-hidden rounded-2xl border">
                   <img src={form.cover_media_url} alt="Cover preview" className="h-56 w-full object-cover" />
                 </div>
-              )}
-              {!form.cover_media_url && (
+              ) : (
                 <Card className="flex h-56 items-center justify-center rounded-2xl border-dashed">
                   <div className="text-center text-muted-foreground">
                     <ImagePlus className="mx-auto mb-2 h-8 w-8" strokeWidth={1.5} />
