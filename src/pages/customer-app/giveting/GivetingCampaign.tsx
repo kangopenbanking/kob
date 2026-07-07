@@ -16,6 +16,9 @@ export const GivetingCampaign: React.FC = () => {
   const [organiser, setOrganiser] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentBody, setCommentBody] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
