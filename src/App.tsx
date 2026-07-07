@@ -1191,6 +1191,7 @@ function App() {
               {/* Phase 3: Advanced Commerce */}
               <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="giveting" element={<AdminGiveting />} />
+              <Route path="giveting-fees" element={<AdminGivetingFees />} />
               <Route path="rewards-management" element={<RewardsManagement />} />
               <Route path="onboarding-management" element={<OnboardingManagement />} />
               <Route path="bill-management" element={<AdminBillManagement />} />
