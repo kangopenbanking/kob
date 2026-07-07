@@ -176,6 +176,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Business App Management", path: "/admin/business-app-management", icon: Smartphone },
       { title: "Marketplace", path: "/admin/marketplace", icon: Store },
       { title: "Storefront Moderation", path: "/admin/marketplace-moderation", icon: Shield },
+      { title: "Fundraising Campaigns", path: "/admin/giveting", icon: Shield },
     ],
   },
   {

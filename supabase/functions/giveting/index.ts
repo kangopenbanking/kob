@@ -500,6 +500,96 @@ async function handleCategories() {
   return jsonRes(200, { categories: data ?? [] });
 }
 
+// ─── Admin management ───
+
+async function assertAdmin(req: Request) {
+  const { user, supabase } = await getAuthUser(req);
+  const { data: roleRow } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('role', 'admin')
+    .maybeSingle();
+  if (!roleRow) throw new Error('forbidden');
+  return { user, supabase };
+}
+
+async function handleAdminList(req: Request, body: any) {
+  await assertAdmin(req);
+  const supabase = svcClient();
+  const { search, status, category, limit = 50, offset = 0 } = body ?? {};
+  let q = supabase
+    .from('giveting_campaigns')
+    .select('id, slug, title, category_slug, currency, goal_amount_minor, total_raised_minor, donor_count, cover_media_url, location_country, location_city, status, owner_user_id, created_at, published_at, moderation_notes, moderated_at', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(offset, offset + Math.min(Number(limit) || 50, 200) - 1);
+  if (search) q = q.ilike('title', `%${search}%`);
+  if (status) q = q.eq('status', status);
+  if (category) q = q.eq('category_slug', category);
+  const { data, count, error } = await q;
+  if (error) return jsonRes(500, { error: error.message });
+  return jsonRes(200, { campaigns: data ?? [], total: count ?? 0 });
+}
+
+async function handleAdminUpdate(req: Request, body: any) {
+  const { user } = await assertAdmin(req);
+  const supabase = svcClient();
+  const { id, patch } = body ?? {};
+  if (!id || !patch || typeof patch !== 'object') return jsonRes(400, { error: 'id and patch required' });
+  const allowed = [
+    'title', 'story', 'category_slug', 'currency', 'goal_amount_minor',
+    'cover_media_url', 'gallery', 'location_country', 'location_city',
+    'beneficiary_type', 'beneficiary_name', 'beneficiary_relation',
+    'verified_badge', 'moderation_notes',
+  ];
+  const clean: any = {};
+  for (const k of allowed) if (k in patch) clean[k] = patch[k];
+  if (Object.keys(clean).length === 0) return jsonRes(400, { error: 'no_valid_fields' });
+  if ('currency' in clean && !['XAF','XOF','EUR','USD','GBP'].includes(clean.currency)) {
+    return jsonRes(400, { error: 'invalid_currency' });
+  }
+  clean.moderated_by = user.id;
+  clean.moderated_at = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('giveting_campaigns')
+    .update(clean)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return jsonRes(500, { error: error.message });
+  return jsonRes(200, { campaign: data });
+}
+
+async function handleAdminSetStatus(req: Request, body: any) {
+  const { user } = await assertAdmin(req);
+  const supabase = svcClient();
+  const { id, status, notes } = body ?? {};
+  const allowedStatuses = ['draft','pending','active','paused','blocked','completed','archived'];
+  if (!id || !allowedStatuses.includes(status)) return jsonRes(400, { error: 'invalid_status' });
+  const patch: any = {
+    status,
+    moderated_by: user.id,
+    moderated_at: new Date().toISOString(),
+  };
+  if (notes !== undefined) patch.moderation_notes = notes;
+  if (status === 'active') {
+    const { data: existing } = await supabase
+      .from('giveting_campaigns')
+      .select('published_at')
+      .eq('id', id)
+      .maybeSingle();
+    if (existing && !existing.published_at) patch.published_at = new Date().toISOString();
+  }
+  const { data, error } = await supabase
+    .from('giveting_campaigns')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) return jsonRes(500, { error: error.message });
+  return jsonRes(200, { campaign: data });
+}
+
 // ─────────── Router ───────────
 
 Deno.serve(async (req) => {
@@ -528,6 +618,9 @@ Deno.serve(async (req) => {
       case 'list-comments': return handleListComments(body);
       case 'withdraw': return handleWithdraw(req, body);
       case 'list-withdrawals': return handleListWithdrawals(req, body);
+      case 'admin-list': return handleAdminList(req, body);
+      case 'admin-update': return handleAdminUpdate(req, body);
+      case 'admin-set-status': return handleAdminSetStatus(req, body);
       default: return jsonRes(400, { error: `unknown_action: ${action}` });
     }
   } catch (err: any) {
