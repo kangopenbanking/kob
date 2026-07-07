@@ -92,9 +92,11 @@ export default function KYCVerificationReview() {
       if (status === "rejected") body.rejection_reason = notes;
       if (status === "info_requested") body.info_request_message = notes;
       const { data, error } = await runWithStepUp(() => supabase.functions.invoke("admin-kyc-review", { body }));
-      if (error) throw error;
+      if (error) {
+        const msg = await extractEdgeFunctionError(error, "Failed to submit KYC review. Please try again.");
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
-
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc-submissions-admin"] });
@@ -109,8 +111,8 @@ export default function KYCVerificationReview() {
       setSelectedKYC(null);
       setReviewNotes("");
     },
-    onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: (error: any) => {
+      toast({ title: "Error", description: error?.message || "Failed to submit KYC review.", variant: "destructive" });
     },
   });
 
