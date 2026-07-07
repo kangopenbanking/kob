@@ -32,6 +32,7 @@ export const GivetingCreate: React.FC = () => {
   const [coverMode, setCoverMode] = useState<'upload' | 'url'>('upload');
   const fileRef = useRef<HTMLInputElement>(null);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  const [pendingKyc, setPendingKyc] = useState(false);
 
   const [form, setForm] = useState({
     category_slug: '',
