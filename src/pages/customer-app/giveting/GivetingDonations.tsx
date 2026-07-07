@@ -130,19 +130,51 @@ export const GivetingDonations: React.FC = () => {
             <p className="mt-1 text-sm text-muted-foreground">Donations will appear here.</p>
           </div>
         ) : (
-          <div className="mt-6 space-y-4">
-            {donations.map((d) => (
-              <div key={d.id} className="flex items-center gap-3">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase text-muted-foreground">
-                  {(d.donor_display_name ?? '?').charAt(0)}
+          <>
+            {(() => {
+              const top = [...donations].sort((a, b) => Number(b.converted_amount_minor ?? b.amount_minor) - Number(a.converted_amount_minor ?? a.amount_minor))[0];
+              const recent = donations[0];
+              return (
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Top donation', d: top },
+                    { label: 'Recent donation', d: recent },
+                  ].map(({ label, d }) => (
+                    <Card key={label} className="rounded-2xl p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">{formatMoney(d.amount_minor, d.currency)}</p>
+                      <p className="truncate text-xs text-muted-foreground">{d.is_anonymous ? 'Anonymous' : (d.donor_display_name ?? 'Anonymous')}</p>
+                    </Card>
+                  ))}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{d.donor_display_name ?? 'Anonymous'}</p>
-                  <p className="text-xs text-muted-foreground">{formatMoney(d.amount_minor, d.currency)} · {new Date(d.created_at).toLocaleDateString()}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              );
+            })()}
+
+            <div className="mt-6 space-y-4">
+              {donations.map((d) => {
+                const displayName = d.is_anonymous ? 'Anonymous' : (d.donor_display_name ?? 'Anonymous');
+                return (
+                  <Card key={d.id} className="rounded-2xl border-border/70 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold uppercase text-primary">
+                        {displayName.charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="truncate text-sm font-semibold">{displayName}</p>
+                          <p className="text-sm font-semibold text-foreground">{formatMoney(d.amount_minor, d.currency)}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</p>
+                        {d.comment && (
+                          <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground/90">{d.comment}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
