@@ -32,6 +32,7 @@ export const GivetingCreate: React.FC = () => {
   const [coverMode, setCoverMode] = useState<'upload' | 'url'>('upload');
   const fileRef = useRef<HTMLInputElement>(null);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  const [pendingKyc, setPendingKyc] = useState(false);
 
   const [form, setForm] = useState({
     category_slug: '',
@@ -83,18 +84,16 @@ export const GivetingCreate: React.FC = () => {
         location_country: form.location_country || null,
         location_city: form.location_city || null,
       });
-      await giveting('publish', { id: res.campaign.id });
       setCreatedSlug(res.campaign.slug);
+      setPendingKyc(!!res.kyc_required);
       setStep('ready');
-      toast.success('Your fundraiser is live!');
-    } catch (e: any) {
-      const m = e.message || '';
-      if (m === 'kyc_required') {
-        toast.error('Complete identity verification to launch a fundraiser.');
-        nav('/app/kyc');
+      if (res.kyc_required) {
+        toast.info('Saved. Complete identity verification to make it live.');
       } else {
-        toast.error(m || 'Could not publish');
+        toast.success('Your fundraiser is live!');
       }
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not save fundraiser');
     } finally {
       setLoading(false);
     }
@@ -389,7 +388,22 @@ export const GivetingCreate: React.FC = () => {
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary-foreground">
               <Megaphone className="h-7 w-7 text-primary" strokeWidth={1.8} />
             </div>
-            <h1 className="text-3xl font-bold leading-tight">Your fundraiser is ready to share.</h1>
+            <h1 className="text-3xl font-bold leading-tight">
+              {pendingKyc ? 'Almost there!' : 'Your fundraiser is ready to share.'}
+            </h1>
+            {pendingKyc && (
+              <>
+                <p className="mt-4 max-w-xs text-sm text-primary-foreground/85">
+                  Your fundraiser is saved and pending. Complete identity verification (KYC) to make it live and start receiving donations.
+                </p>
+                <Button
+                  onClick={() => nav('/app/kyc')}
+                  className="mt-6 h-12 rounded-full bg-accent px-8 text-sm font-semibold text-accent-foreground hover:bg-accent/90"
+                >
+                  Complete KYC
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

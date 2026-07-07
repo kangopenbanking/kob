@@ -25,6 +25,7 @@ import { SecureField } from '@/components/security/SecureField';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Store, Briefcase } from 'lucide-react';
+import { GivetingHomeCarousel } from '@/components/customer-app/giveting/GivetingHomeCarousel';
 
 /* ─── Animated Counter Hook ─── */
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -837,6 +838,11 @@ const CustomerHome: React.FC = () => {
           <MediaBanner items={tenant.mediaSections} cardSize="medium" />
         </motion.div>
       )}
+
+      {/* ─── Giveting fundraisers carousel ─── */}
+      <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.175 }}>
+        <GivetingHomeCarousel />
+      </motion.div>
 
       {/* ─── Recent Activities (Live) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.18 }}>

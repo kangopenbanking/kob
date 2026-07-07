@@ -2,11 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Heart, Plus, ArrowRight } from 'lucide-react';
+import { Heart, Plus, ArrowRight, ShieldAlert } from 'lucide-react';
 import { giveting, formatMoney, progressPct } from '@/lib/giveting';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
+import { cn } from '@/lib/utils';
+
+const STATUS_STYLES: Record<string, string> = {
+  active: 'bg-emerald-100 text-emerald-800',
+  pending: 'bg-amber-100 text-amber-900',
+  draft: 'bg-muted text-muted-foreground',
+  paused: 'bg-slate-200 text-slate-700',
+  blocked: 'bg-rose-100 text-rose-800',
+  completed: 'bg-primary/15 text-primary',
+  archived: 'bg-muted text-muted-foreground',
+};
 
 export const GivetingHome: React.FC = () => {
   const nav = useNavigate();
@@ -39,6 +50,26 @@ export const GivetingHome: React.FC = () => {
       >
         <Plus className="mr-2 h-5 w-5" /> Start a fundraiser
       </Button>
+
+      {!loading && campaigns.some((c) => c.status === 'pending') && (
+        <Card
+          onClick={() => nav('/app/kyc')}
+          className="mb-5 cursor-pointer rounded-3xl border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+              <ShieldAlert className="h-5 w-5" strokeWidth={1.8} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Verify your identity to go live</p>
+              <p className="mt-0.5 text-xs text-amber-800/90 dark:text-amber-200/80">
+                One or more of your fundraisers is pending. Complete KYC to publish it and start receiving donations.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-amber-800 dark:text-amber-300" />
+          </div>
+        </Card>
+      )}
 
       {loading ? (
         <div className="space-y-3">
@@ -76,7 +107,7 @@ export const GivetingHome: React.FC = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="line-clamp-1 text-base font-semibold">{c.title}</h3>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{c.status}</span>
+                      <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide', STATUS_STYLES[c.status] ?? 'bg-muted text-muted-foreground')}>{c.status === 'pending' ? 'Pending KYC' : c.status}</span>
                     </div>
                     <p className="mt-1 text-sm font-semibold text-foreground">
                       {formatMoney(c.total_raised_minor, c.currency)}

@@ -16,6 +16,9 @@ export const GivetingCampaign: React.FC = () => {
   const [organiser, setOrganiser] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentBody, setCommentBody] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -24,12 +27,14 @@ export const GivetingCampaign: React.FC = () => {
         const res: any = await giveting('get', { slug });
         setCampaign(res.campaign);
         setOrganiser(res.organiser);
-        const [d, u]: any[] = await Promise.all([
+        const [d, u, cm]: any[] = await Promise.all([
           giveting('list-donations', { campaign_id: res.campaign.id, limit: 10 }),
           giveting('list-updates', { campaign_id: res.campaign.id }),
+          giveting('list-comments', { campaign_id: res.campaign.id }),
         ]);
         setDonations(d.donations ?? []);
         setUpdates(u.updates ?? []);
+        setComments(cm.comments ?? []);
       } catch (e: any) {
         toast.error(e.message ?? 'Could not load fundraiser');
       } finally {
@@ -139,6 +144,53 @@ export const GivetingCampaign: React.FC = () => {
                     <p className="text-xs text-muted-foreground">{formatMoney(d.amount_minor, d.currency)} · {new Date(d.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-8">
+          <div className="mb-3 flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <h2 className="text-lg font-bold">Comments <span className="ml-1 text-xs font-medium text-muted-foreground">({comments.length})</span></h2>
+          </div>
+          <div className="mb-4 flex gap-2">
+            <input
+              value={commentBody}
+              onChange={(e) => setCommentBody(e.target.value)}
+              placeholder="Leave a message of support…"
+              className="h-11 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary"
+              maxLength={500}
+            />
+            <Button
+              size="sm"
+              disabled={postingComment || !commentBody.trim()}
+              onClick={async () => {
+                setPostingComment(true);
+                try {
+                  const res: any = await giveting('post-comment', { campaign_id: campaign.id, body: commentBody.trim() });
+                  setComments((prev) => [res.comment, ...prev]);
+                  setCommentBody('');
+                } catch (e: any) {
+                  toast.error(e?.message === 'Unauthorized' ? 'Sign in to comment' : (e?.message ?? 'Could not post'));
+                } finally {
+                  setPostingComment(false);
+                }
+              }}
+              className="h-11 rounded-full px-5 text-xs font-semibold"
+            >
+              Post
+            </Button>
+          </div>
+          {comments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No comments yet. Be the first to share encouragement.</p>
+          ) : (
+            <div className="space-y-3">
+              {comments.slice(0, 20).map((cm) => (
+                <Card key={cm.id} className="rounded-2xl p-3">
+                  <p className="whitespace-pre-wrap text-sm text-foreground">{cm.body}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{new Date(cm.created_at).toLocaleString()}</p>
+                </Card>
               ))}
             </div>
           )}

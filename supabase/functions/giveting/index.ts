@@ -116,7 +116,7 @@ async function handleCreate(req: Request, body: any) {
     return jsonRes(400, { error: 'invalid currency' });
   }
 
-  // Verify KYC — creators must be KYC-verified
+  // Verify KYC — approved creators get auto-published live; others go to pending until KYC completes.
   const { data: kyc } = await supabase
     .from('kyc_verifications')
     .select('status')
@@ -124,11 +124,9 @@ async function handleCreate(req: Request, body: any) {
     .eq('status', 'approved')
     .limit(1);
   const kycOk = (kyc?.length ?? 0) > 0;
-  if (!kycOk) {
-    return jsonRes(403, { error: 'kyc_required', message: 'You must complete identity verification to launch a fundraiser.' });
-  }
 
   const slug = slugify(title);
+  const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from('giveting_campaigns')
     .insert({
@@ -145,12 +143,13 @@ async function handleCreate(req: Request, body: any) {
       beneficiary_relation: beneficiary_relation ?? null,
       location_country: location_country ?? null,
       location_city: location_city ?? null,
-      status: 'draft',
+      status: kycOk ? 'active' : 'pending',
+      published_at: kycOk ? nowIso : null,
     })
     .select('*')
     .single();
   if (error) return jsonRes(500, { error: error.message });
-  return jsonRes(200, { campaign: data });
+  return jsonRes(200, { campaign: data, kyc_required: !kycOk });
 }
 
 async function handleUpdateCampaign(req: Request, body: any) {
@@ -175,15 +174,25 @@ async function handleUpdateCampaign(req: Request, body: any) {
 async function handlePublish(req: Request, body: any) {
   const { user, supabase } = await getAuthUser(req);
   const { id } = body;
+  const { data: kyc } = await supabase
+    .from('kyc_verifications')
+    .select('status')
+    .eq('user_id', user.id)
+    .eq('status', 'approved')
+    .limit(1);
+  const kycOk = (kyc?.length ?? 0) > 0;
+  const patch: any = kycOk
+    ? { status: 'active', published_at: new Date().toISOString() }
+    : { status: 'pending' };
   const { data, error } = await supabase
     .from('giveting_campaigns')
-    .update({ status: 'active', published_at: new Date().toISOString() })
+    .update(patch)
     .eq('id', id)
     .eq('owner_user_id', user.id)
     .select('*')
     .single();
   if (error) return jsonRes(500, { error: error.message });
-  return jsonRes(200, { campaign: data });
+  return jsonRes(200, { campaign: data, kyc_required: !kycOk });
 }
 
 async function handleArchive(req: Request, body: any) {
