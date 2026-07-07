@@ -174,15 +174,25 @@ async function handleUpdateCampaign(req: Request, body: any) {
 async function handlePublish(req: Request, body: any) {
   const { user, supabase } = await getAuthUser(req);
   const { id } = body;
+  const { data: kyc } = await supabase
+    .from('kyc_verifications')
+    .select('status')
+    .eq('user_id', user.id)
+    .eq('status', 'approved')
+    .limit(1);
+  const kycOk = (kyc?.length ?? 0) > 0;
+  const patch: any = kycOk
+    ? { status: 'active', published_at: new Date().toISOString() }
+    : { status: 'pending' };
   const { data, error } = await supabase
     .from('giveting_campaigns')
-    .update({ status: 'active', published_at: new Date().toISOString() })
+    .update(patch)
     .eq('id', id)
     .eq('owner_user_id', user.id)
     .select('*')
     .single();
   if (error) return jsonRes(500, { error: error.message });
-  return jsonRes(200, { campaign: data });
+  return jsonRes(200, { campaign: data, kyc_required: !kycOk });
 }
 
 async function handleArchive(req: Request, body: any) {
