@@ -13809,6 +13809,9 @@ export type Database = {
           id: string
           location_city: string | null
           location_country: string | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_notes: string | null
           owner_user_id: string
           published_at: string | null
           slug: string
@@ -13833,6 +13836,9 @@ export type Database = {
           id?: string
           location_city?: string | null
           location_country?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
           owner_user_id: string
           published_at?: string | null
           slug: string
@@ -13857,6 +13863,9 @@ export type Database = {
           id?: string
           location_city?: string | null
           location_country?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_notes?: string | null
           owner_user_id?: string
           published_at?: string | null
           slug?: string
