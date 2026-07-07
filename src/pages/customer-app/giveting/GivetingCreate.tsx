@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Megaphone } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, Check, ImagePlus, Loader2, Megaphone, Upload, Link2,
+  HeartPulse, LifeBuoy, Flower, GraduationCap, Users, PawPrint, Briefcase,
+  Church, Home, Trophy, Plane, HandHeart, Sparkles, Medal, Palette, Calendar, Leaf,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { giveting, GIVETING_CATEGORIES, GIVETING_CURRENCIES, toMinor } from '@/lib/giveting';
+import { giveting, GIVETING_CATEGORIES, GIVETING_CURRENCIES, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { cn } from '@/lib/utils';
+
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number; color?: string }>> = {
+  medical: HeartPulse, emergencies: LifeBuoy, memorial: Flower, education: GraduationCap,
+  community: Users, animals: PawPrint, business: Briefcase, faith: Church, family: Home,
+  sports: Trophy, travel: Plane, volunteer: HandHeart, wishes: Sparkles, competitions: Medal,
+  creative: Palette, events: Calendar, environment: Leaf,
+};
 
 type Step = 'category' | 'beneficiary' | 'goal' | 'story' | 'cover' | 'review' | 'ready';
 
