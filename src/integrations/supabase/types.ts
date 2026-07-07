@@ -13794,6 +13794,349 @@ export type Database = {
           },
         ]
       }
+      giveting_campaigns: {
+        Row: {
+          beneficiary_name: string | null
+          beneficiary_relation: string | null
+          beneficiary_type: string
+          category_slug: string
+          cover_media_url: string | null
+          created_at: string
+          currency: string
+          donor_count: number
+          gallery: Json
+          goal_amount_minor: number
+          id: string
+          location_city: string | null
+          location_country: string | null
+          owner_user_id: string
+          published_at: string | null
+          slug: string
+          status: string
+          story: string
+          title: string
+          total_raised_minor: number
+          updated_at: string
+          verified_badge: boolean
+        }
+        Insert: {
+          beneficiary_name?: string | null
+          beneficiary_relation?: string | null
+          beneficiary_type?: string
+          category_slug: string
+          cover_media_url?: string | null
+          created_at?: string
+          currency?: string
+          donor_count?: number
+          gallery?: Json
+          goal_amount_minor: number
+          id?: string
+          location_city?: string | null
+          location_country?: string | null
+          owner_user_id: string
+          published_at?: string | null
+          slug: string
+          status?: string
+          story?: string
+          title: string
+          total_raised_minor?: number
+          updated_at?: string
+          verified_badge?: boolean
+        }
+        Update: {
+          beneficiary_name?: string | null
+          beneficiary_relation?: string | null
+          beneficiary_type?: string
+          category_slug?: string
+          cover_media_url?: string | null
+          created_at?: string
+          currency?: string
+          donor_count?: number
+          gallery?: Json
+          goal_amount_minor?: number
+          id?: string
+          location_city?: string | null
+          location_country?: string | null
+          owner_user_id?: string
+          published_at?: string | null
+          slug?: string
+          status?: string
+          story?: string
+          title?: string
+          total_raised_minor?: number
+          updated_at?: string
+          verified_badge?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_campaigns_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "giveting_categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      giveting_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string
+          label: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon: string
+          label: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string
+          label?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      giveting_comments: {
+        Row: {
+          author_user_id: string
+          body: string
+          campaign_id: string
+          created_at: string
+          donation_id: string | null
+          id: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          campaign_id: string
+          created_at?: string
+          donation_id?: string | null
+          id?: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          campaign_id?: string
+          created_at?: string
+          donation_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_comments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "giveting_comments_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_donations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveting_donations: {
+        Row: {
+          amount_minor: number
+          campaign_id: string
+          comment: string | null
+          converted_amount_minor: number
+          created_at: string
+          currency: string
+          donor_display_name: string | null
+          donor_user_id: string | null
+          fx_rate_to_campaign: number
+          id: string
+          idempotency_key: string
+          is_anonymous: boolean
+          source: string
+          status: string
+          tip_minor: number
+          transaction_id: string | null
+        }
+        Insert: {
+          amount_minor: number
+          campaign_id: string
+          comment?: string | null
+          converted_amount_minor: number
+          created_at?: string
+          currency: string
+          donor_display_name?: string | null
+          donor_user_id?: string | null
+          fx_rate_to_campaign?: number
+          id?: string
+          idempotency_key: string
+          is_anonymous?: boolean
+          source?: string
+          status?: string
+          tip_minor?: number
+          transaction_id?: string | null
+        }
+        Update: {
+          amount_minor?: number
+          campaign_id?: string
+          comment?: string | null
+          converted_amount_minor?: number
+          created_at?: string
+          currency?: string
+          donor_display_name?: string | null
+          donor_user_id?: string | null
+          fx_rate_to_campaign?: number
+          id?: string
+          idempotency_key?: string
+          is_anonymous?: boolean
+          source?: string
+          status?: string
+          tip_minor?: number
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveting_followers: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_followers_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveting_updates: {
+        Row: {
+          author_user_id: string
+          body: string
+          campaign_id: string
+          created_at: string
+          id: string
+          media_url: string | null
+          title: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          title: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          media_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_updates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      giveting_withdrawals: {
+        Row: {
+          amount_minor: number
+          campaign_id: string
+          created_at: string
+          currency: string
+          destination_ref: string | null
+          destination_type: string
+          failure_reason: string | null
+          fee_minor: number
+          id: string
+          idempotency_key: string
+          net_minor: number
+          processed_at: string | null
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_minor: number
+          campaign_id: string
+          created_at?: string
+          currency: string
+          destination_ref?: string | null
+          destination_type: string
+          failure_reason?: string | null
+          fee_minor?: number
+          id?: string
+          idempotency_key: string
+          net_minor: number
+          processed_at?: string | null
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          campaign_id?: string
+          created_at?: string
+          currency?: string
+          destination_ref?: string | null
+          destination_type?: string
+          failure_reason?: string | null
+          fee_minor?: number
+          id?: string
+          idempotency_key?: string
+          net_minor?: number
+          processed_at?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_withdrawals_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homepage_hero_slides: {
         Row: {
           created_at: string

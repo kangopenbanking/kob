@@ -28,6 +28,7 @@ const allQuickActions = [
 ];
 
 const utilityItems = [
+  { label: 'Giveting', icon: Heart, path: 'giveting', color: 'bg-[hsl(150,55%,88%)]', iconColor: 'text-[hsl(150,55%,30%)]' },
   { label: 'Send Abroad', icon: Globe, path: 'send-money', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
   { label: 'Global Accounts', icon: Globe, path: 'global-accounts', color: 'bg-primary/10', iconColor: 'text-primary' },
   { label: 'Remittances', icon: Download, path: 'remittances', color: 'bg-[hsl(150,50%,90%)]', iconColor: 'text-[hsl(150,45%,35%)]' },
