@@ -94,7 +94,7 @@ export default function KYCVerificationReview() {
       if (status === "info_requested") body.info_request_message = notes;
       const { data, error } = await runWithStepUp(() => supabase.functions.invoke("admin-kyc-review", { body }));
       if (error) {
-        const msg = await extractEdgeFunctionError(error, "Failed to submit KYC review. Please try again.");
+        const msg = await extractEdgeFunctionErrorAsync(error, "Failed to submit KYC review. Please try again.");
         throw new Error(msg);
       }
       if (data?.error) throw new Error(data.error);
