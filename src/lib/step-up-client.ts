@@ -98,7 +98,7 @@ export function useStepUp() {
     if (!pending) return;
     try {
       const retry = await pending.runner();
-      const stillBlocked = detectStepUp(retry);
+      const stillBlocked = await detectStepUp(retry);
       if (stillBlocked.triggered) {
         pending.reject(new Error(stillBlocked.message || "Step-up still required after MFA"));
       } else {
