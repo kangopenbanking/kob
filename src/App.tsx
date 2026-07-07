@@ -445,6 +445,8 @@ const SettlementApproval = lazy(() => import("./pages/admin/SettlementApproval")
 const InvoiceManagement = lazy(() => import("./pages/admin/InvoiceManagement"));
 const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketplaceModeration"));
 const AdminGiveting = lazy(() => import("./pages/admin/AdminGiveting"));
+const AdminGivetingFees = lazy(() => import("./pages/admin/AdminGivetingFees"));
+const GivetingPublicCampaign = lazy(() => import("./pages/public/GivetingPublicCampaign"));
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletOversight"));
@@ -925,6 +927,7 @@ function App() {
             <Route path="/daily-needs" element={<Layout><DailyNeedsMarketing /></Layout>} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/store/:merchantId" element={<PublicStorefront />} />
+            <Route path="/g/:slug" element={<GivetingPublicCampaign />} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
             <Route path="/fund-account" element={<Layout><ProtectedRoute><NonInstitutionRoute><CustomerFundAccount /></NonInstitutionRoute></ProtectedRoute></Layout>} />
@@ -1188,6 +1191,7 @@ function App() {
               {/* Phase 3: Advanced Commerce */}
               <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="giveting" element={<AdminGiveting />} />
+              <Route path="giveting-fees" element={<AdminGivetingFees />} />
               <Route path="rewards-management" element={<RewardsManagement />} />
               <Route path="onboarding-management" element={<OnboardingManagement />} />
               <Route path="bill-management" element={<AdminBillManagement />} />

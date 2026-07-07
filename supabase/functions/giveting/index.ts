@@ -435,10 +435,11 @@ async function handleWithdraw(req: Request, body: any) {
   const available = Number(campaign.total_raised_minor) - alreadyOut;
   if (amount_minor > available) return jsonRes(400, { error: 'exceeds_available', available });
 
-  // Fee: 2.9% + 100 XAF equivalent in campaign currency
-  const feePctMinor = Math.round(amount_minor * 0.029);
-  // Convert 100 XAF fixed fee to campaign currency
-  const { converted: fixedFeeMinor } = convertBetween(10000, 'XAF', campaign.currency); // 100 XAF = 10000 minor
+  // Fee = pct_bps of amount + fixed_minor_xaf (converted to campaign currency).
+  // Config is admin-tunable via system_config.giveting.withdrawal_fee.
+  const { pct_bps, fixed_minor_xaf } = await getWithdrawalFeeConfig();
+  const feePctMinor = Math.round((amount_minor * pct_bps) / 10000);
+  const { converted: fixedFeeMinor } = convertBetween(fixed_minor_xaf, 'XAF', campaign.currency);
   const fee_minor = feePctMinor + fixedFeeMinor;
   const net_minor = amount_minor - fee_minor;
   if (net_minor <= 0) return jsonRes(400, { error: 'amount_below_fee' });
@@ -500,7 +501,52 @@ async function handleCategories() {
   return jsonRes(200, { categories: data ?? [] });
 }
 
+// ─── Fee configuration ───
+
+type FeeConfig = { pct_bps: number; fixed_minor_xaf: number };
+
+const DEFAULT_FEE: FeeConfig = { pct_bps: 290, fixed_minor_xaf: 10000 };
+
+async function getWithdrawalFeeConfig(): Promise<FeeConfig> {
+  try {
+    const supabase = svcClient();
+    const { data } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'giveting.withdrawal_fee')
+      .maybeSingle();
+    const v = (data?.value ?? {}) as Partial<FeeConfig>;
+    const pct = Number.isFinite(v.pct_bps as number) ? Math.max(0, Math.min(5000, Number(v.pct_bps))) : DEFAULT_FEE.pct_bps;
+    const fx = Number.isFinite(v.fixed_minor_xaf as number) ? Math.max(0, Math.min(10_000_000, Number(v.fixed_minor_xaf))) : DEFAULT_FEE.fixed_minor_xaf;
+    return { pct_bps: pct, fixed_minor_xaf: fx };
+  } catch {
+    return DEFAULT_FEE;
+  }
+}
+
+async function handleGetFeeConfig() {
+  const cfg = await getWithdrawalFeeConfig();
+  return jsonRes(200, { config: cfg });
+}
+
+async function handleAdminSetFeeConfig(req: Request, body: any) {
+  await assertAdmin(req);
+  const supabase = svcClient();
+  const pct = Number(body?.pct_bps);
+  const fx = Number(body?.fixed_minor_xaf);
+  if (!Number.isFinite(pct) || pct < 0 || pct > 5000) return jsonRes(400, { error: 'invalid_pct_bps' });
+  if (!Number.isFinite(fx) || fx < 0 || fx > 10_000_000) return jsonRes(400, { error: 'invalid_fixed_minor_xaf' });
+  const value = { pct_bps: Math.round(pct), fixed_minor_xaf: Math.round(fx) };
+  const { error } = await supabase
+    .from('system_config')
+    .upsert({ key: 'giveting.withdrawal_fee', value, category: 'giveting', description: 'Withdrawal fee for Giveting fundraisers.' }, { onConflict: 'key' });
+  if (error) return jsonRes(500, { error: error.message });
+  return jsonRes(200, { config: value });
+}
+
 // ─── Admin management ───
+
+
 
 async function assertAdmin(req: Request) {
   const { user, supabase } = await getAuthUser(req);
@@ -621,6 +667,8 @@ Deno.serve(async (req) => {
       case 'admin-list': return handleAdminList(req, body);
       case 'admin-update': return handleAdminUpdate(req, body);
       case 'admin-set-status': return handleAdminSetStatus(req, body);
+      case 'get-fee-config': return handleGetFeeConfig();
+      case 'admin-set-fee-config': return handleAdminSetFeeConfig(req, body);
       default: return jsonRes(400, { error: `unknown_action: ${action}` });
     }
   } catch (err: any) {
