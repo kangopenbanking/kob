@@ -2,11 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Heart, Plus, ArrowRight } from 'lucide-react';
+import { Heart, Plus, ArrowRight, ShieldAlert } from 'lucide-react';
 import { giveting, formatMoney, progressPct } from '@/lib/giveting';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
+import { cn } from '@/lib/utils';
+
+const STATUS_STYLES: Record<string, string> = {
+  active: 'bg-emerald-100 text-emerald-800',
+  pending: 'bg-amber-100 text-amber-900',
+  draft: 'bg-muted text-muted-foreground',
+  paused: 'bg-slate-200 text-slate-700',
+  blocked: 'bg-rose-100 text-rose-800',
+  completed: 'bg-primary/15 text-primary',
+  archived: 'bg-muted text-muted-foreground',
+};
 
 export const GivetingHome: React.FC = () => {
   const nav = useNavigate();
