@@ -388,7 +388,22 @@ export const GivetingCreate: React.FC = () => {
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary-foreground">
               <Megaphone className="h-7 w-7 text-primary" strokeWidth={1.8} />
             </div>
-            <h1 className="text-3xl font-bold leading-tight">Your fundraiser is ready to share.</h1>
+            <h1 className="text-3xl font-bold leading-tight">
+              {pendingKyc ? 'Almost there!' : 'Your fundraiser is ready to share.'}
+            </h1>
+            {pendingKyc && (
+              <>
+                <p className="mt-4 max-w-xs text-sm text-primary-foreground/85">
+                  Your fundraiser is saved and pending. Complete identity verification (KYC) to make it live and start receiving donations.
+                </p>
+                <Button
+                  onClick={() => nav('/app/kyc')}
+                  className="mt-6 h-12 rounded-full bg-accent px-8 text-sm font-semibold text-accent-foreground hover:bg-accent/90"
+                >
+                  Complete KYC
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>
