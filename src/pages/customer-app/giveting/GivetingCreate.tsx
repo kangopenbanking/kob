@@ -280,20 +280,74 @@ export const GivetingCreate: React.FC = () => {
           <>
             <h1 className="mb-1 text-2xl font-bold">Add a cover image</h1>
             <p className="mb-6 text-sm text-muted-foreground">A good photo helps donors connect. You can add one later too.</p>
+
+            <div className="mb-4 inline-flex rounded-full border border-border bg-muted p-1">
+              <button
+                type="button"
+                onClick={() => setCoverMode('upload')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors',
+                  coverMode === 'upload' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+                )}
+              >
+                <Upload className="h-3.5 w-3.5" /> Upload
+              </button>
+              <button
+                type="button"
+                onClick={() => setCoverMode('url')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition-colors',
+                  coverMode === 'url' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'
+                )}
+              >
+                <Link2 className="h-3.5 w-3.5" /> Paste link
+              </button>
+            </div>
+
             <div className="space-y-3">
-              <Label>Image URL</Label>
-              <Input
-                value={form.cover_media_url}
-                onChange={(e) => set('cover_media_url', e.target.value)}
-                placeholder="https://…"
-                className="h-12"
-              />
-              {form.cover_media_url && (
+              {coverMode === 'upload' ? (
+                <>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => onFilePicked(e.target.files?.[0] ?? null)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="h-12 w-full rounded-full"
+                  >
+                    {uploading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>
+                    ) : form.cover_media_url ? (
+                      <><ImagePlus className="mr-2 h-4 w-4" /> Replace image</>
+                    ) : (
+                      <><Upload className="mr-2 h-4 w-4" /> Choose from device</>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">PNG, JPEG, WebP or GIF. Up to 8 MB.</p>
+                </>
+              ) : (
+                <>
+                  <Label>Image URL</Label>
+                  <Input
+                    value={form.cover_media_url}
+                    onChange={(e) => set('cover_media_url', e.target.value)}
+                    placeholder="https://…"
+                    className="h-12"
+                  />
+                </>
+              )}
+
+              {form.cover_media_url ? (
                 <div className="overflow-hidden rounded-2xl border">
                   <img src={form.cover_media_url} alt="Cover preview" className="h-56 w-full object-cover" />
                 </div>
-              )}
-              {!form.cover_media_url && (
+              ) : (
                 <Card className="flex h-56 items-center justify-center rounded-2xl border-dashed">
                   <div className="text-center text-muted-foreground">
                     <ImagePlus className="mx-auto mb-2 h-8 w-8" strokeWidth={1.5} />
