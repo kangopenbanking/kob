@@ -444,6 +444,7 @@ const AdminMarketplace = lazy(() => import("./pages/admin/AdminMarketplace"));
 const SettlementApproval = lazy(() => import("./pages/admin/SettlementApproval"));
 const InvoiceManagement = lazy(() => import("./pages/admin/InvoiceManagement"));
 const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketplaceModeration"));
+const AdminGiveting = lazy(() => import("./pages/admin/AdminGiveting"));
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletOversight"));
@@ -1186,6 +1187,7 @@ function App() {
               <Route path="invoice-management" element={<InvoiceManagement />} />
               {/* Phase 3: Advanced Commerce */}
               <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
+              <Route path="giveting" element={<AdminGiveting />} />
               <Route path="rewards-management" element={<RewardsManagement />} />
               <Route path="onboarding-management" element={<OnboardingManagement />} />
               <Route path="bill-management" element={<AdminBillManagement />} />
