@@ -27,12 +27,14 @@ export const GivetingCampaign: React.FC = () => {
         const res: any = await giveting('get', { slug });
         setCampaign(res.campaign);
         setOrganiser(res.organiser);
-        const [d, u]: any[] = await Promise.all([
+        const [d, u, cm]: any[] = await Promise.all([
           giveting('list-donations', { campaign_id: res.campaign.id, limit: 10 }),
           giveting('list-updates', { campaign_id: res.campaign.id }),
+          giveting('list-comments', { campaign_id: res.campaign.id }),
         ]);
         setDonations(d.donations ?? []);
         setUpdates(u.updates ?? []);
+        setComments(cm.comments ?? []);
       } catch (e: any) {
         toast.error(e.message ?? 'Could not load fundraiser');
       } finally {
