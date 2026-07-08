@@ -305,9 +305,30 @@ export default function KangAgent() {
         <div className="mx-auto flex min-h-full max-w-2xl flex-col px-3 py-3">
           {empty ? (
             <div className="flex flex-1 flex-col items-center justify-center text-center py-8">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl" />
-                <img src={kangLogo.url} alt="" className="relative h-24 w-24 object-contain drop-shadow-lg" />
+              <div className="relative flex h-40 w-40 items-center justify-center">
+                {/* Pulse wave rings */}
+                <span className="kang-pulse-ring" style={{ animationDelay: "0s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "0.8s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "1.6s" }} />
+                {/* Orbiting particles */}
+                <span className="kang-orbit">
+                  <span className="kang-particle" style={{ background: "hsl(265 70% 60%)" }} />
+                </span>
+                <span className="kang-orbit" style={{ animationDelay: "-2s", animationDuration: "7s" }}>
+                  <span className="kang-particle" style={{ background: "hsl(210 90% 55%)" }} />
+                </span>
+                <span className="kang-orbit" style={{ animationDelay: "-4s", animationDuration: "9s" }}>
+                  <span className="kang-particle" style={{ background: "hsl(95 65% 55%)" }} />
+                </span>
+                {/* Ambient glow */}
+                <div className="absolute inset-6 rounded-full bg-primary/25 blur-2xl animate-pulse" />
+                <motion.img
+                  src={kangLogo.url}
+                  alt=""
+                  className="relative h-24 w-24 object-contain drop-shadow-[0_8px_24px_hsl(var(--primary)/0.35)]"
+                  animate={{ y: [0, -6, 0], rotate: [0, 3, -3, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                />
               </div>
               <h2 className="mt-5 text-lg font-semibold tracking-tight">Hi, I'm Kang Agent</h2>
               <p className="mt-1.5 max-w-xs text-[12px] leading-relaxed text-muted-foreground">
