@@ -134,13 +134,16 @@ async function handleSubscribe(service: any, userId: string, body: any) {
   const PLAN_AMOUNT = await resolveFeePrice(service, 'credit_premium_subscription', DEFAULT_PLAN_AMOUNT);
 
   // ── Wallet debit (server-mediated) ──
+  // Wallet accounts are Kang-issued (account_id starts with "KANG-"), stored
+  // with account_type='Personal'. Match on the KANG- prefix rather than a
+  // non-existent 'wallet' account_type.
   const { data: wallet, error: walletErr } = await service
     .from('accounts')
-    .select('id, institution_id, currency')
+    .select('id, institution_id, currency, account_id')
     .eq('user_id', userId)
-    .eq('account_type', 'wallet')
     .eq('is_active', true)
     .eq('currency', PLAN_CURRENCY)
+    .ilike('account_id', 'KANG-%')
     .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle();
