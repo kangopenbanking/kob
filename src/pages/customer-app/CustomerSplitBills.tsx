@@ -164,7 +164,9 @@ const CustomerSplitBills: React.FC = () => {
   const addRegisteredUser = (u: SearchResult) => {
     setParticipants([
       ...participants,
-      makeParticipant(u.name, u.phone_masked || '', colors[participants.length % colors.length], false, u.id),
+      // Do not store the masked phone as the participant's phone — it prevents later
+      // recipient resolution. user_id is what actually links them.
+      makeParticipant(u.name, '', colors[participants.length % colors.length], false, u.id),
     ]);
     setSearchQuery('');
     setSearchResults([]);
