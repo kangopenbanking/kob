@@ -74,6 +74,9 @@ export const GivetingWithdraw: React.FC = () => {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Available to withdraw</p>
           <p className="mt-1 text-3xl font-bold">{formatMoney(available, campaign.currency)}</p>
           <p className="mt-1 text-xs text-muted-foreground">Total raised: {formatMoney(campaign.total_raised_minor, campaign.currency)}</p>
+          {alreadyOut > 0 && (
+            <p className="mt-0.5 text-xs text-muted-foreground">Already withdrawn (incl. fees): {formatMoney(alreadyOut, campaign.currency)}</p>
+          )}
         </Card>
 
         <div className="mt-6">
@@ -119,15 +122,20 @@ export const GivetingWithdraw: React.FC = () => {
           <section className="mt-8">
             <h2 className="mb-3 text-lg font-bold">Recent transfers</h2>
             <div className="space-y-2">
-              {withdrawals.map((w) => (
-                <div key={w.id} className="flex items-center justify-between rounded-2xl border p-3 text-sm">
-                  <div>
-                    <p className="font-medium">{formatMoney(w.net_minor, w.currency)}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} · {w.status}</p>
+              {withdrawals.map((w) => {
+                const gross = Number(w.net_minor) + Number(w.fee_minor);
+                return (
+                  <div key={w.id} className="flex items-center justify-between rounded-2xl border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{formatMoney(gross, w.currency)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(w.created_at).toLocaleDateString()} · {w.status} · net {formatMoney(w.net_minor, w.currency)} · fee {formatMoney(w.fee_minor, w.currency)}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">{w.destination_type}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground uppercase tracking-wide">{w.destination_type}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
