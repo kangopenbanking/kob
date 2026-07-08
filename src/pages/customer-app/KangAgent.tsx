@@ -1,9 +1,11 @@
 // Kang Agent — ChatGPT-style mobile chat UI
 // Wires the /app/kang-agent route to the three edge functions built in Step 3.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, X, Trash2, Sparkles, Loader2, Crown, MessageSquare,
+  Wallet, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
