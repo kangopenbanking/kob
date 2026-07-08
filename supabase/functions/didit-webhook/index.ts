@@ -6,6 +6,7 @@
 // Docs: https://docs.didit.me/integration/webhooks
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { applyDiditEvent } from "../_shared/didit-processing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,27 +68,6 @@ function timingSafeEqualHex(a: string, b: string): boolean {
   return diff === 0;
 }
 
-function mapDiditStatusToKyc(status: string): "approved" | "rejected" | "pending" | "manual_review" | null {
-  switch (status) {
-    case "Approved":
-      return "approved";
-    case "Declined":
-      return "rejected";
-    case "In Review":
-      return "manual_review";
-    case "Resubmitted":
-    case "In Progress":
-    case "Awaiting User":
-    case "Not Started":
-      return "pending";
-    case "Kyc Expired":
-    case "Expired":
-    case "Abandoned":
-      return null; // don't clobber row; handled explicitly below
-    default:
-      return null;
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -160,118 +140,71 @@ Deno.serve(async (req) => {
   });
 
   if (insErr) {
-    // Duplicate delivery — already stored. Return 2xx so Didit stops retrying.
+    // Duplicate delivery — already stored. Increment duplicate_count so the
+    // monitor can alert on duplicate storms, then return 2xx so Didit stops
+    // retrying.
     if (insErr.code === "23505") {
       log({ event: "duplicate_delivery", event_id: eventId });
+      await supabase.rpc("increment_didit_duplicate", { p_event_id: eventId }).then(
+        () => {},
+        async () => {
+          // RPC may not exist yet — fall back to a direct update.
+          const { data: row } = await supabase
+            .from("didit_webhook_events")
+            .select("duplicate_count")
+            .eq("event_id", eventId)
+            .maybeSingle();
+          await supabase
+            .from("didit_webhook_events")
+            .update({
+              duplicate_count: ((row?.duplicate_count as number) ?? 0) + 1,
+              last_duplicate_at: new Date().toISOString(),
+            })
+            .eq("event_id", eventId);
+        },
+      );
       return new Response("ok", { status: 200, headers: corsHeaders });
     }
     log({ event: "inbox_insert_failed", error: insErr.message });
-    // Return 500 so Didit retries.
     return new Response("inbox_write_failed", { status: 500, headers: corsHeaders });
   }
 
   // 4) Process by status — session lifecycle events only
-  let processingError: string | null = null;
-  try {
-    if (
-      status &&
-      (webhookType === "status.updated" || webhookType === "data.updated")
-    ) {
-      const kycStatus = mapDiditStatusToKyc(status);
-      const decision = (parsed.decision ?? null) as Record<string, unknown> | null;
+  const outcome = await applyDiditEvent(supabase, {
+    eventId,
+    webhookType,
+    status,
+    effectiveSessionId,
+    vendorData,
+    workflowId,
+    parsed,
+  });
 
-      const patch: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
-      };
-      if (kycStatus) {
-        patch.status = kycStatus;
-        if (kycStatus === "approved") patch.verified_at = new Date().toISOString();
-      }
-      if (decision) {
-        patch.metadata = {
-          provider: "didit",
-          workflow_id: workflowId,
-          didit_status: status,
-          decision,
-          last_event_id: eventId,
-          last_event_at: new Date().toISOString(),
-        };
-      }
-      if (status === "Kyc Expired") {
-        patch.status = "expired";
-      }
-
-      // Locate the row: prefer didit_session_id, fallback to vendor_data → user_id
-      let matched = false;
-      if (effectiveSessionId) {
-        const { data: bySession, error: selErr } = await supabase
-          .from("kyc_verifications")
-          .select("id")
-          .eq("didit_session_id", effectiveSessionId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (selErr) throw new Error(`select_by_session: ${selErr.message}`);
-        if (bySession?.id) {
-          const { error: updErr } = await supabase
-            .from("kyc_verifications")
-            .update(patch)
-            .eq("id", bySession.id);
-          if (updErr) throw new Error(`update_by_session: ${updErr.message}`);
-          matched = true;
-        }
-      }
-
-      if (!matched && vendorData) {
-        // vendor_data is our internal user_id.
-        const { data: byUser, error: selErr } = await supabase
-          .from("kyc_verifications")
-          .select("id")
-          .eq("user_id", vendorData)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (selErr) throw new Error(`select_by_vendor: ${selErr.message}`);
-        if (byUser?.id) {
-          patch.didit_session_id = effectiveSessionId ?? null;
-          const { error: updErr } = await supabase
-            .from("kyc_verifications")
-            .update(patch)
-            .eq("id", byUser.id);
-          if (updErr) throw new Error(`update_by_vendor: ${updErr.message}`);
-          matched = true;
-        }
-      }
-
-      log({
-        event: "processed",
-        event_id: eventId,
-        webhook_type: webhookType,
-        didit_status: status,
-        kyc_status: kycStatus,
-        matched,
-      });
-    } else {
-      log({
-        event: "acknowledged_only",
-        event_id: eventId,
-        webhook_type: webhookType,
-      });
-    }
-  } catch (err) {
-    processingError = (err as Error).message;
-    log({ event: "processing_failed", event_id: eventId, error: processingError });
+  if (outcome.ok) {
+    await supabase
+      .from("didit_webhook_events")
+      .update({
+        processed: true,
+        processing_error: null,
+        processed_at: new Date().toISOString(),
+        next_retry_at: null,
+      })
+      .eq("event_id", eventId);
+  } else {
+    // Schedule an immediate retry (30s). The didit-webhook-monitor cron will
+    // pick it up with exponential backoff.
+    await supabase
+      .from("didit_webhook_events")
+      .update({
+        processed: false,
+        processing_error: outcome.error,
+        last_error: outcome.error,
+        next_retry_at: new Date(Date.now() + 30_000).toISOString(),
+      })
+      .eq("event_id", eventId);
   }
-
-  await supabase
-    .from("didit_webhook_events")
-    .update({
-      processed: !processingError,
-      processing_error: processingError,
-      processed_at: new Date().toISOString(),
-    })
-    .eq("event_id", eventId);
 
   // Always return 2xx after signature+dedupe — retries won't help.
   return new Response("ok", { status: 200, headers: corsHeaders });
 });
+
