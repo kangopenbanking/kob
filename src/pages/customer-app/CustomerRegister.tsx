@@ -624,7 +624,7 @@ const CustomerRegister: React.FC = () => {
             ) : step === TOTAL_STEPS - 1 ? (
               'Complete Setup'
             ) : step === 1 ? (
-              'Verify Identity'
+              'Start Didit verification'
             ) : step === 6 ? (
               'Enable Fingerprint'
             ) : step === 7 ? (
