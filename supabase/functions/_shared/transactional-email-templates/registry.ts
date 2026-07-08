@@ -42,6 +42,7 @@ import { template as ptpRescheduled } from './ptp-rescheduled.tsx'
 import { template as ptpBroken } from './ptp-broken.tsx'
 import { template as ptpKept } from './ptp-kept.tsx'
 import { template as givetingCampaignLive } from './giveting-campaign-live.tsx'
+import { template as crediqBasicCheckUnlocked } from './crediq-basic-check-unlocked.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
