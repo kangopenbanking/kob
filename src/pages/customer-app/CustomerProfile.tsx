@@ -378,7 +378,7 @@ const CustomerProfile: React.FC = () => {
       <SectionCard id="kyc" icon={ShieldCheck} title="Identity verification (Didit)" done={kycDone} highlight={highlight === "kyc"}>
         {kycDone ? (
           <p className="text-xs text-muted-foreground">
-            Verified via {kycRow?.provider || "Didit"} — no further action required.
+            Verified via Didit — no further action required.
           </p>
         ) : (
           <div className="space-y-2">
