@@ -15,7 +15,7 @@
 // send-transactional-email (template: admin-email-queue-alert, reused).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { applyDiditEvent } from "../didit-webhook/index.ts";
+import { applyDiditEvent } from "../_shared/didit-processing.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
