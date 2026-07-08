@@ -8,7 +8,7 @@ interface Props {
   campaignUrl?: string
 }
 
-const APP_URL = 'https://kob.lovable.app'
+const APP_URL = 'https://kangopenbanking.com'
 
 const Email = ({ name, title, campaignUrl }: Props) => {
   const url = campaignUrl?.startsWith('http') ? campaignUrl : `${APP_URL}${campaignUrl ?? '/app/giveting'}`
