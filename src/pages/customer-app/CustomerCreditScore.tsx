@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw, Vault, Coins, Info } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw, Vault, Coins, Info, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerCreditScore } from '@/hooks/useCustomerData';
