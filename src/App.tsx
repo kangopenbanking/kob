@@ -1716,6 +1716,7 @@ function App() {
               <Route path="cards/settings" element={<CustomerCardSettings />} />
               <Route path="more" element={<CustomerMore />} />
               <Route path="kang-agent" element={<KangAgent />} />
+              <Route path="kang-agent/billing" element={<KangAgentBilling />} />
               <Route path="promise-to-pay" element={<CustomerPromiseToPay />} />
               <Route path="transfer" element={<CustomerTransfer />} />
               <Route path="request" element={<CustomerRequest />} />
