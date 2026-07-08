@@ -163,6 +163,27 @@ export const GivetingCampaign: React.FC = () => {
           </div>
         </div>
 
+        {isClosed && (
+          <Card className="mt-6 flex items-start gap-3 rounded-2xl border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-700 dark:text-amber-400" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                This {campaign.status === 'archived' ? 'cause has been archived' : 'cause is closed'} and is no longer accepting donations.
+              </p>
+              {closeReason && (
+                <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                  <span className="font-medium">Reason:</span> {closeReason}
+                </p>
+              )}
+              {closedAt && (
+                <p className="mt-1 text-[11px] text-amber-800/80 dark:text-amber-200/70">
+                  Closed on {new Date(closedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
+          </Card>
+        )}
+
         <section className="mt-6">
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{campaign.story}</p>
         </section>
