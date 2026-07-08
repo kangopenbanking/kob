@@ -35,7 +35,39 @@ const statusBadge = (s?: string | null) => {
 export default function CustomerKYCWizard() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [launching, setLaunching] = useState(false);
   const [kyc, setKyc] = useState<KycStatus | null>(null);
+
+  const startDidit = async () => {
+    setLaunching(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error("Please sign in first."); return; }
+      const fallbackExpiry = new Date();
+      fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+      const resp = await submitIdentityKyc({
+        verification_type: "identity",
+        document_type: "national_id",
+        document_number: "PENDING",
+        document_country: "CM",
+        document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+        document_front_url: "",
+        selfie_url: "",
+        source_app: "customer_app",
+      });
+      if (resp.provider === "didit") {
+        toast.success("Verification launched — complete the steps in the Didit window.");
+      } else {
+        // Provider fell back to manual — send user to the manual upload flow.
+        toast.message("Redirecting to manual verification…");
+        nav("/kyc-verification");
+      }
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, "Could not start verification"));
+    } finally {
+      setLaunching(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
