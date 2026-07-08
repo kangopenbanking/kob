@@ -308,17 +308,17 @@ export default function KangAgent() {
               <div className="relative flex h-40 w-40 items-center justify-center">
                 {/* Pulse wave rings — travel across the page */}
                 <span className="kang-pulse-ring" style={{ animationDelay: "0s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "1.4s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "2.8s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "4.2s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "2.5s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "5s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "7.5s" }} />
                 {/* Orbiting particles */}
                 <span className="kang-orbit">
                   <span className="kang-particle" style={{ background: "hsl(265 70% 60%)" }} />
                 </span>
-                <span className="kang-orbit" style={{ animationDelay: "-2s", animationDuration: "7s" }}>
+                <span className="kang-orbit" style={{ animationDelay: "-4s", animationDuration: "14s" }}>
                   <span className="kang-particle" style={{ background: "hsl(210 90% 55%)" }} />
                 </span>
-                <span className="kang-orbit" style={{ animationDelay: "-4s", animationDuration: "9s" }}>
+                <span className="kang-orbit" style={{ animationDelay: "-8s", animationDuration: "18s" }}>
                   <span className="kang-particle" style={{ background: "hsl(95 65% 55%)" }} />
                 </span>
                 {/* Ambient glow */}
@@ -328,7 +328,7 @@ export default function KangAgent() {
                   alt=""
                   className="relative h-24 w-24 object-contain drop-shadow-[0_8px_24px_hsl(var(--primary)/0.35)]"
                   animate={{ y: [0, -6, 0], rotate: [0, 3, -3, 0] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
               <h2 className="mt-5 text-lg font-semibold tracking-tight">Hi, I'm Kang Agent</h2>

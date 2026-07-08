@@ -555,13 +555,13 @@ body::-webkit-scrollbar {
     opacity: 0;
     pointer-events: none;
     will-change: transform, opacity;
-    animation: kang-pulse-wave 5.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    animation: kang-pulse-wave 10s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   }
   .kang-orbit {
     position: absolute;
     inset: 0;
     border-radius: 9999px;
-    animation: kang-orbit-spin 6s linear infinite;
+    animation: kang-orbit-spin 12s linear infinite;
     pointer-events: none;
   }
   .kang-particle {
