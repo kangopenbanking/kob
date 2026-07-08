@@ -244,21 +244,78 @@ export const GivetingCampaign: React.FC = () => {
             </Card>
           </section>
         )}
+
+        {isOwner && (
+          <section className="mt-8">
+            <h2 className="mb-3 text-lg font-bold">Activity</h2>
+            <CampaignAuditTrail campaignId={campaign.id} currency={campaign.currency} />
+          </section>
+        )}
       </div>
 
       <footer className="fixed inset-x-0 bottom-16 z-40 mx-auto flex max-w-lg gap-3 border-t bg-background px-5 py-3">
-        <Button
-          onClick={() => nav(`/app/giveting/c/${slug}/donate`)}
-          className="h-12 flex-[2] rounded-full bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
-        >
-          <Heart className="mr-2 h-4 w-4" strokeWidth={2} /> Donate
-        </Button>
-        <Button onClick={share} variant="outline" className="h-12 flex-1 rounded-full border-primary bg-primary font-semibold text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">
-          <Share2 className="mr-2 h-4 w-4" /> Share
-        </Button>
+        {isClosed ? (
+          <>
+            <Button
+              disabled
+              className="h-12 flex-[2] rounded-full bg-muted font-semibold text-muted-foreground"
+              aria-disabled
+            >
+              <Lock className="mr-2 h-4 w-4" strokeWidth={2} />
+              Fundraiser closed
+            </Button>
+            {isOwner && (
+              <Button
+                onClick={() => setReopenOpen(true)}
+                variant="outline"
+                className="h-12 flex-1 rounded-full border-primary font-semibold text-primary hover:bg-primary/5"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" /> Reopen
+              </Button>
+            )}
+            {!isOwner && (
+              <Button onClick={share} variant="outline" className="h-12 flex-1 rounded-full border-primary bg-primary font-semibold text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">
+                <Share2 className="mr-2 h-4 w-4" /> Share
+              </Button>
+            )}
+          </>
+        ) : (
+          <>
+            <Button
+              onClick={() => nav(`/app/giveting/c/${slug}/donate`)}
+              disabled={!isActive}
+              className="h-12 flex-[2] rounded-full bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
+            >
+              <Heart className="mr-2 h-4 w-4" strokeWidth={2} />
+              {isActive ? 'Donate' : 'Not accepting donations'}
+            </Button>
+            <Button onClick={share} variant="outline" className="h-12 flex-1 rounded-full border-primary bg-primary font-semibold text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground">
+              <Share2 className="mr-2 h-4 w-4" /> Share
+            </Button>
+          </>
+        )}
       </footer>
+
+      <AlertDialog open={reopenOpen} onOpenChange={setReopenOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reopen this fundraiser?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It will become active again and appear on the home screen. Donors will be able to
+              contribute immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reopening}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={reopening} onClick={reopen}>
+              {reopening ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reopening…</> : 'Reopen fundraiser'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
+
 
 export default GivetingCampaign;
