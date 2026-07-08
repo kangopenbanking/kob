@@ -25,7 +25,9 @@ const allQuickActions = [
   { key: 'driver_hub', label: 'Driver Hub', icon: Users, color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
   { key: 'cards', label: 'Cards', icon: CreditCard, color: 'bg-[hsl(220,60%,92%)]', iconColor: 'text-[hsl(220,60%,40%)]', featureKey: 'cards' },
   { key: 'promise_to_pay', label: 'Promise to Pay', icon: HandCoins, color: 'bg-[hsl(265,55%,92%)]', iconColor: 'text-[hsl(265,55%,40%)]', featureKey: 'loans' },
+  { key: 'kang_agent', label: 'Kang Agent', icon: Sparkles, color: 'bg-[hsl(280,60%,92%)]', iconColor: 'text-[hsl(280,55%,40%)]' },
 ];
+
 
 const utilityItems = [
   { label: 'Giveting', icon: Heart, path: 'giveting', color: 'bg-[hsl(150,55%,88%)]', iconColor: 'text-[hsl(150,55%,30%)]' },
