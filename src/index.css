@@ -500,3 +500,47 @@ body::-webkit-scrollbar {
   height: 0;
   display: none;
 }
+
+/* ─── iOS scrollable-overlay hardening ─────────────────────────────────
+   iOS Safari has quirks when scrollbars are hidden inside overlays
+   (Radix Dialog / Sheet / DropdownMenu / Popover, shadcn ScrollArea):
+   – momentum scrolling stalls without `-webkit-overflow-scrolling`
+   – scroll gestures leak to the underlying page without `overscroll-behavior`
+   – text selection / long-press callout break if `touch-action` is `none`
+   – drag inside a scroll container needs `pan-y` (not `manipulation`)
+   These rules restore correct behavior while keeping scrollbars invisible. */
+@supports (-webkit-touch-callout: none) {
+  [role="dialog"],
+  [role="alertdialog"],
+  [data-radix-dialog-content],
+  [data-radix-popper-content-wrapper],
+  [data-radix-scroll-area-viewport],
+  [data-radix-dropdown-menu-content],
+  [data-radix-popover-content],
+  [data-vaul-drawer],
+  [data-state][data-side] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-user-select: auto;
+    user-select: auto;
+    -webkit-touch-callout: default;
+  }
+
+  /* Horizontal scrollers (carousels, tab strips) need pan-x instead. */
+  [data-orientation="horizontal"][data-radix-scroll-area-viewport],
+  .scrollbar-none[data-orientation="horizontal"],
+  .no-scrollbar[data-orientation="horizontal"] {
+    touch-action: pan-x;
+  }
+
+  /* Preserve selection & drag inside any explicitly hidden-scrollbar area. */
+  .scrollbar-none,
+  .no-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    -webkit-user-select: auto;
+    user-select: auto;
+    -webkit-touch-callout: default;
+  }
+}
