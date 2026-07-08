@@ -20,7 +20,6 @@ const PROJECT_REF = Deno.env.get("SUPABASE_URL") ?? "";
 const STATIC_ORIGINS = [
   "https://kangopenbanking.com",
   "https://www.kangopenbanking.com",
-  "https://kob.lovable.app",
 ];
 
 type ManifestEntry = {
