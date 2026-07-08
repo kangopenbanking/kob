@@ -21,6 +21,8 @@ export const GivetingWithdraw: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [pinOpen, setPinOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [closePromptOpen, setClosePromptOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const load = async () => {
     const res: any = await giveting('get', { slug });
