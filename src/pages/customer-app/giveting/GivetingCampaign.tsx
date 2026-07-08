@@ -103,13 +103,18 @@ export const GivetingCampaign: React.FC = () => {
   };
 
   const reopen = async () => {
+    const reason = reopenReason.trim();
+    if (reason.length < 3) return toast.error('Please provide a reason (at least 3 characters).');
     setReopening(true);
     try {
-      const res: any = await giveting('set-status', { id: campaign.id, status: 'active' });
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'active', reason });
       if (res?.error) throw new Error(res.message || res.error);
       setCampaign(res.campaign ?? { ...campaign, status: 'active' });
+      setCloseReason(null);
+      setClosedAt(null);
       toast.success('Fundraiser reopened. It is active again.');
       setReopenOpen(false);
+      setReopenReason('');
     } catch (e: any) {
       toast.error(e?.message || 'Could not reopen fundraiser');
     } finally {
