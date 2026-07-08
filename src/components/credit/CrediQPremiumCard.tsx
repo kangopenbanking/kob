@@ -1,5 +1,7 @@
 // CrediQ Premium upsell card — used on consumer credit pages
 // to surface paid features (full report, AI tips, alerts).
+// Prices are fetched live from the crediq-subscription status endpoint
+// so admin fee-structure updates flow through automatically.
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +10,49 @@ import { ShieldCheck, FileText, Bell, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+interface Pricing {
+  plan_amount: number;
+  report_amount: number;
+  currency: string;
+}
+
 interface Status {
   active: boolean;
   current_period_end: string | null;
   amount: number;
   currency: string;
   auto_renew: boolean;
+  period_days?: number;
+  pricing?: Pricing;
+}
+
+// Extract a human-readable error message from a supabase.functions.invoke
+// failure. The client swallows the response body by default, so we re-read
+// it from the FunctionsHttpError context when available.
+async function extractInvokeError(err: any, fallback: string): Promise<string> {
+  try {
+    const ctx = err?.context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.json();
+      if (body?.error) return String(body.error);
+      if (body?.message) return String(body.message);
+    }
+    if (ctx && typeof ctx.text === "function") {
+      const txt = await ctx.text();
+      if (txt) return txt;
+    }
+  } catch {
+    /* ignore */
+  }
+  return err?.message || fallback;
+}
+
+function formatMoney(amount: number, currency: string) {
+  try {
+    return `${Math.round(amount).toLocaleString()} ${currency}`;
+  } catch {
+    return `${amount} ${currency}`;
+  }
 }
 
 export function CrediQPremiumCard() {
@@ -32,7 +71,8 @@ export function CrediQPremiumCard() {
       if (error) throw error;
       setStatus(data as Status);
     } catch (e: any) {
-      console.error(e);
+      const msg = await extractInvokeError(e, "Could not load Premium status.");
+      console.error("crediq-subscription status failed:", msg);
     } finally {
       setLoading(false);
     }
@@ -50,9 +90,8 @@ export function CrediQPremiumCard() {
       });
       await load();
     } catch (e: any) {
-      toast.error("Could not activate Premium", {
-        description: e?.message || "Please try again or contact support.",
-      });
+      const msg = await extractInvokeError(e, "Please try again or contact support.");
+      toast.error("Could not activate Premium", { description: msg });
     } finally {
       setWorking(false);
     }
@@ -70,7 +109,8 @@ export function CrediQPremiumCard() {
       });
       await load();
     } catch (e: any) {
-      toast.error("Could not cancel", { description: e?.message });
+      const msg = await extractInvokeError(e, "Please try again.");
+      toast.error("Could not cancel", { description: msg });
     } finally {
       setWorking(false);
     }
@@ -85,6 +125,10 @@ export function CrediQPremiumCard() {
   }
 
   const active = status?.active;
+  const currency = status?.currency || status?.pricing?.currency || "XAF";
+  const planAmount = status?.pricing?.plan_amount ?? status?.amount ?? 1500;
+  const reportAmount = status?.pricing?.report_amount ?? 2500;
+  const periodDays = status?.period_days ?? 30;
 
   return (
     <Card className="p-6 border-border">
@@ -103,7 +147,9 @@ export function CrediQPremiumCard() {
         {active ? (
           <Badge variant="outline" className="border-border">Active</Badge>
         ) : (
-          <Badge variant="outline" className="border-border">1,500 XAF / month</Badge>
+          <Badge variant="outline" className="border-border">
+            {formatMoney(planAmount, currency)} / {periodDays === 30 ? "month" : `${periodDays} days`}
+          </Badge>
         )}
       </div>
 
@@ -132,11 +178,11 @@ export function CrediQPremiumCard() {
         </div>
       ) : (
         <Button className="w-full" onClick={subscribe} disabled={working}>
-          {working ? <Loader2 className="w-4 h-4 animate-spin" /> : "Activate Premium"}
+          {working ? <Loader2 className="w-4 h-4 animate-spin" /> : `Activate Premium — ${formatMoney(planAmount, currency)}`}
         </Button>
       )}
       <p className="text-[11px] text-muted-foreground mt-3">
-        One-time report purchases (2,500 XAF / 30-day access) remain available.
+        One-time report purchases ({formatMoney(reportAmount, currency)} / 30-day access) remain available.
       </p>
     </Card>
   );
