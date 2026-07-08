@@ -102,7 +102,48 @@ const CustomerRegister: React.FC = () => {
     }
   };
 
+  const [diditLaunched, setDiditLaunched] = useState(false);
+
+  const launchDiditVerification = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Please sign in to continue');
+      const { submitIdentityKyc } = await import('@/lib/kycGateway');
+      const fallbackExpiry = new Date();
+      fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+      const resp = await submitIdentityKyc({
+        verification_type: 'identity',
+        document_type: 'national_id',
+        document_number: 'PENDING',
+        document_country: 'CM',
+        document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+        document_front_url: '',
+        selfie_url: '',
+        source_app: 'customer_app',
+      });
+      setDiditLaunched(true);
+      if (resp.provider === 'didit') {
+        toast.success('Identity verification launched via Didit');
+      } else {
+        toast.info('Continuing with manual verification');
+      }
+      // Skip local capture (steps 2 & 3) when Didit / gateway accepted the session
+      setStep(resp.provider === 'didit' ? 4 : 2);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not start Didit verification'));
+      // Fall back to manual capture flow
+      setStep(2);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNext = async () => {
+    if (step === 1) {
+      await launchDiditVerification();
+      return;
+    }
     if (step === 5 && pinStage === 'create') {
       setPinStage('confirm');
       return;
@@ -167,25 +208,28 @@ const CustomerRegister: React.FC = () => {
       }
 
       // Route KYC through the unified gateway (Didit-first). Never insert
-      // into kyc_verifications directly from the client.
-      try {
-        const { submitIdentityKyc } = await import('@/lib/kycGateway');
-        const fallbackExpiry = new Date();
-        fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
-        await submitIdentityKyc({
-          verification_type: 'identity',
-          document_type: 'national_id',
-          document_number: 'PENDING',
-          document_country: 'CM',
-          document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
-          document_front_url: documentFrontPath ?? '',
-          selfie_url: selfiePath ?? '',
-          source_app: 'customer_app',
-        });
-      } catch (kycErr) {
-        // KYC launch failure must not block registration — user can retry
-        // from /app/kyc. Log for observability.
-        console.warn('[KYC] Didit launch during registration failed:', kycErr);
+      // into kyc_verifications directly from the client. Skip if the user
+      // already launched Didit at step 1.
+      if (!diditLaunched) {
+        try {
+          const { submitIdentityKyc } = await import('@/lib/kycGateway');
+          const fallbackExpiry = new Date();
+          fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+          await submitIdentityKyc({
+            verification_type: 'identity',
+            document_type: 'national_id',
+            document_number: 'PENDING',
+            document_country: 'CM',
+            document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+            document_front_url: documentFrontPath ?? '',
+            selfie_url: selfiePath ?? '',
+            source_app: 'customer_app',
+          });
+        } catch (kycErr) {
+          // KYC launch failure must not block registration — user can retry
+          // from /app/kyc. Log for observability.
+          console.warn('[KYC] Didit launch during registration failed:', kycErr);
+        }
       }
 
       // Set PIN via edge function
@@ -298,8 +342,13 @@ const CustomerRegister: React.FC = () => {
                 </div>
                 <h2 className="text-xl font-bold text-foreground text-center">{tr('Let\'s verify your identity')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  We want to confirm your identity before you can use Kang. This helps keep your account safe and secure.
+                  We use <span className="font-semibold text-foreground">Didit</span> to verify your identity securely. Tap the button below to launch the verification flow — it takes about 2 minutes.
                 </p>
+                <ul className="text-xs text-muted-foreground space-y-1.5 mt-2 max-w-xs">
+                  <li className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-primary mt-0.5" /> Government-issued ID capture</li>
+                  <li className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-primary mt-0.5" /> Live selfie with liveness detection</li>
+                  <li className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-primary mt-0.5" /> Encrypted end-to-end</li>
+                </ul>
               </div>
             )}
 
@@ -575,7 +624,7 @@ const CustomerRegister: React.FC = () => {
             ) : step === TOTAL_STEPS - 1 ? (
               'Complete Setup'
             ) : step === 1 ? (
-              'Verify Identity'
+              'Start Didit verification'
             ) : step === 6 ? (
               'Enable Fingerprint'
             ) : step === 7 ? (
