@@ -51,11 +51,16 @@ function pickMascot(content: string) {
 }
 
 export default function KangAgent() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
   const [sub, setSub] = useState<Subscription | null>(null);
   const [creditScore, setCreditScore] = useState<number | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [monthlyFee, setMonthlyFee] = useState<number>(2000);
+  const [currency, setCurrency] = useState<string>("XAF");
+  const [paying, setPaying] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -67,22 +72,81 @@ export default function KangAgent() {
   const trialUsed = sub?.questions_asked_count ?? 0;
   const trialLimit = sub?.free_questions_limit ?? 5;
   const isTrial = sub?.status === "trial";
+  const isSuspended = sub?.status === "suspended";
+  const isActive = sub?.status === "active";
   const limitReached = isTrial && trialUsed >= trialLimit;
+  const canPay = walletBalance >= monthlyFee;
+  const blocked = limitReached || isSuspended;
+
+  const fmt = (n: number) => `${Math.round(n).toLocaleString()} ${currency}`;
 
   // --- Data fetchers ---
   async function loadProfileAndSub() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const db = supabase as any;
-    const [{ data: profile }, { data: subRow }] = await Promise.all([
-      db.from("profiles").select("credit_score").eq("user_id", user.id).maybeSingle(),
-      db.from("kang_subscriptions").select("status, questions_asked_count, free_questions_limit").eq("user_id", user.id).maybeSingle(),
+    const [{ data: profile }, { data: subRow }, { data: cfg }, { data: accounts }] = await Promise.all([
+      db.from("profiles").select("credit_score").eq("id", user.id).maybeSingle(),
+      db.from("kang_subscriptions")
+        .select("status, questions_asked_count, free_questions_limit, current_period_end, last_payment_status")
+        .eq("user_id", user.id).maybeSingle(),
+      db.from("kang_config").select("value").eq("key", "monthly_fee").maybeSingle(),
+      db.from("accounts").select("id").eq("user_id", user.id).eq("is_active", true).limit(1),
     ]);
     if (profile) setCreditScore((profile as any).credit_score ?? 500);
     setSub((subRow as any) ?? {
       status: "trial", questions_asked_count: 0, free_questions_limit: 5,
     });
+    if (cfg?.value) {
+      setMonthlyFee(Number((cfg.value as any).amount ?? 2000));
+      setCurrency(String((cfg.value as any).currency ?? "XAF"));
+    }
+    const accountId = accounts?.[0]?.id;
+    if (accountId) {
+      const { data: bal } = await db
+        .from("account_balances")
+        .select("amount")
+        .eq("account_id", accountId)
+        .eq("balance_type", "ClosingAvailable")
+        .order("balance_datetime", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setWalletBalance(Number((bal as any)?.amount ?? 0));
+    } else {
+      setWalletBalance(0);
+    }
   }
+
+  async function payFromWallet() {
+    if (paying) return;
+    setPaying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("kang-wallet-payment", { body: {} });
+      if (error) throw error;
+      const body: any = data;
+      if (body?.success) {
+        toast.success(body.message ?? "Subscription activated.");
+        setShowPaywall(false);
+        await loadProfileAndSub();
+      } else if (body?.error === "insufficient_funds") {
+        toast.error(`Insufficient funds. You need ${fmt(body.required)} but have ${fmt(body.current_balance)}.`);
+        await loadProfileAndSub();
+      } else {
+        toast.error(body?.message ?? "Payment could not be processed.");
+        await loadProfileAndSub();
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Network error. Please try again.");
+    } finally {
+      setPaying(false);
+    }
+  }
+
+  function goTopUp() {
+    setShowPaywall(false);
+    navigate("/app/wallet");
+  }
+
 
   async function loadSessions() {
     try {
