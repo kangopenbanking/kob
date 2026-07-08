@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2 } from 'lucide-react';
 import { giveting, formatMoney, progressPct } from '@/lib/giveting';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
+import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
 import { toast } from 'sonner';
 
 export const GivetingManage: React.FC = () => {
@@ -129,6 +130,10 @@ export const GivetingManage: React.FC = () => {
             </div>
           </section>
         )}
+
+        <section className="mt-8">
+          <CampaignAuditTrail campaignId={campaign.id} currency={campaign.currency} />
+        </section>
       </div>
 
       <footer className="fixed inset-x-0 bottom-16 z-40 mx-auto flex max-w-lg gap-3 border-t bg-background px-5 py-3">

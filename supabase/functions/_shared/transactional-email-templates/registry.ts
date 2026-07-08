@@ -41,6 +41,7 @@ import { template as ptpPartial } from './ptp-partial.tsx'
 import { template as ptpRescheduled } from './ptp-rescheduled.tsx'
 import { template as ptpBroken } from './ptp-broken.tsx'
 import { template as ptpKept } from './ptp-kept.tsx'
+import { template as givetingCampaignLive } from './giveting-campaign-live.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
@@ -75,4 +76,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ptp-rescheduled': ptpRescheduled,
   'ptp-broken': ptpBroken,
   'ptp-kept': ptpKept,
+  'giveting-campaign-live': givetingCampaignLive,
 }

@@ -74,15 +74,19 @@ export const GivetingHome: React.FC = () => {
   const publishNow = async (id: string) => {
     setPublishingId(id);
     try {
-      const res: any = await giveting('publish', { id });
+      const res: any = await giveting('publish', { id, idempotency_key: crypto.randomUUID() });
       if (res.kyc_required) {
-        toast.info('Verify your identity first to make this fundraiser live.');
+        toast.info(res.message ?? 'Verify your identity first to make this fundraiser live.');
+      } else if (res.replayed) {
+        toast.success(res.message ?? 'Fundraiser is already live.');
+        await load();
       } else {
-        toast.success('Fundraiser is now live.');
+        toast.success(res.message ?? 'Fundraiser is now live.');
         await load();
       }
     } catch (e: any) {
-      toast.error(e.message ?? 'Could not publish');
+      const msg = (e as any)?.details?.message ?? e?.message;
+      toast.error(msg ?? 'Could not publish this fundraiser. Please try again.');
     } finally {
       setPublishingId(null);
     }
