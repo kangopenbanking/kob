@@ -116,18 +116,20 @@ const OPEN_DURATION_MS = 60_000;
 
 type BreakerState = { state: "closed" | "open" | "half_open"; failure_count: number; window_started_at: string; opened_at: string | null };
 
-async function getBreaker(supabase: ReturnType<typeof createClient>): Promise<BreakerState> {
-  const { data } = await supabase.from("kyc_circuit_breaker_state").select("*").eq("provider", "youverify").maybeSingle();
+type Provider = "youverify" | "didit";
+
+async function getBreaker(supabase: ReturnType<typeof createClient>, provider: Provider = "youverify"): Promise<BreakerState> {
+  const { data } = await supabase.from("kyc_circuit_breaker_state").select("*").eq("provider", provider).maybeSingle();
   return (data as BreakerState) ?? { state: "closed", failure_count: 0, window_started_at: new Date().toISOString(), opened_at: null };
 }
 
-async function breakerAllow(supabase: ReturnType<typeof createClient>): Promise<{ allow: boolean; state: BreakerState["state"] }> {
-  const b = await getBreaker(supabase);
+async function breakerAllow(supabase: ReturnType<typeof createClient>, provider: Provider = "youverify"): Promise<{ allow: boolean; state: BreakerState["state"] }> {
+  const b = await getBreaker(supabase, provider);
   if (b.state === "closed") return { allow: true, state: "closed" };
   if (b.state === "open") {
     const openedMs = b.opened_at ? Date.now() - new Date(b.opened_at).getTime() : 0;
     if (openedMs >= OPEN_DURATION_MS) {
-      await supabase.from("kyc_circuit_breaker_state").update({ state: "half_open", updated_at: new Date().toISOString() }).eq("provider", "youverify");
+      await supabase.from("kyc_circuit_breaker_state").update({ state: "half_open", updated_at: new Date().toISOString() }).eq("provider", provider);
       return { allow: true, state: "half_open" };
     }
     return { allow: false, state: "open" };
@@ -136,12 +138,12 @@ async function breakerAllow(supabase: ReturnType<typeof createClient>): Promise<
   return { allow: true, state: "half_open" };
 }
 
-async function breakerRecord(supabase: ReturnType<typeof createClient>, success: boolean) {
-  const b = await getBreaker(supabase);
+async function breakerRecord(supabase: ReturnType<typeof createClient>, success: boolean, provider: Provider = "youverify") {
+  const b = await getBreaker(supabase, provider);
   if (success) {
     await supabase.from("kyc_circuit_breaker_state").update({
       state: "closed", failure_count: 0, window_started_at: new Date().toISOString(), opened_at: null, updated_at: new Date().toISOString(),
-    }).eq("provider", "youverify");
+    }).eq("provider", provider);
     return;
   }
   const now = Date.now();
@@ -157,7 +159,135 @@ async function breakerRecord(supabase: ReturnType<typeof createClient>, success:
     opened_at: shouldOpen ? new Date().toISOString() : null,
     last_failure_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  }).eq("provider", "youverify");
+  }).eq("provider", provider);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Didit Adapter — primary provider. Creates a hosted verification session and
+// returns the URL for the client SDK. Webhook (didit-webhook) is the source of
+// truth for the final decision.
+// ─────────────────────────────────────────────────────────────────────────────
+const DIDIT_BASE = Deno.env.get("DIDIT_BASE_URL") ?? "https://verification.didit.me";
+const DIDIT_API_KEY = Deno.env.get("DIDIT_API_KEY") ?? "";
+const DIDIT_WORKFLOW_ID = Deno.env.get("DIDIT_WORKFLOW_ID") ?? "";
+const DIDIT_TIMEOUT_MS = 15_000;
+
+class DiditError extends Error {
+  constructor(public retryable: boolean, public code: string, message: string, public status?: number) {
+    super(message);
+  }
+}
+
+async function shouldRouteToDidit(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  country: string,
+): Promise<{ route: boolean; reason: string }> {
+  const flags = await loadFlags(supabase);
+  const global = flags["didit.global"];
+  if (!global?.is_enabled) return { route: false, reason: "didit_global_disabled" };
+
+  const countries = flags["didit.countries"];
+  if (countries?.country_codes?.length && !countries.country_codes.includes(country.toUpperCase())) {
+    return { route: false, reason: "didit_country_not_allowed" };
+  }
+
+  const rollout = flags["didit.rollout"];
+  if (rollout?.user_whitelist?.includes(userId)) return { route: true, reason: "didit_whitelist" };
+  const pct = rollout?.rollout_percentage ?? 0;
+  if (pct <= 0) return { route: false, reason: "didit_rollout_zero" };
+  if (pct >= 100) return { route: true, reason: "didit_rollout_full" };
+  return userBucket(userId) < pct
+    ? { route: true, reason: `didit_rollout_${pct}` }
+    : { route: false, reason: `didit_rollout_skip_${pct}` };
+}
+
+async function createDiditSession(req: KycRequest, callbackUrl?: string): Promise<Record<string, unknown>> {
+  if (!DIDIT_API_KEY) throw new DiditError(false, "missing_api_key", "DIDIT_API_KEY not configured");
+  if (!DIDIT_WORKFLOW_ID) throw new DiditError(false, "missing_workflow_id", "DIDIT_WORKFLOW_ID not configured");
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), DIDIT_TIMEOUT_MS);
+  try {
+    const body: Record<string, unknown> = {
+      workflow_id: DIDIT_WORKFLOW_ID,
+      vendor_data: req.user_id,
+      metadata: {
+        trace_id: req.trace_id,
+        verification_type: req.verification_type,
+        country: req.country,
+      },
+    };
+    if (callbackUrl) body.callback = callbackUrl;
+    const res = await fetch(`${DIDIT_BASE}/v3/session/`, {
+      method: "POST",
+      headers: {
+        "x-api-key": DIDIT_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    const text = await res.text();
+    let json: Record<string, unknown> = {};
+    try { json = text ? JSON.parse(text) : {}; } catch { /* keep raw */ }
+    if (res.status === 429) throw new DiditError(true, "rate_limited", "Didit rate limited", 429);
+    if (res.status === 401 || res.status === 403) throw new DiditError(false, "auth_failed", "Didit auth failed", res.status);
+    if (res.status === 400) throw new DiditError(false, "validation_error", String(json.detail ?? json.message ?? "bad request"), 400);
+    if (res.status >= 500) throw new DiditError(true, "upstream_error", `Didit ${res.status}`, res.status);
+    if (!res.ok) throw new DiditError(true, "unexpected_status", `Didit ${res.status}: ${text}`, res.status);
+    return json;
+  } catch (err) {
+    if (err instanceof DiditError) throw err;
+    if ((err as Error).name === "AbortError") throw new DiditError(true, "timeout", "Didit request timed out");
+    throw new DiditError(true, "network_error", (err as Error).message);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function persistDiditSession(
+  supabase: ReturnType<typeof createClient>,
+  req: KycRequest,
+  sessionId: string,
+): Promise<void> {
+  try {
+    const p = req.payload as Record<string, unknown>;
+    const { data: existing } = await supabase
+      .from("kyc_verifications")
+      .select("id")
+      .eq("user_id", req.user_id)
+      .in("status", ["pending"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from("kyc_verifications").update({
+        didit_session_id: sessionId,
+        verification_method: "didit",
+        status: "pending",
+        updated_at: new Date().toISOString(),
+      }).eq("id", existing.id);
+      logKyc({ event: "persist_didit_session", mode: "update", trace_id: req.trace_id, kyc_id: existing.id, session_id: sessionId });
+      return;
+    }
+
+    const { data: inserted, error: insErr } = await supabase.from("kyc_verifications").insert({
+      user_id: req.user_id,
+      verification_type: req.verification_type === "business" ? "business" : "identity",
+      status: "pending",
+      verification_method: "didit",
+      document_type: (p.document_type as string) ?? null,
+      document_number: (p.document_number as string) ?? null,
+      document_country: ((p.document_country ?? req.country) as string) ?? null,
+      didit_session_id: sessionId,
+      source_app: (p.source_app as string) ?? "customer_app",
+      metadata: { trace_id: req.trace_id, provider: "didit", workflow_id: DIDIT_WORKFLOW_ID },
+    }).select("id").maybeSingle();
+    logKyc({ event: "persist_didit_session", mode: "insert", trace_id: req.trace_id, kyc_id: inserted?.id ?? null, session_id: sessionId, error: insErr?.message });
+  } catch (err) {
+    logKyc({ event: "persist_didit_session_failed", trace_id: req.trace_id, error: (err as Error).message });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
