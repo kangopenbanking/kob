@@ -782,6 +782,7 @@ const CustomerSettingsSecurity = lazy(() => import("./pages/customer-app/Custome
 const CustomerStatements = lazy(() => import("./pages/customer-app/CustomerStatements"));
 const CustomerKYCWizard = lazy(() => import("./pages/customer-app/CustomerKYCWizard"));
 const CustomerKYCResume = lazy(() => import("./pages/customer-app/CustomerKYCResume"));
+const CustomerProfile = lazy(() => import("./pages/customer-app/CustomerProfile"));
 const CustomerReferral = lazy(() => import("./pages/customer-app/CustomerReferral"));
 const MerchantTaxRates = lazy(() => import("./pages/merchant/MerchantTaxRates"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
@@ -1746,6 +1747,7 @@ function App() {
               <Route path="statements" element={<CustomerStatements />} />
               <Route path="kyc" element={<CustomerKYCWizard />} />
               <Route path="kyc/resume" element={<CustomerKYCResume />} />
+              <Route path="profile" element={<CustomerProfile />} />
               <Route path="referral" element={<CustomerReferral />} />
               <Route path="alerts" element={<CustomerAlerts />} />
               <Route path="help" element={<CustomerHelp />} />
