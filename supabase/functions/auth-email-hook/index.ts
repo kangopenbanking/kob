@@ -220,12 +220,44 @@ async function handleWebhook(req: Request): Promise<Response> {
     )
   }
 
-  // Build template props from payload.data (HookData structure)
+  // PERMANENT: strip any lovable.app / lovable.dev / preview host from the
+  // Supabase-generated confirmation URL (and its redirect_to param) and
+  // rewrite it to the canonical brand domain. This guarantees verification
+  // links never leak the internal preview host.
+  const CANONICAL_APP_HOST = 'kangopenbanking.com'
+  const FORBIDDEN_HOST_RE = /(^|\.)lovable\.(app|dev)$/i
+  const rewriteAuthUrl = (raw: string | undefined | null): string => {
+    if (!raw) return raw ?? ''
+    try {
+      const u = new URL(raw)
+      if (FORBIDDEN_HOST_RE.test(u.hostname)) {
+        u.hostname = CANONICAL_APP_HOST
+        u.port = ''
+        u.protocol = 'https:'
+      }
+      const redirect = u.searchParams.get('redirect_to')
+      if (redirect) {
+        try {
+          const r = new URL(redirect)
+          if (FORBIDDEN_HOST_RE.test(r.hostname)) {
+            r.hostname = CANONICAL_APP_HOST
+            r.port = ''
+            r.protocol = 'https:'
+            u.searchParams.set('redirect_to', r.toString())
+          }
+        } catch { /* ignore malformed redirect_to */ }
+      }
+      return u.toString()
+    } catch {
+      return raw
+    }
+  }
+
   const templateProps = {
     siteName: SITE_NAME,
-    siteUrl: `https://${ROOT_DOMAIN}`,
+    siteUrl: `https://${CANONICAL_APP_HOST}`,
     recipient: payload.data.email,
-    confirmationUrl: payload.data.url,
+    confirmationUrl: rewriteAuthUrl(payload.data.url),
     token: payload.data.token,
     email: payload.data.email,
     newEmail: payload.data.new_email,
