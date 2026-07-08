@@ -69,7 +69,7 @@ const CustomerCreditDiagnostics: React.FC = () => {
     queryKey: ["diag-kyc", uid],
     enabled: !!uid,
     queryFn: async (): Promise<Row[]> => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("kyc_verifications")
         .select("id, status, verification_type, provider, created_at, updated_at, decision_reason")
         .eq("user_id", uid!)
@@ -83,7 +83,7 @@ const CustomerCreditDiagnostics: React.FC = () => {
     queryKey: ["diag-didit", uid],
     enabled: !!uid,
     queryFn: async (): Promise<Row[]> => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("didit_webhook_events")
         .select("id, event_type, status, session_id, processed_at, received_at, error_message")
         .eq("user_id", uid!)
@@ -97,7 +97,7 @@ const CustomerCreditDiagnostics: React.FC = () => {
     queryKey: ["diag-otp", uid],
     enabled: !!uid,
     queryFn: async (): Promise<Row[]> => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("otp_request_log")
         .select("id, phone_number, delivery_method, status, otp_type, created_at, error_code")
         .eq("user_id", uid!)
@@ -111,7 +111,7 @@ const CustomerCreditDiagnostics: React.FC = () => {
     queryKey: ["diag-credit-events", uid],
     enabled: !!uid,
     queryFn: async (): Promise<Row[]> => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("credit_events")
         .select("id, event_type, value_numeric, description, event_time")
         .eq("user_id", uid!)
