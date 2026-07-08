@@ -119,15 +119,20 @@ export const GivetingWithdraw: React.FC = () => {
           <section className="mt-8">
             <h2 className="mb-3 text-lg font-bold">Recent transfers</h2>
             <div className="space-y-2">
-              {withdrawals.map((w) => (
-                <div key={w.id} className="flex items-center justify-between rounded-2xl border p-3 text-sm">
-                  <div>
-                    <p className="font-medium">{formatMoney(w.net_minor, w.currency)}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()} · {w.status}</p>
+              {withdrawals.map((w) => {
+                const gross = Number(w.net_minor) + Number(w.fee_minor);
+                return (
+                  <div key={w.id} className="flex items-center justify-between rounded-2xl border p-3 text-sm">
+                    <div>
+                      <p className="font-medium">{formatMoney(gross, w.currency)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(w.created_at).toLocaleDateString()} · {w.status} · net {formatMoney(w.net_minor, w.currency)} · fee {formatMoney(w.fee_minor, w.currency)}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wide">{w.destination_type}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground uppercase tracking-wide">{w.destination_type}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
