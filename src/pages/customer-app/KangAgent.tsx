@@ -292,6 +292,7 @@ export default function KangAgent() {
           ) : (
             <Badge variant="secondary" className="text-[10px] h-6 px-1.5">Trial {trialUsed}/{trialLimit}</Badge>
           )}
+          <KangNotificationBell unreadCount={unreadNotifs} onChanged={loadProfileAndSub} />
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={newChat} aria-label="New chat">
             <Plus className="h-4.5 w-4.5" />
           </Button>
