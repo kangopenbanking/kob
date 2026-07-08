@@ -179,6 +179,21 @@ export default function CustomerKYCWizard() {
           </ul>
         </Card>
 
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={startDidit}
+          disabled={launching || kyc?.status === "approved" || kyc?.status === "verified"}
+        >
+          {launching ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />Launching…</>
+          ) : kyc?.status === "approved" || kyc?.status === "verified" ? (
+            "Verification complete"
+          ) : (
+            "Start verification"
+          )}
+        </Button>
+
         <Button variant="outline" className="w-full" onClick={() => nav("/app/help")}>
           Need help with verification?
         </Button>
