@@ -10195,13 +10195,20 @@ export type Database = {
       }
       didit_webhook_events: {
         Row: {
+          alerted_at: string | null
+          duplicate_count: number
           event_id: string
           id: string
+          last_duplicate_at: string | null
+          last_error: string | null
+          last_retry_at: string | null
+          next_retry_at: string | null
           payload: Json
           processed: boolean
           processed_at: string | null
           processing_error: string | null
           received_at: string
+          retry_count: number
           session_id: string | null
           signature_valid: boolean
           status: string | null
@@ -10210,13 +10217,20 @@ export type Database = {
           workflow_id: string | null
         }
         Insert: {
+          alerted_at?: string | null
+          duplicate_count?: number
           event_id: string
           id?: string
+          last_duplicate_at?: string | null
+          last_error?: string | null
+          last_retry_at?: string | null
+          next_retry_at?: string | null
           payload: Json
           processed?: boolean
           processed_at?: string | null
           processing_error?: string | null
           received_at?: string
+          retry_count?: number
           session_id?: string | null
           signature_valid?: boolean
           status?: string | null
@@ -10225,13 +10239,20 @@ export type Database = {
           workflow_id?: string | null
         }
         Update: {
+          alerted_at?: string | null
+          duplicate_count?: number
           event_id?: string
           id?: string
+          last_duplicate_at?: string | null
+          last_error?: string | null
+          last_retry_at?: string | null
+          next_retry_at?: string | null
           payload?: Json
           processed?: boolean
           processed_at?: string | null
           processing_error?: string | null
           received_at?: string
+          retry_count?: number
           session_id?: string | null
           signature_valid?: boolean
           status?: string | null
