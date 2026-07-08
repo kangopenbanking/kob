@@ -130,7 +130,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const eventId = String(parsed.event_id ?? "");
   const webhookType = String(parsed.webhook_type ?? "unknown");
   const sessionId = parsed.session_id ? String(parsed.session_id) : null;
   const businessSessionId = parsed.business_session_id ? String(parsed.business_session_id) : null;
@@ -138,11 +137,14 @@ Deno.serve(async (req) => {
   const vendorData = parsed.vendor_data ? String(parsed.vendor_data) : null;
   const status = parsed.status ? String(parsed.status) : null;
   const workflowId = parsed.workflow_id ? String(parsed.workflow_id) : null;
+  const payloadTs = parsed.timestamp ?? parsed.created_at ?? ts;
 
-  if (!eventId) {
-    log({ event: "missing_event_id" });
-    return new Response("bad_payload", { status: 400, headers: corsHeaders });
-  }
+  // Didit doesn't send an event_id — synthesize a stable one from
+  // (session_id | vendor_data) + webhook_type + timestamp + status.
+  const eventId = String(
+    parsed.event_id ??
+      `${effectiveSessionId ?? vendorData ?? "unknown"}:${webhookType}:${payloadTs}:${status ?? "n/a"}`,
+  );
 
   // 3) Idempotency — insert first; unique constraint short-circuits duplicates
   const { error: insErr } = await supabase.from("didit_webhook_events").insert({
