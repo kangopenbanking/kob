@@ -54,6 +54,20 @@ export const GivetingCampaign: React.FC = () => {
         setDonations(d.donations ?? []);
         setUpdates(u.updates ?? []);
         setComments(cm.comments ?? []);
+
+        // If the campaign is closed, surface the saved reason from the audit trail.
+        if (['completed', 'archived'].includes(res.campaign.status)) {
+          try {
+            const ev: any = await giveting('list-events', { campaign_id: res.campaign.id, limit: 50 });
+            const closeEvt = (ev.events ?? []).find(
+              (e: any) => e.event_type === 'status_changed' && e.to_status === 'completed',
+            );
+            if (closeEvt) {
+              setCloseReason(closeEvt.metadata?.close_reason || closeEvt.reason || null);
+              setClosedAt(closeEvt.metadata?.closed_at || closeEvt.created_at || null);
+            }
+          } catch { /* non-blocking */ }
+        }
       } catch (e: any) {
         toast.error(e.message ?? 'Could not load fundraiser');
       } finally {
