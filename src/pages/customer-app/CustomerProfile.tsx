@@ -118,12 +118,12 @@ const CustomerProfile: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("kyc_verifications")
-        .select("id, status, provider, created_at")
+        .select("id, status, verification_type, created_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      return data as { id: string; status: string; provider: string | null; created_at: string } | null;
+      return (data as unknown) as { id: string; status: string; verification_type: string | null; created_at: string } | null;
     },
   });
 
