@@ -1129,6 +1129,7 @@ function App() {
               <Route path="slo" element={<AdminSLO />} />
               <Route path="kyc-gateway" element={<AdminKycGateway />} />
               <Route path="kyc-dashboard" element={<AdminKycDashboard />} />
+              <Route path="kang-agent" element={<AdminKangAgent />} />
               <Route path="screenshot-guard" element={<AdminScreenshotGuard />} />
               <Route path="rate-limits" element={<RateLimitConfig />} />
               <Route path="api-docs" element={<ApiDocumentation />} />
