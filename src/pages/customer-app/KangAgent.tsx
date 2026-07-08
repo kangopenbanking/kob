@@ -108,6 +108,12 @@ export default function KangAgent() {
     } else {
       setWalletBalance(0);
     }
+    // Unread notifications count (kang-sync-state also returns this; use direct read for speed)
+    const { count } = await db
+      .from("kang_notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).eq("is_read", false);
+    setUnreadNotifs(count ?? 0);
   }
 
   async function payFromWallet() {
