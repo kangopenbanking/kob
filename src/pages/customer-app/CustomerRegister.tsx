@@ -208,25 +208,28 @@ const CustomerRegister: React.FC = () => {
       }
 
       // Route KYC through the unified gateway (Didit-first). Never insert
-      // into kyc_verifications directly from the client.
-      try {
-        const { submitIdentityKyc } = await import('@/lib/kycGateway');
-        const fallbackExpiry = new Date();
-        fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
-        await submitIdentityKyc({
-          verification_type: 'identity',
-          document_type: 'national_id',
-          document_number: 'PENDING',
-          document_country: 'CM',
-          document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
-          document_front_url: documentFrontPath ?? '',
-          selfie_url: selfiePath ?? '',
-          source_app: 'customer_app',
-        });
-      } catch (kycErr) {
-        // KYC launch failure must not block registration — user can retry
-        // from /app/kyc. Log for observability.
-        console.warn('[KYC] Didit launch during registration failed:', kycErr);
+      // into kyc_verifications directly from the client. Skip if the user
+      // already launched Didit at step 1.
+      if (!diditLaunched) {
+        try {
+          const { submitIdentityKyc } = await import('@/lib/kycGateway');
+          const fallbackExpiry = new Date();
+          fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+          await submitIdentityKyc({
+            verification_type: 'identity',
+            document_type: 'national_id',
+            document_number: 'PENDING',
+            document_country: 'CM',
+            document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+            document_front_url: documentFrontPath ?? '',
+            selfie_url: selfiePath ?? '',
+            source_app: 'customer_app',
+          });
+        } catch (kycErr) {
+          // KYC launch failure must not block registration — user can retry
+          // from /app/kyc. Log for observability.
+          console.warn('[KYC] Didit launch during registration failed:', kycErr);
+        }
       }
 
       // Set PIN via edge function
