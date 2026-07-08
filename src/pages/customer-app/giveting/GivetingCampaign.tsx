@@ -2,11 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, ShieldCheck, Share2, Heart, MessageCircle } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Share2, Heart, MessageCircle, Lock, RotateCcw, Loader2 } from 'lucide-react';
 import { giveting, formatMoney, progressPct } from '@/lib/giveting';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
+import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
 
 export const GivetingCampaign: React.FC = () => {
   const { slug } = useParams();
