@@ -544,3 +544,43 @@ body::-webkit-scrollbar {
     -webkit-touch-callout: default;
   }
 }
+
+/* Kang Agent — futuristic pulse waves + orbiting particles */
+@layer utilities {
+  .kang-pulse-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    border: 1.5px solid hsl(var(--primary) / 0.55);
+    opacity: 0;
+    animation: kang-pulse-wave 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+  .kang-orbit {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    animation: kang-orbit-spin 6s linear infinite;
+    pointer-events: none;
+  }
+  .kang-particle {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 10px currentColor, 0 0 20px hsl(var(--primary) / 0.5);
+  }
+}
+
+@keyframes kang-pulse-wave {
+  0%   { transform: scale(0.55); opacity: 0.9; }
+  70%  { opacity: 0.15; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+@keyframes kang-orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
