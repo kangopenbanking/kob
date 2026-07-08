@@ -54,6 +54,17 @@ export const GivetingDonate: React.FC = () => {
   };
 
   if (!campaign) return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (campaign.status !== 'active') {
+    return (
+      <div className="px-5 pt-10 text-center">
+        <p className="text-sm text-muted-foreground">This fundraiser is no longer accepting donations.</p>
+        <Button variant="outline" className="mt-4 rounded-full" onClick={() => nav(`/app/giveting/c/${slug}`)}>
+          Back to fundraiser
+        </Button>
+      </div>
+    );
+  }
+
 
   const preset = campaign.currency === 'XAF' || campaign.currency === 'XOF' ? [1000, 5000, 10000, 25000] : [5, 10, 25, 50];
 
