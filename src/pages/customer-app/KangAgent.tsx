@@ -375,28 +375,53 @@ export default function KangAgent() {
 
       {/* Input */}
       <div className="border-t border-border/60 bg-card/90 backdrop-blur px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto max-w-2xl flex items-end gap-2">
-          <Input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value.slice(0, 4000))}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            placeholder={limitReached ? "Upgrade to keep chatting" : "Ask about finance, business, or money…"}
-            className="flex-1 rounded-full h-11 px-4"
-            aria-label="Message kang Agent"
-            disabled={sending}
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={sending || !input.trim()}
-            size="icon"
-            className="h-11 w-11 rounded-full shrink-0"
-            aria-label="Send message"
-          >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
-        </div>
+        {blocked ? (
+          <div className="mx-auto max-w-2xl">
+            <button
+              type="button"
+              onClick={() => setShowPaywall(true)}
+              className="w-full flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-left hover:bg-primary/10 transition-colors"
+              aria-label="Renew subscription"
+            >
+              <div className="flex items-center gap-3">
+                <img src={attentionMascot.url} alt="" className="h-10 w-10 object-contain" />
+                <div>
+                  <p className="text-sm font-semibold">
+                    {isSuspended ? "Subscription suspended" : "Free questions used"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {canPay ? `Deduct ${fmt(monthlyFee)} from your wallet to continue` : "Top up your wallet to reactivate"}
+                  </p>
+                </div>
+              </div>
+              <ArrowUpRight className="h-4 w-4 text-primary" />
+            </button>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-2xl flex items-end gap-2">
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value.slice(0, 4000))}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder="Ask about finance, business, or money…"
+              className="flex-1 rounded-full h-11 px-4"
+              aria-label="Message kang Agent"
+              disabled={sending}
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={sending || !input.trim()}
+              size="icon"
+              className="h-11 w-11 rounded-full shrink-0"
+              aria-label="Send message"
+            >
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
+        )}
       </div>
+
 
       {/* Sidebar (conversations) */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
