@@ -26,6 +26,14 @@ export const GivetingCampaign: React.FC = () => {
   const [comments, setComments] = useState<any[]>([]);
   const [commentBody, setCommentBody] = useState('');
   const [postingComment, setPostingComment] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopening, setReopening] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+  }, []);
+
 
   useEffect(() => {
     if (!slug) return;
