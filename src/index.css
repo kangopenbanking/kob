@@ -460,3 +460,43 @@ All colors MUST be HSL.
   0% { transform: translateX(0); }
   100% { transform: translateX(-33.333%); }
 }
+
+/* ─── Global scrollbar hiding ──────────────────────────────────────────
+   Hide native scrollbars across browsers while preserving scroll gestures,
+   keyboard navigation, focus rings, text selection and drag interactions.
+   Applies to the document and any scrollable container. Overlay UI
+   (Radix Dialog / DropdownMenu / Popover) inherits automatically. */
+html,
+body {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/legacy Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                  /* Chrome/Safari/WebKit */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Explicit utility for opt-in use on nested scroll containers. */
+.scrollbar-none,
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
