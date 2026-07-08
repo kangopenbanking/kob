@@ -348,6 +348,7 @@ const PaymentStateMachine = lazy(() => import("./pages/developer/PaymentStateMac
 // Phase 5 (bank-grade) — admin SLO observability dashboard
 const AdminSLO = lazy(() => import("./pages/admin/AdminSLO"));
 const AdminKycGateway = lazy(() => import("./pages/admin/AdminKycGateway"));
+const AdminKycDashboard = lazy(() => import("./pages/admin/AdminKycDashboard"));
 const ProviderOnboardingChecklist = lazy(() => import("./pages/developer/ProviderOnboardingChecklist"));
 const AdminWebhookReplay = lazy(() => import("./pages/admin/AdminWebhookReplay"));
 const AdminPayByBankInspector = lazy(() => import("./pages/admin/AdminPayByBankInspector"));
@@ -780,6 +781,7 @@ const CustomerTwoFactor = lazy(() => import("./pages/customer-app/CustomerTwoFac
 const CustomerSettingsSecurity = lazy(() => import("./pages/customer-app/CustomerSettingsSecurity"));
 const CustomerStatements = lazy(() => import("./pages/customer-app/CustomerStatements"));
 const CustomerKYCWizard = lazy(() => import("./pages/customer-app/CustomerKYCWizard"));
+const CustomerKYCResume = lazy(() => import("./pages/customer-app/CustomerKYCResume"));
 const CustomerReferral = lazy(() => import("./pages/customer-app/CustomerReferral"));
 const MerchantTaxRates = lazy(() => import("./pages/merchant/MerchantTaxRates"));
 const CustomerAlerts = lazy(() => import("./pages/customer-app/CustomerAlerts"));
@@ -1121,6 +1123,7 @@ function App() {
               <Route path="api-performance" element={<ApiPerformance />} />
               <Route path="slo" element={<AdminSLO />} />
               <Route path="kyc-gateway" element={<AdminKycGateway />} />
+              <Route path="kyc-dashboard" element={<AdminKycDashboard />} />
               <Route path="screenshot-guard" element={<AdminScreenshotGuard />} />
               <Route path="rate-limits" element={<RateLimitConfig />} />
               <Route path="api-docs" element={<ApiDocumentation />} />
@@ -1742,6 +1745,7 @@ function App() {
               <Route path="settings/security" element={<CustomerSettingsSecurity />} />
               <Route path="statements" element={<CustomerStatements />} />
               <Route path="kyc" element={<CustomerKYCWizard />} />
+              <Route path="kyc/resume" element={<CustomerKYCResume />} />
               <Route path="referral" element={<CustomerReferral />} />
               <Route path="alerts" element={<CustomerAlerts />} />
               <Route path="help" element={<CustomerHelp />} />
