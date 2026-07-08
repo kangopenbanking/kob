@@ -69,9 +69,10 @@ export default function KangAgent() {
   async function loadProfileAndSub() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+    const db = supabase as any;
     const [{ data: profile }, { data: subRow }] = await Promise.all([
-      supabase.from("profiles").select("credit_score").eq("user_id", user.id).maybeSingle(),
-      supabase.from("kang_subscriptions").select("status, questions_asked_count, free_questions_limit").eq("user_id", user.id).maybeSingle(),
+      db.from("profiles").select("credit_score").eq("user_id", user.id).maybeSingle(),
+      db.from("kang_subscriptions").select("status, questions_asked_count, free_questions_limit").eq("user_id", user.id).maybeSingle(),
     ]);
     if (profile) setCreditScore((profile as any).credit_score ?? 500);
     setSub((subRow as any) ?? {
