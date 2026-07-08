@@ -84,6 +84,16 @@ export async function evaluateBasicCheck(sb: SB, userId: string): Promise<BasicC
 /**
  * Persist the basic-check flag onto credit_profiles. Safe to call whenever
  * the engine runs; only updates if the value actually changed.
+ *
+ * On the false→true transition we ALSO emit:
+ *   1. An in-app notice via `app_notifications` (idempotency-keyed so the
+ *      customer never receives it twice).
+ *   2. A "basic check complete" app email through the shared
+ *      `send-transactional-email` function (uses the same idempotency key so
+ *      the transactional queue de-duplicates retries).
+ *
+ * All side effects are wrapped in try/catch — a notification failure must
+ * never break the credit-score fetch path.
  */
 export async function persistBasicCheckFlag(
   sb: SB,
@@ -103,11 +113,59 @@ export async function persistBasicCheckFlag(
     updated_at: new Date().toISOString(),
   };
 
+  const wasPassed = !!existing?.basic_check_passed;
+  const transitioning = passed && !wasPassed;
+
   if (!existing) {
     await sb.from("credit_profiles").upsert(payload, { onConflict: "user_id" });
-    return;
-  }
-  if (existing.basic_check_passed !== passed) {
+  } else if (existing.basic_check_passed !== passed) {
     await sb.from("credit_profiles").update(payload).eq("user_id", userId);
+  }
+
+  if (!transitioning) return;
+
+  // ── Fan-out: in-app notice + email. Best-effort only. ───────────────
+  const idempotencyKey = `crediq-basic-check-unlocked-${userId}`;
+  try {
+    await sb.from("app_notifications").upsert(
+      {
+        user_id: userId,
+        type: "credit_score",
+        title: "Your CrediQ score is unlocking",
+        message:
+          "Your identity, phone and profile checks all passed. Your credit score is being calculated now — tap to view it.",
+        icon: "shield-check",
+        is_read: false,
+        metadata: { source: "basic_check_unlocked", route: "/app/credit" },
+        idempotency_key: idempotencyKey,
+      },
+      { onConflict: "idempotency_key" },
+    );
+  } catch (err) {
+    console.warn("[credit-basic-check] app_notifications insert failed", (err as Error).message);
+  }
+
+  try {
+    const { data: profile } = await sb
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const recipient = profile?.email as string | undefined;
+    if (recipient) {
+      await sb.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "crediq-basic-check-unlocked",
+          recipientEmail: recipient,
+          idempotencyKey,
+          templateData: {
+            name: (profile?.full_name as string | undefined)?.split(" ")[0] ?? "",
+          },
+        },
+      });
+    }
+  } catch (err) {
+    console.warn("[credit-basic-check] send-transactional-email failed", (err as Error).message);
   }
 }
