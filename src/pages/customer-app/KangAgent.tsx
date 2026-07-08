@@ -306,10 +306,11 @@ export default function KangAgent() {
           {empty ? (
             <div className="flex flex-1 flex-col items-center justify-center text-center py-8">
               <div className="relative flex h-40 w-40 items-center justify-center">
-                {/* Pulse wave rings */}
+                {/* Pulse wave rings — travel across the page */}
                 <span className="kang-pulse-ring" style={{ animationDelay: "0s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "0.8s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "1.6s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "1.4s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "2.8s" }} />
+                <span className="kang-pulse-ring" style={{ animationDelay: "4.2s" }} />
                 {/* Orbiting particles */}
                 <span className="kang-orbit">
                   <span className="kang-particle" style={{ background: "hsl(265 70% 60%)" }} />
