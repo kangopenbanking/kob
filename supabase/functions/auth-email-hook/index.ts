@@ -37,9 +37,12 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "Kang OB"
-const SENDER_DOMAIN = "notify.kangopenbanking.com"
-const ROOT_DOMAIN = "kangopenbanking.com"
-const FROM_DOMAIN = "support.kangopenbanking.com"
+// Auth emails route through the verified sender domain
+// notify.info.kangfintechsolutions.com until notify.auth.kangopenbanking.com
+// finishes provisioning (Cloudflare DNS sync failure on platform side).
+const SENDER_DOMAIN = "notify.info.kangfintechsolutions.com"
+const ROOT_DOMAIN = "kangfintechsolutions.com"
+const FROM_DOMAIN = "notify.info.kangfintechsolutions.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
