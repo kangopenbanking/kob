@@ -279,7 +279,7 @@ export const GivetingManage: React.FC = () => {
               </div>
               <div className="flex-1">
                 <p className="text-base font-semibold">
-                  {isClosed ? 'Fundraiser is closed' : 'Close this fundraiser'}
+                  {isClosed ? 'This cause is closed' : 'Close this cause or fundraiser'}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {isClosed
@@ -288,7 +288,7 @@ export const GivetingManage: React.FC = () => {
                 </p>
               </div>
               {isClosed ? (
-                <Button variant="outline" size="sm" onClick={reopenCampaign} disabled={statusBusy} className="rounded-full">
+                <Button variant="outline" size="sm" onClick={() => setReopenOpen(true)} disabled={statusBusy} className="rounded-full">
                   {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reopen'}
                 </Button>
               ) : (
