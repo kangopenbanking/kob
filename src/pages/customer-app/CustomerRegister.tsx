@@ -150,41 +150,43 @@ const CustomerRegister: React.FC = () => {
         address: address || null,
       } as any).eq('id', user.id);
 
-      // Upload KYC documents to storage and create kyc_verifications record
+      // Upload any captured documents/selfie to storage so the fallback
+      // self-hosted path (only used if Didit is unavailable) still has them.
       let documentFrontPath: string | null = null;
       let selfiePath: string | null = null;
 
       if (idPhoto) {
         const idPath = `${user.id}/kyc/id-front-${Date.now()}.${idPhoto.name.split('.').pop()}`;
         const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(idPath, idPhoto);
-        if (!uploadErr) {
-          documentFrontPath = idPath;
-        }
+        if (!uploadErr) documentFrontPath = idPath;
       }
-
       if (selfie) {
         const uploadedSelfiePath = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
         const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(uploadedSelfiePath, selfie);
-        if (!uploadErr) {
-          selfiePath = uploadedSelfiePath;
-        }
+        if (!uploadErr) selfiePath = uploadedSelfiePath;
       }
 
-      // Insert KYC verification record (consumer app - no institution_id)
-      const allowedDocTypes = ['national_id', 'passport', 'drivers_license'];
-      const docType = 'national_id';
-      if (!allowedDocTypes.includes(docType)) throw new Error('Invalid document type');
-
-      await supabase.from('kyc_verifications').insert({
-        user_id: user.id,
-        verification_type: 'identity',
-        status: 'pending',
-        document_type: docType,
-        document_front_url: documentFrontPath,
-        selfie_url: selfiePath,
-        source_app: 'customer_app',
-        institution_id: null,
-      } as any);
+      // Route KYC through the unified gateway (Didit-first). Never insert
+      // into kyc_verifications directly from the client.
+      try {
+        const { submitIdentityKyc } = await import('@/lib/kycGateway');
+        const fallbackExpiry = new Date();
+        fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+        await submitIdentityKyc({
+          verification_type: 'identity',
+          document_type: 'national_id',
+          document_number: 'PENDING',
+          document_country: 'CM',
+          document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+          document_front_url: documentFrontPath ?? '',
+          selfie_url: selfiePath ?? '',
+          source_app: 'customer_app',
+        });
+      } catch (kycErr) {
+        // KYC launch failure must not block registration — user can retry
+        // from /app/kyc. Log for observability.
+        console.warn('[KYC] Didit launch during registration failed:', kycErr);
+      }
 
       // Set PIN via edge function
       if (newPin) {
@@ -208,7 +210,7 @@ const CustomerRegister: React.FC = () => {
         }
       }
 
-      toast.success('Registration complete!');
+      toast.success('Registration complete! Finish identity verification when ready.');
       navigate('/app/onboarding', { replace: true });
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Registration failed'));
