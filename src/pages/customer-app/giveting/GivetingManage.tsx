@@ -10,6 +10,7 @@ import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2, ImagePl
 import { giveting, formatMoney, fromMinor, progressPct, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
 import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
+import { useAuthenticatedUser } from '@/hooks/useAuthenticatedUser';
 import { toast } from 'sonner';
 
 export const GivetingManage: React.FC = () => {
