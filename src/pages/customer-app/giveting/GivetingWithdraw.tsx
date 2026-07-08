@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Wallet } from 'lucide-react';
+import { ArrowLeft, Loader2, Wallet, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { giveting, formatMoney, newIdempotencyKey, toMinor } from '@/lib/giveting';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { toast } from 'sonner';
