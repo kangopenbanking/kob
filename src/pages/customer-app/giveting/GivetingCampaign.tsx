@@ -30,6 +30,9 @@ export const GivetingCampaign: React.FC = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+  const [closeReason, setCloseReason] = useState<string | null>(null);
+  const [closedAt, setClosedAt] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
