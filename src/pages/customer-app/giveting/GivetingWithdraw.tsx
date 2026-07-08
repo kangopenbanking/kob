@@ -76,16 +76,21 @@ export const GivetingWithdraw: React.FC = () => {
   };
 
   const closeCampaign = async () => {
+    const reason = closeReason.trim();
+    if (reason.length < 3) {
+      toast.error('Please provide a reason for closing (at least 3 characters).');
+      return;
+    }
     setClosing(true);
     try {
-      const res: any = await giveting('set-status', { id: campaign.id, status: 'completed' });
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'completed', reason });
       if (res?.error) {
-        // Backend guard rails (withdrawals_in_flight, unwithdrawn_balance, forbidden, ...)
         const map: Record<string, string> = {
           withdrawals_in_flight: 'Wait for pending withdrawals to settle before closing.',
           unwithdrawn_balance: 'Withdraw the remaining balance before closing this fundraiser.',
           forbidden: 'Only the fundraiser owner can close it.',
           invalid_transition: 'This fundraiser cannot be closed from its current state.',
+          reason_required: 'Please provide a reason for closing this fundraiser.',
         };
         toast.error(map[res.error] ?? res.message ?? res.error);
         return;
