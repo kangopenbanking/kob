@@ -474,6 +474,14 @@ export default function KangAgent() {
           </SheetHeader>
           <ScrollArea className="h-[calc(100dvh-72px)]">
             <div className="p-2 space-y-1">
+              <button
+                onClick={() => { setSidebarOpen(false); navigate("/app/kang-agent/billing"); }}
+                className="w-full flex items-center gap-2 rounded-xl px-3 py-2.5 text-left hover:bg-muted transition-colors"
+              >
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[13px] font-medium">Billing History</span>
+              </button>
+              <div className="my-1 h-px bg-border/60" />
               {sessions.length === 0 && (
                 <div className="text-center text-sm text-muted-foreground py-10 px-4">
                   <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
