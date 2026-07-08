@@ -132,14 +132,20 @@ export const GivetingManage: React.FC = () => {
     }
   };
 
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+
   const reopenCampaign = async () => {
     if (!campaign) return;
-    if (!confirm('Reopen this fundraiser and start accepting donations again?')) return;
+    const reason = reopenReason.trim();
+    if (reason.length < 3) return toast.error('Please provide a reason (at least 3 characters).');
     setStatusBusy(true);
     try {
-      const res: any = await giveting('set-status', { id: campaign.id, status: 'active', reason: 'Reopened by owner' });
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'active', reason });
       setCampaign((c: any) => ({ ...c, ...(res.campaign ?? { status: 'active' }) }));
       toast.success('Fundraiser reopened');
+      setReopenOpen(false);
+      setReopenReason('');
     } catch (e: any) {
       toast.error(e?.message || 'Could not reopen fundraiser');
     } finally {
