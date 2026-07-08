@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ShieldCheck, FileText, Camera, MapPin, CheckCircle2, AlertCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, ShieldCheck, FileText, Camera, MapPin, CheckCircle2, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { submitIdentityKyc } from "@/lib/kycGateway";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 
 interface KycStatus {
   level: number | null;
