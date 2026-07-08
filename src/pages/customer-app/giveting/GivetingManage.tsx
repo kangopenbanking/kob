@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2 } from 'lucide-react';
-import { giveting, formatMoney, progressPct } from '@/lib/giveting';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2, ImagePlus, Loader2, Upload } from 'lucide-react';
+import { giveting, formatMoney, fromMinor, progressPct, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
 import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
 import { toast } from 'sonner';
@@ -14,6 +18,86 @@ export const GivetingManage: React.FC = () => {
   const [campaign, setCampaign] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    story: '',
+    goal_amount: '',
+    cover_media_url: '',
+    location_city: '',
+    location_country: '',
+    beneficiary_name: '',
+    beneficiary_relation: '',
+  });
+
+  const openEdit = () => {
+    if (!campaign) return;
+    setEditForm({
+      title: campaign.title ?? '',
+      story: campaign.story ?? '',
+      goal_amount: String(fromMinor(campaign.goal_amount_minor ?? 0)),
+      cover_media_url: campaign.cover_media_url ?? '',
+      location_city: campaign.location_city ?? '',
+      location_country: campaign.location_country ?? '',
+      beneficiary_name: campaign.beneficiary_name ?? '',
+      beneficiary_relation: campaign.beneficiary_relation ?? '',
+    });
+    setEditOpen(true);
+  };
+
+  const onFilePicked = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadGivetingCover(file);
+      setEditForm((f) => ({ ...f, cover_media_url: url }));
+      toast.success('Cover image uploaded');
+    } catch (e: any) {
+      const m = e?.message || '';
+      if (m === 'image_too_large') toast.error('Image is larger than 8 MB.');
+      else if (m === 'unsupported_image_type') toast.error('Only PNG, JPEG, WebP or GIF supported.');
+      else toast.error(m || 'Could not upload image');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!campaign) return;
+    const title = editForm.title.trim();
+    const story = editForm.story.trim();
+    if (title.length < 3) return toast.error('Title must be at least 3 characters.');
+    if (story.length < 20) return toast.error('Story must be at least 20 characters.');
+    const goalNum = Number(editForm.goal_amount);
+    if (!goalNum || goalNum <= 0) return toast.error('Enter a valid goal amount.');
+    setSaving(true);
+    try {
+      const res: any = await giveting('update', {
+        id: campaign.id,
+        patch: {
+          title,
+          story,
+          goal_amount_minor: toMinor(goalNum, campaign.currency),
+          cover_media_url: editForm.cover_media_url || null,
+          location_city: editForm.location_city || null,
+          location_country: editForm.location_country || null,
+          beneficiary_name: editForm.beneficiary_name || null,
+          beneficiary_relation: editForm.beneficiary_relation || null,
+        },
+      });
+      setCampaign((c: any) => ({ ...c, ...res.campaign }));
+      toast.success('Fundraiser updated');
+      setEditOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not update fundraiser');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -60,7 +144,7 @@ export const GivetingManage: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={() => nav(`/app/giveting/c/${slug}`)} className="h-9 w-9 rounded-full" title="Preview">
             <Eye className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Edit" disabled>
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Edit" onClick={openEdit}>
             <Pencil className="h-5 w-5" />
           </Button>
         </div>
@@ -144,6 +228,93 @@ export const GivetingManage: React.FC = () => {
           Share
         </Button>
       </footer>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit fundraiser</DialogTitle>
+            <DialogDescription>Update your fundraiser details. Changes are saved instantly.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={editForm.title}
+                onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                maxLength={100}
+                className="mt-1 h-11"
+              />
+            </div>
+            <div>
+              <Label>Story</Label>
+              <Textarea
+                value={editForm.story}
+                onChange={(e) => setEditForm((f) => ({ ...f, story: e.target.value }))}
+                maxLength={4000}
+                className="mt-1 min-h-[140px]"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">{editForm.story.length} / 4000</p>
+            </div>
+            <div>
+              <Label>Goal amount ({campaign?.currency})</Label>
+              <Input
+                type="number"
+                min="1"
+                inputMode="decimal"
+                value={editForm.goal_amount}
+                onChange={(e) => setEditForm((f) => ({ ...f, goal_amount: e.target.value }))}
+                className="mt-1 h-11"
+              />
+            </div>
+            <div>
+              <Label>Cover image</Label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => onFilePicked(e.target.files?.[0] ?? null)}
+              />
+              <div className="mt-1 flex items-center gap-3">
+                {editForm.cover_media_url ? (
+                  <img src={editForm.cover_media_url} alt="" className="h-16 w-24 rounded-lg object-cover" />
+                ) : (
+                  <div className="flex h-16 w-24 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+                    <ImagePlus className="h-5 w-5" />
+                  </div>
+                )}
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="rounded-full">
+                  {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>) : (<><Upload className="mr-2 h-4 w-4" /> {editForm.cover_media_url ? 'Replace' : 'Upload'}</>)}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>City</Label>
+                <Input value={editForm.location_city} onChange={(e) => setEditForm((f) => ({ ...f, location_city: e.target.value }))} className="mt-1 h-11" />
+              </div>
+              <div>
+                <Label>Country</Label>
+                <Input value={editForm.location_country} onChange={(e) => setEditForm((f) => ({ ...f, location_country: e.target.value }))} className="mt-1 h-11" />
+              </div>
+            </div>
+            <div>
+              <Label>Beneficiary name</Label>
+              <Input value={editForm.beneficiary_name} onChange={(e) => setEditForm((f) => ({ ...f, beneficiary_name: e.target.value }))} className="mt-1 h-11" />
+            </div>
+            <div>
+              <Label>Relationship</Label>
+              <Input value={editForm.beneficiary_relation} onChange={(e) => setEditForm((f) => ({ ...f, beneficiary_relation: e.target.value }))} className="mt-1 h-11" placeholder="e.g. Brother, Local charity" />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving} className="rounded-full">Cancel</Button>
+            <Button onClick={saveEdit} disabled={saving || uploading} className="rounded-full">
+              {saving ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>) : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
