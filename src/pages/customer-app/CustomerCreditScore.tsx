@@ -293,6 +293,14 @@ const CustomerCreditScore: React.FC = () => {
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
         <h1 className="text-xl font-bold text-foreground flex-1">{tr('Credit Score')}</h1>
         <button
+          onClick={() => navigate('/app/credit/diagnostics')}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border active:scale-95 transition"
+          aria-label="Credit check diagnostics"
+          data-testid="credit-diagnostics-link"
+        >
+          <Stethoscope className="h-4 w-4 text-foreground" strokeWidth={1.8} />
+        </button>
+        <button
           onClick={() => recomputeMutation.mutate()}
           disabled={recomputeMutation.isPending}
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border active:scale-95 transition disabled:opacity-50"
