@@ -16215,6 +16215,48 @@ export type Database = {
         }
         Relationships: []
       }
+      kang_billing_logs: {
+        Row: {
+          amount: number
+          balance_after: number | null
+          balance_before: number | null
+          created_at: string
+          currency: string
+          id: string
+          payment_reference: string
+          reason: string | null
+          status: string
+          triggered_by: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number | null
+          balance_before?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_reference: string
+          reason?: string | null
+          status: string
+          triggered_by?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number | null
+          balance_before?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_reference?: string
+          reason?: string | null
+          status?: string
+          triggered_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       kang_chat_sessions: {
         Row: {
           created_at: string
@@ -16236,6 +16278,30 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      kang_config: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -31510,6 +31576,10 @@ export type Database = {
       is_travel_service_owner: {
         Args: { _service_id: string; _user_id: string }
         Returns: boolean
+      }
+      kang_debit_wallet: {
+        Args: { p_amount: number; p_reference: string; p_user_id: string }
+        Returns: Json
       }
       log_audit_event: {
         Args: {
