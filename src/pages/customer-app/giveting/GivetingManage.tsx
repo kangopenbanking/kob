@@ -18,6 +18,86 @@ export const GivetingManage: React.FC = () => {
   const [campaign, setCampaign] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    story: '',
+    goal_amount: '',
+    cover_media_url: '',
+    location_city: '',
+    location_country: '',
+    beneficiary_name: '',
+    beneficiary_relation: '',
+  });
+
+  const openEdit = () => {
+    if (!campaign) return;
+    setEditForm({
+      title: campaign.title ?? '',
+      story: campaign.story ?? '',
+      goal_amount: String(fromMinor(campaign.goal_amount_minor ?? 0)),
+      cover_media_url: campaign.cover_media_url ?? '',
+      location_city: campaign.location_city ?? '',
+      location_country: campaign.location_country ?? '',
+      beneficiary_name: campaign.beneficiary_name ?? '',
+      beneficiary_relation: campaign.beneficiary_relation ?? '',
+    });
+    setEditOpen(true);
+  };
+
+  const onFilePicked = async (file: File | null) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadGivetingCover(file);
+      setEditForm((f) => ({ ...f, cover_media_url: url }));
+      toast.success('Cover image uploaded');
+    } catch (e: any) {
+      const m = e?.message || '';
+      if (m === 'image_too_large') toast.error('Image is larger than 8 MB.');
+      else if (m === 'unsupported_image_type') toast.error('Only PNG, JPEG, WebP or GIF supported.');
+      else toast.error(m || 'Could not upload image');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!campaign) return;
+    const title = editForm.title.trim();
+    const story = editForm.story.trim();
+    if (title.length < 3) return toast.error('Title must be at least 3 characters.');
+    if (story.length < 20) return toast.error('Story must be at least 20 characters.');
+    const goalNum = Number(editForm.goal_amount);
+    if (!goalNum || goalNum <= 0) return toast.error('Enter a valid goal amount.');
+    setSaving(true);
+    try {
+      const res: any = await giveting('update', {
+        id: campaign.id,
+        patch: {
+          title,
+          story,
+          goal_amount_minor: toMinor(goalNum, campaign.currency),
+          cover_media_url: editForm.cover_media_url || null,
+          location_city: editForm.location_city || null,
+          location_country: editForm.location_country || null,
+          beneficiary_name: editForm.beneficiary_name || null,
+          beneficiary_relation: editForm.beneficiary_relation || null,
+        },
+      });
+      setCampaign((c: any) => ({ ...c, ...res.campaign }));
+      toast.success('Fundraiser updated');
+      setEditOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not update fundraiser');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
