@@ -415,7 +415,37 @@ export const GivetingManage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={closeOpen} onOpenChange={(o) => { setCloseOpen(o); if (!o) setCloseReason(''); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Close this fundraiser?</DialogTitle>
+            <DialogDescription>
+              Donations will be disabled and the fundraiser will show as closed. You can reopen it later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Label htmlFor="close-reason">Reason for closing</Label>
+            <Textarea
+              id="close-reason"
+              value={closeReason}
+              onChange={(e) => setCloseReason(e.target.value)}
+              placeholder="e.g. Goal reached, funds already withdrawn."
+              maxLength={500}
+              className="mt-1 min-h-[100px]"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">{closeReason.length} / 500 · recorded in the activity trail</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setCloseOpen(false)} disabled={statusBusy} className="rounded-full">Cancel</Button>
+            <Button onClick={closeCampaign} disabled={statusBusy || closeReason.trim().length < 3} className="rounded-full">
+              {statusBusy ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Closing…</>) : 'Close fundraiser'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
