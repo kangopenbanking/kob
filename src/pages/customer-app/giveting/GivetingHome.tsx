@@ -16,8 +16,18 @@ const STATUS_STYLES: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
   paused: 'bg-slate-200 text-slate-700',
   blocked: 'bg-rose-100 text-rose-800',
-  completed: 'bg-primary/15 text-primary',
+  completed: 'bg-slate-200 text-slate-700',
   archived: 'bg-muted text-muted-foreground',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  completed: 'Closed',
+  archived: 'Closed',
+  paused: 'Paused',
+  active: 'Active',
+  pending: 'Pending',
+  draft: 'Draft',
+  blocked: 'Blocked',
 };
 
 export const GivetingHome: React.FC = () => {
@@ -170,10 +180,17 @@ export const GivetingHome: React.FC = () => {
           {campaigns.map((c) => {
             const pct = progressPct(c.total_raised_minor, c.goal_amount_minor);
             const isPending = c.status === 'pending';
+            const isClosed = c.status === 'completed' || c.status === 'archived';
+            const statusLabel = isPending
+              ? (kycApproved ? 'Ready to publish' : 'Pending KYC')
+              : (STATUS_LABELS[c.status] ?? c.status);
             return (
               <Card
                 key={c.id}
-                className="overflow-hidden rounded-3xl border-border/70 transition-shadow hover:shadow-md"
+                className={cn(
+                  'overflow-hidden rounded-3xl border-border/70 transition-shadow hover:shadow-md',
+                  isClosed && 'opacity-70 grayscale-[35%]',
+                )}
               >
                 <div
                   onClick={() => nav(`/app/giveting/c/${c.slug}/manage`)}
@@ -181,7 +198,7 @@ export const GivetingHome: React.FC = () => {
                 >
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-muted">
                     {c.cover_media_url ? (
-                      <img src={c.cover_media_url} alt="" className="h-full w-full object-cover" />
+                      <img src={c.cover_media_url} alt="" className={cn('h-full w-full object-cover', isClosed && 'grayscale')} />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-primary/10 text-xs text-primary">
                         <Heart className="h-6 w-6" strokeWidth={1.6} />
@@ -190,15 +207,18 @@ export const GivetingHome: React.FC = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="line-clamp-1 text-base font-semibold">{c.title}</h3>
+                      <h3 className={cn('line-clamp-1 text-base font-semibold', isClosed && 'text-muted-foreground line-through decoration-1')}>{c.title}</h3>
                       <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide', STATUS_STYLES[c.status] ?? 'bg-muted text-muted-foreground')}>
-                        {isPending ? (kycApproved ? 'Ready to publish' : 'Pending KYC') : c.status}
+                        {statusLabel}
                       </span>
                     </div>
                     <p className="mt-1 text-sm font-semibold text-foreground">
                       {formatMoney(c.total_raised_minor, c.currency)}
                       <span className="text-xs font-normal text-muted-foreground"> of {formatMoney(c.goal_amount_minor, c.currency)}</span>
                     </p>
+                    {isClosed && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">Inactive — no new donations</p>
+                    )}
                   </div>
                   <ProgressRing pct={pct} size={44} stroke={4} />
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />

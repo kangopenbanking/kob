@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Wallet } from 'lucide-react';
+import { ArrowLeft, Loader2, Wallet, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { giveting, formatMoney, newIdempotencyKey, toMinor } from '@/lib/giveting';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { toast } from 'sonner';
@@ -17,6 +21,8 @@ export const GivetingWithdraw: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [pinOpen, setPinOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [closePromptOpen, setClosePromptOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const load = async () => {
     const res: any = await giveting('get', { slug });
@@ -49,7 +55,14 @@ export const GivetingWithdraw: React.FC = () => {
         idempotency_key: newIdempotencyKey(),
       });
       toast.success('Withdrawal sent to your wallet');
-      nav(`/app/giveting/c/${slug}/manage`);
+      await load();
+      setAmount('');
+      // Offer to close the fundraiser once funds are out.
+      if (campaign.status !== 'completed' && campaign.status !== 'archived') {
+        setClosePromptOpen(true);
+      } else {
+        nav(`/app/giveting/c/${slug}/manage`);
+      }
     } catch (e: any) {
       const m = e.message ?? '';
       if (m === 'exceeds_available') toast.error('Amount exceeds available balance');
@@ -57,6 +70,20 @@ export const GivetingWithdraw: React.FC = () => {
       else toast.error(m || 'Withdrawal failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const closeCampaign = async () => {
+    setClosing(true);
+    try {
+      await giveting('set-status', { id: campaign.id, status: 'completed' });
+      toast.success('Fundraiser closed');
+      setClosePromptOpen(false);
+      nav('/app/giveting');
+    } catch (e: any) {
+      toast.error(e.message ?? 'Could not close fundraiser');
+    } finally {
+      setClosing(false);
     }
   };
 
@@ -159,6 +186,31 @@ export const GivetingWithdraw: React.FC = () => {
         title="Confirm withdrawal"
         description="Enter your 6-digit PIN to authorise this withdrawal."
       />
+
+      <AlertDialog open={closePromptOpen} onOpenChange={setClosePromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" strokeWidth={1.7} />
+              Close this fundraiser?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Your withdrawal has been sent. Closing the fundraiser marks it as
+              completed and inactive — no new donations can be received and it
+              will show as closed on your Giveting home. This action can be
+              reversed by an admin if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={closing} onClick={() => nav(`/app/giveting/c/${slug}/manage`)}>
+              Keep active
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={closing} onClick={closeCampaign}>
+              {closing ? 'Closing…' : 'Close fundraiser'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
