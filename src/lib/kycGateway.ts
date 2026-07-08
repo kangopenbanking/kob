@@ -1,18 +1,31 @@
 /**
  * KYC/KYB submission client — routes EVERY customer-facing verification
- * through `unified-kyc-gateway` so Youverify is the default provider
- * (with automatic fallback to the self-hosted `kyc-submit` /
- * `business-kyc-submit` functions when the Youverify breaker is open).
+ * through `unified-kyc-gateway` so **Didit** is the primary provider, with
+ * automatic fallback to **Youverify**, and finally to the self-hosted
+ * manual-upload flow (`kyc-submit` / `business-kyc-submit`) if both fail.
  *
  * Do NOT call `kyc-submit` or `business-kyc-submit` from the frontend
- * directly. Always go through these helpers — that is what keeps
- * Youverify as the default verification system end-to-end.
+ * directly. Always go through these helpers.
  */
 import { supabase } from "@/integrations/supabase/client";
 
 const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/unified-kyc-gateway`;
 
-async function authedFetch(path: string, body: unknown) {
+export interface KycGatewayResponse {
+  trace_id: string;
+  provider: "didit" | "youverify" | "self_hosted";
+  fallback_triggered: boolean;
+  result: "approved" | "rejected" | "pending" | "manual_review";
+  risk_score?: number;
+  session_id?: string;
+  reference?: string;
+  /** Didit hosted verification URL — auto-launched by the SDK when present. */
+  verification_url?: string;
+  raw?: Record<string, unknown>;
+  error?: { code: string; message: string };
+}
+
+async function authedFetch(path: string, body: unknown): Promise<KycGatewayResponse> {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   if (!token) throw new Error("Not authenticated");
@@ -26,13 +39,41 @@ async function authedFetch(path: string, body: unknown) {
     body: JSON.stringify(body ?? {}),
   });
   const text = await res.text();
-  let json: any = null;
+  let json: KycGatewayResponse | { error?: string; message?: string; raw?: string } | null = null;
   try { json = text ? JSON.parse(text) : null; } catch { json = { raw: text }; }
-  if (!res.ok || json?.error) {
-    const msg = json?.message || json?.error || `verification failed (${res.status})`;
+  if (!res.ok || (json as { error?: unknown })?.error) {
+    const j = (json ?? {}) as { message?: string; error?: string };
+    const msg = j.message || j.error || `verification failed (${res.status})`;
     throw new Error(typeof msg === "string" ? msg : "Verification request failed");
   }
-  return json;
+  return json as KycGatewayResponse;
+}
+
+/**
+ * Launch the Didit hosted verification modal. Resolves when the modal closes
+ * (user completed, cancelled, or errored). The final decision is delivered
+ * asynchronously via the didit-webhook Edge Function — this promise only
+ * signals that the client-side flow ended.
+ */
+export async function openDiditVerification(url: string): Promise<"completed" | "cancelled" | "failed"> {
+  try {
+    const mod: any = await import("@didit-protocol/sdk-web");
+    const DiditSdk = mod.DiditSdk ?? mod.default?.DiditSdk ?? mod.default;
+    if (!DiditSdk?.shared?.startVerification) {
+      // SDK shape unexpected — fall back to a new tab so the user still finishes.
+      window.open(url, "_blank", "noopener,noreferrer");
+      return "completed";
+    }
+    return await new Promise((resolve) => {
+      DiditSdk.shared.onComplete = (result: { status: "completed" | "cancelled" | "failed" }) => {
+        resolve(result?.status ?? "completed");
+      };
+      DiditSdk.shared.startVerification({ url });
+    });
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return "completed";
+  }
 }
 
 export interface IdentityKycPayload {
@@ -44,7 +85,6 @@ export interface IdentityKycPayload {
   document_front_url: string;
   document_back_url?: string;
   selfie_url: string;
-  // Optional pass-throughs preserved by the gateway / fallback target
   source_app?: string;
   [k: string]: unknown;
 }
@@ -70,12 +110,26 @@ export interface BusinessKybPayload {
   [k: string]: unknown;
 }
 
-/** Submit individual identity KYC through Youverify-first gateway. */
-export async function submitIdentityKyc(payload: IdentityKycPayload) {
-  return authedFetch("/kyc/verify", { ...payload, verification_type: "identity" });
+async function submitAndMaybeLaunchDidit(
+  path: string,
+  payload: Record<string, unknown>,
+): Promise<KycGatewayResponse> {
+  const resp = await authedFetch(path, payload);
+  if (resp.provider === "didit" && resp.verification_url) {
+    // Fire-and-await the SDK modal; the webhook is the source of truth for
+    // the actual decision, so callers can continue polling `/kyc/status/:id`.
+    await openDiditVerification(resp.verification_url);
+  }
+  return resp;
 }
 
-/** Submit business KYB through Youverify-first gateway. */
-export async function submitBusinessKyb(payload: BusinessKybPayload) {
-  return authedFetch("/kyb/verify", { ...payload, verification_type: "business" });
+/** Submit individual identity KYC through Didit-first gateway. */
+export async function submitIdentityKyc(payload: IdentityKycPayload) {
+  return submitAndMaybeLaunchDidit("/kyc/verify", { ...payload, verification_type: "identity" });
 }
+
+/** Submit business KYB through Didit-first gateway. */
+export async function submitBusinessKyb(payload: BusinessKybPayload) {
+  return submitAndMaybeLaunchDidit("/kyb/verify", { ...payload, verification_type: "business" });
+}
+

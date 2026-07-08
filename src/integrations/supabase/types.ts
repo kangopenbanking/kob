@@ -10193,6 +10193,54 @@ export type Database = {
         }
         Relationships: []
       }
+      didit_webhook_events: {
+        Row: {
+          event_id: string
+          id: string
+          payload: Json
+          processed: boolean
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+          session_id: string | null
+          signature_valid: boolean
+          status: string | null
+          vendor_data: string | null
+          webhook_type: string
+          workflow_id: string | null
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          payload: Json
+          processed?: boolean
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          session_id?: string | null
+          signature_valid?: boolean
+          status?: string | null
+          vendor_data?: string | null
+          webhook_type: string
+          workflow_id?: string | null
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          session_id?: string | null
+          signature_valid?: boolean
+          status?: string | null
+          vendor_data?: string | null
+          webhook_type?: string
+          workflow_id?: string | null
+        }
+        Relationships: []
+      }
       direct_debits: {
         Row: {
           account_id: string
@@ -16425,6 +16473,7 @@ export type Database = {
       kyc_verifications: {
         Row: {
           created_at: string | null
+          didit_session_id: string | null
           document_back_url: string | null
           document_country: string | null
           document_expiry_date: string | null
@@ -16450,6 +16499,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          didit_session_id?: string | null
           document_back_url?: string | null
           document_country?: string | null
           document_expiry_date?: string | null
@@ -16475,6 +16525,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          didit_session_id?: string | null
           document_back_url?: string | null
           document_country?: string | null
           document_expiry_date?: string | null
