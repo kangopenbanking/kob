@@ -169,16 +169,27 @@ serve(async (req) => {
     console.log('Flutterwave transfer response:', flutterwaveData);
 
     if (flutterwaveData.status === 'success') {
+      const fwStatus = flutterwaveData.data.status;
+      const succeeded = fwStatus === 'SUCCESSFUL';
+
       // Update transaction with Flutterwave reference
       await supabase
         .from('mobile_money_transactions')
         .update({
           flutterwave_ref: flutterwaveData.data.id.toString(),
-          status: 'processing',
+          status: succeeded ? 'successful' : 'processing',
           metadata: flutterwaveData.data,
-          completed_at: flutterwaveData.data.status === 'SUCCESSFUL' ? new Date().toISOString() : null
+          completed_at: succeeded ? new Date().toISOString() : null
         })
         .eq('id', transactionData.id);
+
+      // Promote ledger row to Booked on immediate success
+      if (succeeded) {
+        await supabase
+          .from('transactions')
+          .update({ status: 'Booked' })
+          .eq('transaction_reference', transaction_ref);
+      }
 
       // Record transaction fee
       try {
@@ -214,17 +225,26 @@ serve(async (req) => {
             transaction_id: transactionData.id,
             transaction_ref,
             flutterwave_ref: flutterwaveData.data.id.toString(),
-            status: flutterwaveData.data.status === 'SUCCESSFUL' ? 'successful' : 'processing',
+            status: succeeded ? 'successful' : 'processing',
             message: 'Transfer initiated successfully'
           }
         }),
-        { 
+        {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
         }
       );
     } else {
-      // Update transaction as failed
+      // Payout rejected — refund the wallet and mark ledger row failed
+      await supabase.rpc('atomic_credit_balance', {
+        _account_id: walletAccount.id,
+        _amount: Number(amount),
+        _currency: currencyU,
+      });
+      await supabase
+        .from('transactions')
+        .update({ status: 'Rejected' })
+        .eq('transaction_reference', transaction_ref);
       await supabase
         .from('mobile_money_transactions')
         .update({
