@@ -35,24 +35,39 @@ export default function CustomerKYCWizard() {
   const [kyc, setKyc] = useState<KycStatus | null>(null);
 
   useEffect(() => {
-    (async () => {
+    const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
-      const { data } = await (supabase.from("profiles") as any)
-        .select("kyc_level, kyc_status, kyc_document_status, kyc_selfie_status, kyc_address_status")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (data) {
-        setKyc({
-          level: data.kyc_level,
-          status: data.kyc_status,
-          document_status: data.kyc_document_status,
-          selfie_status: data.kyc_selfie_status,
-          address_status: data.kyc_address_status,
-        });
-      }
+      // Source of truth: kyc_verifications (latest identity record)
+      const { data: rows } = await (supabase.from("kyc_verifications") as any)
+        .select("status, verification_type, document_front_url, selfie_url, updated_at")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(5);
+      const identity = (rows || []).find((r: any) => (r.verification_type ?? "identity") === "identity") || (rows || [])[0];
+      const st = identity?.status ?? null;
+      const approved = st === "approved" || st === "verified";
+      setKyc({
+        level: approved ? 2 : st ? 1 : 0,
+        status: st,
+        document_status: identity?.document_front_url ? st : null,
+        selfie_status: identity?.selfie_url ? st : null,
+        address_status: null,
+      });
       setLoading(false);
+    };
+    load();
+    // Realtime refresh when admin approves/rejects
+    let channel: any;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      channel = supabase
+        .channel(`kyc-wizard-${user.id}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "kyc_verifications", filter: `user_id=eq.${user.id}` }, () => load())
+        .subscribe();
     })();
+    return () => { if (channel) supabase.removeChannel(channel); };
   }, []);
 
   const stepStatus = (id: string) =>
