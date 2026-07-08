@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw, Vault, Coins, Info } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle, RefreshCw, Vault, Coins, Info, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerCreditScore } from '@/hooks/useCustomerData';
@@ -20,6 +20,26 @@ const CustomerCreditScore: React.FC = () => {
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const { data: scoreData, isLoading } = useCustomerCreditScore(user?.id);
+
+  // Realtime: when the Didit webhook flips the user's KYC row to approved,
+  // invalidate the score query so the checklist unlocks immediately without
+  // waiting for the 15-second poll interval.
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`credit-kyc-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'kyc_verifications',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['customer-credit-score', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['customer-kyc-status', user.id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, queryClient]);
 
   // Recompute mutation
   const recomputeMutation = useMutation({
@@ -272,6 +292,14 @@ const CustomerCreditScore: React.FC = () => {
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
         <h1 className="text-xl font-bold text-foreground flex-1">{tr('Credit Score')}</h1>
+        <button
+          onClick={() => navigate('/app/credit/diagnostics')}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border active:scale-95 transition"
+          aria-label="Credit check diagnostics"
+          data-testid="credit-diagnostics-link"
+        >
+          <Stethoscope className="h-4 w-4 text-foreground" strokeWidth={1.8} />
+        </button>
         <button
           onClick={() => recomputeMutation.mutate()}
           disabled={recomputeMutation.isPending}

@@ -188,6 +188,14 @@ export function useCustomerCreditScore(userId?: string) {
     queryKey: ['customer-credit-score', userId],
     enabled: !!userId,
     refetchOnWindowFocus: true,
+    // Auto-refresh every 15s while the customer is still gated by the basic
+    // check so a Didit webhook approval (or any other async unlock) is
+    // reflected without requiring a manual reload.
+    refetchInterval: (query) => {
+      const d: any = query.state.data;
+      if (d?.source === 'basic_check_required') return 15_000;
+      return false;
+    },
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('credit-score-fetch', {
         body: { user_id: userId, include_report: false },
