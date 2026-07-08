@@ -725,6 +725,7 @@ const GivetingNotifications = lazy(() => import("./pages/customer-app/giveting/G
 const GivetingProfile = lazy(() => import("./pages/customer-app/giveting/GivetingProfile"));
 const CustomerRentReporting = lazy(() => import("./pages/customer-app/CustomerRentReporting"));
 const CustomerCreditScore = lazy(() => import("./pages/customer-app/CustomerCreditScore"));
+const CustomerCreditDiagnostics = lazy(() => import("./pages/customer-app/CustomerCreditDiagnostics"));
 const GlobalReceivingAccount = lazy(() => import("./pages/customer-app/GlobalReceivingAccount"));
 const VirtualAccounts = lazy(() => import("./pages/customer-app/VirtualAccounts"));
 // Daily Needs (Food + Pharmacy)
