@@ -16,8 +16,18 @@ const STATUS_STYLES: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
   paused: 'bg-slate-200 text-slate-700',
   blocked: 'bg-rose-100 text-rose-800',
-  completed: 'bg-primary/15 text-primary',
+  completed: 'bg-slate-200 text-slate-700',
   archived: 'bg-muted text-muted-foreground',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  completed: 'Closed',
+  archived: 'Closed',
+  paused: 'Paused',
+  active: 'Active',
+  pending: 'Pending',
+  draft: 'Draft',
+  blocked: 'Blocked',
 };
 
 export const GivetingHome: React.FC = () => {
