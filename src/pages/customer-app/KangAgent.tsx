@@ -1,9 +1,11 @@
 // Kang Agent — ChatGPT-style mobile chat UI
 // Wires the /app/kang-agent route to the three edge functions built in Step 3.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, X, Trash2, Sparkles, Loader2, Crown, MessageSquare,
+  Wallet, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +35,8 @@ type Subscription = {
   status: "trial" | "active" | "suspended";
   questions_asked_count: number;
   free_questions_limit: number;
+  current_period_end?: string | null;
+  last_payment_status?: string | null;
 };
 
 const STORAGE_KEY = "kang-agent:session-id";
@@ -47,11 +51,16 @@ function pickMascot(content: string) {
 }
 
 export default function KangAgent() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
   const [sub, setSub] = useState<Subscription | null>(null);
   const [creditScore, setCreditScore] = useState<number | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [monthlyFee, setMonthlyFee] = useState<number>(2000);
+  const [currency, setCurrency] = useState<string>("XAF");
+  const [paying, setPaying] = useState(false);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -63,22 +72,81 @@ export default function KangAgent() {
   const trialUsed = sub?.questions_asked_count ?? 0;
   const trialLimit = sub?.free_questions_limit ?? 5;
   const isTrial = sub?.status === "trial";
+  const isSuspended = sub?.status === "suspended";
+  const isActive = sub?.status === "active";
   const limitReached = isTrial && trialUsed >= trialLimit;
+  const canPay = walletBalance >= monthlyFee;
+  const blocked = limitReached || isSuspended;
+
+  const fmt = (n: number) => `${Math.round(n).toLocaleString()} ${currency}`;
 
   // --- Data fetchers ---
   async function loadProfileAndSub() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const db = supabase as any;
-    const [{ data: profile }, { data: subRow }] = await Promise.all([
-      db.from("profiles").select("credit_score").eq("user_id", user.id).maybeSingle(),
-      db.from("kang_subscriptions").select("status, questions_asked_count, free_questions_limit").eq("user_id", user.id).maybeSingle(),
+    const [{ data: profile }, { data: subRow }, { data: cfg }, { data: accounts }] = await Promise.all([
+      db.from("profiles").select("credit_score").eq("id", user.id).maybeSingle(),
+      db.from("kang_subscriptions")
+        .select("status, questions_asked_count, free_questions_limit, current_period_end, last_payment_status")
+        .eq("user_id", user.id).maybeSingle(),
+      db.from("kang_config").select("value").eq("key", "monthly_fee").maybeSingle(),
+      db.from("accounts").select("id").eq("user_id", user.id).eq("is_active", true).limit(1),
     ]);
     if (profile) setCreditScore((profile as any).credit_score ?? 500);
     setSub((subRow as any) ?? {
       status: "trial", questions_asked_count: 0, free_questions_limit: 5,
     });
+    if (cfg?.value) {
+      setMonthlyFee(Number((cfg.value as any).amount ?? 2000));
+      setCurrency(String((cfg.value as any).currency ?? "XAF"));
+    }
+    const accountId = accounts?.[0]?.id;
+    if (accountId) {
+      const { data: bal } = await db
+        .from("account_balances")
+        .select("amount")
+        .eq("account_id", accountId)
+        .eq("balance_type", "ClosingAvailable")
+        .order("balance_datetime", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setWalletBalance(Number((bal as any)?.amount ?? 0));
+    } else {
+      setWalletBalance(0);
+    }
   }
+
+  async function payFromWallet() {
+    if (paying) return;
+    setPaying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("kang-wallet-payment", { body: {} });
+      if (error) throw error;
+      const body: any = data;
+      if (body?.success) {
+        toast.success(body.message ?? "Subscription activated.");
+        setShowPaywall(false);
+        await loadProfileAndSub();
+      } else if (body?.error === "insufficient_funds") {
+        toast.error(`Insufficient funds. You need ${fmt(body.required)} but have ${fmt(body.current_balance)}.`);
+        await loadProfileAndSub();
+      } else {
+        toast.error(body?.message ?? "Payment could not be processed.");
+        await loadProfileAndSub();
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Network error. Please try again.");
+    } finally {
+      setPaying(false);
+    }
+  }
+
+  function goTopUp() {
+    setShowPaywall(false);
+    navigate("/app/wallet");
+  }
+
 
   async function loadSessions() {
     try {
@@ -128,7 +196,7 @@ export default function KangAgent() {
   async function sendMessage() {
     const text = input.trim();
     if (!text || sending) return;
-    if (limitReached) { setShowPaywall(true); return; }
+    if (blocked) { setShowPaywall(true); return; }
 
     setSending(true);
     const optimistic: Message = {
@@ -210,10 +278,14 @@ export default function KangAgent() {
               <Sparkles className="h-3 w-3" /> {creditScore}
             </Badge>
           )}
-          {sub?.status === "active" ? (
-            <Badge className="gap-1 bg-primary text-primary-foreground text-xs"><Crown className="h-3 w-3" /> Active</Badge>
+          {isActive ? (
+            <Badge className="gap-1 bg-primary text-primary-foreground text-xs" title={sub?.current_period_end ? `Renews ${new Date(sub.current_period_end).toLocaleDateString()}` : undefined}>
+              <Crown className="h-3 w-3" /> {sub?.current_period_end ? `Renews ${new Date(sub.current_period_end).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}` : "Active"}
+            </Badge>
+          ) : isSuspended ? (
+            <Badge variant="destructive" className="gap-1 text-xs"><AlertTriangle className="h-3 w-3" /> Suspended</Badge>
           ) : (
-            <Badge variant="secondary" className="text-xs">{trialUsed}/{trialLimit}</Badge>
+            <Badge variant="secondary" className="text-xs">Trial {trialUsed}/{trialLimit}</Badge>
           )}
           <Button variant="ghost" size="icon" onClick={newChat} aria-label="New chat">
             <Plus className="h-5 w-5" />
@@ -303,28 +375,53 @@ export default function KangAgent() {
 
       {/* Input */}
       <div className="border-t border-border/60 bg-card/90 backdrop-blur px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto max-w-2xl flex items-end gap-2">
-          <Input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value.slice(0, 4000))}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-            placeholder={limitReached ? "Upgrade to keep chatting" : "Ask about finance, business, or money…"}
-            className="flex-1 rounded-full h-11 px-4"
-            aria-label="Message kang Agent"
-            disabled={sending}
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={sending || !input.trim()}
-            size="icon"
-            className="h-11 w-11 rounded-full shrink-0"
-            aria-label="Send message"
-          >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
-        </div>
+        {blocked ? (
+          <div className="mx-auto max-w-2xl">
+            <button
+              type="button"
+              onClick={() => setShowPaywall(true)}
+              className="w-full flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-left hover:bg-primary/10 transition-colors"
+              aria-label="Renew subscription"
+            >
+              <div className="flex items-center gap-3">
+                <img src={attentionMascot.url} alt="" className="h-10 w-10 object-contain" />
+                <div>
+                  <p className="text-sm font-semibold">
+                    {isSuspended ? "Subscription suspended" : "Free questions used"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {canPay ? `Deduct ${fmt(monthlyFee)} from your wallet to continue` : "Top up your wallet to reactivate"}
+                  </p>
+                </div>
+              </div>
+              <ArrowUpRight className="h-4 w-4 text-primary" />
+            </button>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-2xl flex items-end gap-2">
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value.slice(0, 4000))}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+              placeholder="Ask about finance, business, or money…"
+              className="flex-1 rounded-full h-11 px-4"
+              aria-label="Message kang Agent"
+              disabled={sending}
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={sending || !input.trim()}
+              size="icon"
+              className="h-11 w-11 rounded-full shrink-0"
+              aria-label="Send message"
+            >
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
+        )}
       </div>
+
 
       {/* Sidebar (conversations) */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -375,32 +472,62 @@ export default function KangAgent() {
         </SheetContent>
       </Sheet>
 
-      {/* Paywall dialog */}
+      {/* Wallet-billing paywall */}
       <Dialog open={showPaywall} onOpenChange={setShowPaywall}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-2">
-              <img src={attentionMascot.url} alt="" className="h-28 w-28 object-contain" />
+              <img src={attentionMascot.url} alt="" className="h-24 w-24 object-contain" />
             </div>
-            <DialogTitle className="text-center">You've used your free questions</DialogTitle>
+            <DialogTitle className="text-center">Subscription Renewal Required</DialogTitle>
             <DialogDescription className="text-center">
-              Upgrade to kang Agent Premium for unlimited AI financial advice.
+              kang Agent Premium is billed monthly from your Kang wallet.
             </DialogDescription>
           </DialogHeader>
-          <ul className="space-y-2 text-sm py-2">
-            <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Unlimited AI conversations</li>
-            <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Monthly credit-score boost on time payment</li>
-            <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Priority support</li>
-          </ul>
-          <div className="rounded-xl bg-muted p-4 text-center">
-            <p className="text-2xl font-bold">2,500 XAF<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+
+          <div className="space-y-3 py-2">
+            <div className="flex items-center justify-between rounded-xl border border-border/60 p-3">
+              <span className="text-sm text-muted-foreground">Monthly fee</span>
+              <span className="text-sm font-semibold">{fmt(monthlyFee)}</span>
+            </div>
+            <div className={`flex items-center justify-between rounded-xl border p-3 ${canPay ? "border-border/60" : "border-destructive/40 bg-destructive/5"}`}>
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Wallet className="h-4 w-4" /> Wallet balance
+              </span>
+              <span className={`text-sm font-semibold ${canPay ? "" : "text-destructive"}`}>{fmt(walletBalance)}</span>
+            </div>
+
+            {!canPay && (
+              <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive">
+                  Insufficient wallet balance. You need {fmt(monthlyFee - walletBalance)} more to activate Premium.
+                </p>
+              </div>
+            )}
+
+            <ul className="space-y-2 text-sm pt-1">
+              <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Unlimited AI conversations</li>
+              <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> +1 credit-score point on time payment</li>
+              <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Automatic monthly renewal from wallet</li>
+            </ul>
           </div>
+
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setShowPaywall(false)}>Later</Button>
-            <Button className="flex-1" onClick={() => { setShowPaywall(false); toast.info("Payment flow coming soon."); }}>Subscribe Now</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setShowPaywall(false)} disabled={paying}>Later</Button>
+            {canPay ? (
+              <Button className="flex-1" onClick={payFromWallet} disabled={paying}>
+                {paying ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…</>) : "Deduct from Wallet & Activate"}
+              </Button>
+            ) : (
+              <Button className="flex-1" onClick={goTopUp} disabled={paying}>
+                <Wallet className="mr-2 h-4 w-4" /> Top Up Wallet
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+
