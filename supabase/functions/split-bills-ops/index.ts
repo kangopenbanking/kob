@@ -28,38 +28,37 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ users: [] }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      // Search by name
+      const q = query.trim();
+      const cleanQuery = q.replace(/[\s\-\(\)]/g, '');
+      const isPhoneish = /^\+?\d{3,}$/.test(cleanQuery);
+      const isKangish = /^KANG-/i.test(q) || /^\d{6,12}$/.test(cleanQuery);
+
+      // Search by name (partial, case-insensitive)
       const { data: nameResults, error: nameErr } = await supabase
         .from('profiles')
-        .select('id, full_name, phone_number')
+        .select('id, full_name, phone_number, kang_id')
         .neq('id', user.id)
-        .ilike('full_name', `%${query}%`)
+        .ilike('full_name', `%${q}%`)
         .limit(8);
-      
       if (nameErr) console.error('Name search error:', nameErr);
 
-      // Also search by phone if query looks like a phone number
+      // Phone search
       let phoneResults: any[] = [];
-      const cleanQuery = query.replace(/[\s\-\(\)]/g, '');
-      if (/^\+?\d{3,}$/.test(cleanQuery)) {
+      if (isPhoneish) {
         const phoneVariants = [cleanQuery];
         if (!cleanQuery.startsWith('+')) phoneVariants.push(`+${cleanQuery}`);
-        if (/^6\d{8}$/.test(cleanQuery)) {
-          phoneVariants.push(`+237${cleanQuery}`);
-        }
-        // Also do a partial match on phone
+        if (/^6\d{8}$/.test(cleanQuery)) phoneVariants.push(`+237${cleanQuery}`, `237${cleanQuery}`);
         const { data: partialPhone } = await supabase
           .from('profiles')
-          .select('id, full_name, phone_number')
+          .select('id, full_name, phone_number, kang_id')
           .neq('id', user.id)
           .ilike('phone_number', `%${cleanQuery}%`)
           .limit(5);
         if (partialPhone?.length) phoneResults.push(...partialPhone);
-        
         for (const pv of phoneVariants) {
           const { data } = await supabase
             .from('profiles')
-            .select('id, full_name, phone_number')
+            .select('id, full_name, phone_number, kang_id')
             .eq('phone_number', pv)
             .neq('id', user.id)
             .limit(3);
@@ -67,18 +66,30 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Merge and deduplicate
+      // KANG ID search
+      let kangResults: any[] = [];
+      if (isKangish) {
+        const kangIdNorm = /^KANG-/i.test(q) ? q.toUpperCase() : `KANG-${cleanQuery}`;
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, phone_number, kang_id')
+          .eq('kang_id', kangIdNorm)
+          .neq('id', user.id)
+          .limit(3);
+        if (data?.length) kangResults.push(...data);
+      }
+
       const seen = new Set<string>();
-      const merged = [...(nameResults || []), ...phoneResults].filter(u => {
+      const merged = [...(nameResults || []), ...phoneResults, ...kangResults].filter(u => {
         if (seen.has(u.id)) return false;
         seen.add(u.id);
         return true;
-      }).slice(0, 8);
+      }).slice(0, 10);
 
-      // Mask phone numbers for privacy
       const users = merged.map(u => ({
         id: u.id,
         name: u.full_name || 'Unknown',
+        kang_id: u.kang_id || null,
         phone_masked: u.phone_number
           ? u.phone_number.slice(0, -4).replace(/\d/g, '*') + u.phone_number.slice(-4)
           : null,
@@ -190,16 +201,38 @@ Deno.serve(async (req) => {
 
       const { data: bill } = await supabase.from('split_bills').select('title').eq('id', split_bill_id).single();
 
-      // Resolve recipient user_id
-      let recipientId = part.user_id;
+      // Resolve recipient user_id — try user_id → phone (multi-variant) → exact name → back-fill
+      let recipientId: string | null = part.user_id ?? null;
+
       if (!recipientId && part.phone) {
         const cleanPhone = part.phone.replace(/[\s\-\(\)]/g, '');
-        const { data: profile } = await supabase
+        // Skip masked phones (e.g. "+********5254"); they cannot resolve
+        if (!/\*/.test(cleanPhone)) {
+          const phoneVariants = [cleanPhone];
+          if (!cleanPhone.startsWith('+')) phoneVariants.push(`+${cleanPhone}`);
+          if (/^6\d{8}$/.test(cleanPhone)) phoneVariants.push(`+237${cleanPhone}`, `237${cleanPhone}`);
+          for (const pv of phoneVariants) {
+            const { data: profile } = await supabase
+              .from('profiles').select('id').eq('phone_number', pv).maybeSingle();
+            if (profile?.id) { recipientId = profile.id; break; }
+          }
+        }
+      }
+
+      // Fallback: exact name match (case-insensitive) — helps legacy rows saved without user_id
+      if (!recipientId && part.name) {
+        const { data: nameMatches } = await supabase
           .from('profiles')
           .select('id')
-          .eq('phone_number', cleanPhone)
-          .maybeSingle();
-        recipientId = profile?.id || null;
+          .ilike('full_name', part.name.trim())
+          .limit(2);
+        if (nameMatches?.length === 1) recipientId = nameMatches[0].id;
+      }
+
+      // Back-fill the participant row so future actions are instant
+      if (recipientId && !part.user_id) {
+        await supabase.from('split_bill_participants')
+          .update({ user_id: recipientId }).eq('id', participant_id);
       }
 
       if (recipientId) {
