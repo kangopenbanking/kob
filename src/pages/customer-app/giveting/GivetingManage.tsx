@@ -425,9 +425,10 @@ export const GivetingManage: React.FC = () => {
       <Dialog open={closeOpen} onOpenChange={(o) => { setCloseOpen(o); if (!o) setCloseReason(''); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Close this fundraiser?</DialogTitle>
+            <DialogTitle>Close this cause or fundraiser?</DialogTitle>
             <DialogDescription>
-              Donations will be disabled and the fundraiser will show as closed. You can reopen it later.
+              Donations will be disabled and it will show as closed. Followers and recent donors will
+              be notified. You can reopen it later.
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
@@ -445,7 +446,37 @@ export const GivetingManage: React.FC = () => {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setCloseOpen(false)} disabled={statusBusy} className="rounded-full">Cancel</Button>
             <Button onClick={closeCampaign} disabled={statusBusy || closeReason.trim().length < 3} className="rounded-full">
-              {statusBusy ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Closing…</>) : 'Close fundraiser'}
+              {statusBusy ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Closing…</>) : 'Close it'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={reopenOpen} onOpenChange={(o) => { setReopenOpen(o); if (!o) setReopenReason(''); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reopen this cause or fundraiser?</DialogTitle>
+            <DialogDescription>
+              It will become active again and appear on the home screen. Followers and recent donors
+              will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Label htmlFor="reopen-reason">Reason for reopening</Label>
+            <Textarea
+              id="reopen-reason"
+              value={reopenReason}
+              onChange={(e) => setReopenReason(e.target.value)}
+              placeholder="e.g. Goal increased, new phase of the campaign."
+              maxLength={500}
+              className="mt-1 min-h-[100px]"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">{reopenReason.length} / 500 · recorded in the activity trail</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReopenOpen(false)} disabled={statusBusy} className="rounded-full">Cancel</Button>
+            <Button onClick={reopenCampaign} disabled={statusBusy || reopenReason.trim().length < 3} className="rounded-full">
+              {statusBusy ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reopening…</>) : 'Reopen it'}
             </Button>
           </DialogFooter>
         </DialogContent>
