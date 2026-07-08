@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Send, Download, Receipt, Building2, Users,
   Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
-  Lock, ChevronRight, Loader2, Package, ShieldAlert, Globe, Heart, Star, Store, MessageCircle, HandCoins, CreditCard
+  Lock, ChevronRight, Loader2, Package, ShieldAlert, Globe, Heart, Star, Store, MessageCircle, HandCoins, CreditCard, Sparkles
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
@@ -25,7 +25,9 @@ const allQuickActions = [
   { key: 'driver_hub', label: 'Driver Hub', icon: Users, color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
   { key: 'cards', label: 'Cards', icon: CreditCard, color: 'bg-[hsl(220,60%,92%)]', iconColor: 'text-[hsl(220,60%,40%)]', featureKey: 'cards' },
   { key: 'promise_to_pay', label: 'Promise to Pay', icon: HandCoins, color: 'bg-[hsl(265,55%,92%)]', iconColor: 'text-[hsl(265,55%,40%)]', featureKey: 'loans' },
+  { key: 'kang_agent', label: 'Kang Agent', icon: Sparkles, color: 'bg-[hsl(280,60%,92%)]', iconColor: 'text-[hsl(280,55%,40%)]' },
 ];
+
 
 const utilityItems = [
   { label: 'Giveting', icon: Heart, path: 'giveting', color: 'bg-[hsl(150,55%,88%)]', iconColor: 'text-[hsl(150,55%,30%)]' },
@@ -86,7 +88,9 @@ const CustomerMore: React.FC = () => {
               action.key === 'daily_needs' ? 'daily-needs' :
               action.key === 'driver_hub' ? 'driver' :
               action.key === 'promise_to_pay' ? 'promise-to-pay' :
+              action.key === 'kang_agent' ? 'kang-agent' :
               action.key
+
             )} className="flex flex-col items-center gap-2">
               <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
                 <action.icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
