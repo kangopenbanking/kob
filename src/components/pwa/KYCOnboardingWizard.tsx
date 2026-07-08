@@ -138,19 +138,35 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
         nationality: personalInfo.nationality,
       });
 
-      // Best-effort: tag institution context onto the new verification
-      if (tenant.id && data?.verification_id) {
-        await supabase
-          .from('kyc_verifications')
-          .update({
-            source_app: 'banking_app',
-            institution_id: tenant.id,
-            metadata: {
-              date_of_birth: personalInfo.dateOfBirth,
-              nationality: personalInfo.nationality,
-            },
-          } as any)
-          .eq('id', data.verification_id);
+      // Best-effort: tag institution context onto the newly created verification row.
+      // The gateway persists the row keyed by user_id / session — we patch the
+      // most recent pending row for this user to attach the tenant/institution.
+      if (tenant.id) {
+        const { data: authUser } = await supabase.auth.getUser();
+        const uid = authUser?.user?.id;
+        if (uid) {
+          const { data: latest } = await supabase
+            .from('kyc_verifications')
+            .select('id')
+            .eq('user_id', uid)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (latest?.id) {
+            await supabase
+              .from('kyc_verifications')
+              .update({
+                source_app: 'banking_app',
+                institution_id: tenant.id,
+                metadata: {
+                  date_of_birth: personalInfo.dateOfBirth,
+                  nationality: personalInfo.nationality,
+                  provider_session_id: data?.session_id ?? null,
+                },
+              } as any)
+              .eq('id', latest.id);
+          }
+        }
       }
 
       toast.success('Verification submitted — we will email you when the review is complete.');
