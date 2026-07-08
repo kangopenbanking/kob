@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2, ImagePlus, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2, ImagePlus, Loader2, Upload, Lock, Unlock } from 'lucide-react';
 import { giveting, formatMoney, fromMinor, progressPct, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
 import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
@@ -23,6 +23,9 @@ export const GivetingManage: React.FC = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
+  const [statusBusy, setStatusBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     title: '',
@@ -104,6 +107,43 @@ export const GivetingManage: React.FC = () => {
       toast.error(e?.message || 'Could not update fundraiser');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const closeCampaign = async () => {
+    if (!campaign) return;
+    const reason = closeReason.trim();
+    if (reason.length < 3) return toast.error('Please provide a reason (at least 3 characters).');
+    setStatusBusy(true);
+    try {
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'completed', reason });
+      setCampaign((c: any) => ({ ...c, ...(res.campaign ?? { status: 'completed' }) }));
+      toast.success('Fundraiser closed');
+      setCloseOpen(false);
+      setCloseReason('');
+    } catch (e: any) {
+      const m = e?.message || '';
+      if (m === 'pending_withdrawals') toast.error('Wait for pending withdrawals to settle before closing.');
+      else if (m === 'unwithdrawn_balance') toast.error('Withdraw remaining funds before closing.');
+      else if (m === 'not_owner') toast.error('Only the fundraiser owner can close it.');
+      else toast.error(m || 'Could not close fundraiser');
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  const reopenCampaign = async () => {
+    if (!campaign) return;
+    if (!confirm('Reopen this fundraiser and start accepting donations again?')) return;
+    setStatusBusy(true);
+    try {
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'active', reason: 'Reopened by owner' });
+      setCampaign((c: any) => ({ ...c, ...(res.campaign ?? { status: 'active' }) }));
+      toast.success('Fundraiser reopened');
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not reopen fundraiser');
+    } finally {
+      setStatusBusy(false);
     }
   };
 
@@ -222,6 +262,39 @@ export const GivetingManage: React.FC = () => {
           </div>
           <Plus className="h-4 w-4 text-muted-foreground" />
         </Card>
+
+        {(() => {
+          const status = campaign.status as string;
+          const isClosed = status === 'completed' || status === 'archived';
+          return (
+            <Card className="mt-3 flex items-center gap-4 rounded-2xl p-4">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-full ${isClosed ? 'bg-muted' : 'bg-primary/10 text-primary'}`}>
+                {isClosed ? <Unlock className="h-5 w-5" strokeWidth={1.6} /> : <Lock className="h-5 w-5" strokeWidth={1.6} />}
+              </div>
+              <div className="flex-1">
+                <p className="text-base font-semibold">
+                  {isClosed ? 'Fundraiser is closed' : 'Close this fundraiser'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isClosed
+                    ? 'Donations are disabled. You can reopen it at any time.'
+                    : 'Stop accepting new donations. You can reopen it later.'}
+                </p>
+              </div>
+              {isClosed ? (
+                <Button variant="outline" size="sm" onClick={reopenCampaign} disabled={statusBusy} className="rounded-full">
+                  {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reopen'}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setCloseOpen(true)} disabled={statusBusy} className="rounded-full">
+                  Close
+                </Button>
+              )}
+            </Card>
+          );
+        })()}
+
+
 
         {donations.length > 0 && (
           <section className="mt-8">
@@ -342,7 +415,37 @@ export const GivetingManage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={closeOpen} onOpenChange={(o) => { setCloseOpen(o); if (!o) setCloseReason(''); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Close this fundraiser?</DialogTitle>
+            <DialogDescription>
+              Donations will be disabled and the fundraiser will show as closed. You can reopen it later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Label htmlFor="close-reason">Reason for closing</Label>
+            <Textarea
+              id="close-reason"
+              value={closeReason}
+              onChange={(e) => setCloseReason(e.target.value)}
+              placeholder="e.g. Goal reached, funds already withdrawn."
+              maxLength={500}
+              className="mt-1 min-h-[100px]"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">{closeReason.length} / 500 · recorded in the activity trail</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setCloseOpen(false)} disabled={statusBusy} className="rounded-full">Cancel</Button>
+            <Button onClick={closeCampaign} disabled={statusBusy || closeReason.trim().length < 3} className="rounded-full">
+              {statusBusy ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Closing…</>) : 'Close fundraiser'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
