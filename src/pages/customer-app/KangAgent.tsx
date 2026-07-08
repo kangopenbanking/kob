@@ -80,17 +80,16 @@ export default function KangAgent() {
   }
 
   async function loadSessions() {
-    const { data, error } = await supabase.functions.invoke("kang-chat-history", {
-      body: {}, method: "GET" as any,
-    }).catch(async () => {
-      // Fallback to fetch with query params
+    try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kang-chat-history?page=1&limit=20`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${session?.access_token}` } });
-      return { data: await res.json(), error: null };
-    });
-    if (error) return;
-    if ((data as any)?.sessions) setSessions((data as any).sessions);
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const body = await res.json();
+      if (body?.success && Array.isArray(body.sessions)) setSessions(body.sessions);
+    } catch {
+      // silent — sidebar is not critical
+    }
   }
 
   async function loadSessionMessages(id: string) {
