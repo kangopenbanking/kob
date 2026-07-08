@@ -294,11 +294,13 @@ async function handleDonate(req: Request, body: any) {
 
   if (dErr) {
     // Best-effort refund
-    await supabase.rpc('atomic_credit_balance', {
-      _account_id: account.id,
-      _amount: debitXAF,
-      _currency: 'XAF',
-    }).catch(() => {});
+    try {
+      await supabase.rpc('atomic_credit_balance', {
+        _account_id: account.id,
+        _amount: debitXAF,
+        _currency: 'XAF',
+      });
+    } catch (_) { /* best-effort */ }
     return jsonRes(500, { error: 'record_failed', message: dErr.message });
   }
 
