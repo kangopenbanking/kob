@@ -60,6 +60,7 @@ export default function KangAgent() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
