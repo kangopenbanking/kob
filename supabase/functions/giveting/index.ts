@@ -353,21 +353,21 @@ async function handleArchive(req: Request, body: any) {
     .single();
   if (error) return jsonRes(500, { error: error.message });
 
+  const isCloseEvent = status === 'completed';
+  const isReopenEvent = status === 'active' && current.status !== 'active';
+  const nowIso = new Date().toISOString();
+
   // Audit trail — best-effort, non-blocking
   try {
-    const evtType = status === 'active' && current.status !== 'active'
-      ? 'status_changed'
-      : 'status_changed';
     const reasonText = reasonTrimmed
-      || (status === 'active' && current.status !== 'active' ? 'Fundraiser reopened by owner'
+      || (isReopenEvent ? 'Fundraiser reopened by owner'
         : status === 'paused' ? 'Fundraiser paused by owner'
         : status === 'archived' ? 'Fundraiser archived by owner'
         : 'Status changed by owner');
-    const nowIso = new Date().toISOString();
     await supabase.from('giveting_campaign_events').insert({
       campaign_id: id,
       owner_user_id: current.owner_user_id,
-      event_type: evtType,
+      event_type: 'status_changed',
       from_status: current.status,
       to_status: status,
       actor_user_id: user.id,
@@ -375,13 +375,70 @@ async function handleArchive(req: Request, body: any) {
       reason: reasonText,
       metadata: {
         reason: reasonText,
-        closed_by: status === 'completed' ? user.id : undefined,
-        closed_at: status === 'completed' ? nowIso : undefined,
-        reopened_by: status === 'active' && current.status !== 'active' ? user.id : undefined,
-        reopened_at: status === 'active' && current.status !== 'active' ? nowIso : undefined,
+        close_reason: isCloseEvent ? reasonTrimmed : undefined,
+        reopen_reason: isReopenEvent ? reasonTrimmed : undefined,
+        closed_by: isCloseEvent ? user.id : undefined,
+        closed_at: isCloseEvent ? nowIso : undefined,
+        reopened_by: isReopenEvent ? user.id : undefined,
+        reopened_at: isReopenEvent ? nowIso : undefined,
       },
     });
   } catch (_) { /* audit is best effort */ }
+
+  // Notify followers and recent donors on close / reopen — best-effort.
+  if (isCloseEvent || isReopenEvent) {
+    try {
+      const { data: camp } = await supabase
+        .from('giveting_campaigns')
+        .select('title, slug')
+        .eq('id', id)
+        .maybeSingle();
+      const title = camp?.title ?? 'A fundraiser you follow';
+      const slug = camp?.slug ?? '';
+
+      const recipients = new Set<string>();
+
+      const { data: followers } = await supabase
+        .from('giveting_followers')
+        .select('user_id')
+        .eq('campaign_id', id);
+      (followers ?? []).forEach((f: any) => f.user_id && recipients.add(f.user_id));
+
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: recentDonors } = await supabase
+        .from('giveting_donations')
+        .select('donor_user_id')
+        .eq('campaign_id', id)
+        .eq('status', 'succeeded')
+        .gte('created_at', ninetyDaysAgo);
+      (recentDonors ?? []).forEach((d: any) => d.donor_user_id && recipients.add(d.donor_user_id));
+
+      recipients.delete(user.id);
+
+      if (recipients.size > 0) {
+        const notifTitle = isCloseEvent ? 'Fundraiser closed' : 'Fundraiser reopened';
+        const notifMessage = isCloseEvent
+          ? `"${title}" is no longer accepting donations. Reason: ${reasonTrimmed}`
+          : `"${title}" is accepting donations again. ${reasonTrimmed}`;
+        const rows = Array.from(recipients).map((uid) => ({
+          user_id: uid,
+          type: isCloseEvent ? 'warning' : 'info',
+          title: notifTitle,
+          message: notifMessage,
+          icon: 'giveting',
+          metadata: {
+            campaign_id: id,
+            slug,
+            event: isCloseEvent ? 'campaign_closed' : 'campaign_reopened',
+            reason: reasonTrimmed,
+          },
+        }));
+        for (let i = 0; i < rows.length; i += 500) {
+          await supabase.from('app_notifications').insert(rows.slice(i, i + 500));
+        }
+      }
+    } catch (_) { /* notifications are best effort */ }
+  }
 
   return jsonRes(200, { campaign: data });
 }
