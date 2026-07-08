@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
-  Wallet, AlertTriangle, ArrowUpRight,
+  Wallet, AlertTriangle, ArrowUpRight, Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
+import { KangNotificationBell } from "./KangNotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
