@@ -13794,6 +13794,56 @@ export type Database = {
           },
         ]
       }
+      giveting_campaign_events: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          campaign_id: string
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          owner_user_id: string
+          reason: string | null
+          to_status: string | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          owner_user_id: string
+          reason?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          owner_user_id?: string
+          reason?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giveting_campaign_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giveting_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       giveting_campaigns: {
         Row: {
           beneficiary_name: string | null
