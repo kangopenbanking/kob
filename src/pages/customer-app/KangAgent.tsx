@@ -1,27 +1,22 @@
 // Kang Agent — ChatGPT-style mobile chat UI
 // Wires the /app/kang-agent route to the three edge functions built in Step 3.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Send, Plus, Menu, X, Trash2, Sparkles, Loader2, Crown, MessageSquare,
+  Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
   Wallet, AlertTriangle, ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PullToRefresh } from "@/components/pwa/PullToRefresh";
-import welcomeMascot from "@/assets/kang-mascot/welcome.png.asset.json";
+import kangLogo from "@/assets/kang-mascot/logo.png.asset.json";
 import attentionMascot from "@/assets/kang-mascot/attention.png.asset.json";
-import supportMascot from "@/assets/kang-mascot/support.png.asset.json";
-import thinkingMascot from "@/assets/kang-mascot/thinking.png.asset.json";
-import workingMascot from "@/assets/kang-mascot/working.png.asset.json";
 
 type Role = "user" | "assistant";
 type Message = { id: string; role: Role; content: string; created_at: string };
@@ -41,14 +36,12 @@ type Subscription = {
 
 const STORAGE_KEY = "kang-agent:session-id";
 
-function pickMascot(content: string) {
-  const c = content.toLowerCase();
-  if (/support|help|contact|agent/.test(c)) return supportMascot.url;
-  if (/think|calculat|analy|budget|plan/.test(c)) return thinkingMascot.url;
-  if (/ai|technical|api|code|data/.test(c)) return workingMascot.url;
-  if (/tip|advice|recommend|should|consider/.test(c)) return attentionMascot.url;
-  return welcomeMascot.url;
-}
+const SUGGESTIONS = [
+  "How can I improve my credit score?",
+  "Help me build a monthly budget.",
+  "What's a good savings strategy?",
+  "Explain my recent spending trends.",
+];
 
 export default function KangAgent() {
   const navigate = useNavigate();
@@ -67,7 +60,8 @@ export default function KangAgent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const trialUsed = sub?.questions_asked_count ?? 0;
   const trialLimit = sub?.free_questions_limit ?? 5;
@@ -80,7 +74,6 @@ export default function KangAgent() {
 
   const fmt = (n: number) => `${Math.round(n).toLocaleString()} ${currency}`;
 
-  // --- Data fetchers ---
   async function loadProfileAndSub() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -94,9 +87,7 @@ export default function KangAgent() {
       db.from("accounts").select("id").eq("user_id", user.id).eq("is_active", true).limit(1),
     ]);
     if (profile) setCreditScore((profile as any).credit_score ?? 500);
-    setSub((subRow as any) ?? {
-      status: "trial", questions_asked_count: 0, free_questions_limit: 5,
-    });
+    setSub((subRow as any) ?? { status: "trial", questions_asked_count: 0, free_questions_limit: 5 });
     if (cfg?.value) {
       setMonthlyFee(Number((cfg.value as any).amount ?? 2000));
       setCurrency(String((cfg.value as any).currency ?? "XAF"));
@@ -147,7 +138,6 @@ export default function KangAgent() {
     navigate("/app/wallet");
   }
 
-
   async function loadSessions() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -157,7 +147,7 @@ export default function KangAgent() {
       const body = await res.json();
       if (body?.success && Array.isArray(body.sessions)) setSessions(body.sessions);
     } catch {
-      // silent — sidebar is not critical
+      // silent
     }
   }
 
@@ -188,10 +178,18 @@ export default function KangAgent() {
   }, [sessionId]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, sending]);
 
   useEffect(() => { inputRef.current?.focus(); }, [sessionId, sending]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 140) + "px";
+  }, [input]);
 
   async function sendMessage() {
     const text = input.trim();
@@ -200,10 +198,7 @@ export default function KangAgent() {
 
     setSending(true);
     const optimistic: Message = {
-      id: `tmp-${Date.now()}`,
-      role: "user",
-      content: text,
-      created_at: new Date().toISOString(),
+      id: `tmp-${Date.now()}`, role: "user", content: text, created_at: new Date().toISOString(),
     };
     setMessages((m) => [...m, optimistic]);
     setInput("");
@@ -225,7 +220,6 @@ export default function KangAgent() {
         return;
       }
       if (body.session_id && body.session_id !== sessionId) setSessionId(body.session_id);
-      // Reload messages authoritative + subscription
       if (body.session_id) await loadSessionMessages(body.session_id);
       await loadProfileAndSub();
       loadSessions();
@@ -254,142 +248,149 @@ export default function KangAgent() {
     toast.success("Conversation removed.");
   }
 
-  const empty = messages.length === 0;
+  const empty = messages.length === 0 && !loadingMessages;
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <div
+      className="relative flex flex-col bg-gradient-to-b from-background via-background to-muted/30"
+      style={{ height: "calc(100dvh - 5rem)" }}
+    >
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-border/60 bg-card/80 backdrop-blur px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} aria-label="Open conversations">
-            <Menu className="h-5 w-5" />
+      <header className="flex items-center justify-between border-b border-border/50 bg-background/70 backdrop-blur-xl px-3 py-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setSidebarOpen(true)} aria-label="Open conversations">
+            <Menu className="h-4.5 w-4.5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <img src={welcomeMascot.url} alt="Kang mascot" className="h-8 w-8 rounded-full object-contain" />
-            <div>
-              <h1 className="text-sm font-semibold leading-tight">kang Agent</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={kangLogo.url} alt="Kang Agent" className="h-8 w-8 object-contain shrink-0 drop-shadow-sm" />
+            <div className="min-w-0">
+              <h1 className="text-[13px] font-semibold leading-tight truncate">Kang Agent</h1>
               <p className="text-[10px] text-muted-foreground leading-tight">AI Financial Advisor</p>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {creditScore != null && (
-            <Badge variant="outline" className="gap-1 text-xs" aria-label={`Credit score ${creditScore}`}>
-              <Sparkles className="h-3 w-3" /> {creditScore}
+            <Badge variant="outline" className="gap-1 text-[10px] h-6 px-1.5" aria-label={`Credit score ${creditScore}`}>
+              <Sparkles className="h-2.5 w-2.5" /> {creditScore}
             </Badge>
           )}
           {isActive ? (
-            <Badge className="gap-1 bg-primary text-primary-foreground text-xs" title={sub?.current_period_end ? `Renews ${new Date(sub.current_period_end).toLocaleDateString()}` : undefined}>
-              <Crown className="h-3 w-3" /> {sub?.current_period_end ? `Renews ${new Date(sub.current_period_end).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}` : "Active"}
+            <Badge className="gap-1 bg-primary text-primary-foreground text-[10px] h-6 px-1.5">
+              <Crown className="h-2.5 w-2.5" /> Active
             </Badge>
           ) : isSuspended ? (
-            <Badge variant="destructive" className="gap-1 text-xs"><AlertTriangle className="h-3 w-3" /> Suspended</Badge>
+            <Badge variant="destructive" className="gap-1 text-[10px] h-6 px-1.5"><AlertTriangle className="h-2.5 w-2.5" /> Suspended</Badge>
           ) : (
-            <Badge variant="secondary" className="text-xs">Trial {trialUsed}/{trialLimit}</Badge>
+            <Badge variant="secondary" className="text-[10px] h-6 px-1.5">Trial {trialUsed}/{trialLimit}</Badge>
           )}
-          <Button variant="ghost" size="icon" onClick={newChat} aria-label="New chat">
-            <Plus className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="h-9 w-9" onClick={newChat} aria-label="New chat">
+            <Plus className="h-4.5 w-4.5" />
           </Button>
         </div>
       </header>
 
-      {/* Trial progress bar */}
       {isTrial && (
-        <div className="px-4 pt-2">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+        <div className="px-4 pt-2 pb-1">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
             <span>Free questions</span>
             <span>{trialUsed} of {trialLimit} used</span>
           </div>
-          <Progress value={(trialUsed / trialLimit) * 100} className="h-1.5" />
+          <Progress value={(trialUsed / trialLimit) * 100} className="h-1" />
         </div>
       )}
 
-      {/* Chat area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <PullToRefresh onRefresh={async () => { await loadProfileAndSub(); if (sessionId) await loadSessionMessages(sessionId); }}>
-          <div className="mx-auto max-w-2xl px-4 py-4 space-y-4">
-            {empty && !loadingMessages && (
-              <div className="flex flex-col items-center text-center py-10">
-                <img src={welcomeMascot.url} alt="" className="h-40 w-40 object-contain" />
-                <h2 className="mt-4 text-lg font-semibold">Hi, I'm kang Agent</h2>
-                <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                  Ask me anything about your finances — budgeting, saving, credit score, or business planning.
-                </p>
-                <div className="mt-6 grid grid-cols-1 gap-2 w-full max-w-sm">
-                  {["How can I improve my credit score?", "Help me build a monthly budget.", "What's a good savings strategy?"].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setInput(s)}
-                      className="rounded-2xl border border-border/60 bg-card px-4 py-3 text-left text-sm hover:bg-muted transition-colors"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
+      {/* Chat scroll area */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex min-h-full max-w-2xl flex-col px-3 py-3">
+          {empty ? (
+            <div className="flex flex-1 flex-col items-center justify-center text-center py-8">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl" />
+                <img src={kangLogo.url} alt="" className="relative h-24 w-24 object-contain drop-shadow-lg" />
               </div>
-            )}
-
-            {loadingMessages && (
-              <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            )}
-
-            <AnimatePresence initial={false}>
-              {messages.map((m) => (
-                <motion.div
-                  key={m.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {m.role === "assistant" && (
-                    <img src={pickMascot(m.content)} alt="" className="h-10 w-10 rounded-full object-contain shrink-0 mt-1" />
-                  )}
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words ${
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-muted text-foreground rounded-bl-sm"
-                    }`}
+              <h2 className="mt-5 text-lg font-semibold tracking-tight">Hi, I'm Kang Agent</h2>
+              <p className="mt-1.5 max-w-xs text-[12px] leading-relaxed text-muted-foreground">
+                Your AI financial advisor. Ask me about budgeting, saving, credit, or business planning.
+              </p>
+              <div className="mt-6 grid w-full max-w-sm grid-cols-1 gap-2">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setInput(s); setTimeout(() => inputRef.current?.focus(), 0); }}
+                    className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur px-3.5 py-2.5 text-left text-[12px] text-foreground/80 hover:bg-card hover:border-primary/40 transition-all"
                   >
-                    {m.content}
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {sending && (
-              <div className="flex items-center gap-2">
-                <img src={thinkingMascot.url} alt="" className="h-10 w-10 rounded-full object-contain" />
-                <div className="rounded-2xl rounded-bl-sm bg-muted px-4 py-3">
-                  <div className="flex gap-1">
-                    <span className="h-2 w-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-2 w-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
-                    <span className="h-2 w-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
-                  </div>
-                </div>
+                    {s}
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
-        </PullToRefresh>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1" />
+              {loadingMessages && (
+                <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+              )}
+              <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {messages.map((m) => (
+                    <motion.div
+                      key={m.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      {m.role === "assistant" && (
+                        <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0 mt-0.5" />
+                      )}
+                      <div
+                        className={`max-w-[82%] rounded-2xl px-3.5 py-2 text-[13px] leading-[1.5] whitespace-pre-wrap break-words ${
+                          m.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-br-md shadow-sm"
+                            : "bg-card border border-border/60 text-foreground rounded-bl-md"
+                        }`}
+                      >
+                        {m.content}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                {sending && (
+                  <div className="flex items-center gap-2">
+                    <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain" />
+                    <div className="rounded-2xl rounded-bl-md bg-card border border-border/60 px-3.5 py-2.5">
+                      <div className="flex gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div ref={bottomRef} />
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border/60 bg-card/90 backdrop-blur px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      {/* Composer */}
+      <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl px-3 py-2.5">
         {blocked ? (
           <div className="mx-auto max-w-2xl">
             <button
               type="button"
               onClick={() => setShowPaywall(true)}
-              className="w-full flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3 text-left hover:bg-primary/10 transition-colors"
-              aria-label="Renew subscription"
+              className="w-full flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/5 px-3.5 py-2.5 text-left hover:bg-primary/10 transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <img src={attentionMascot.url} alt="" className="h-10 w-10 object-contain" />
+              <div className="flex items-center gap-2.5">
+                <img src={attentionMascot.url} alt="" className="h-9 w-9 object-contain" />
                 <div>
-                  <p className="text-sm font-semibold">
+                  <p className="text-[12px] font-semibold">
                     {isSuspended ? "Subscription suspended" : "Free questions used"}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[10px] text-muted-foreground">
                     {canPay ? `Deduct ${fmt(monthlyFee)} from your wallet to continue` : "Top up your wallet to reactivate"}
                   </p>
                 </div>
@@ -398,37 +399,45 @@ export default function KangAgent() {
             </button>
           </div>
         ) : (
-          <div className="mx-auto max-w-2xl flex items-end gap-2">
-            <Input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value.slice(0, 4000))}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder="Ask about finance, business, or money…"
-              className="flex-1 rounded-full h-11 px-4"
-              aria-label="Message kang Agent"
-              disabled={sending}
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={sending || !input.trim()}
-              size="icon"
-              className="h-11 w-11 rounded-full shrink-0"
-              aria-label="Send message"
-            >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
+          <div className="mx-auto max-w-2xl">
+            <div className="relative flex items-end gap-2 rounded-3xl border border-border/60 bg-card/80 backdrop-blur px-3 py-2 shadow-sm focus-within:border-primary/50 transition-colors">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value.slice(0, 4000))}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                placeholder="Ask Kang Agent…"
+                rows={1}
+                className="flex-1 resize-none bg-transparent text-[13px] leading-[1.5] outline-none placeholder:text-muted-foreground/70 py-1.5 max-h-[140px]"
+                aria-label="Message Kang Agent"
+                disabled={sending}
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={sending || !input.trim()}
+                size="icon"
+                className="h-8 w-8 rounded-full shrink-0"
+                aria-label="Send message"
+              >
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+            <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+              Kang Agent may make mistakes. Verify important financial decisions.
+            </p>
           </div>
         )}
       </div>
 
-
-      {/* Sidebar (conversations) */}
+      {/* Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-[86%] sm:w-96">
           <SheetHeader className="px-4 py-4 border-b border-border/60">
             <SheetTitle className="flex items-center justify-between">
-              <span>Conversations</span>
+              <span className="flex items-center gap-2">
+                <img src={kangLogo.url} alt="" className="h-6 w-6 object-contain" />
+                Conversations
+              </span>
               <Button size="sm" variant="outline" onClick={newChat}><Plus className="h-4 w-4 mr-1" /> New</Button>
             </SheetTitle>
           </SheetHeader>
@@ -450,9 +459,9 @@ export default function KangAgent() {
                 >
                   <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{s.title || "New Chat"}</p>
+                    <p className="text-[13px] font-medium truncate">{s.title || "New Chat"}</p>
                     {s.last_message && (
-                      <p className="text-xs text-muted-foreground truncate">{s.last_message.content}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{s.last_message.content}</p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {new Date(s.updated_at).toLocaleDateString()}
@@ -472,16 +481,16 @@ export default function KangAgent() {
         </SheetContent>
       </Sheet>
 
-      {/* Wallet-billing paywall */}
+      {/* Paywall */}
       <Dialog open={showPaywall} onOpenChange={setShowPaywall}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-2">
-              <img src={attentionMascot.url} alt="" className="h-24 w-24 object-contain" />
+              <img src={kangLogo.url} alt="" className="h-20 w-20 object-contain" />
             </div>
             <DialogTitle className="text-center">Subscription Renewal Required</DialogTitle>
             <DialogDescription className="text-center">
-              kang Agent Premium is billed monthly from your Kang wallet.
+              Kang Agent Premium is billed monthly from your Kang wallet.
             </DialogDescription>
           </DialogHeader>
 
@@ -530,4 +539,3 @@ export default function KangAgent() {
     </div>
   );
 }
-
