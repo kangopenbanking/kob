@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       const status = (url.searchParams.get('status') || 'success').toLowerCase();
       const errorCode = url.searchParams.get('error');
       const ok = !errorCode && (status === 'success' || status === 'authorized' || status === 'completed');
-      const appOrigin = Deno.env.get('APP_PUBLIC_URL') || (req.headers.get('referer') ? new URL(req.headers.get('referer')!).origin : 'https://kob.lovable.app');
+      const appOrigin = Deno.env.get('APP_PUBLIC_URL') || (req.headers.get('referer') ? new URL(req.headers.get('referer')!).origin : 'https://kangopenbanking.com');
 
       // Bank-link confirmation
       if (linkId) {
