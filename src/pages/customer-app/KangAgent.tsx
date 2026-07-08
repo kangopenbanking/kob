@@ -472,32 +472,62 @@ export default function KangAgent() {
         </SheetContent>
       </Sheet>
 
-      {/* Paywall dialog */}
+      {/* Wallet-billing paywall */}
       <Dialog open={showPaywall} onOpenChange={setShowPaywall}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-2">
-              <img src={attentionMascot.url} alt="" className="h-28 w-28 object-contain" />
+              <img src={attentionMascot.url} alt="" className="h-24 w-24 object-contain" />
             </div>
-            <DialogTitle className="text-center">You've used your free questions</DialogTitle>
+            <DialogTitle className="text-center">Subscription Renewal Required</DialogTitle>
             <DialogDescription className="text-center">
-              Upgrade to kang Agent Premium for unlimited AI financial advice.
+              kang Agent Premium is billed monthly from your Kang wallet.
             </DialogDescription>
           </DialogHeader>
-          <ul className="space-y-2 text-sm py-2">
-            <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Unlimited AI conversations</li>
-            <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Monthly credit-score boost on time payment</li>
-            <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Priority support</li>
-          </ul>
-          <div className="rounded-xl bg-muted p-4 text-center">
-            <p className="text-2xl font-bold">2,500 XAF<span className="text-sm font-normal text-muted-foreground">/month</span></p>
+
+          <div className="space-y-3 py-2">
+            <div className="flex items-center justify-between rounded-xl border border-border/60 p-3">
+              <span className="text-sm text-muted-foreground">Monthly fee</span>
+              <span className="text-sm font-semibold">{fmt(monthlyFee)}</span>
+            </div>
+            <div className={`flex items-center justify-between rounded-xl border p-3 ${canPay ? "border-border/60" : "border-destructive/40 bg-destructive/5"}`}>
+              <span className="text-sm text-muted-foreground flex items-center gap-2">
+                <Wallet className="h-4 w-4" /> Wallet balance
+              </span>
+              <span className={`text-sm font-semibold ${canPay ? "" : "text-destructive"}`}>{fmt(walletBalance)}</span>
+            </div>
+
+            {!canPay && (
+              <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+                <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <p className="text-xs text-destructive">
+                  Insufficient wallet balance. You need {fmt(monthlyFee - walletBalance)} more to activate Premium.
+                </p>
+              </div>
+            )}
+
+            <ul className="space-y-2 text-sm pt-1">
+              <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Unlimited AI conversations</li>
+              <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> +1 credit-score point on time payment</li>
+              <li className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Automatic monthly renewal from wallet</li>
+            </ul>
           </div>
+
           <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => setShowPaywall(false)}>Later</Button>
-            <Button className="flex-1" onClick={() => { setShowPaywall(false); toast.info("Payment flow coming soon."); }}>Subscribe Now</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setShowPaywall(false)} disabled={paying}>Later</Button>
+            {canPay ? (
+              <Button className="flex-1" onClick={payFromWallet} disabled={paying}>
+                {paying ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…</>) : "Deduct from Wallet & Activate"}
+              </Button>
+            ) : (
+              <Button className="flex-1" onClick={goTopUp} disabled={paying}>
+                <Wallet className="mr-2 h-4 w-4" /> Top Up Wallet
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+
