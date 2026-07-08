@@ -21,6 +21,26 @@ const CustomerCreditScore: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: scoreData, isLoading } = useCustomerCreditScore(user?.id);
 
+  // Realtime: when the Didit webhook flips the user's KYC row to approved,
+  // invalidate the score query so the checklist unlocks immediately without
+  // waiting for the 15-second poll interval.
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`credit-kyc-${user.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'kyc_verifications',
+        filter: `user_id=eq.${user.id}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['customer-credit-score', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['customer-kyc-status', user.id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, queryClient]);
+
   // Recompute mutation
   const recomputeMutation = useMutation({
     mutationFn: async () => {
