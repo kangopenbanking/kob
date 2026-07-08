@@ -278,10 +278,14 @@ export default function KangAgent() {
               <Sparkles className="h-3 w-3" /> {creditScore}
             </Badge>
           )}
-          {sub?.status === "active" ? (
-            <Badge className="gap-1 bg-primary text-primary-foreground text-xs"><Crown className="h-3 w-3" /> Active</Badge>
+          {isActive ? (
+            <Badge className="gap-1 bg-primary text-primary-foreground text-xs" title={sub?.current_period_end ? `Renews ${new Date(sub.current_period_end).toLocaleDateString()}` : undefined}>
+              <Crown className="h-3 w-3" /> {sub?.current_period_end ? `Renews ${new Date(sub.current_period_end).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}` : "Active"}
+            </Badge>
+          ) : isSuspended ? (
+            <Badge variant="destructive" className="gap-1 text-xs"><AlertTriangle className="h-3 w-3" /> Suspended</Badge>
           ) : (
-            <Badge variant="secondary" className="text-xs">{trialUsed}/{trialLimit}</Badge>
+            <Badge variant="secondary" className="text-xs">Trial {trialUsed}/{trialLimit}</Badge>
           )}
           <Button variant="ghost" size="icon" onClick={newChat} aria-label="New chat">
             <Plus className="h-5 w-5" />
