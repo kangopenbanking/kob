@@ -103,6 +103,12 @@ async function handleStatus(service: any, userId: string) {
 
   const active = !!sub && sub.status === 'active' && new Date(sub.current_period_end) > new Date();
 
+  // Admin-configured pricing (source of truth) with sensible fallbacks.
+  const [planAmount, reportAmount] = await Promise.all([
+    resolveFeePrice(service, 'credit_premium_subscription', DEFAULT_PLAN_AMOUNT),
+    resolveFeePrice(service, 'credit_report_inquiry', DEFAULT_REPORT_AMOUNT),
+  ]);
+
   return jsonOk({
     active,
     plan: sub?.plan ?? 'free',
@@ -110,10 +116,18 @@ async function handleStatus(service: any, userId: string) {
     auto_renew: sub?.auto_renew ?? false,
     current_period_start: sub?.current_period_start ?? null,
     current_period_end: sub?.current_period_end ?? null,
-    amount: sub?.amount ?? PLAN_AMOUNT,
+    amount: active && sub?.amount ? Number(sub.amount) : planAmount,
     currency: sub?.currency ?? PLAN_CURRENCY,
+    period_days: PERIOD_DAYS,
+    pricing: {
+      plan_amount: planAmount,
+      report_amount: reportAmount,
+      currency: PLAN_CURRENCY,
+      source: 'fee_structures',
+    },
   });
 }
+
 
 async function handleSubscribe(service: any, userId: string, body: any) {
   // ── Wallet debit (server-mediated) ──
