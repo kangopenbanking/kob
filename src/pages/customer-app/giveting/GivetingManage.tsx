@@ -228,6 +228,93 @@ export const GivetingManage: React.FC = () => {
           Share
         </Button>
       </footer>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit fundraiser</DialogTitle>
+            <DialogDescription>Update your fundraiser details. Changes are saved instantly.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={editForm.title}
+                onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                maxLength={100}
+                className="mt-1 h-11"
+              />
+            </div>
+            <div>
+              <Label>Story</Label>
+              <Textarea
+                value={editForm.story}
+                onChange={(e) => setEditForm((f) => ({ ...f, story: e.target.value }))}
+                maxLength={4000}
+                className="mt-1 min-h-[140px]"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">{editForm.story.length} / 4000</p>
+            </div>
+            <div>
+              <Label>Goal amount ({campaign?.currency})</Label>
+              <Input
+                type="number"
+                min="1"
+                inputMode="decimal"
+                value={editForm.goal_amount}
+                onChange={(e) => setEditForm((f) => ({ ...f, goal_amount: e.target.value }))}
+                className="mt-1 h-11"
+              />
+            </div>
+            <div>
+              <Label>Cover image</Label>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => onFilePicked(e.target.files?.[0] ?? null)}
+              />
+              <div className="mt-1 flex items-center gap-3">
+                {editForm.cover_media_url ? (
+                  <img src={editForm.cover_media_url} alt="" className="h-16 w-24 rounded-lg object-cover" />
+                ) : (
+                  <div className="flex h-16 w-24 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+                    <ImagePlus className="h-5 w-5" />
+                  </div>
+                )}
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="rounded-full">
+                  {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading…</>) : (<><Upload className="mr-2 h-4 w-4" /> {editForm.cover_media_url ? 'Replace' : 'Upload'}</>)}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>City</Label>
+                <Input value={editForm.location_city} onChange={(e) => setEditForm((f) => ({ ...f, location_city: e.target.value }))} className="mt-1 h-11" />
+              </div>
+              <div>
+                <Label>Country</Label>
+                <Input value={editForm.location_country} onChange={(e) => setEditForm((f) => ({ ...f, location_country: e.target.value }))} className="mt-1 h-11" />
+              </div>
+            </div>
+            <div>
+              <Label>Beneficiary name</Label>
+              <Input value={editForm.beneficiary_name} onChange={(e) => setEditForm((f) => ({ ...f, beneficiary_name: e.target.value }))} className="mt-1 h-11" />
+            </div>
+            <div>
+              <Label>Relationship</Label>
+              <Input value={editForm.beneficiary_relation} onChange={(e) => setEditForm((f) => ({ ...f, beneficiary_relation: e.target.value }))} className="mt-1 h-11" placeholder="e.g. Brother, Local charity" />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={saving} className="rounded-full">Cancel</Button>
+            <Button onClick={saveEdit} disabled={saving || uploading} className="rounded-full">
+              {saving ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>) : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
