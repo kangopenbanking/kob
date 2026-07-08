@@ -1747,6 +1747,7 @@ function App() {
               <Route path="statements" element={<CustomerStatements />} />
               <Route path="kyc" element={<CustomerKYCWizard />} />
               <Route path="kyc/resume" element={<CustomerKYCResume />} />
+              <Route path="profile" element={<CustomerProfile />} />
               <Route path="referral" element={<CustomerReferral />} />
               <Route path="alerts" element={<CustomerAlerts />} />
               <Route path="help" element={<CustomerHelp />} />
