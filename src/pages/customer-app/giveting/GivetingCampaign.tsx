@@ -319,23 +319,35 @@ export const GivetingCampaign: React.FC = () => {
         )}
       </footer>
 
-      <AlertDialog open={reopenOpen} onOpenChange={setReopenOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reopen this fundraiser?</AlertDialogTitle>
-            <AlertDialogDescription>
-              It will become active again and appear on the home screen. Donors will be able to
-              contribute immediately.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={reopening}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={reopening} onClick={reopen}>
-              {reopening ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reopening…</> : 'Reopen fundraiser'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={reopenOpen} onOpenChange={(o) => { setReopenOpen(o); if (!o) setReopenReason(''); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reopen this cause or fundraiser?</DialogTitle>
+            <DialogDescription>
+              It will become active again and appear on the home screen. Followers and recent donors
+              will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Label htmlFor="reopen-reason-detail">Reason for reopening</Label>
+            <Textarea
+              id="reopen-reason-detail"
+              value={reopenReason}
+              onChange={(e) => setReopenReason(e.target.value)}
+              placeholder="e.g. Goal increased, new phase of the campaign."
+              maxLength={500}
+              className="mt-1 min-h-[100px]"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">{reopenReason.length} / 500 · recorded in the activity trail</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReopenOpen(false)} disabled={reopening} className="rounded-full">Cancel</Button>
+            <Button onClick={reopen} disabled={reopening || reopenReason.trim().length < 3} className="rounded-full">
+              {reopening ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reopening…</> : 'Reopen it'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
