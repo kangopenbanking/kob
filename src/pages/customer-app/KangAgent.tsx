@@ -35,6 +35,8 @@ type Subscription = {
   status: "trial" | "active" | "suspended";
   questions_asked_count: number;
   free_questions_limit: number;
+  current_period_end?: string | null;
+  last_payment_status?: string | null;
 };
 
 const STORAGE_KEY = "kang-agent:session-id";
