@@ -696,6 +696,8 @@ const CustomerCardOrderPhysical = lazy(() => import("./pages/customer-app/Custom
 const CustomerCardSettings = lazy(() => import("./pages/customer-app/CustomerCardSettings"));
 const CustomerMore = lazy(() => import("./pages/customer-app/CustomerMore"));
 const KangAgent = lazy(() => import("./pages/customer-app/KangAgent"));
+const KangAgentBilling = lazy(() => import("./pages/customer-app/KangAgentBilling"));
+const AdminKangAgent = lazy(() => import("./pages/admin/AdminKangAgent"));
 const CustomerPromiseToPay = lazy(() => import("./pages/customer-app/CustomerPromiseToPay"));
 const CustomerOrderTracking = lazy(() => import("./pages/customer-app/CustomerOrderTracking").then(m => ({ default: m.CustomerOrderTracking })));
 const CustomerTransfer = lazy(() => import("./pages/customer-app/CustomerTransfer"));
