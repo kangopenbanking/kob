@@ -130,9 +130,10 @@ async function handleStatus(service: any, userId: string) {
 
 
 async function handleSubscribe(service: any, userId: string, body: any) {
+  // Admin-configured price is the source of truth.
+  const PLAN_AMOUNT = await resolveFeePrice(service, 'credit_premium_subscription', DEFAULT_PLAN_AMOUNT);
+
   // ── Wallet debit (server-mediated) ──
-  // Resolve user's primary XAF wallet, atomically debit PLAN_AMOUNT, then
-  // write a transactions row. We attribute the institution from the wallet.
   const { data: wallet, error: walletErr } = await service
     .from('accounts')
     .select('id, institution_id, currency')
@@ -145,7 +146,11 @@ async function handleSubscribe(service: any, userId: string, body: any) {
     .maybeSingle();
 
   if (walletErr || !wallet) {
-    return jsonError('No active XAF wallet found. Please fund your wallet first.', 400);
+    return jsonError(
+      'No active XAF wallet found. Please fund your wallet before activating Premium.',
+      400,
+      { code: 'wallet_missing' },
+    );
   }
 
   const paymentRef = body.payment_reference || `crq-prem-${crypto.randomUUID().slice(0, 12)}`;
@@ -159,11 +164,16 @@ async function handleSubscribe(service: any, userId: string, body: any) {
   });
   if (debitErr) {
     const msg = debitErr.message || 'Wallet debit failed';
-    if (msg.includes('Insufficient funds')) {
-      return jsonError('Insufficient wallet balance for CrediQ Premium (1,500 XAF).', 402);
+    if (msg.toLowerCase().includes('insufficient')) {
+      return jsonError(
+        `Insufficient wallet balance for CrediQ Premium (${PLAN_AMOUNT.toLocaleString()} ${PLAN_CURRENCY}).`,
+        402,
+        { code: 'insufficient_funds', required: PLAN_AMOUNT, currency: PLAN_CURRENCY },
+      );
     }
-    return jsonError(msg, 400);
+    return jsonError(msg, 400, { code: 'debit_failed' });
   }
+
 
   // Record the wallet transaction (best-effort)
   const nowIso = new Date().toISOString();
