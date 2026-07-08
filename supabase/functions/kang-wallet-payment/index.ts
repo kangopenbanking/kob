@@ -101,6 +101,16 @@ Deno.serve(async (req) => {
       });
       await admin.rpc("increment_credit_score", { p_user_id: userId, p_delta: -3 }).catch(() => {});
 
+      await admin.from("kang_notifications").insert({
+        user_id: userId,
+        type: "payment_failed",
+        title: "Kang Agent payment failed",
+        message: errorCode === "insufficient_funds"
+          ? `We couldn't debit ${monthlyFee} ${currency} — your wallet balance is ${currentBalance} ${currency}. Top up to reactivate Premium.`
+          : "We couldn't process your subscription payment. Please try again.",
+        metadata: { payment_reference: paymentReference, error: errorCode, required: monthlyFee, current_balance: currentBalance },
+      });
+
       return json(200, {
         success: false,
         error: errorCode,

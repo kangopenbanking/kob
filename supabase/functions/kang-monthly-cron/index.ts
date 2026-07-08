@@ -121,6 +121,14 @@ Deno.serve(async (req) => {
         });
         await admin.rpc("increment_credit_score", { p_user_id: userId, p_delta: -3 }).catch(() => {});
 
+        await admin.from("kang_notifications").insert({
+          user_id: userId,
+          type: "payment_failed",
+          title: "Kang Agent auto-renewal failed",
+          message: `We couldn't renew your Kang Agent Premium — wallet balance is ${currentBalance} ${currency}. Top up to reactivate.`,
+          metadata: { payment_reference: paymentReference, error: errorCode, required: monthlyFee, current_balance: currentBalance, triggered_by: "cron" },
+        });
+
         failedCount++;
       }
     } catch (e) {

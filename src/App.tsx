@@ -696,6 +696,8 @@ const CustomerCardOrderPhysical = lazy(() => import("./pages/customer-app/Custom
 const CustomerCardSettings = lazy(() => import("./pages/customer-app/CustomerCardSettings"));
 const CustomerMore = lazy(() => import("./pages/customer-app/CustomerMore"));
 const KangAgent = lazy(() => import("./pages/customer-app/KangAgent"));
+const KangAgentBilling = lazy(() => import("./pages/customer-app/KangAgentBilling"));
+const AdminKangAgent = lazy(() => import("./pages/admin/AdminKangAgent"));
 const CustomerPromiseToPay = lazy(() => import("./pages/customer-app/CustomerPromiseToPay"));
 const CustomerOrderTracking = lazy(() => import("./pages/customer-app/CustomerOrderTracking").then(m => ({ default: m.CustomerOrderTracking })));
 const CustomerTransfer = lazy(() => import("./pages/customer-app/CustomerTransfer"));
@@ -1127,6 +1129,7 @@ function App() {
               <Route path="slo" element={<AdminSLO />} />
               <Route path="kyc-gateway" element={<AdminKycGateway />} />
               <Route path="kyc-dashboard" element={<AdminKycDashboard />} />
+              <Route path="kang-agent" element={<AdminKangAgent />} />
               <Route path="screenshot-guard" element={<AdminScreenshotGuard />} />
               <Route path="rate-limits" element={<RateLimitConfig />} />
               <Route path="api-docs" element={<ApiDocumentation />} />
@@ -1714,6 +1717,7 @@ function App() {
               <Route path="cards/settings" element={<CustomerCardSettings />} />
               <Route path="more" element={<CustomerMore />} />
               <Route path="kang-agent" element={<KangAgent />} />
+              <Route path="kang-agent/billing" element={<KangAgentBilling />} />
               <Route path="promise-to-pay" element={<CustomerPromiseToPay />} />
               <Route path="transfer" element={<CustomerTransfer />} />
               <Route path="request" element={<CustomerRequest />} />

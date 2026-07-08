@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
-  Wallet, AlertTriangle, ArrowUpRight,
+  Wallet, AlertTriangle, ArrowUpRight, Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
+import { KangNotificationBell } from "./KangNotificationBell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ export default function KangAgent() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -106,6 +108,12 @@ export default function KangAgent() {
     } else {
       setWalletBalance(0);
     }
+    // Unread notifications count (kang-sync-state also returns this; use direct read for speed)
+    const { count } = await db
+      .from("kang_notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).eq("is_read", false);
+    setUnreadNotifs(count ?? 0);
   }
 
   async function payFromWallet() {
@@ -284,6 +292,7 @@ export default function KangAgent() {
           ) : (
             <Badge variant="secondary" className="text-[10px] h-6 px-1.5">Trial {trialUsed}/{trialLimit}</Badge>
           )}
+          <KangNotificationBell unreadCount={unreadNotifs} onChanged={loadProfileAndSub} />
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={newChat} aria-label="New chat">
             <Plus className="h-4.5 w-4.5" />
           </Button>
@@ -465,6 +474,14 @@ export default function KangAgent() {
           </SheetHeader>
           <ScrollArea className="h-[calc(100dvh-72px)]">
             <div className="p-2 space-y-1">
+              <button
+                onClick={() => { setSidebarOpen(false); navigate("/app/kang-agent/billing"); }}
+                className="w-full flex items-center gap-2 rounded-xl px-3 py-2.5 text-left hover:bg-muted transition-colors"
+              >
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[13px] font-medium">Billing History</span>
+              </button>
+              <div className="my-1 h-px bg-border/60" />
               {sessions.length === 0 && (
                 <div className="text-center text-sm text-muted-foreground py-10 px-4">
                   <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
