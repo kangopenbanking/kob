@@ -71,6 +71,9 @@ export const GivetingCampaign: React.FC = () => {
   }
 
   const pct = progressPct(campaign.total_raised_minor, campaign.goal_amount_minor);
+  const isOwner = !!currentUserId && currentUserId === campaign.owner_user_id;
+  const isClosed = ['completed', 'archived'].includes(campaign.status);
+  const isActive = campaign.status === 'active';
 
   const share = () => {
     const url = window.location.href;
@@ -80,6 +83,22 @@ export const GivetingCampaign: React.FC = () => {
       toast.success('Link copied');
     }
   };
+
+  const reopen = async () => {
+    setReopening(true);
+    try {
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'active' });
+      if (res?.error) throw new Error(res.message || res.error);
+      setCampaign(res.campaign ?? { ...campaign, status: 'active' });
+      toast.success('Fundraiser reopened. It is active again.');
+      setReopenOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not reopen fundraiser');
+    } finally {
+      setReopening(false);
+    }
+  };
+
 
   return (
     <div className="pb-32">
