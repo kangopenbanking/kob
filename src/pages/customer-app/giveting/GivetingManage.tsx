@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 export const GivetingManage: React.FC = () => {
   const { slug } = useParams();
   const nav = useNavigate();
+  const { user: authUser, loading: authLoading } = useAuthenticatedUser();
   const [campaign, setCampaign] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
