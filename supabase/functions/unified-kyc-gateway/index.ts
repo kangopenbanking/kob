@@ -562,14 +562,71 @@ async function runVerification(
   authToken: string,
   req: KycRequest,
 ): Promise<KycResponse> {
+  // ── Tier 1: Didit (primary) ─────────────────────────────────────────────
+  const diditDecision = await shouldRouteToDidit(supabase, req.user_id, req.country);
+  const diditBreaker = await breakerAllow(supabase, "didit");
+  const useDidit = diditDecision.route && diditBreaker.allow;
+  logKyc({
+    event: "route_decision_didit",
+    trace_id: req.trace_id,
+    use_didit: useDidit,
+    flag_reason: diditDecision.reason,
+    breaker: diditBreaker.state,
+  });
+
+  let diditFallbackReason: string | null = null;
+
+  if (useDidit) {
+    const start = Date.now();
+    try {
+      const session = await createDiditSession(req);
+      const dtTime = Date.now() - start;
+      const sessionId = String(session.session_id ?? "");
+      const url = String(session.url ?? "");
+      if (!sessionId || !url) {
+        throw new DiditError(true, "empty_response", "Didit returned no session_id/url");
+      }
+      await breakerRecord(supabase, true, "didit");
+      if (req.verification_type !== "aml") {
+        await persistDiditSession(supabase, req, sessionId);
+      }
+      await writeAudit(supabase, {
+        trace_id: req.trace_id, user_id: req.user_id, verification_type: req.verification_type, country: req.country,
+        provider_used: "didit", fallback_triggered: false,
+        verification_result: "pending",
+      });
+      logKyc({ event: "didit_success", trace_id: req.trace_id, ms: dtTime, session_id: sessionId });
+      return {
+        trace_id: req.trace_id,
+        provider: "didit",
+        fallback_triggered: false,
+        result: "pending",
+        session_id: sessionId,
+        verification_url: url,
+        raw: session,
+      };
+    } catch (err) {
+      const dtTime = Date.now() - start;
+      const e = err as DiditError;
+      logKyc({ event: "didit_failure", trace_id: req.trace_id, ms: dtTime, code: e.code, retryable: e.retryable });
+      await breakerRecord(supabase, false, "didit");
+      diditFallbackReason = `didit_${e.code}`;
+      // Non-retryable Didit auth/validation errors still fall through to Youverify
+      // per the requested provider chain (Didit → Youverify → manual).
+    }
+  } else {
+    diditFallbackReason = diditBreaker.allow ? diditDecision.reason : `didit_circuit_${diditBreaker.state}`;
+  }
+
+  // ── Tier 2: Youverify (fallback) ────────────────────────────────────────
   const decision = await shouldRouteToYouverify(supabase, req.user_id, req.country);
   const breaker = await breakerAllow(supabase);
   const useYv = decision.route && breaker.allow;
-  logKyc({ event: "route_decision", trace_id: req.trace_id, use_youverify: useYv, flag_reason: decision.reason, breaker: breaker.state });
+  logKyc({ event: "route_decision", trace_id: req.trace_id, use_youverify: useYv, flag_reason: decision.reason, breaker: breaker.state, didit_fallback_reason: diditFallbackReason });
 
   let yvTime: number | null = null;
   let yvSuccess: boolean | null = null;
-  let fallbackReason: string | null = null;
+  let fallbackReason: string | null = diditFallbackReason;
 
   if (useYv) {
     const start = Date.now();
