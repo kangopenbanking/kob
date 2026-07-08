@@ -88,7 +88,9 @@ const CustomerMore: React.FC = () => {
               action.key === 'daily_needs' ? 'daily-needs' :
               action.key === 'driver_hub' ? 'driver' :
               action.key === 'promise_to_pay' ? 'promise-to-pay' :
+              action.key === 'kang_agent' ? 'kang-agent' :
               action.key
+
             )} className="flex flex-col items-center gap-2">
               <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
                 <action.icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
