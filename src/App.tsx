@@ -1741,6 +1741,7 @@ function App() {
               <Route path="savings-vault" element={<CustomerSavingsVault />} />
               <Route path="rent-reporting" element={<CustomerRentReporting />} />
               <Route path="credit" element={<CustomerCreditScore />} />
+              <Route path="credit/diagnostics" element={<CustomerCreditDiagnostics />} />
               <Route path="settings" element={<CustomerSettings />} />
               <Route path="settings/sessions" element={<CustomerSessions />} />
               <Route path="settings/two-factor" element={<CustomerTwoFactor />} />
