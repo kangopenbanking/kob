@@ -274,18 +274,100 @@ async function handleListEvents(req: Request, body: any) {
 
 async function handleArchive(req: Request, body: any) {
   const { user, supabase } = await getAuthUser(req);
-  const { id, status } = body;
-  if (!['paused', 'archived', 'active', 'completed'].includes(status)) return jsonRes(400, { error: 'invalid status' });
+  const { id, status, reason } = body;
+  const allowed = ['paused', 'archived', 'active', 'completed'];
+  if (!id || !allowed.includes(status)) return jsonRes(400, { error: 'invalid_status' });
+
+  // Ownership check (explicit, not silent no-op via .eq filter)
+  const { data: current, error: loadErr } = await supabase
+    .from('giveting_campaigns')
+    .select('id, status, owner_user_id, total_raised_minor, currency, published_at')
+    .eq('id', id)
+    .maybeSingle();
+  if (loadErr) return jsonRes(500, { error: 'load_failed', message: loadErr.message });
+  if (!current) return jsonRes(404, { error: 'not_found' });
+  if (current.owner_user_id !== user.id) return jsonRes(403, { error: 'forbidden', message: 'Only the fundraiser owner can change its status.' });
+
+  // Guard: closing (completed) requires no in-flight withdrawals and zero
+  // unwithdrawn balance. This protects donors and prevents accidental
+  // close-with-funds-stranded.
+  if (status === 'completed') {
+    const { count: pendingCount } = await supabase
+      .from('giveting_withdrawals')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', id)
+      .in('status', ['pending', 'processing']);
+    if ((pendingCount ?? 0) > 0) {
+      return jsonRes(409, {
+        error: 'withdrawals_in_flight',
+        message: 'Wait for pending withdrawals to settle before closing this fundraiser.',
+      });
+    }
+
+    // Sum of settled-and-in-flight withdrawal gross amounts must equal total raised
+    const { data: wds } = await supabase
+      .from('giveting_withdrawals')
+      .select('amount_minor, status')
+      .eq('campaign_id', id)
+      .in('status', ['settled', 'processing']);
+    const withdrawn = (wds ?? []).reduce((acc: number, w: any) => acc + Number(w.amount_minor || 0), 0);
+    const raised = Number(current.total_raised_minor || 0);
+    if (raised - withdrawn > 0) {
+      return jsonRes(409, {
+        error: 'unwithdrawn_balance',
+        message: 'Withdraw the remaining balance before closing this fundraiser.',
+      });
+    }
+  }
+
+  // Guard: reopen (→ active) is only valid from a non-active terminal-ish state
+  if (status === 'active' && !['paused', 'completed', 'archived'].includes(current.status)) {
+    return jsonRes(409, { error: 'invalid_transition', message: 'This fundraiser is already active.' });
+  }
+
+  const patch: any = { status };
+  // On reopen, refresh published_at if it was never set
+  if (status === 'active' && !current.published_at) patch.published_at = new Date().toISOString();
+
   const { data, error } = await supabase
     .from('giveting_campaigns')
-    .update({ status })
+    .update(patch)
     .eq('id', id)
-    .eq('owner_user_id', user.id)
+    .eq('owner_user_id', user.id) // defence in depth
     .select('*')
     .single();
   if (error) return jsonRes(500, { error: error.message });
+
+  // Audit trail — best-effort, non-blocking
+  try {
+    const evtType = status === 'active' && current.status !== 'active'
+      ? 'status_changed'
+      : 'status_changed';
+    const reasonText = reason
+      ?? (status === 'completed' ? 'Fundraiser closed by owner'
+        : status === 'active' && current.status !== 'active' ? 'Fundraiser reopened by owner'
+        : status === 'paused' ? 'Fundraiser paused by owner'
+        : status === 'archived' ? 'Fundraiser archived by owner'
+        : 'Status changed by owner');
+    await supabase.from('giveting_campaign_events').insert({
+      campaign_id: id,
+      owner_user_id: current.owner_user_id,
+      event_type: evtType,
+      from_status: current.status,
+      to_status: status,
+      actor_user_id: user.id,
+      actor_role: 'owner',
+      reason: reasonText,
+      metadata: {
+        closed_at: status === 'completed' ? new Date().toISOString() : undefined,
+        reopened_at: status === 'active' && current.status !== 'active' ? new Date().toISOString() : undefined,
+      },
+    });
+  } catch (_) { /* audit is best effort */ }
+
   return jsonRes(200, { campaign: data });
 }
+
 
 // ─── Donations ───
 
