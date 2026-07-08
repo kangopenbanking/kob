@@ -68,27 +68,6 @@ function timingSafeEqualHex(a: string, b: string): boolean {
   return diff === 0;
 }
 
-function mapDiditStatusToKyc(status: string): "approved" | "rejected" | "pending" | "manual_review" | null {
-  switch (status) {
-    case "Approved":
-      return "approved";
-    case "Declined":
-      return "rejected";
-    case "In Review":
-      return "manual_review";
-    case "Resubmitted":
-    case "In Progress":
-    case "Awaiting User":
-    case "Not Started":
-      return "pending";
-    case "Kyc Expired":
-    case "Expired":
-    case "Abandoned":
-      return null; // don't clobber row; handled explicitly below
-    default:
-      return null;
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
