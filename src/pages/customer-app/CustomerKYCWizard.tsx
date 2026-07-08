@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ShieldCheck, FileText, Camera, MapPin, CheckCircle2, AlertCircle, ChevronRight } from "lucide-react";
+import { ArrowLeft, ShieldCheck, FileText, Camera, MapPin, CheckCircle2, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { submitIdentityKyc } from "@/lib/kycGateway";
+import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 
 interface KycStatus {
   level: number | null;
@@ -32,7 +35,39 @@ const statusBadge = (s?: string | null) => {
 export default function CustomerKYCWizard() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [launching, setLaunching] = useState(false);
   const [kyc, setKyc] = useState<KycStatus | null>(null);
+
+  const startDidit = async () => {
+    setLaunching(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error("Please sign in first."); return; }
+      const fallbackExpiry = new Date();
+      fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+      const resp = await submitIdentityKyc({
+        verification_type: "identity",
+        document_type: "national_id",
+        document_number: "PENDING",
+        document_country: "CM",
+        document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+        document_front_url: "",
+        selfie_url: "",
+        source_app: "customer_app",
+      });
+      if (resp.provider === "didit") {
+        toast.success("Verification launched — complete the steps in the Didit window.");
+      } else {
+        // Provider fell back to manual — send user to the manual upload flow.
+        toast.message("Redirecting to manual verification…");
+        nav("/kyc-verification");
+      }
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, "Could not start verification"));
+    } finally {
+      setLaunching(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -143,6 +178,21 @@ export default function CustomerKYCWizard() {
             <li>· Protects your account from fraud</li>
           </ul>
         </Card>
+
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={startDidit}
+          disabled={launching || kyc?.status === "approved" || kyc?.status === "verified"}
+        >
+          {launching ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />Launching…</>
+          ) : kyc?.status === "approved" || kyc?.status === "verified" ? (
+            "Verification complete"
+          ) : (
+            "Start verification"
+          )}
+        </Button>
 
         <Button variant="outline" className="w-full" onClick={() => nav("/app/help")}>
           Need help with verification?
