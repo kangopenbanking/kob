@@ -615,6 +615,7 @@ const OTPMonitoringDashboard = lazy(() => import("./pages/admin/OTPMonitoringDas
 const NotificationDeliveryTelemetry = lazy(() => import("./pages/admin/NotificationDeliveryTelemetry"));
 const EmailDLQReplay = lazy(() => import("./pages/admin/EmailDLQReplay"));
 const MfaBackupCodes = lazy(() => import("./pages/security/MfaBackupCodes"));
+const MfaSettings = lazy(() => import("./pages/security/MfaSettings"));
 const SignupNotificationsE2E = lazy(() => import("./pages/admin/SignupNotificationsE2E"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
