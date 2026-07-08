@@ -615,6 +615,7 @@ const OTPMonitoringDashboard = lazy(() => import("./pages/admin/OTPMonitoringDas
 const NotificationDeliveryTelemetry = lazy(() => import("./pages/admin/NotificationDeliveryTelemetry"));
 const EmailDLQReplay = lazy(() => import("./pages/admin/EmailDLQReplay"));
 const MfaBackupCodes = lazy(() => import("./pages/security/MfaBackupCodes"));
+const MfaSettings = lazy(() => import("./pages/security/MfaSettings"));
 const SignupNotificationsE2E = lazy(() => import("./pages/admin/SignupNotificationsE2E"));
 const MerchantSettlementAccounts = lazy(() => import("./pages/merchant/MerchantSettlementAccounts"));
 const MerchantSubaccounts = lazy(() => import("./pages/merchant/MerchantSubaccounts"));
@@ -1547,6 +1548,7 @@ function App() {
             </Route>
             <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/security/backup-codes" element={<ProtectedRoute><DashboardLayout><MfaBackupCodes /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/security/mfa" element={<ProtectedRoute><DashboardLayout><MfaSettings /></DashboardLayout></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/notification-history" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationHistory /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/mobile-money" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
