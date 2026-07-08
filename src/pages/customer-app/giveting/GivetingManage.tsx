@@ -110,6 +110,43 @@ export const GivetingManage: React.FC = () => {
     }
   };
 
+  const closeCampaign = async () => {
+    if (!campaign) return;
+    const reason = closeReason.trim();
+    if (reason.length < 3) return toast.error('Please provide a reason (at least 3 characters).');
+    setStatusBusy(true);
+    try {
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'completed', reason });
+      setCampaign((c: any) => ({ ...c, ...(res.campaign ?? { status: 'completed' }) }));
+      toast.success('Fundraiser closed');
+      setCloseOpen(false);
+      setCloseReason('');
+    } catch (e: any) {
+      const m = e?.message || '';
+      if (m === 'pending_withdrawals') toast.error('Wait for pending withdrawals to settle before closing.');
+      else if (m === 'unwithdrawn_balance') toast.error('Withdraw remaining funds before closing.');
+      else if (m === 'not_owner') toast.error('Only the fundraiser owner can close it.');
+      else toast.error(m || 'Could not close fundraiser');
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
+  const reopenCampaign = async () => {
+    if (!campaign) return;
+    if (!confirm('Reopen this fundraiser and start accepting donations again?')) return;
+    setStatusBusy(true);
+    try {
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'active', reason: 'Reopened by owner' });
+      setCampaign((c: any) => ({ ...c, ...(res.campaign ?? { status: 'active' }) }));
+      toast.success('Fundraiser reopened');
+    } catch (e: any) {
+      toast.error(e?.message || 'Could not reopen fundraiser');
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
