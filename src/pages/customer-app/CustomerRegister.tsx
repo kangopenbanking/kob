@@ -102,7 +102,48 @@ const CustomerRegister: React.FC = () => {
     }
   };
 
+  const [diditLaunched, setDiditLaunched] = useState(false);
+
+  const launchDiditVerification = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Please sign in to continue');
+      const { submitIdentityKyc } = await import('@/lib/kycGateway');
+      const fallbackExpiry = new Date();
+      fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+      const resp = await submitIdentityKyc({
+        verification_type: 'identity',
+        document_type: 'national_id',
+        document_number: 'PENDING',
+        document_country: 'CM',
+        document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
+        document_front_url: '',
+        selfie_url: '',
+        source_app: 'customer_app',
+      });
+      setDiditLaunched(true);
+      if (resp.provider === 'didit') {
+        toast.success('Identity verification launched via Didit');
+      } else {
+        toast.info('Continuing with manual verification');
+      }
+      // Skip local capture (steps 2 & 3) when Didit / gateway accepted the session
+      setStep(resp.provider === 'didit' ? 4 : 2);
+    } catch (err: any) {
+      toast.error(extractEdgeFunctionError(err, 'Could not start Didit verification'));
+      // Fall back to manual capture flow
+      setStep(2);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNext = async () => {
+    if (step === 1) {
+      await launchDiditVerification();
+      return;
+    }
     if (step === 5 && pinStage === 'create') {
       setPinStage('confirm');
       return;
