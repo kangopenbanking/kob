@@ -35,7 +35,17 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const LABELS: Record<string, (e: Event, currency: string) => string> = {
   created: (e) => `Fundraiser created (${e.to_status ?? 'draft'})`,
-  status_changed: (e) => `Status changed: ${e.from_status ?? '—'} → ${e.to_status ?? '—'}`,
+  status_changed: (e) => {
+    const to = e.to_status ?? '—';
+    const from = e.from_status ?? '—';
+    const closeReason = e.metadata?.close_reason as string | undefined;
+    const reopenReason = e.metadata?.reopen_reason as string | undefined;
+    if (to === 'completed' && closeReason) return `Closed by owner — ${closeReason}`;
+    if (to === 'active' && reopenReason) return `Reopened by owner — ${reopenReason}`;
+    if (to === 'active' && from !== 'active') return `Reopened by owner${e.reason ? ` — ${e.reason}` : ''}`;
+    if (to === 'completed') return `Closed by owner${e.reason ? ` — ${e.reason}` : ''}`;
+    return `Status changed: ${from} → ${to}${e.reason ? ` — ${e.reason}` : ''}`;
+  },
   auto_published_kyc: () => 'Auto-published after identity verification',
   donation: (e, c) =>
     `Donation received — ${formatMoney(e.metadata?.amount_minor ?? 0, e.metadata?.currency ?? c)}`,

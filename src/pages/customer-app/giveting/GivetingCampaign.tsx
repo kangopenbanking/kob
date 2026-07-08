@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, ShieldCheck, Share2, Heart, MessageCircle, Lock, RotateCcw, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Share2, Heart, MessageCircle, Lock, RotateCcw, Loader2, Info } from 'lucide-react';
 import { giveting, formatMoney, progressPct } from '@/lib/giveting';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,9 +10,10 @@ import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
 import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 
 export const GivetingCampaign: React.FC = () => {
@@ -29,6 +30,9 @@ export const GivetingCampaign: React.FC = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopening, setReopening] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+  const [closeReason, setCloseReason] = useState<string | null>(null);
+  const [closedAt, setClosedAt] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
@@ -50,6 +54,20 @@ export const GivetingCampaign: React.FC = () => {
         setDonations(d.donations ?? []);
         setUpdates(u.updates ?? []);
         setComments(cm.comments ?? []);
+
+        // If the campaign is closed, surface the saved reason from the audit trail.
+        if (['completed', 'archived'].includes(res.campaign.status)) {
+          try {
+            const ev: any = await giveting('list-events', { campaign_id: res.campaign.id, limit: 50 });
+            const closeEvt = (ev.events ?? []).find(
+              (e: any) => e.event_type === 'status_changed' && e.to_status === 'completed',
+            );
+            if (closeEvt) {
+              setCloseReason(closeEvt.metadata?.close_reason || closeEvt.reason || null);
+              setClosedAt(closeEvt.metadata?.closed_at || closeEvt.created_at || null);
+            }
+          } catch { /* non-blocking */ }
+        }
       } catch (e: any) {
         toast.error(e.message ?? 'Could not load fundraiser');
       } finally {
@@ -85,13 +103,18 @@ export const GivetingCampaign: React.FC = () => {
   };
 
   const reopen = async () => {
+    const reason = reopenReason.trim();
+    if (reason.length < 3) return toast.error('Please provide a reason (at least 3 characters).');
     setReopening(true);
     try {
-      const res: any = await giveting('set-status', { id: campaign.id, status: 'active' });
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'active', reason });
       if (res?.error) throw new Error(res.message || res.error);
       setCampaign(res.campaign ?? { ...campaign, status: 'active' });
+      setCloseReason(null);
+      setClosedAt(null);
       toast.success('Fundraiser reopened. It is active again.');
       setReopenOpen(false);
+      setReopenReason('');
     } catch (e: any) {
       toast.error(e?.message || 'Could not reopen fundraiser');
     } finally {
@@ -139,6 +162,27 @@ export const GivetingCampaign: React.FC = () => {
             <p className="mt-1 text-xs text-muted-foreground">{campaign.donor_count} {campaign.donor_count === 1 ? 'donor' : 'donors'}</p>
           </div>
         </div>
+
+        {isClosed && (
+          <Card className="mt-6 flex items-start gap-3 rounded-2xl border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-700 dark:text-amber-400" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
+                This {campaign.status === 'archived' ? 'cause has been archived' : 'cause is closed'} and is no longer accepting donations.
+              </p>
+              {closeReason && (
+                <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                  <span className="font-medium">Reason:</span> {closeReason}
+                </p>
+              )}
+              {closedAt && (
+                <p className="mt-1 text-[11px] text-amber-800/80 dark:text-amber-200/70">
+                  Closed on {new Date(closedAt).toLocaleString()}
+                </p>
+              )}
+            </div>
+          </Card>
+        )}
 
         <section className="mt-6">
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{campaign.story}</p>
@@ -296,23 +340,35 @@ export const GivetingCampaign: React.FC = () => {
         )}
       </footer>
 
-      <AlertDialog open={reopenOpen} onOpenChange={setReopenOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reopen this fundraiser?</AlertDialogTitle>
-            <AlertDialogDescription>
-              It will become active again and appear on the home screen. Donors will be able to
-              contribute immediately.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={reopening}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={reopening} onClick={reopen}>
-              {reopening ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reopening…</> : 'Reopen fundraiser'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={reopenOpen} onOpenChange={(o) => { setReopenOpen(o); if (!o) setReopenReason(''); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reopen this cause or fundraiser?</DialogTitle>
+            <DialogDescription>
+              It will become active again and appear on the home screen. Followers and recent donors
+              will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Label htmlFor="reopen-reason-detail">Reason for reopening</Label>
+            <Textarea
+              id="reopen-reason-detail"
+              value={reopenReason}
+              onChange={(e) => setReopenReason(e.target.value)}
+              placeholder="e.g. Goal increased, new phase of the campaign."
+              maxLength={500}
+              className="mt-1 min-h-[100px]"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">{reopenReason.length} / 500 · recorded in the activity trail</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setReopenOpen(false)} disabled={reopening} className="rounded-full">Cancel</Button>
+            <Button onClick={reopen} disabled={reopening || reopenReason.trim().length < 3} className="rounded-full">
+              {reopening ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Reopening…</> : 'Reopen it'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
