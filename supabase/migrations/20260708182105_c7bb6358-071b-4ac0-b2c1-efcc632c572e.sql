@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated users can read active fee structures" ON public.fee_structures;
