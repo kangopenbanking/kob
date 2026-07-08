@@ -10,11 +10,13 @@ import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2, ImagePl
 import { giveting, formatMoney, fromMinor, progressPct, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
 import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
+import { useAuthenticatedUser } from '@/hooks/useAuthenticatedUser';
 import { toast } from 'sonner';
 
 export const GivetingManage: React.FC = () => {
   const { slug } = useParams();
   const nav = useNavigate();
+  const { user: authUser, loading: authLoading } = useAuthenticatedUser();
   const [campaign, setCampaign] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
@@ -33,8 +35,14 @@ export const GivetingManage: React.FC = () => {
     beneficiary_relation: '',
   });
 
+  const isOwner = !!(authUser && campaign && authUser.id === campaign.owner_user_id);
+
   const openEdit = () => {
     if (!campaign) return;
+    if (!isOwner) {
+      toast.error('Only the fundraiser owner can edit this fundraiser.');
+      return;
+    }
     setEditForm({
       title: campaign.title ?? '',
       story: campaign.story ?? '',
@@ -130,7 +138,26 @@ export const GivetingManage: React.FC = () => {
     toast.success('Link copied');
   };
 
-  if (!campaign) return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (authLoading || !campaign) return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+
+  if (!isOwner) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+        <div className="mb-3 text-lg font-semibold">Owner-only page</div>
+        <p className="mb-6 max-w-xs text-sm text-muted-foreground">
+          You can view this fundraiser, but only its owner can manage it.
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => nav(`/app/giveting/c/${slug}`)} className="rounded-full">
+            View fundraiser
+          </Button>
+          <Button onClick={() => nav('/app/giveting')} className="rounded-full">
+            Back to Giveting
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const pct = progressPct(campaign.total_raised_minor, campaign.goal_amount_minor);
 
@@ -144,7 +171,7 @@ export const GivetingManage: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={() => nav(`/app/giveting/c/${slug}`)} className="h-9 w-9 rounded-full" title="Preview">
             <Eye className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Edit" onClick={openEdit}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title={isOwner ? 'Edit' : 'Owner only'} onClick={openEdit} disabled={!isOwner}>
             <Pencil className="h-5 w-5" />
           </Button>
         </div>

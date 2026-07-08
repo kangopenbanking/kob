@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -23,6 +24,7 @@ export const GivetingWithdraw: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [closePromptOpen, setClosePromptOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
 
   const load = async () => {
     const res: any = await giveting('get', { slug });
@@ -74,16 +76,21 @@ export const GivetingWithdraw: React.FC = () => {
   };
 
   const closeCampaign = async () => {
+    const reason = closeReason.trim();
+    if (reason.length < 3) {
+      toast.error('Please provide a reason for closing (at least 3 characters).');
+      return;
+    }
     setClosing(true);
     try {
-      const res: any = await giveting('set-status', { id: campaign.id, status: 'completed' });
+      const res: any = await giveting('set-status', { id: campaign.id, status: 'completed', reason });
       if (res?.error) {
-        // Backend guard rails (withdrawals_in_flight, unwithdrawn_balance, forbidden, ...)
         const map: Record<string, string> = {
           withdrawals_in_flight: 'Wait for pending withdrawals to settle before closing.',
           unwithdrawn_balance: 'Withdraw the remaining balance before closing this fundraiser.',
           forbidden: 'Only the fundraiser owner can close it.',
           invalid_transition: 'This fundraiser cannot be closed from its current state.',
+          reason_required: 'Please provide a reason for closing this fundraiser.',
         };
         toast.error(map[res.error] ?? res.message ?? res.error);
         return;
@@ -213,11 +220,28 @@ export const GivetingWithdraw: React.FC = () => {
               reversed by an admin if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2 py-1">
+            <Label htmlFor="close-reason" className="text-sm">
+              Reason for closing <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="close-reason"
+              value={closeReason}
+              onChange={(e) => setCloseReason(e.target.value)}
+              maxLength={500}
+              disabled={closing}
+              placeholder="e.g. Goal reached and funds withdrawn. Thank you to all donors."
+              className="min-h-[96px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              Recorded on the audit trail with your name and the time of closure.
+            </p>
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={closing} onClick={() => nav(`/app/giveting/c/${slug}/manage`)}>
+            <AlertDialogCancel disabled={closing} onClick={() => { setCloseReason(''); nav(`/app/giveting/c/${slug}/manage`); }}>
               Keep active
             </AlertDialogCancel>
-            <AlertDialogAction disabled={closing} onClick={closeCampaign}>
+            <AlertDialogAction disabled={closing || closeReason.trim().length < 3} onClick={closeCampaign}>
               {closing ? 'Closing…' : 'Close fundraiser'}
             </AlertDialogAction>
           </AlertDialogFooter>

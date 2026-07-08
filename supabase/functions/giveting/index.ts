@@ -278,6 +278,15 @@ async function handleArchive(req: Request, body: any) {
   const allowed = ['paused', 'archived', 'active', 'completed'];
   if (!id || !allowed.includes(status)) return jsonRes(400, { error: 'invalid_status' });
 
+  // Closing requires an auditable reason from the owner.
+  const reasonTrimmed = typeof reason === 'string' ? reason.trim() : '';
+  if (status === 'completed' && reasonTrimmed.length < 3) {
+    return jsonRes(400, {
+      error: 'reason_required',
+      message: 'Please provide a reason for closing this fundraiser (at least 3 characters).',
+    });
+  }
+
   // Ownership check (explicit, not silent no-op via .eq filter)
   const { data: current, error: loadErr } = await supabase
     .from('giveting_campaigns')
@@ -343,12 +352,12 @@ async function handleArchive(req: Request, body: any) {
     const evtType = status === 'active' && current.status !== 'active'
       ? 'status_changed'
       : 'status_changed';
-    const reasonText = reason
-      ?? (status === 'completed' ? 'Fundraiser closed by owner'
-        : status === 'active' && current.status !== 'active' ? 'Fundraiser reopened by owner'
+    const reasonText = reasonTrimmed
+      || (status === 'active' && current.status !== 'active' ? 'Fundraiser reopened by owner'
         : status === 'paused' ? 'Fundraiser paused by owner'
         : status === 'archived' ? 'Fundraiser archived by owner'
         : 'Status changed by owner');
+    const nowIso = new Date().toISOString();
     await supabase.from('giveting_campaign_events').insert({
       campaign_id: id,
       owner_user_id: current.owner_user_id,
@@ -359,8 +368,11 @@ async function handleArchive(req: Request, body: any) {
       actor_role: 'owner',
       reason: reasonText,
       metadata: {
-        closed_at: status === 'completed' ? new Date().toISOString() : undefined,
-        reopened_at: status === 'active' && current.status !== 'active' ? new Date().toISOString() : undefined,
+        reason: reasonText,
+        closed_by: status === 'completed' ? user.id : undefined,
+        closed_at: status === 'completed' ? nowIso : undefined,
+        reopened_by: status === 'active' && current.status !== 'active' ? user.id : undefined,
+        reopened_at: status === 'active' && current.status !== 'active' ? nowIso : undefined,
       },
     });
   } catch (_) { /* audit is best effort */ }
