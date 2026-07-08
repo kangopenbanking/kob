@@ -138,7 +138,26 @@ export const GivetingManage: React.FC = () => {
     toast.success('Link copied');
   };
 
-  if (!campaign) return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (authLoading || !campaign) return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+
+  if (!isOwner) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+        <div className="mb-3 text-lg font-semibold">Owner-only page</div>
+        <p className="mb-6 max-w-xs text-sm text-muted-foreground">
+          You can view this fundraiser, but only its owner can manage it.
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => nav(`/app/giveting/c/${slug}`)} className="rounded-full">
+            View fundraiser
+          </Button>
+          <Button onClick={() => nav('/app/giveting')} className="rounded-full">
+            Back to Giveting
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const pct = progressPct(campaign.total_raised_minor, campaign.goal_amount_minor);
 
