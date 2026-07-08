@@ -196,7 +196,7 @@ export default function KangAgent() {
   async function sendMessage() {
     const text = input.trim();
     if (!text || sending) return;
-    if (limitReached) { setShowPaywall(true); return; }
+    if (blocked) { setShowPaywall(true); return; }
 
     setSending(true);
     const optimistic: Message = {
