@@ -179,7 +179,7 @@ export default function KangAgent() {
 
   async function deleteSession(id: string, e: React.MouseEvent) {
     e.stopPropagation();
-    const { error } = await supabase.from("kang_chat_sessions").delete().eq("id", id);
+    const { error } = await (supabase as any).from("kang_chat_sessions").delete().eq("id", id);
     if (error) { toast.error("Could not delete conversation."); return; }
     setSessions((s) => s.filter((x) => x.id !== id));
     if (sessionId === id) newChat();
