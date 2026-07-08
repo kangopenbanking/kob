@@ -17,9 +17,39 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 import { corsHeaders } from "../_shared/cors.ts";
 import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
-const PLAN_AMOUNT = 1500;
+const DEFAULT_PLAN_AMOUNT = 1500;
+const DEFAULT_REPORT_AMOUNT = 2500;
 const PLAN_CURRENCY = 'XAF';
 const PERIOD_DAYS = 30;
+
+// Resolve the admin-configured price from fee_structures. Falls back to the
+// default constant if no active platform row is found.
+async function resolveFeePrice(
+  service: any,
+  transactionType: string,
+  fallback: number,
+): Promise<number> {
+  try {
+    const nowIso = new Date().toISOString();
+    const { data } = await service
+      .from('fee_structures')
+      .select('fixed_amount, fee_model, is_active, effective_from, effective_until, fee_scope')
+      .eq('transaction_type', transactionType)
+      .eq('is_active', true)
+      .eq('fee_scope', 'platform')
+      .lte('effective_from', nowIso)
+      .order('effective_from', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) return fallback;
+    if (data.effective_until && new Date(data.effective_until) < new Date()) return fallback;
+    const amt = Number(data.fixed_amount);
+    return Number.isFinite(amt) && amt > 0 ? amt : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -73,6 +103,12 @@ async function handleStatus(service: any, userId: string) {
 
   const active = !!sub && sub.status === 'active' && new Date(sub.current_period_end) > new Date();
 
+  // Admin-configured pricing (source of truth) with sensible fallbacks.
+  const [planAmount, reportAmount] = await Promise.all([
+    resolveFeePrice(service, 'credit_premium_subscription', DEFAULT_PLAN_AMOUNT),
+    resolveFeePrice(service, 'credit_report_inquiry', DEFAULT_REPORT_AMOUNT),
+  ]);
+
   return jsonOk({
     active,
     plan: sub?.plan ?? 'free',
@@ -80,15 +116,24 @@ async function handleStatus(service: any, userId: string) {
     auto_renew: sub?.auto_renew ?? false,
     current_period_start: sub?.current_period_start ?? null,
     current_period_end: sub?.current_period_end ?? null,
-    amount: sub?.amount ?? PLAN_AMOUNT,
+    amount: active && sub?.amount ? Number(sub.amount) : planAmount,
     currency: sub?.currency ?? PLAN_CURRENCY,
+    period_days: PERIOD_DAYS,
+    pricing: {
+      plan_amount: planAmount,
+      report_amount: reportAmount,
+      currency: PLAN_CURRENCY,
+      source: 'fee_structures',
+    },
   });
 }
 
+
 async function handleSubscribe(service: any, userId: string, body: any) {
+  // Admin-configured price is the source of truth.
+  const PLAN_AMOUNT = await resolveFeePrice(service, 'credit_premium_subscription', DEFAULT_PLAN_AMOUNT);
+
   // ── Wallet debit (server-mediated) ──
-  // Resolve user's primary XAF wallet, atomically debit PLAN_AMOUNT, then
-  // write a transactions row. We attribute the institution from the wallet.
   const { data: wallet, error: walletErr } = await service
     .from('accounts')
     .select('id, institution_id, currency')
@@ -101,7 +146,11 @@ async function handleSubscribe(service: any, userId: string, body: any) {
     .maybeSingle();
 
   if (walletErr || !wallet) {
-    return jsonError('No active XAF wallet found. Please fund your wallet first.', 400);
+    return jsonError(
+      'No active XAF wallet found. Please fund your wallet before activating Premium.',
+      400,
+      { code: 'wallet_missing' },
+    );
   }
 
   const paymentRef = body.payment_reference || `crq-prem-${crypto.randomUUID().slice(0, 12)}`;
@@ -115,11 +164,16 @@ async function handleSubscribe(service: any, userId: string, body: any) {
   });
   if (debitErr) {
     const msg = debitErr.message || 'Wallet debit failed';
-    if (msg.includes('Insufficient funds')) {
-      return jsonError('Insufficient wallet balance for CrediQ Premium (1,500 XAF).', 402);
+    if (msg.toLowerCase().includes('insufficient')) {
+      return jsonError(
+        `Insufficient wallet balance for CrediQ Premium (${PLAN_AMOUNT.toLocaleString()} ${PLAN_CURRENCY}).`,
+        402,
+        { code: 'insufficient_funds', required: PLAN_AMOUNT, currency: PLAN_CURRENCY },
+      );
     }
-    return jsonError(msg, 400);
+    return jsonError(msg, 400, { code: 'debit_failed' });
   }
+
 
   // Record the wallet transaction (best-effort)
   const nowIso = new Date().toISOString();
