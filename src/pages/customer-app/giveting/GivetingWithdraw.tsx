@@ -24,6 +24,7 @@ export const GivetingWithdraw: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [closePromptOpen, setClosePromptOpen] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
 
   const load = async () => {
     const res: any = await giveting('get', { slug });
