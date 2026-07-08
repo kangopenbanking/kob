@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2 } from 'lucide-react';
-import { giveting, formatMoney, progressPct } from '@/lib/giveting';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ArrowLeft, Eye, Pencil, Plus, ArrowUpRight, Bell, Users, Link2, ImagePlus, Loader2, Upload } from 'lucide-react';
+import { giveting, formatMoney, fromMinor, progressPct, toMinor, uploadGivetingCover } from '@/lib/giveting';
 import { ProgressRing } from '@/components/customer-app/giveting/ProgressRing';
 import { CampaignAuditTrail } from '@/components/customer-app/giveting/CampaignAuditTrail';
 import { toast } from 'sonner';
