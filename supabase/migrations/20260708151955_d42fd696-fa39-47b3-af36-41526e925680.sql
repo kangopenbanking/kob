@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS uq_account_balances_canonical ON public.account_balances (account_id, balance_type, credit_debit_indicator, currency);
