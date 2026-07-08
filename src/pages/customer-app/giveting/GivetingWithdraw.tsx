@@ -186,6 +186,31 @@ export const GivetingWithdraw: React.FC = () => {
         title="Confirm withdrawal"
         description="Enter your 6-digit PIN to authorise this withdrawal."
       />
+
+      <AlertDialog open={closePromptOpen} onOpenChange={setClosePromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" strokeWidth={1.7} />
+              Close this fundraiser?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Your withdrawal has been sent. Closing the fundraiser marks it as
+              completed and inactive — no new donations can be received and it
+              will show as closed on your Giveting home. This action can be
+              reversed by an admin if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={closing} onClick={() => nav(`/app/giveting/c/${slug}/manage`)}>
+              Keep active
+            </AlertDialogCancel>
+            <AlertDialogAction disabled={closing} onClick={closeCampaign}>
+              {closing ? 'Closing…' : 'Close fundraiser'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
