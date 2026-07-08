@@ -30,12 +30,14 @@ export interface KycRequest {
 
 export interface KycResponse {
   trace_id: string;
-  provider: "youverify" | "self_hosted";
+  provider: "didit" | "youverify" | "self_hosted";
   fallback_triggered: boolean;
   result: VerificationResult;
   risk_score?: number;
   session_id?: string;
   reference?: string;
+  /** Didit hosted verification URL — client opens with @didit-protocol/sdk-web. */
+  verification_url?: string;
   raw?: Record<string, unknown>;
   error?: { code: string; message: string };
 }
