@@ -70,6 +70,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Institution Management", path: "/admin/institution-management", icon: Building2 },
       { title: "KYC Verification", path: "/admin/kyc-verification", icon: Shield },
       { title: "KYC Gateway", path: "/admin/kyc-gateway", icon: ShieldCheck },
+      { title: "KYC Dashboard", path: "/admin/kyc-dashboard", icon: ShieldCheck },
       { title: "Business KYC (KYB)", path: "/admin/business-kyc", icon: Building2 },
       { title: "KYB Review Queue", path: "/admin/kyb-review-queue", icon: CheckCircle2 },
       { title: "Loan Review Queue", path: "/admin/loan-review-queue", icon: CheckCircle2 },
