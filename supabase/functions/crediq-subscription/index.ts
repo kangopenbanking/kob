@@ -17,9 +17,39 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 import { corsHeaders } from "../_shared/cors.ts";
 import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
-const PLAN_AMOUNT = 1500;
+const DEFAULT_PLAN_AMOUNT = 1500;
+const DEFAULT_REPORT_AMOUNT = 2500;
 const PLAN_CURRENCY = 'XAF';
 const PERIOD_DAYS = 30;
+
+// Resolve the admin-configured price from fee_structures. Falls back to the
+// default constant if no active platform row is found.
+async function resolveFeePrice(
+  service: any,
+  transactionType: string,
+  fallback: number,
+): Promise<number> {
+  try {
+    const nowIso = new Date().toISOString();
+    const { data } = await service
+      .from('fee_structures')
+      .select('fixed_amount, fee_model, is_active, effective_from, effective_until, fee_scope')
+      .eq('transaction_type', transactionType)
+      .eq('is_active', true)
+      .eq('fee_scope', 'platform')
+      .lte('effective_from', nowIso)
+      .order('effective_from', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) return fallback;
+    if (data.effective_until && new Date(data.effective_until) < new Date()) return fallback;
+    const amt = Number(data.fixed_amount);
+    return Number.isFinite(amt) && amt > 0 ? amt : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
