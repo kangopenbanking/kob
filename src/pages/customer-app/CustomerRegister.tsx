@@ -342,8 +342,13 @@ const CustomerRegister: React.FC = () => {
                 </div>
                 <h2 className="text-xl font-bold text-foreground text-center">{tr('Let\'s verify your identity')}</h2>
                 <p className="text-sm text-muted-foreground text-center max-w-xs">
-                  We want to confirm your identity before you can use Kang. This helps keep your account safe and secure.
+                  We use <span className="font-semibold text-foreground">Didit</span> to verify your identity securely. Tap the button below to launch the verification flow — it takes about 2 minutes.
                 </p>
+                <ul className="text-xs text-muted-foreground space-y-1.5 mt-2 max-w-xs">
+                  <li className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-primary mt-0.5" /> Government-issued ID capture</li>
+                  <li className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-primary mt-0.5" /> Live selfie with liveness detection</li>
+                  <li className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-primary mt-0.5" /> Encrypted end-to-end</li>
+                </ul>
               </div>
             )}
 
