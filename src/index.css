@@ -551,9 +551,11 @@ body::-webkit-scrollbar {
     position: absolute;
     inset: 0;
     border-radius: 9999px;
-    border: 1.5px solid hsl(var(--primary) / 0.55);
+    border: 1.5px solid hsl(var(--primary) / 0.6);
     opacity: 0;
-    animation: kang-pulse-wave 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    pointer-events: none;
+    will-change: transform, opacity;
+    animation: kang-pulse-wave 5.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   }
   .kang-orbit {
     position: absolute;
@@ -575,9 +577,10 @@ body::-webkit-scrollbar {
 }
 
 @keyframes kang-pulse-wave {
-  0%   { transform: scale(0.55); opacity: 0.9; }
-  70%  { opacity: 0.15; }
-  100% { transform: scale(1.35); opacity: 0; }
+  0%   { transform: scale(0.4); opacity: 0.85; border-width: 2px; }
+  40%  { opacity: 0.35; }
+  80%  { opacity: 0.08; }
+  100% { transform: scale(8); opacity: 0; border-width: 0.5px; }
 }
 
 @keyframes kang-orbit-spin {
