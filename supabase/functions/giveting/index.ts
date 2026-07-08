@@ -481,21 +481,25 @@ async function handleWithdraw(req: Request, body: any) {
     const netXAF = netXAFMinor / 100;
     const { data: account } = await supabase.from('accounts').select('id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle();
     if (account) {
-      await supabase.rpc('atomic_credit_balance', {
-        _account_id: account.id,
-        _amount: netXAF,
-        _currency: 'XAF',
-      }).catch((e: any) => console.error('credit failed', e));
-      await supabase.from('transactions').insert({
-        account_id: account.id,
-        amount: netXAF,
-        currency: 'XAF',
-        credit_debit_indicator: 'Credit',
-        status: 'Booked',
-        booking_datetime: new Date().toISOString(),
-        transaction_information: `Giveting withdrawal — ${campaign.title}`,
-        transaction_reference: `GIVE-WD-${wd.id.slice(0, 8).toUpperCase()}`,
-      }).catch(() => {});
+      try {
+        await supabase.rpc('atomic_credit_balance', {
+          _account_id: account.id,
+          _amount: netXAF,
+          _currency: 'XAF',
+        });
+      } catch (e) { console.error('credit failed', e); }
+      try {
+        await supabase.from('transactions').insert({
+          account_id: account.id,
+          amount: netXAF,
+          currency: 'XAF',
+          credit_debit_indicator: 'Credit',
+          status: 'Booked',
+          booking_datetime: new Date().toISOString(),
+          transaction_information: `Giveting withdrawal — ${campaign.title}`,
+          transaction_reference: `GIVE-WD-${wd.id.slice(0, 8).toUpperCase()}`,
+        });
+      } catch (_) { /* best-effort */ }
     }
   }
 
