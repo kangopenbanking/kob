@@ -144,7 +144,7 @@ export const GivetingManage: React.FC = () => {
           <Button variant="ghost" size="icon" onClick={() => nav(`/app/giveting/c/${slug}`)} className="h-9 w-9 rounded-full" title="Preview">
             <Eye className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Edit" disabled>
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" title="Edit" onClick={openEdit}>
             <Pencil className="h-5 w-5" />
           </Button>
         </div>
