@@ -55,7 +55,14 @@ export const GivetingWithdraw: React.FC = () => {
         idempotency_key: newIdempotencyKey(),
       });
       toast.success('Withdrawal sent to your wallet');
-      nav(`/app/giveting/c/${slug}/manage`);
+      await load();
+      setAmount('');
+      // Offer to close the fundraiser once funds are out.
+      if (campaign.status !== 'completed' && campaign.status !== 'archived') {
+        setClosePromptOpen(true);
+      } else {
+        nav(`/app/giveting/c/${slug}/manage`);
+      }
     } catch (e: any) {
       const m = e.message ?? '';
       if (m === 'exceeds_available') toast.error('Amount exceeds available balance');
@@ -63,6 +70,20 @@ export const GivetingWithdraw: React.FC = () => {
       else toast.error(m || 'Withdrawal failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const closeCampaign = async () => {
+    setClosing(true);
+    try {
+      await giveting('set-status', { id: campaign.id, status: 'completed' });
+      toast.success('Fundraiser closed');
+      setClosePromptOpen(false);
+      nav('/app/giveting');
+    } catch (e: any) {
+      toast.error(e.message ?? 'Could not close fundraiser');
+    } finally {
+      setClosing(false);
     }
   };
 
