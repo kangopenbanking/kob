@@ -173,7 +173,28 @@ async function handleUpdateCampaign(req: Request, body: any) {
 
 async function handlePublish(req: Request, body: any) {
   const { user, supabase } = await getAuthUser(req);
-  const { id } = body;
+  const { id, idempotency_key } = body;
+  if (!id) return jsonRes(400, { error: 'id_required', message: 'Campaign id is required.' });
+
+  // Load & lock the campaign, verify ownership
+  const { data: campaign, error: cErr } = await supabase
+    .from('giveting_campaigns')
+    .select('id, status, owner_user_id, title')
+    .eq('id', id)
+    .eq('owner_user_id', user.id)
+    .maybeSingle();
+  if (cErr) return jsonRes(500, { error: 'lookup_failed', message: cErr.message });
+  if (!campaign) return jsonRes(404, { error: 'not_found', message: 'Fundraiser not found.' });
+
+  // Idempotency: if already active, replay the same success
+  if (campaign.status === 'active') {
+    return jsonRes(200, { campaign, kyc_required: false, replayed: true, message: 'Fundraiser is already live.' });
+  }
+  if (['archived', 'blocked', 'completed'].includes(campaign.status)) {
+    return jsonRes(409, { error: 'invalid_state', message: `This fundraiser is ${campaign.status} and cannot be published.` });
+  }
+
+  // Re-verify KYC at the moment of publish (approval may have arrived mid-request)
   const { data: kyc } = await supabase
     .from('kyc_verifications')
     .select('status')
@@ -181,18 +202,74 @@ async function handlePublish(req: Request, body: any) {
     .eq('status', 'approved')
     .limit(1);
   const kycOk = (kyc?.length ?? 0) > 0;
-  const patch: any = kycOk
-    ? { status: 'active', published_at: new Date().toISOString() }
-    : { status: 'pending' };
+
+  if (!kycOk) {
+    return jsonRes(200, {
+      campaign,
+      kyc_required: true,
+      message: 'Verify your identity to make this fundraiser live.',
+    });
+  }
+
   const { data, error } = await supabase
     .from('giveting_campaigns')
-    .update(patch)
+    .update({ status: 'active', published_at: new Date().toISOString() })
     .eq('id', id)
     .eq('owner_user_id', user.id)
+    .eq('status', 'pending') // guarded update — no-op if state already changed
     .select('*')
-    .single();
+    .maybeSingle();
+  if (error) return jsonRes(500, { error: 'publish_failed', message: error.message });
+
+  // Guarded update returned nothing → another writer beat us. Return current state idempotently.
+  if (!data) {
+    const { data: latest } = await supabase.from('giveting_campaigns').select('*').eq('id', id).maybeSingle();
+    return jsonRes(200, { campaign: latest, kyc_required: false, replayed: true, message: 'Fundraiser is already live.' });
+  }
+
+  // Reason attribution (surfaces on the audit trail via metadata)
+  try {
+    await supabase.from('giveting_campaign_events').insert({
+      campaign_id: id,
+      owner_user_id: user.id,
+      event_type: 'status_changed',
+      from_status: 'pending',
+      to_status: 'active',
+      actor_user_id: user.id,
+      actor_role: 'owner',
+      reason: 'Manual publish',
+      metadata: { idempotency_key: idempotency_key ?? null },
+    });
+  } catch { /* audit is best effort; DB trigger also logs */ }
+
+  return jsonRes(200, { campaign: data, kyc_required: false, message: 'Fundraiser is now live.' });
+}
+
+async function handleListEvents(req: Request, body: any) {
+  const { user, supabase } = await getAuthUser(req);
+  const { campaign_id, limit = 50 } = body;
+  if (!campaign_id) return jsonRes(400, { error: 'campaign_id_required' });
+
+  // Ownership check (admin bypass via has_role would apply on the client via RLS if using anon key)
+  const { data: c } = await supabase
+    .from('giveting_campaigns')
+    .select('id, owner_user_id')
+    .eq('id', campaign_id)
+    .maybeSingle();
+  if (!c) return jsonRes(404, { error: 'not_found' });
+  if (c.owner_user_id !== user.id) {
+    const { data: role } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    if (!role) return jsonRes(403, { error: 'forbidden' });
+  }
+
+  const { data, error } = await supabase
+    .from('giveting_campaign_events')
+    .select('*')
+    .eq('campaign_id', campaign_id)
+    .order('created_at', { ascending: false })
+    .limit(Math.min(limit, 200));
   if (error) return jsonRes(500, { error: error.message });
-  return jsonRes(200, { campaign: data, kyc_required: !kycOk });
+  return jsonRes(200, { events: data ?? [] });
 }
 
 async function handleArchive(req: Request, body: any) {
