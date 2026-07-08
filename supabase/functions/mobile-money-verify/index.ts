@@ -122,39 +122,90 @@ serve(async (req) => {
         console.error('Failed to update transaction:', updateError);
       }
 
-      // Auto-credit bank account if this is a successful bank deposit (F5: atomic RPC)
-      if (dbStatus === 'successful' && transaction.is_bank_deposit && transaction.destination_account_id) {
-        console.log('Auto-crediting bank account (atomic):', transaction.destination_account_id);
+      // ─── Wallet / bank credit on successful CHARGE ────────────────
+      // A charge (top-up) must land somewhere. If it was flagged as a
+      // bank deposit, use the dedicated RPC. Otherwise credit the user's
+      // KANG- wallet. Without this, top-ups completed by the user were
+      // never reflected on their account. Guarded to run only when the
+      // transaction has no bank_transaction_id yet — safe under retries.
+      if (dbStatus === 'successful' && transaction.transaction_type === 'charge' && !transaction.bank_transaction_id) {
         try {
-          const { data: creditResult, error: creditErr } = await supabase.rpc('atomic_flw_account_credit', {
-            _account_id: transaction.destination_account_id,
-            _user_id: transaction.user_id,
-            _amount: parseFloat(transaction.amount),
-            _currency: transaction.currency,
-            _tx_ref: transaction.transaction_ref,
-            _institution_id: null,
-            _provider_ref: flutterwaveData.data.flw_ref ?? null,
-            _source: 'mobile_money',
-            _metadata: {
-              mobile_transaction_id: transaction.id,
-              provider: transaction.provider,
-              phone_number: transaction.phone_number,
-            },
-          });
+          if (transaction.is_bank_deposit && transaction.destination_account_id) {
+            console.log('Auto-crediting bank account (atomic):', transaction.destination_account_id);
+            const { data: creditResult, error: creditErr } = await supabase.rpc('atomic_flw_account_credit', {
+              _account_id: transaction.destination_account_id,
+              _user_id: transaction.user_id,
+              _amount: parseFloat(transaction.amount),
+              _currency: transaction.currency,
+              _tx_ref: transaction.transaction_ref,
+              _institution_id: null,
+              _provider_ref: flutterwaveData.data.flw_ref ?? null,
+              _source: 'mobile_money',
+              _metadata: {
+                mobile_transaction_id: transaction.id,
+                provider: transaction.provider,
+                phone_number: transaction.phone_number,
+              },
+            });
 
-          if (creditErr) {
-            console.error('atomic_flw_account_credit failed:', creditErr);
-          } else if (creditResult?.transaction_id) {
-            await supabase
-              .from('mobile_money_transactions')
-              .update({ bank_transaction_id: creditResult.transaction_id })
-              .eq('id', transaction.id);
-            console.log('Bank account credited atomically:', creditResult);
+            if (creditErr) {
+              console.error('atomic_flw_account_credit failed:', creditErr);
+            } else if (creditResult?.transaction_id) {
+              await supabase
+                .from('mobile_money_transactions')
+                .update({ bank_transaction_id: creditResult.transaction_id })
+                .eq('id', transaction.id);
+            }
+          } else {
+            // Wallet top-up: credit the user's active KANG- wallet
+            const { data: wallet } = await supabase
+              .from('accounts')
+              .select('id')
+              .eq('user_id', transaction.user_id)
+              .eq('is_active', true)
+              .like('account_id', 'KANG-%')
+              .limit(1)
+              .maybeSingle();
+
+            if (!wallet) {
+              console.error('mobile-money-verify: no wallet for user', transaction.user_id);
+            } else {
+              const { error: creditErr } = await supabase.rpc('atomic_credit_balance', {
+                _account_id: wallet.id,
+                _amount: parseFloat(transaction.amount),
+                _currency: transaction.currency,
+              });
+              if (creditErr) {
+                console.error('atomic_credit_balance failed:', creditErr);
+              } else {
+                const { data: txRow } = await supabase
+                  .from('transactions')
+                  .insert({
+                    account_id: wallet.id,
+                    amount: parseFloat(transaction.amount),
+                    currency: transaction.currency,
+                    credit_debit_indicator: 'Credit',
+                    status: 'Booked',
+                    booking_datetime: new Date().toISOString(),
+                    transaction_information: `Mobile money top-up (${transaction.provider?.toUpperCase() || 'MOMO'})`,
+                    transaction_reference: transaction.transaction_ref,
+                  })
+                  .select('id')
+                  .maybeSingle();
+                if (txRow?.id) {
+                  await supabase
+                    .from('mobile_money_transactions')
+                    .update({ bank_transaction_id: txRow.id })
+                    .eq('id', transaction.id);
+                }
+              }
+            }
           }
         } catch (autoCredError) {
           console.error('Auto-credit error:', autoCredError);
         }
       }
+
 
       return new Response(
         JSON.stringify({

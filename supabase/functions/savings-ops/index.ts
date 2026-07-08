@@ -90,18 +90,58 @@ async function handleDeposit(req: Request, body: any) {
   if (savingsAccount.status !== 'active') throw new Error('Savings account is not active');
   if (savingsAccount.is_locked) throw new Error('Cannot deposit to locked fixed deposit account');
 
+  // ─── Atomic debit from the funding wallet ───────────────────────
+  // Previously the source account balance was only *checked* and never
+  // debited — deposits silently duplicated money into savings without
+  // reducing the funder's wallet. Debit atomically and refund on any
+  // later failure so the ledger and savings row stay in sync.
   if (source_account_id) {
-    const { data: sourceBalance } = await supabase.from('account_balances').select('amount').eq('account_id', source_account_id).eq('balance_type', 'InterimAvailable').single();
-    if (!sourceBalance || parseFloat(sourceBalance.amount) < amount) throw new Error('Insufficient balance in source account');
+    const { error: srcDebitErr } = await supabase.rpc('atomic_debit_balance', {
+      _account_id: source_account_id,
+      _amount: amount,
+      _currency: 'XAF',
+    });
+    if (srcDebitErr) {
+      const msg = srcDebitErr.message || '';
+      if (msg.includes('Insufficient')) throw new Error('Insufficient balance in source account');
+      throw new Error(`Failed to debit source account: ${msg}`);
+    }
   }
 
   const newBalance = parseFloat(savingsAccount.current_balance) + amount;
   const { error: updateError } = await supabase.from('savings_accounts').update({ current_balance: newBalance, available_balance: newBalance }).eq('id', savings_account_id);
-  if (updateError) throw new Error('Failed to update savings balance');
+  if (updateError) {
+    if (source_account_id) {
+      await supabase.rpc('atomic_credit_balance', { _account_id: source_account_id, _amount: amount, _currency: 'XAF' });
+    }
+    throw new Error('Failed to update savings balance');
+  }
 
   const txRef = `DEP-${Date.now()}`;
   await supabase.from('savings_transactions').insert({ savings_account_id, user_id: user.id, transaction_type: 'deposit', amount, balance_after: newBalance, source_account_id, description: 'Deposit to savings', reference: txRef });
-  await supabase.from('account_balances').upsert({ account_id: savingsAccount.account_id, balance_type: 'InterimAvailable', credit_debit_indicator: 'Credit', amount: newBalance, currency: 'XAF', balance_datetime: new Date().toISOString() });
+
+  // Credit the savings-linked account balance atomically (not a raw upsert)
+  await supabase.rpc('atomic_credit_balance', { _account_id: savingsAccount.account_id, _amount: amount, _currency: 'XAF' });
+
+  // Canonical ledger rows for both sides
+  const nowIso = new Date().toISOString();
+  if (source_account_id) {
+    await supabase.from('transactions').insert({
+      account_id: source_account_id,
+      amount, currency: 'XAF', credit_debit_indicator: 'Debit',
+      status: 'Booked', booking_datetime: nowIso,
+      transaction_information: `Transfer to savings (${savingsAccount.account_name || 'Savings'})`,
+      transaction_reference: txRef,
+    });
+  }
+  await supabase.from('transactions').insert({
+    account_id: savingsAccount.account_id,
+    amount, currency: 'XAF', credit_debit_indicator: 'Credit',
+    status: 'Booked', booking_datetime: nowIso,
+    transaction_information: `Deposit to savings (${savingsAccount.account_name || 'Savings'})`,
+    transaction_reference: txRef,
+  });
+
 
   // Credit event (non-blocking)
   try {
@@ -168,7 +208,31 @@ async function handleWithdraw(req: Request, body: any) {
 
   const txRef = `WTH-${Date.now()}`;
   await supabase.from('savings_transactions').insert({ savings_account_id, user_id: user.id, transaction_type: 'withdrawal', amount, balance_after: remainingBalance, destination_account_id, description: 'Withdrawal from savings', reference: txRef });
-  await supabase.from('account_balances').upsert({ account_id: savingsAccount.account_id, balance_type: 'InterimAvailable', credit_debit_indicator: 'Debit', amount: remainingBalance, currency: 'XAF', balance_datetime: new Date().toISOString() });
+
+  // Atomically debit the savings-linked account and credit destination
+  await supabase.rpc('atomic_debit_balance', { _account_id: savingsAccount.account_id, _amount: amount, _currency: 'XAF' });
+  if (destination_account_id) {
+    await supabase.rpc('atomic_credit_balance', { _account_id: destination_account_id, _amount: amount, _currency: 'XAF' });
+  }
+
+  // Canonical ledger rows for both sides
+  const wdIso = new Date().toISOString();
+  await supabase.from('transactions').insert({
+    account_id: savingsAccount.account_id,
+    amount, currency: 'XAF', credit_debit_indicator: 'Debit',
+    status: 'Booked', booking_datetime: wdIso,
+    transaction_information: `Withdrawal from savings (${savingsAccount.account_name || 'Savings'})`,
+    transaction_reference: txRef,
+  });
+  if (destination_account_id) {
+    await supabase.from('transactions').insert({
+      account_id: destination_account_id,
+      amount, currency: 'XAF', credit_debit_indicator: 'Credit',
+      status: 'Booked', booking_datetime: wdIso,
+      transaction_information: `Withdrawal from savings (${savingsAccount.account_name || 'Savings'})`,
+      transaction_reference: txRef,
+    });
+  }
 
   try { await serviceSupabase.from('credit_events').insert({ user_id: user.id, institution_id: savingsAccount.institution_id || null, event_type: 'SAVINGS_WITHDRAWAL', event_time: new Date().toISOString(), value_numeric: amount, metadata: { savings_account_id, balance_after: remainingBalance, transaction_ref: txRef }, source: 'savings_service' }); } catch (e) { console.error('Credit event failed:', e); }
 

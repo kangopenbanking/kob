@@ -70,6 +70,42 @@ serve(async (req) => {
       transaction_ref
     });
 
+    // ─── Wallet debit (financial safety) ─────────────────────────────
+    // A mobile-money transfer is a payout FROM the user's wallet. The
+    // wallet MUST be debited atomically BEFORE the external payout is
+    // initiated, otherwise the platform pays out without charging the
+    // user. Debit is refunded below if Flutterwave rejects the transfer.
+    const currencyU = (currency || 'XAF').toUpperCase();
+    const { data: walletAccount, error: walletErr } = await supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .like('account_id', 'KANG-%')
+      .limit(1)
+      .maybeSingle();
+
+    if (walletErr || !walletAccount) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'no_wallet_account', message: 'No wallet account found for this user.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { error: debitErr } = await supabase.rpc('atomic_debit_balance', {
+      _account_id: walletAccount.id,
+      _amount: Number(amount),
+      _currency: currencyU,
+    });
+    if (debitErr) {
+      const msg = debitErr.message || '';
+      const status = msg.includes('Insufficient') ? 400 : 500;
+      return new Response(
+        JSON.stringify({ success: false, error: status === 400 ? 'insufficient_funds' : 'debit_failed', message: msg }),
+        { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create transaction record
     const { data: transactionData, error: dbError } = await supabase
       .from('mobile_money_transactions')
@@ -79,7 +115,7 @@ serve(async (req) => {
         transaction_type: 'transfer',
         provider: provider.toLowerCase(),
         amount,
-        currency: currency.toUpperCase(),
+        currency: currencyU,
         phone_number,
         description: description || 'Mobile money transfer',
         status: 'pending'
@@ -89,8 +125,26 @@ serve(async (req) => {
 
     if (dbError) {
       console.error('Database error:', dbError);
+      // Refund wallet — payout has not been initiated yet
+      await supabase.rpc('atomic_credit_balance', {
+        _account_id: walletAccount.id,
+        _amount: Number(amount),
+        _currency: currencyU,
+      });
       throw new Error('Failed to create transaction record');
     }
+
+    // Log canonical ledger entry (Debit — Pending until confirmed)
+    await supabase.from('transactions').insert({
+      account_id: walletAccount.id,
+      amount: Number(amount),
+      currency: currencyU,
+      credit_debit_indicator: 'Debit',
+      status: 'Pending',
+      booking_datetime: new Date().toISOString(),
+      transaction_information: `Mobile money transfer to ${phone_number} (${provider.toUpperCase()})`,
+      transaction_reference: transaction_ref,
+    });
 
     // Initiate Flutterwave transfer (payout)
     const flutterwaveResponse = await fetch('https://api.flutterwave.com/v3/transfers', {
@@ -115,16 +169,27 @@ serve(async (req) => {
     console.log('Flutterwave transfer response:', flutterwaveData);
 
     if (flutterwaveData.status === 'success') {
+      const fwStatus = flutterwaveData.data.status;
+      const succeeded = fwStatus === 'SUCCESSFUL';
+
       // Update transaction with Flutterwave reference
       await supabase
         .from('mobile_money_transactions')
         .update({
           flutterwave_ref: flutterwaveData.data.id.toString(),
-          status: 'processing',
+          status: succeeded ? 'successful' : 'processing',
           metadata: flutterwaveData.data,
-          completed_at: flutterwaveData.data.status === 'SUCCESSFUL' ? new Date().toISOString() : null
+          completed_at: succeeded ? new Date().toISOString() : null
         })
         .eq('id', transactionData.id);
+
+      // Promote ledger row to Booked on immediate success
+      if (succeeded) {
+        await supabase
+          .from('transactions')
+          .update({ status: 'Booked' })
+          .eq('transaction_reference', transaction_ref);
+      }
 
       // Record transaction fee
       try {
@@ -160,17 +225,26 @@ serve(async (req) => {
             transaction_id: transactionData.id,
             transaction_ref,
             flutterwave_ref: flutterwaveData.data.id.toString(),
-            status: flutterwaveData.data.status === 'SUCCESSFUL' ? 'successful' : 'processing',
+            status: succeeded ? 'successful' : 'processing',
             message: 'Transfer initiated successfully'
           }
         }),
-        { 
+        {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
         }
       );
     } else {
-      // Update transaction as failed
+      // Payout rejected — refund the wallet and mark ledger row failed
+      await supabase.rpc('atomic_credit_balance', {
+        _account_id: walletAccount.id,
+        _amount: Number(amount),
+        _currency: currencyU,
+      });
+      await supabase
+        .from('transactions')
+        .update({ status: 'Rejected' })
+        .eq('transaction_reference', transaction_ref);
       await supabase
         .from('mobile_money_transactions')
         .update({
