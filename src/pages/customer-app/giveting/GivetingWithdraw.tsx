@@ -74,6 +74,9 @@ export const GivetingWithdraw: React.FC = () => {
           <p className="text-xs uppercase tracking-wide text-muted-foreground">Available to withdraw</p>
           <p className="mt-1 text-3xl font-bold">{formatMoney(available, campaign.currency)}</p>
           <p className="mt-1 text-xs text-muted-foreground">Total raised: {formatMoney(campaign.total_raised_minor, campaign.currency)}</p>
+          {alreadyOut > 0 && (
+            <p className="mt-0.5 text-xs text-muted-foreground">Already withdrawn (incl. fees): {formatMoney(alreadyOut, campaign.currency)}</p>
+          )}
         </Card>
 
         <div className="mt-6">
