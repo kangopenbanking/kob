@@ -263,6 +263,39 @@ export const GivetingManage: React.FC = () => {
           <Plus className="h-4 w-4 text-muted-foreground" />
         </Card>
 
+        {(() => {
+          const status = campaign.status as string;
+          const isClosed = status === 'completed' || status === 'archived';
+          return (
+            <Card className="mt-3 flex items-center gap-4 rounded-2xl p-4">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-full ${isClosed ? 'bg-muted' : 'bg-primary/10 text-primary'}`}>
+                {isClosed ? <Unlock className="h-5 w-5" strokeWidth={1.6} /> : <Lock className="h-5 w-5" strokeWidth={1.6} />}
+              </div>
+              <div className="flex-1">
+                <p className="text-base font-semibold">
+                  {isClosed ? 'Fundraiser is closed' : 'Close this fundraiser'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isClosed
+                    ? 'Donations are disabled. You can reopen it at any time.'
+                    : 'Stop accepting new donations. You can reopen it later.'}
+                </p>
+              </div>
+              {isClosed ? (
+                <Button variant="outline" size="sm" onClick={reopenCampaign} disabled={statusBusy} className="rounded-full">
+                  {statusBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reopen'}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setCloseOpen(true)} disabled={statusBusy} className="rounded-full">
+                  Close
+                </Button>
+              )}
+            </Card>
+          );
+        })()}
+
+
+
         {donations.length > 0 && (
           <section className="mt-8">
             <h2 className="mb-3 text-lg font-bold">Recent donations</h2>
