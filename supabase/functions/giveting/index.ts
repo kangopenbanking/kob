@@ -761,6 +761,7 @@ Deno.serve(async (req) => {
       case 'list-comments': return handleListComments(body);
       case 'withdraw': return handleWithdraw(req, body);
       case 'list-withdrawals': return handleListWithdrawals(req, body);
+      case 'list-events': return handleListEvents(req, body);
       case 'admin-list': return handleAdminList(req, body);
       case 'admin-update': return handleAdminUpdate(req, body);
       case 'admin-set-status': return handleAdminSetStatus(req, body);
