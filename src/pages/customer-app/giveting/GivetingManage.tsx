@@ -23,6 +23,9 @@ export const GivetingManage: React.FC = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
+  const [statusBusy, setStatusBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const [editForm, setEditForm] = useState({
     title: '',
