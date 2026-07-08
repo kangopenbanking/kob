@@ -220,11 +220,28 @@ export const GivetingWithdraw: React.FC = () => {
               reversed by an admin if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2 py-1">
+            <Label htmlFor="close-reason" className="text-sm">
+              Reason for closing <span className="text-destructive">*</span>
+            </Label>
+            <Textarea
+              id="close-reason"
+              value={closeReason}
+              onChange={(e) => setCloseReason(e.target.value)}
+              maxLength={500}
+              disabled={closing}
+              placeholder="e.g. Goal reached and funds withdrawn. Thank you to all donors."
+              className="min-h-[96px]"
+            />
+            <p className="text-xs text-muted-foreground">
+              Recorded on the audit trail with your name and the time of closure.
+            </p>
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={closing} onClick={() => nav(`/app/giveting/c/${slug}/manage`)}>
+            <AlertDialogCancel disabled={closing} onClick={() => { setCloseReason(''); nav(`/app/giveting/c/${slug}/manage`); }}>
               Keep active
             </AlertDialogCancel>
-            <AlertDialogAction disabled={closing} onClick={closeCampaign}>
+            <AlertDialogAction disabled={closing || closeReason.trim().length < 3} onClick={closeCampaign}>
               {closing ? 'Closing…' : 'Close fundraiser'}
             </AlertDialogAction>
           </AlertDialogFooter>
