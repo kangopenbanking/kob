@@ -9,12 +9,12 @@ interface BasicCheckChecklistProps {
 }
 
 const ITEMS: { key: string; label: string; description: string; route: string }[] = [
-  { key: "profile", label: "Create your profile", description: "We need a basic profile record on file.", route: "/app/profile" },
-  { key: "full_name", label: "Add your full legal name", description: "First and last name as on your ID.", route: "/app/profile" },
-  { key: "date_of_birth", label: "Add your date of birth", description: "Required for identity verification.", route: "/app/profile" },
-  { key: "country", label: "Confirm your country", description: "Used for regulatory compliance.", route: "/app/profile" },
-  { key: "phone_verification", label: "Verify your phone number", description: "We send a one-time code by SMS.", route: "/app/profile" },
-  { key: "kyc", label: "Complete identity verification (KYC)", description: "Upload a government-issued ID and a selfie.", route: "/app/kyc" },
+  { key: "profile", label: "Create your profile", description: "We need a basic profile record on file.", route: "/app/profile#full_name" },
+  { key: "full_name", label: "Add your full legal name", description: "First and last name as on your ID.", route: "/app/profile#full_name" },
+  { key: "date_of_birth", label: "Add your date of birth", description: "Required for identity verification.", route: "/app/profile#date_of_birth" },
+  { key: "country", label: "Confirm your country", description: "Used for regulatory compliance.", route: "/app/profile#country" },
+  { key: "phone_verification", label: "Verify your phone number", description: "We send a one-time code by SMS.", route: "/app/profile#phone_verification" },
+  { key: "kyc", label: "Complete identity verification (Didit)", description: "Government-issued ID and a live selfie via Didit.", route: "/app/profile#kyc" },
 ];
 
 /**
