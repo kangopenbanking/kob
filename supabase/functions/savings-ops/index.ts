@@ -208,7 +208,31 @@ async function handleWithdraw(req: Request, body: any) {
 
   const txRef = `WTH-${Date.now()}`;
   await supabase.from('savings_transactions').insert({ savings_account_id, user_id: user.id, transaction_type: 'withdrawal', amount, balance_after: remainingBalance, destination_account_id, description: 'Withdrawal from savings', reference: txRef });
-  await supabase.from('account_balances').upsert({ account_id: savingsAccount.account_id, balance_type: 'InterimAvailable', credit_debit_indicator: 'Debit', amount: remainingBalance, currency: 'XAF', balance_datetime: new Date().toISOString() });
+
+  // Atomically debit the savings-linked account and credit destination
+  await supabase.rpc('atomic_debit_balance', { _account_id: savingsAccount.account_id, _amount: amount, _currency: 'XAF' });
+  if (destination_account_id) {
+    await supabase.rpc('atomic_credit_balance', { _account_id: destination_account_id, _amount: amount, _currency: 'XAF' });
+  }
+
+  // Canonical ledger rows for both sides
+  const wdIso = new Date().toISOString();
+  await supabase.from('transactions').insert({
+    account_id: savingsAccount.account_id,
+    amount, currency: 'XAF', credit_debit_indicator: 'Debit',
+    status: 'Booked', booking_datetime: wdIso,
+    transaction_information: `Withdrawal from savings (${savingsAccount.account_name || 'Savings'})`,
+    transaction_reference: txRef,
+  });
+  if (destination_account_id) {
+    await supabase.from('transactions').insert({
+      account_id: destination_account_id,
+      amount, currency: 'XAF', credit_debit_indicator: 'Credit',
+      status: 'Booked', booking_datetime: wdIso,
+      transaction_information: `Withdrawal from savings (${savingsAccount.account_name || 'Savings'})`,
+      transaction_reference: txRef,
+    });
+  }
 
   try { await serviceSupabase.from('credit_events').insert({ user_id: user.id, institution_id: savingsAccount.institution_id || null, event_type: 'SAVINGS_WITHDRAWAL', event_time: new Date().toISOString(), value_numeric: amount, metadata: { savings_account_id, balance_after: remainingBalance, transaction_ref: txRef }, source: 'savings_service' }); } catch (e) { console.error('Credit event failed:', e); }
 
