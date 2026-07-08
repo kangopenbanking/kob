@@ -35,8 +35,14 @@ export const GivetingManage: React.FC = () => {
     beneficiary_relation: '',
   });
 
+  const isOwner = !!(authUser && campaign && authUser.id === campaign.owner_user_id);
+
   const openEdit = () => {
     if (!campaign) return;
+    if (!isOwner) {
+      toast.error('Only the fundraiser owner can edit this fundraiser.');
+      return;
+    }
     setEditForm({
       title: campaign.title ?? '',
       story: campaign.story ?? '',
