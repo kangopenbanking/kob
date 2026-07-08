@@ -537,7 +537,12 @@ async function handleWithdraw(req: Request, body: any) {
   const net_minor = amount_minor - fee_minor;
   if (net_minor <= 0) return jsonRes(400, { error: 'amount_below_fee' });
 
-  const { data: wd, error } = await supabase.from('giveting_withdrawals').insert({
+  // Use service client for financial writes so RLS/perm issues on
+  // accounts/account_balances/transactions cannot silently fail. The user
+  // client above was only used for ownership checks.
+  const svc = svcClient();
+
+  const { data: wd, error } = await svc.from('giveting_withdrawals').insert({
     campaign_id,
     requested_by: user.id,
     destination_type,
@@ -546,38 +551,79 @@ async function handleWithdraw(req: Request, body: any) {
     currency: campaign.currency,
     fee_minor,
     net_minor,
-    status: destination_type === 'wallet' ? 'settled' : 'pending',
+    status: destination_type === 'wallet' ? 'processing' : 'pending',
     idempotency_key,
-    processed_at: destination_type === 'wallet' ? new Date().toISOString() : null,
   }).select('*').single();
   if (error) return jsonRes(500, { error: error.message });
 
-  // If destination is wallet: credit user wallet in XAF
+  // If destination is wallet: credit user wallet in XAF. This MUST succeed
+  // or we mark the withdrawal as failed so the user can retry — a "settled"
+  // withdrawal with no wallet credit is the exact bug we're fixing.
   if (destination_type === 'wallet') {
     const { converted: netXAFMinor } = convertBetween(net_minor, campaign.currency, 'XAF');
     const netXAF = netXAFMinor / 100;
-    const { data: account } = await supabase.from('accounts').select('id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle();
-    if (account) {
-      try {
-        await supabase.rpc('atomic_credit_balance', {
-          _account_id: account.id,
-          _amount: netXAF,
-          _currency: 'XAF',
-        });
-      } catch (e) { console.error('credit failed', e); }
-      try {
-        await supabase.from('transactions').insert({
-          account_id: account.id,
-          amount: netXAF,
-          currency: 'XAF',
-          credit_debit_indicator: 'Credit',
-          status: 'Booked',
-          booking_datetime: new Date().toISOString(),
-          transaction_information: `Giveting withdrawal — ${campaign.title}`,
-          transaction_reference: `GIVE-WD-${wd.id.slice(0, 8).toUpperCase()}`,
-        });
-      } catch (_) { /* best-effort */ }
+
+    // Prefer an active account; fall back to the newest account so users
+    // whose accounts don't carry an is_active flag still receive funds.
+    let { data: account } = await svc
+      .from('accounts')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!account) {
+      const { data: any_account } = await svc
+        .from('accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      account = any_account;
     }
+
+    if (!account) {
+      await svc.from('giveting_withdrawals').update({
+        status: 'failed',
+        failure_reason: 'no_wallet_account',
+      }).eq('id', wd.id);
+      return jsonRes(422, { error: 'no_wallet_account', message: 'No wallet account found for this user.' });
+    }
+
+    const { data: creditRes, error: creditErr } = await svc.rpc('atomic_credit_balance', {
+      _account_id: account.id,
+      _amount: netXAF,
+      _currency: 'XAF',
+    });
+    if (creditErr || !(creditRes as any)?.success) {
+      console.error('[giveting.withdraw] wallet credit failed', { creditErr, creditRes, wd_id: wd.id });
+      await svc.from('giveting_withdrawals').update({
+        status: 'failed',
+        failure_reason: creditErr?.message ?? 'credit_failed',
+      }).eq('id', wd.id);
+      return jsonRes(502, { error: 'wallet_credit_failed', message: creditErr?.message ?? 'Could not credit wallet.' });
+    }
+
+    const { error: txErr } = await svc.from('transactions').insert({
+      account_id: account.id,
+      amount: netXAF,
+      currency: 'XAF',
+      credit_debit_indicator: 'Credit',
+      status: 'Booked',
+      booking_datetime: new Date().toISOString(),
+      transaction_information: `Giveting withdrawal — ${campaign.title}`,
+      transaction_reference: `GIVE-WD-${wd.id.slice(0, 8).toUpperCase()}`,
+    });
+    if (txErr) console.error('[giveting.withdraw] transaction log failed (non-fatal)', txErr);
+
+    const { data: settled } = await svc.from('giveting_withdrawals').update({
+      status: 'settled',
+      processed_at: new Date().toISOString(),
+    }).eq('id', wd.id).select('*').single();
+
+    return jsonRes(200, { withdrawal: settled ?? wd });
   }
 
   return jsonRes(200, { withdrawal: wd });
