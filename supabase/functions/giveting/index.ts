@@ -312,16 +312,21 @@ async function handleDonate(req: Request, body: any) {
     .eq('id', campaign_id);
 
   // Log wallet transaction
-  await supabase.from('transactions').insert({
-    account_id: account.id,
-    amount: debitXAF,
-    currency: 'XAF',
-    credit_debit_indicator: 'Debit',
-    status: 'Booked',
-    booking_datetime: new Date().toISOString(),
-    transaction_information: `Giveting donation`,
-    transaction_reference: `GIVE-${donation.id.slice(0, 8).toUpperCase()}`,
-  }).catch((err) => console.error('tx log failed', err));
+  try {
+    const { error: txErr } = await supabase.from('transactions').insert({
+      account_id: account.id,
+      amount: debitXAF,
+      currency: 'XAF',
+      credit_debit_indicator: 'Debit',
+      status: 'Booked',
+      booking_datetime: new Date().toISOString(),
+      transaction_information: `Giveting donation`,
+      transaction_reference: `GIVE-${donation.id.slice(0, 8).toUpperCase()}`,
+    });
+    if (txErr) console.error('tx log failed', txErr);
+  } catch (err) {
+    console.error('tx log threw', err);
+  }
 
   return jsonRes(200, { donation });
 }
