@@ -432,13 +432,13 @@ export default function KangAgent() {
       {/* Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-[86%] sm:w-96">
-          <SheetHeader className="px-4 py-4 border-b border-border/60">
-            <SheetTitle className="flex items-center justify-between">
+          <SheetHeader className="px-4 py-4 pr-12 border-b border-border/60">
+            <SheetTitle className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-2">
                 <img src={kangLogo.url} alt="" className="h-6 w-6 object-contain" />
                 Conversations
               </span>
-              <Button size="sm" variant="outline" onClick={newChat}><Plus className="h-4 w-4 mr-1" /> New</Button>
+              <Button size="sm" variant="outline" onClick={newChat} className="mr-6"><Plus className="h-4 w-4 mr-1" /> New</Button>
             </SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(100dvh-72px)]">
