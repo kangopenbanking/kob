@@ -31,13 +31,27 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
+      try { streamRef.current.getTracks().forEach(t => t.stop()); } catch {}
       streamRef.current = null;
     }
-    if (html5QrRef.current) {
-      html5QrRef.current.stop().catch(() => {});
-      try { html5QrRef.current.clear(); } catch {}
+    const scanner = html5QrRef.current;
+    if (scanner) {
       html5QrRef.current = null;
+      // html5-qrcode throws synchronously if the scanner is not SCANNING/PAUSED.
+      // Guard with getState() and swallow both sync + async failures.
+      try {
+        const state = typeof scanner.getState === 'function' ? scanner.getState() : 2;
+        // States: NOT_STARTED=1, SCANNING=2, PAUSED=3
+        if (state === 2 || state === 3) {
+          Promise.resolve(scanner.stop()).catch(() => {}).finally(() => {
+            try { scanner.clear(); } catch {}
+          });
+        } else {
+          try { scanner.clear(); } catch {}
+        }
+      } catch {
+        try { scanner.clear(); } catch {}
+      }
     }
     setCameraActive(false);
     setScannerType(null);
