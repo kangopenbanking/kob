@@ -78,4 +78,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'ptp-broken': ptpBroken,
   'ptp-kept': ptpKept,
   'giveting-campaign-live': givetingCampaignLive,
+  'crediq-basic-check-unlocked': crediqBasicCheckUnlocked,
 }
