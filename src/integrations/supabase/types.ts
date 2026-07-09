@@ -11571,6 +11571,44 @@ export type Database = {
         }
         Relationships: []
       }
+      fiscal_periods: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string | null
+          period_end: string
+          period_start: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          period_end: string
+          period_start: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_periods_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forum_replies: {
         Row: {
           author_name: string
@@ -16837,6 +16875,7 @@ export type Database = {
       }
       ledger_accounts: {
         Row: {
+          account_class: Database["public"]["Enums"]["ledger_account_class"]
           account_code: string
           account_name: string
           account_type: string
@@ -16847,10 +16886,12 @@ export type Database = {
           id: string
           institution_id: string | null
           is_active: boolean
+          normal_balance: string
           parent_account_id: string | null
           updated_at: string
         }
         Insert: {
+          account_class: Database["public"]["Enums"]["ledger_account_class"]
           account_code: string
           account_name: string
           account_type: string
@@ -16861,10 +16902,12 @@ export type Database = {
           id?: string
           institution_id?: string | null
           is_active?: boolean
+          normal_balance: string
           parent_account_id?: string | null
           updated_at?: string
         }
         Update: {
+          account_class?: Database["public"]["Enums"]["ledger_account_class"]
           account_code?: string
           account_name?: string
           account_type?: string
@@ -16875,6 +16918,7 @@ export type Database = {
           id?: string
           institution_id?: string | null
           is_active?: boolean
+          normal_balance?: string
           parent_account_id?: string | null
           updated_at?: string
         }
@@ -32074,6 +32118,14 @@ export type Database = {
         | "sync_adjust"
         | "transfer_in"
         | "transfer_out"
+      ledger_account_class:
+        | "ASSET"
+        | "LIABILITY"
+        | "EQUITY"
+        | "INCOME"
+        | "EXPENSE"
+        | "CONTRA_ASSET"
+        | "CONTRA_LIABILITY"
       loan_status:
         | "draft"
         | "submitted"
@@ -32494,6 +32546,15 @@ export const Constants = {
         "sync_adjust",
         "transfer_in",
         "transfer_out",
+      ],
+      ledger_account_class: [
+        "ASSET",
+        "LIABILITY",
+        "EQUITY",
+        "INCOME",
+        "EXPENSE",
+        "CONTRA_ASSET",
+        "CONTRA_LIABILITY",
       ],
       loan_status: [
         "draft",
