@@ -2,10 +2,16 @@ import React, { useRef } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Upload, Check, Palette } from 'lucide-react';
 import { toast } from 'sonner';
-import bgUnity from '@/assets/card-backgrounds/bg-unity.png.asset.json';
-import bgCameroon from '@/assets/card-backgrounds/bg-cameroon.png.asset.json';
-import bgSilk from '@/assets/card-backgrounds/bg-silk.webp.asset.json';
-import bgEmerald from '@/assets/card-backgrounds/bg-emerald.png.asset.json';
+// Bundled directly so backgrounds display on installed PWAs / custom domains
+// where the /__l5e/ CDN paths are not served.
+import bgUnityUrl from '@/assets/card-backgrounds/bg-unity.png';
+import bgCameroonUrl from '@/assets/card-backgrounds/bg-cameroon.png';
+import bgSilkUrl from '@/assets/card-backgrounds/bg-silk.webp';
+import bgEmeraldUrl from '@/assets/card-backgrounds/bg-emerald.png';
+const bgUnity = { url: bgUnityUrl };
+const bgCameroon = { url: bgCameroonUrl };
+const bgSilk = { url: bgSilkUrl };
+const bgEmerald = { url: bgEmeraldUrl };
 
 export interface CardBackground {
   id: string;
