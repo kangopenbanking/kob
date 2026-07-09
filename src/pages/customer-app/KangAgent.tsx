@@ -61,6 +61,32 @@ export default function KangAgent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
+
+  async function copyMessage(id: string, content: string) {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((c) => (c === id ? null : c)), 1500);
+    } catch {
+      toast.error("Copy failed");
+    }
+  }
+
+  function reactToMessage(id: string, kind: "up" | "down") {
+    setFeedback((f) => {
+      const next = { ...f };
+      if (next[id] === kind) delete next[id];
+      else next[id] = kind;
+      return next;
+    });
+  }
+
+  function editMessage(content: string) {
+    setInput(content);
+    inputRef.current?.focus();
+  }
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
