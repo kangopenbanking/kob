@@ -360,6 +360,14 @@ export default function KangAgent() {
             </Badge>
           ) : isSuspended ? (
             <Badge variant="destructive" className="gap-1 text-[10px] h-6 px-1.5"><AlertTriangle className="h-2.5 w-2.5" /> Suspended</Badge>
+          ) : limitReached ? (
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-1 rounded-md text-[10px] h-6 px-2 font-medium text-white bg-[#7c3aed] hover:bg-[#6d28d9] transition-colors"
+              aria-label="Upgrade"
+            >
+              <Crown className="h-2.5 w-2.5" /> Upgrade
+            </button>
           ) : (
             <Badge variant="secondary" className="text-[10px] h-6 px-1.5">Trial {trialUsed}/{trialLimit}</Badge>
           )}
