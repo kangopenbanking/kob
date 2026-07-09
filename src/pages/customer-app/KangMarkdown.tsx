@@ -33,7 +33,7 @@ export function KangMarkdown({
     <div className="kang-md break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        urlTransform={safeUrl}
+        
         components={{
           h1: ({ node, ...p }) => <h1 className="text-[15px] font-semibold mt-2 mb-1" {...p} />,
           h2: ({ node, ...p }) => <h2 className="text-[14px] font-semibold mt-2 mb-1" {...p} />,
