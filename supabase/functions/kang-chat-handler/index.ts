@@ -18,9 +18,11 @@ const OPENROUTER_TITLE = Deno.env.get("OPENROUTER_TITLE") ?? "kang Agent";
 
 const EMBEDDING_ENDPOINT =
   Deno.env.get("EMBEDDING_ENDPOINT") ??
-  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/embeddings";
-const EMBEDDING_MODEL = Deno.env.get("EMBEDDING_MODEL") ?? "text-embedding-v3";
+  "https://openrouter.ai/api/v1/embeddings";
+const EMBEDDING_MODEL =
+  Deno.env.get("EMBEDDING_MODEL") ?? "openai/text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 1536;
+
 
 const SYSTEM_PROMPT_BASE = `You are the kang Agent, the official AI Financial Advisor for the Kang Open Banking App. Your jurisdiction is Cameroon and the CEMAC zone (XAF), with global financial knowledge.
 
@@ -52,26 +54,39 @@ async function embed(text: string, apiKey: string): Promise<number[] | null> {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": OPENROUTER_REFERER,
+        "X-Title": OPENROUTER_TITLE,
       },
       body: JSON.stringify({
         model: EMBEDDING_MODEL,
         input: text,
-        dimensions: EMBEDDING_DIMENSIONS,
-        encoding_format: "float",
       }),
     });
     if (!res.ok) {
-      console.warn("kang-chat-handler: embed non-ok", res.status);
+      const errBody = await res.text().catch(() => "");
+      console.warn(
+        "kang-chat-handler: embed non-ok — falling back without RAG",
+        res.status,
+        errBody.slice(0, 300),
+      );
       return null;
     }
     const data = await res.json();
     const vec = data?.data?.[0]?.embedding;
-    return Array.isArray(vec) ? vec : null;
+    if (!Array.isArray(vec) || vec.length !== EMBEDDING_DIMENSIONS) {
+      console.warn(
+        "kang-chat-handler: embed unexpected shape — falling back without RAG",
+        Array.isArray(vec) ? vec.length : typeof vec,
+      );
+      return null;
+    }
+    return vec;
   } catch (e) {
     console.warn("kang-chat-handler: embed failed", (e as Error).message);
     return null;
   }
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -89,7 +104,8 @@ Deno.serve(async (req) => {
     const qwenKey =
       Deno.env.get("OPENROUTER_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
     const embeddingKey =
-      Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
+      Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("OPENROUTER_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
+
     if (!qwenKey) return json({ success: false, error: "qwen_key_missing" }, 500);
 
     const authClient = createClient(supabaseUrl, anonKey, {
