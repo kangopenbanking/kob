@@ -685,12 +685,20 @@ async function handleWithdraw(req: Request, body: any) {
   const available = Number(campaign.total_raised_minor) - alreadyOut;
   if (amount_minor > available) return jsonRes(400, { error: 'exceeds_available', available });
 
-  // Fee = pct_bps of amount + fixed_minor_xaf (converted to campaign currency).
-  // Config is admin-tunable via system_config.giveting.withdrawal_fee.
-  const { pct_bps, fixed_minor_xaf } = await getWithdrawalFeeConfig();
-  const feePctMinor = Math.round((amount_minor * pct_bps) / 10000);
-  const { converted: fixedFeeMinor } = convertBetween(fixed_minor_xaf, 'XAF', campaign.currency);
-  const fee_minor = feePctMinor + fixedFeeMinor;
+  // Fee resolution: unified admin-managed fee_structures via resolveFee.
+  // Priority: fee_structures[giveting_platform_fee] → legacy system_config → default.
+  const { resolveFee } = await import('../_shared/resolve-fee.ts');
+  const legacyCfg = await getWithdrawalFeeConfig();
+  const quote = await resolveFee(svcClient(), {
+    transaction_type: 'giveting_platform_fee',
+    amount: amount_minor,
+    fallback: {
+      percentage_rate: (legacyCfg.pct_bps ?? 0) / 100, // bps → percent
+      fixed_amount: 0,
+    },
+  });
+  const { converted: fixedFeeMinor } = convertBetween(legacyCfg.fixed_minor_xaf ?? 0, 'XAF', campaign.currency);
+  const fee_minor = Math.round(quote.final_fee) + fixedFeeMinor;
   const net_minor = amount_minor - fee_minor;
   if (net_minor <= 0) return jsonRes(400, { error: 'amount_below_fee' });
 
