@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
   Wallet, AlertTriangle, ArrowUpRight, Receipt, Copy, ThumbsUp, ThumbsDown, Pencil, Check,
+  Bold, Italic, Heading2, Code2, Link2, List, Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { KangNotificationBell } from "./KangNotificationBell";
