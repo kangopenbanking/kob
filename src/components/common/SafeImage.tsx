@@ -1,4 +1,4 @@
-import { useState, type ImgHTMLAttributes, type SyntheticEvent } from "react";
+import { forwardRef, useState, type ImgHTMLAttributes, type SyntheticEvent } from "react";
 import { cn } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
