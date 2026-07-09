@@ -17,6 +17,7 @@ import kangLogo from '@/assets/kang-logo.png';
 import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
+import { SafeImage } from "@/components/common/SafeImage";
 
 type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 
@@ -340,7 +341,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
           className="relative z-10 flex flex-col items-center text-center"
         >
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20 shadow-lg backdrop-blur-sm">
-            <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
+            <SafeImage src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">
             {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-pin' ? 'Reset PIN' : step === 'setup-pin' ? 'Set Your PIN' : 'Sign In'}

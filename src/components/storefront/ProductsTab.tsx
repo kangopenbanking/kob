@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { POSAttribute } from '@/lib/storefront-data';
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { SafeImage } from "@/components/common/SafeImage";
 
 interface ProductsTabProps {
   merchantId: string | null;
@@ -391,7 +392,7 @@ export function ProductsTab({ merchantId, currency, standardAttributes = [], cus
               <Card key={product.id} className="border border-border/40 shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
                 {imgUrl && (
                   <div className="h-36 bg-muted overflow-hidden">
-                    <img src={imgUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <SafeImage src={imgUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 )}
                 <CardContent className="p-4">
@@ -550,7 +551,7 @@ export function ProductsTab({ merchantId, currency, standardAttributes = [], cus
                   <div className="grid grid-cols-4 gap-3">
                     {images.map((img, idx) => (
                       <div key={idx} className="relative aspect-square rounded-xl border border-border/60 overflow-hidden bg-muted group/img">
-                        <img src={img.preview || img.url} alt={`Product ${idx + 1}`} className="w-full h-full object-cover" />
+                        <SafeImage src={img.preview || img.url} alt={`Product ${idx + 1}`} className="w-full h-full object-cover" />
                         <button onClick={() => removeImage(idx)} className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
                           <X className="w-3.5 h-3.5 text-white" />
                         </button>

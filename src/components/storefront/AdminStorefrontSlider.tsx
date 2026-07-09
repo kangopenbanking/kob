@@ -10,6 +10,7 @@ import { Store, Eye, EyeOff, MapPin, Star, Search, Loader2, ExternalLink } from 
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { SafeImage } from "@/components/common/SafeImage";
 
 export function AdminStorefrontSlider() {
   const queryClient = useQueryClient();
@@ -72,7 +73,7 @@ export function AdminStorefrontSlider() {
               <div key={store.id} className="flex-shrink-0 w-44 rounded-xl overflow-hidden border border-border/40 bg-background shadow-sm">
                 <div className="h-20 bg-muted relative">
                   {store.banner_url ? (
-                    <img src={store.banner_url} alt="" className="w-full h-full object-cover" />
+                    <SafeImage src={store.banner_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center">
                       <Store className="w-6 h-6 text-[hsl(var(--fi-purple))]/30" />
@@ -82,7 +83,7 @@ export function AdminStorefrontSlider() {
                 <div className="p-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
                     {store.logo_url ? (
-                      <img src={store.logo_url} alt="" className="w-5 h-5 rounded-md object-cover" />
+                      <SafeImage src={store.logo_url} alt="" className="w-5 h-5 rounded-md object-cover" />
                     ) : (
                       <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center">
                         <Store className="w-3 h-3 text-muted-foreground" />
@@ -134,7 +135,7 @@ export function AdminStorefrontSlider() {
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         {store.logo_url ? (
-                          <img src={store.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
+                          <SafeImage src={store.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover" />
                         ) : (
                           <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
                             <Store className="w-4 h-4 text-muted-foreground" />
