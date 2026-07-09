@@ -1,7 +1,8 @@
-// Rich markdown renderer for Kang Agent assistant messages.
-// Renders GFM markdown (bold, headings, lists, code, tables) and shows a
-// favicon next to external links — ChatGPT-style.
-import ReactMarkdown from "react-markdown";
+// Rich markdown renderer for Kang Agent messages.
+// Renders GFM markdown safely (react-markdown never emits raw HTML unless
+// rehype-raw is supplied — we deliberately don't) and shows a favicon next
+// to external links, ChatGPT-style.
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ExternalLink } from "lucide-react";
 
@@ -15,36 +16,59 @@ function faviconFor(url: string): string | null {
   }
 }
 
-export function KangMarkdown({ content }: { content: string }) {
+// Only allow http(s) and mailto/tel — blocks javascript:, data:, vbscript:, etc.
+function safeUrl(url: string): string {
+  const transformed = defaultUrlTransform(url);
+  if (!transformed) return "";
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(transformed)) return transformed;
+  return "";
+}
+
+export function KangMarkdown({
+  content,
+  variant = "default",
+}: {
+  content: string;
+  variant?: "default" | "onPrimary";
+}) {
+  const onPrimary = variant === "onPrimary";
+  const linkColor = onPrimary
+    ? "text-primary-foreground underline decoration-primary-foreground/60 hover:decoration-primary-foreground"
+    : "text-primary hover:underline";
+  const codeBg = onPrimary ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted";
+  const preBg = onPrimary ? "bg-primary-foreground/10 text-primary-foreground" : "bg-muted";
+  const quoteBorder = onPrimary ? "border-primary-foreground/40 text-primary-foreground/85" : "border-primary/40 text-muted-foreground";
+
   return (
-    <div className="kang-md text-[13px] leading-[1.55] break-words">
+    <div className="kang-md break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        urlTransform={safeUrl}
         components={{
           h1: ({ node, ...p }) => <h1 className="text-[15px] font-semibold mt-2 mb-1" {...p} />,
           h2: ({ node, ...p }) => <h2 className="text-[14px] font-semibold mt-2 mb-1" {...p} />,
           h3: ({ node, ...p }) => <h3 className="text-[13px] font-semibold mt-2 mb-1" {...p} />,
           p: ({ node, ...p }) => <p className="my-1.5" {...p} />,
-          strong: ({ node, ...p }) => <strong className="font-semibold text-foreground" {...p} />,
+          strong: ({ node, ...p }) => <strong className="font-semibold" {...p} />,
           em: ({ node, ...p }) => <em className="italic" {...p} />,
           ul: ({ node, ...p }) => <ul className="list-disc pl-5 my-1.5 space-y-0.5" {...p} />,
           ol: ({ node, ...p }) => <ol className="list-decimal pl-5 my-1.5 space-y-0.5" {...p} />,
-          li: ({ node, ...p }) => <li className="marker:text-muted-foreground" {...p} />,
-          hr: () => <hr className="my-3 border-border/60" />,
+          li: ({ node, ...p }) => <li {...p} />,
+          hr: () => <hr className="my-3 border-current/30 opacity-30" />,
           blockquote: ({ node, ...p }) => (
-            <blockquote className="border-l-2 border-primary/40 pl-3 my-2 text-muted-foreground" {...p} />
+            <blockquote className={`border-l-2 pl-3 my-2 ${quoteBorder}`} {...p} />
           ),
           code: ({ node, className, children, ...p }: any) => {
             const inline = !className;
             if (inline) {
               return (
-                <code className="rounded bg-muted px-1 py-0.5 text-[12px] font-mono" {...p}>
+                <code className={`rounded px-1 py-0.5 text-[12px] font-mono ${codeBg}`} {...p}>
                   {children}
                 </code>
               );
             }
             return (
-              <pre className="my-2 overflow-x-auto rounded-lg bg-muted p-3 text-[12px] font-mono">
+              <pre className={`my-2 overflow-x-auto rounded-lg p-3 text-[12px] font-mono ${preBg}`}>
                 <code {...p}>{children}</code>
               </pre>
             );
@@ -54,8 +78,8 @@ export function KangMarkdown({ content }: { content: string }) {
               <table className="w-full text-[12px] border-collapse" {...p} />
             </div>
           ),
-          th: ({ node, ...p }) => <th className="border border-border/60 px-2 py-1 text-left font-semibold bg-muted/50" {...p} />,
-          td: ({ node, ...p }) => <td className="border border-border/60 px-2 py-1 align-top" {...p} />,
+          th: ({ node, ...p }) => <th className="border border-current/20 px-2 py-1 text-left font-semibold" {...p} />,
+          td: ({ node, ...p }) => <td className="border border-current/20 px-2 py-1 align-top" {...p} />,
           a: ({ node, href, children, ...p }) => {
             const url = href ?? "";
             const favicon = faviconFor(url);
@@ -65,7 +89,7 @@ export function KangMarkdown({ content }: { content: string }) {
                 href={url}
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center gap-1 text-primary font-medium underline-offset-2 hover:underline break-all"
+                className={`inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline break-all ${linkColor}`}
                 {...p}
               >
                 {favicon && (
