@@ -16221,6 +16221,13 @@ export type Database = {
             referencedRelation: "ledger_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "journal_lines_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["ledger_account_id"]
+          },
         ]
       }
       jwt_secrets: {
@@ -16873,6 +16880,51 @@ export type Database = {
           },
         ]
       }
+      ledger_account_balances: {
+        Row: {
+          balance: number
+          currency: string
+          last_entry_at: string | null
+          ledger_account_id: string
+          total_credit: number
+          total_debit: number
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          currency: string
+          last_entry_at?: string | null
+          ledger_account_id: string
+          total_credit?: number
+          total_debit?: number
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          currency?: string
+          last_entry_at?: string | null
+          ledger_account_id?: string
+          total_credit?: number
+          total_debit?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["ledger_account_id"]
+          },
+        ]
+      }
       ledger_accounts: {
         Row: {
           account_class: Database["public"]["Enums"]["ledger_account_class"]
@@ -16936,6 +16988,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ledger_accounts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["ledger_account_id"]
           },
         ]
       }
@@ -31129,6 +31188,35 @@ export type Database = {
         }
         Relationships: []
       }
+      v_ledger_account_balances: {
+        Row: {
+          account_class:
+            | Database["public"]["Enums"]["ledger_account_class"]
+            | null
+          account_code: string | null
+          account_name: string | null
+          account_type: string | null
+          balance: number | null
+          currency: string | null
+          institution_id: string | null
+          is_active: boolean | null
+          last_entry_at: string | null
+          ledger_account_id: string | null
+          normal_balance: string | null
+          total_credit: number | null
+          total_debit: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_accounts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_can_read_qr_audit: { Args: never; Returns: boolean }
@@ -31823,6 +31911,12 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      rebuild_ledger_account_balances: {
+        Args: never
+        Returns: {
+          rebuilt_accounts: number
         }[]
       }
       record_email_auth_failure: {
