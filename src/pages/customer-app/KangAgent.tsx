@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
-  Wallet, AlertTriangle, ArrowUpRight, Receipt,
+  Wallet, AlertTriangle, ArrowUpRight, Receipt, Copy, ThumbsUp, ThumbsDown, Pencil, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { KangNotificationBell } from "./KangNotificationBell";
