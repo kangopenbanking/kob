@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
     const qwenKey =
       Deno.env.get("OPENROUTER_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
     const embeddingKey =
-      Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
+      Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("OPENROUTER_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
+
     if (!qwenKey) return json({ success: false, error: "qwen_key_missing" }, 500);
 
     const authClient = createClient(supabaseUrl, anonKey, {
