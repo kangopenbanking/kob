@@ -11,8 +11,9 @@ import {
   ArrowLeftRight, CreditCard, Receipt, Smartphone, PhoneCall, Landmark,
   QrCode, PiggyBank, Users, Home, ArrowUpFromLine, ArrowDownToLine,
   Wallet, Globe2, Hash, Banknote, Zap, Send, Lock, Plug, Radio, FileText,
-  RefreshCw, ChevronDown, ChevronUp
+  RefreshCw, ChevronDown, ChevronUp, Bot, Heart, HeartHandshake, Upload
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { LiveFeePreview } from "./LiveFeePreview";
 
