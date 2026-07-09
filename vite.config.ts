@@ -16,14 +16,54 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'kob-logo.png'],
+      injectRegister: null, // registered manually via src/lib/pwa-register.ts (guarded)
+      includeAssets: ['favicon.png', 'kob-logo.png', 'kfs-logo.png'],
+      devOptions: { enabled: false },
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/~oauth/, /\.[a-zA-Z0-9]+$/],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
+        runtimeCaching: [
+          {
+            // User-uploaded images and media served from Supabase Storage.
+            // Without this, installed PWAs on mobile show broken images the
+            // moment the network flickers, because workbox has no handler
+            // for cross-origin requests.
+            urlPattern: ({ url }) =>
+              url.hostname.endsWith('.supabase.co') && url.pathname.includes('/storage/v1/object/'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'supabase-storage-media',
+              expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Lovable CDN assets (/__l5e/assets-v1/*) referenced from .asset.json pointers.
+            urlPattern: ({ url }) => url.pathname.startsWith('/__l5e/assets-v1/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'lovable-cdn-assets',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Generic same-origin image fallback (icons, hero uploads served through app origin).
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'app-images',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       manifest: false, // Use existing public/manifest.json
     }),
+
     prerenderDocsPlugin(),
   ].filter(Boolean),
   resolve: {

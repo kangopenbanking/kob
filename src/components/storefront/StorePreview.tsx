@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { getTemplate, type StorefrontTemplateId } from '@/lib/storefront-templates';
+import { SafeImage } from "@/components/common/SafeImage";
 
 interface StorePreviewProps {
   storeName: string;
@@ -44,7 +45,7 @@ export function StorePreview({
       {showBanner && (
         <div className={cn('relative bg-muted', preview.bannerHeight)}>
           {bannerUrl ? (
-            <img src={bannerUrl} alt="Store banner" className="w-full h-full object-cover" />
+            <SafeImage src={bannerUrl} alt="Store banner" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center" style={{ background: `${primaryColor}20` }}>
               <Store className="w-10 h-10" style={{ color: `${primaryColor}66` }} />
@@ -62,7 +63,7 @@ export function StorePreview({
           {isStacked && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 z-10">
               <div className={cn('w-16 h-16 border-4 border-background overflow-hidden bg-background shadow-sm', logoShapeClass)}>
-                {logoUrl ? <img src={logoUrl} alt={`${storeName || 'Store'} logo`} className="w-full h-full object-cover" /> : (
+                {logoUrl ? <SafeImage src={logoUrl} alt={`${storeName || 'Store'} logo`} className="w-full h-full object-cover" /> : (
                   <div className="w-full h-full flex items-center justify-center" style={{ background: `${primaryColor}1a` }}>
                     <Store className="w-6 h-6" style={{ color: primaryColor }} />
                   </div>
@@ -77,7 +78,7 @@ export function StorePreview({
       {!isStacked && !isSide && showBanner && (
         <div className="relative px-4 -mt-8">
           <div className={cn('w-16 h-16 border-4 border-background overflow-hidden bg-muted shadow-sm', logoShapeClass)}>
-            {logoUrl ? <img src={logoUrl} alt={`${storeName || 'Store'} logo`} className="w-full h-full object-cover" /> : (
+            {logoUrl ? <SafeImage src={logoUrl} alt={`${storeName || 'Store'} logo`} className="w-full h-full object-cover" /> : (
               <div className="w-full h-full flex items-center justify-center" style={{ background: `${primaryColor}1a` }}>
                 <Store className="w-6 h-6" style={{ color: primaryColor }} />
               </div>
@@ -90,7 +91,7 @@ export function StorePreview({
         {isSide ? (
           <div className="flex items-center gap-3">
             <div className={cn('w-14 h-14 overflow-hidden bg-muted shrink-0 border border-border/40', logoShapeClass)}>
-              {logoUrl ? <img src={logoUrl} alt={`${storeName || 'Store'} logo`} className="w-full h-full object-cover" /> : (
+              {logoUrl ? <SafeImage src={logoUrl} alt={`${storeName || 'Store'} logo`} className="w-full h-full object-cover" /> : (
                 <div className="w-full h-full flex items-center justify-center" style={{ background: `${primaryColor}1a` }}>
                   <Store className="w-5 h-5" style={{ color: primaryColor }} />
                 </div>

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Clock, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { SafeImage } from "@/components/common/SafeImage";
 
 interface Store {
   id: string;
@@ -21,7 +22,7 @@ export function StoreCard({ store, hrefSuffix = "" }: { store: Store; hrefSuffix
     >
       <div className="aspect-[16/9] bg-muted overflow-hidden">
         {store.banner_url ? (
-          <img src={store.banner_url} alt={store.name} loading="lazy" className="size-full object-cover" />
+          <SafeImage src={store.banner_url} alt={store.name} loading="lazy" className="size-full object-cover" />
         ) : (
           <div className="size-full bg-muted" />
         )}

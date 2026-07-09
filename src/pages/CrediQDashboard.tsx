@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import CircularScoreDisplay from "@/components/credit/CircularScoreDisplay";
+import { SafeImage } from "@/components/common/SafeImage";
 import {
   TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock,
   ArrowRight, ExternalLink, Shield, Zap, Target, Lightbulb,
@@ -431,7 +432,7 @@ export default function CrediQDashboard() {
                 >
                   <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     {offer.institutions?.logo_url ? (
-                      <img src={offer.institutions.logo_url} alt="" className="w-6 h-6 object-contain" />
+                      <SafeImage src={offer.institutions.logo_url} alt="" className="w-6 h-6 object-contain" />
                     ) : (
                       <Building2 className="w-5 h-5 text-primary" />
                     )}

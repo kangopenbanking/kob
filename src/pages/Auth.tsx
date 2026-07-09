@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 import { enforceSingleSession } from '@/hooks/useSingleSession';
 import { sounds } from '@/lib/sounds';
+import { SafeImage } from "@/components/common/SafeImage";
 
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -629,7 +630,7 @@ export default function Auth() {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <img src={authConfig.logo_url} alt="KOB" className="h-10 w-10 rounded-xl" />
+            <SafeImage src={authConfig.logo_url} alt="KOB" className="h-10 w-10 rounded-xl" />
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-foreground tracking-tight">
                 {authMode === 'select' ? 'Welcome to KOB' : authMode === 'login' ? authConfig.login_title : activeAccountConfig.label}
