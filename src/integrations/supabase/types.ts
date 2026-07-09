@@ -16305,6 +16305,33 @@ export type Database = {
         }
         Relationships: []
       }
+      kang_financial_knowledge: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kang_messages: {
         Row: {
           content: string
@@ -31694,6 +31721,15 @@ export type Database = {
             }[]
           }
       make_user_admin: { Args: { _user_id: string }; Returns: undefined }
+      match_kang_knowledge: {
+        Args: { match_count?: number; query_embedding: string }
+        Returns: {
+          content: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
