@@ -18,6 +18,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area";
 import kangLogo from "@/assets/kang-mascot/logo.png.asset.json";
 import attentionMascot from "@/assets/kang-mascot/attention.png.asset.json";
+import { KangMarkdown } from "./KangMarkdown";
 
 type Role = "user" | "assistant";
 type Message = { id: string; role: Role; content: string; created_at: string };
