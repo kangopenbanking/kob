@@ -10,8 +10,11 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const QWEN_ENDPOINT =
   Deno.env.get("QWEN_ENDPOINT") ??
-  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
-const QWEN_MODEL = Deno.env.get("QWEN_MODEL") ?? "qwen-plus";
+  "https://openrouter.ai/api/v1/chat/completions";
+const QWEN_MODEL = Deno.env.get("QWEN_MODEL") ?? "qwen/qwen-2.5-72b-instruct";
+const OPENROUTER_REFERER =
+  Deno.env.get("OPENROUTER_REFERER") ?? "https://kangopenbanking.com";
+const OPENROUTER_TITLE = Deno.env.get("OPENROUTER_TITLE") ?? "kang Agent";
 
 const EMBEDDING_ENDPOINT =
   Deno.env.get("EMBEDDING_ENDPOINT") ??
