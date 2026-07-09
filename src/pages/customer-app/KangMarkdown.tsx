@@ -49,26 +49,26 @@ export function KangMarkdown({
           h2: ({ node, ...p }) => <h2 className="text-[14px] font-semibold mt-2 mb-1" {...p} />,
           h3: ({ node, ...p }) => <h3 className="text-[13px] font-semibold mt-2 mb-1" {...p} />,
           p: ({ node, ...p }) => <p className="my-1.5" {...p} />,
-          strong: ({ node, ...p }) => <strong className="font-semibold text-foreground" {...p} />,
+          strong: ({ node, ...p }) => <strong className="font-semibold" {...p} />,
           em: ({ node, ...p }) => <em className="italic" {...p} />,
           ul: ({ node, ...p }) => <ul className="list-disc pl-5 my-1.5 space-y-0.5" {...p} />,
           ol: ({ node, ...p }) => <ol className="list-decimal pl-5 my-1.5 space-y-0.5" {...p} />,
-          li: ({ node, ...p }) => <li className="marker:text-muted-foreground" {...p} />,
-          hr: () => <hr className="my-3 border-border/60" />,
+          li: ({ node, ...p }) => <li {...p} />,
+          hr: () => <hr className="my-3 border-current/30 opacity-30" />,
           blockquote: ({ node, ...p }) => (
-            <blockquote className="border-l-2 border-primary/40 pl-3 my-2 text-muted-foreground" {...p} />
+            <blockquote className={`border-l-2 pl-3 my-2 ${quoteBorder}`} {...p} />
           ),
           code: ({ node, className, children, ...p }: any) => {
             const inline = !className;
             if (inline) {
               return (
-                <code className="rounded bg-muted px-1 py-0.5 text-[12px] font-mono" {...p}>
+                <code className={`rounded px-1 py-0.5 text-[12px] font-mono ${codeBg}`} {...p}>
                   {children}
                 </code>
               );
             }
             return (
-              <pre className="my-2 overflow-x-auto rounded-lg bg-muted p-3 text-[12px] font-mono">
+              <pre className={`my-2 overflow-x-auto rounded-lg p-3 text-[12px] font-mono ${preBg}`}>
                 <code {...p}>{children}</code>
               </pre>
             );
@@ -78,8 +78,8 @@ export function KangMarkdown({
               <table className="w-full text-[12px] border-collapse" {...p} />
             </div>
           ),
-          th: ({ node, ...p }) => <th className="border border-border/60 px-2 py-1 text-left font-semibold bg-muted/50" {...p} />,
-          td: ({ node, ...p }) => <td className="border border-border/60 px-2 py-1 align-top" {...p} />,
+          th: ({ node, ...p }) => <th className="border border-current/20 px-2 py-1 text-left font-semibold" {...p} />,
+          td: ({ node, ...p }) => <td className="border border-current/20 px-2 py-1 align-top" {...p} />,
           a: ({ node, href, children, ...p }) => {
             const url = href ?? "";
             const favicon = faviconFor(url);
@@ -89,9 +89,9 @@ export function KangMarkdown({
                 href={url}
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center gap-1 text-primary font-medium underline-offset-2 hover:underline break-all"
+                className={`inline-flex items-center gap-1 font-medium underline-offset-2 hover:underline break-all ${linkColor}`}
                 {...p}
-              >
+              >{"\u200B"}
                 {favicon && (
                   <img
                     src={favicon}
