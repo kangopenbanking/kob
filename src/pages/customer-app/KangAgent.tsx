@@ -63,6 +63,25 @@ export default function KangAgent() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
+  const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
+
+  useEffect(() => {
+    if (!sending) return;
+    const phases = [
+      "Thinking",
+      "Searching knowledge base",
+      "Analysing your finances",
+      "Composing a response",
+      "Almost ready",
+    ];
+    let i = 0;
+    setWorkingStatus(phases[0]);
+    const t = setInterval(() => {
+      i = (i + 1) % phases.length;
+      setWorkingStatus(phases[i]);
+    }, 1800);
+    return () => clearInterval(t);
+  }, [sending]);
 
   async function copyMessage(id: string, content: string) {
     try {
@@ -546,16 +565,39 @@ export default function KangAgent() {
                 </AnimatePresence>
 
                 {sending && !messages.some((m) => m.role === "assistant" && m.id.startsWith("tmp-asst-")) && (
-                  <div className="flex items-center gap-2">
-                    <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain" />
-                    <div className="rounded-2xl rounded-bl-md bg-card border border-border/60 px-3.5 py-2.5">
-                      <div className="flex gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "120ms" }} />
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "240ms" }} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-end gap-2"
+                  >
+                    <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0" />
+                    <div className="relative rounded-2xl rounded-bl-md bg-card border border-border/60 px-3.5 py-2 shadow-sm">
+                      {/* Speech tail */}
+                      <span
+                        aria-hidden
+                        className="absolute -left-1.5 bottom-1.5 h-3 w-3 rotate-45 bg-card border-l border-b border-border/60"
+                      />
+                      <div className="flex items-center gap-2 relative">
+                        <div className="flex gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary/70 animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary/70 animate-bounce" style={{ animationDelay: "120ms" }} />
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary/70 animate-bounce" style={{ animationDelay: "240ms" }} />
+                        </div>
+                        <AnimatePresence mode="wait">
+                          <motion.span
+                            key={workingStatus}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.25 }}
+                            className="text-[12px] text-muted-foreground"
+                          >
+                            {workingStatus}…
+                          </motion.span>
+                        </AnimatePresence>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </div>
               <div ref={bottomRef} />
