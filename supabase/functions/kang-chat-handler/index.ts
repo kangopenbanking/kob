@@ -18,9 +18,11 @@ const OPENROUTER_TITLE = Deno.env.get("OPENROUTER_TITLE") ?? "kang Agent";
 
 const EMBEDDING_ENDPOINT =
   Deno.env.get("EMBEDDING_ENDPOINT") ??
-  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/embeddings";
-const EMBEDDING_MODEL = Deno.env.get("EMBEDDING_MODEL") ?? "text-embedding-v3";
+  "https://openrouter.ai/api/v1/embeddings";
+const EMBEDDING_MODEL =
+  Deno.env.get("EMBEDDING_MODEL") ?? "openai/text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 1536;
+
 
 const SYSTEM_PROMPT_BASE = `You are the kang Agent, the official AI Financial Advisor for the Kang Open Banking App. Your jurisdiction is Cameroon and the CEMAC zone (XAF), with global financial knowledge.
 
