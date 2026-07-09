@@ -54,26 +54,39 @@ async function embed(text: string, apiKey: string): Promise<number[] | null> {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": OPENROUTER_REFERER,
+        "X-Title": OPENROUTER_TITLE,
       },
       body: JSON.stringify({
         model: EMBEDDING_MODEL,
         input: text,
-        dimensions: EMBEDDING_DIMENSIONS,
-        encoding_format: "float",
       }),
     });
     if (!res.ok) {
-      console.warn("kang-chat-handler: embed non-ok", res.status);
+      const errBody = await res.text().catch(() => "");
+      console.warn(
+        "kang-chat-handler: embed non-ok — falling back without RAG",
+        res.status,
+        errBody.slice(0, 300),
+      );
       return null;
     }
     const data = await res.json();
     const vec = data?.data?.[0]?.embedding;
-    return Array.isArray(vec) ? vec : null;
+    if (!Array.isArray(vec) || vec.length !== EMBEDDING_DIMENSIONS) {
+      console.warn(
+        "kang-chat-handler: embed unexpected shape — falling back without RAG",
+        Array.isArray(vec) ? vec.length : typeof vec,
+      );
+      return null;
+    }
+    return vec;
   } catch (e) {
     console.warn("kang-chat-handler: embed failed", (e as Error).message);
     return null;
   }
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
