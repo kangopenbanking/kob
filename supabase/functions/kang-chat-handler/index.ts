@@ -10,8 +10,11 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const QWEN_ENDPOINT =
   Deno.env.get("QWEN_ENDPOINT") ??
-  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions";
-const QWEN_MODEL = Deno.env.get("QWEN_MODEL") ?? "qwen-plus";
+  "https://openrouter.ai/api/v1/chat/completions";
+const QWEN_MODEL = Deno.env.get("QWEN_MODEL") ?? "qwen/qwen-2.5-72b-instruct";
+const OPENROUTER_REFERER =
+  Deno.env.get("OPENROUTER_REFERER") ?? "https://kangopenbanking.com";
+const OPENROUTER_TITLE = Deno.env.get("OPENROUTER_TITLE") ?? "kang Agent";
 
 const EMBEDDING_ENDPOINT =
   Deno.env.get("EMBEDDING_ENDPOINT") ??
@@ -83,7 +86,8 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const qwenKey = Deno.env.get("QWEN_API_KEY");
+    const qwenKey =
+      Deno.env.get("OPENROUTER_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
     const embeddingKey =
       Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
     if (!qwenKey) return json({ success: false, error: "qwen_key_missing" }, 500);
@@ -212,6 +216,8 @@ Deno.serve(async (req) => {
       headers: {
         Authorization: `Bearer ${qwenKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": OPENROUTER_REFERER,
+        "X-Title": OPENROUTER_TITLE,
       },
       body: JSON.stringify({
         model: QWEN_MODEL,
