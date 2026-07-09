@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
   Wallet, AlertTriangle, ArrowUpRight, Receipt, Copy, ThumbsUp, ThumbsDown, Pencil, Check,
-  Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { KangNotificationBell } from "./KangNotificationBell";
@@ -66,7 +65,6 @@ export default function KangAgent() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
-  const [showPreview, setShowPreview] = useState(false);
 
 
 
@@ -636,38 +634,6 @@ export default function KangAgent() {
           </div>
         ) : (
           <div className="mx-auto max-w-2xl space-y-2">
-            {/* Preview toggle */}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowPreview((v) => !v)}
-                aria-pressed={showPreview}
-                aria-label={showPreview ? "Hide preview" : "Show preview"}
-                className={`h-7 px-2.5 inline-flex items-center gap-1 rounded-full text-[11px] font-medium border transition-colors ${
-                  showPreview
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {showPreview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                Preview
-              </button>
-            </div>
-
-            {/* Live preview */}
-            {showPreview && input.trim() && (
-              <motion.div
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-primary/25 bg-primary/[0.04] px-3.5 py-2.5"
-              >
-                <p className="mb-1 text-[10px] uppercase tracking-wide text-primary/80 font-semibold">Preview</p>
-                <div className="text-[13px] leading-[1.55] text-foreground">
-                  <KangMarkdown content={input} />
-                </div>
-              </motion.div>
-            )}
-
             <div className="relative flex items-end gap-2 rounded-3xl border border-border/60 bg-card/80 backdrop-blur px-3 py-2 shadow-sm focus-within:border-primary/50 transition-colors">
               <textarea
                 ref={inputRef}
