@@ -463,7 +463,7 @@ export default function KangAgent() {
                   ))}
                 </AnimatePresence>
 
-                {sending && (
+                {sending && !messages.some((m) => m.role === "assistant" && m.id.startsWith("tmp-asst-")) && (
                   <div className="flex items-center gap-2">
                     <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain" />
                     <div className="rounded-2xl rounded-bl-md bg-card border border-border/60 px-3.5 py-2.5">
