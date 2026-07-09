@@ -349,16 +349,11 @@ export default function KangAgent() {
             <img src={kangLogo.url} alt="Kang Agent" className="h-8 w-8 object-contain shrink-0 drop-shadow-sm" />
             <div className="min-w-0">
               <h1 className="text-[13px] font-semibold leading-tight truncate">Kang Agent</h1>
-              <p className="text-[10px] text-muted-foreground leading-tight">AI Financial Advisor</p>
+              
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          {creditScore != null && (
-            <Badge variant="outline" className="gap-1 text-[10px] h-6 px-1.5" aria-label={`Credit score ${creditScore}`}>
-              <Sparkles className="h-2.5 w-2.5" /> {creditScore}
-            </Badge>
-          )}
           {isActive ? (
             <Badge className="gap-1 bg-primary text-primary-foreground text-[10px] h-6 px-1.5">
               <Crown className="h-2.5 w-2.5" /> Active
