@@ -7,8 +7,12 @@ import { ChevronLeft, Search, UtensilsCrossed, Pill, MapPin, History, Sparkles, 
 import { supabase } from "@/integrations/supabase/client";
 import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import foodCardAsset from "@/assets/food_card.png.asset.json";
-import pharmacyCardAsset from "@/assets/pharmacy_card.png.asset.json";
+// Bundle card images directly so they ship in the built app and work
+// on installed PWAs / custom domains where /__l5e/ CDN paths are unavailable.
+import foodCardUrl from "@/assets/food_card.png";
+import pharmacyCardUrl from "@/assets/pharmacy_card.png";
+const foodCardAsset = { url: foodCardUrl };
+const pharmacyCardAsset = { url: pharmacyCardUrl };
 import { SafeImage } from "@/components/common/SafeImage";
 
 function CardImage({ src, alt, className, heightRatioClass }: { src: string; alt: string; className?: string; heightRatioClass?: string }) {
