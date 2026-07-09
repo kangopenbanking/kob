@@ -131,9 +131,14 @@ export default function AdminKangAgent() {
           <h1 className="text-xl font-semibold tracking-tight">Kang Agent</h1>
           <p className="text-xs text-muted-foreground">Subscriptions, billing, and manual retries</p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/kang-agent/knowledge")}>
+            <BookOpen className="h-4 w-4 mr-1.5" /> Knowledge Base
+          </Button>
+          <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
