@@ -7,6 +7,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { buildFinancialContext } from "../_shared/kang-financial-context.ts";
 
 const QWEN_ENDPOINT =
   Deno.env.get("QWEN_ENDPOINT") ??
@@ -213,9 +214,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    const systemPrompt = context
-      ? `${SYSTEM_PROMPT_BASE}\n\nLOCAL FINANCIAL CONTEXT (use only if relevant to the user's question, otherwise ignore):\n${context}`
-      : SYSTEM_PROMPT_BASE;
+    // Build per-user financial context (server-side aggregation).
+    const financialContext = await buildFinancialContext(admin, userId);
+
+    let systemPrompt = SYSTEM_PROMPT_BASE;
+    if (context) {
+      systemPrompt += `\n\nLOCAL FINANCIAL CONTEXT (use only if relevant to the user's question, otherwise ignore):\n${context}`;
+    }
+    systemPrompt += `\n\nUSER FINANCIAL CONTEXT:\n${financialContext || "(no financial data available yet)"}\n\nINSTRUCTIONS FOR USING CONTEXT:\n- Use the user's financial snapshot to provide highly personalized, actionable advice. For example, if they ask how to save money, reference their specific top spending categories. If they ask for a loan, reference their current balance and credit score.\n- PRIVACY GUARDRAIL: NEVER repeat exact account numbers, full transaction IDs, or raw sensitive data in your response. Only use the aggregated data to inform your advice. Speak about their finances naturally (e.g., 'I see you spent quite a bit on groceries this month...' instead of 'Transaction ID 12345 for 15,000 XAF...').\n- If the context is empty or missing, provide general financial advice.`;
 
     const chatMessages = [
       { role: "system", content: systemPrompt },

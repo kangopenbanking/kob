@@ -6,7 +6,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
   Wallet, AlertTriangle, ArrowUpRight, Receipt, Copy, ThumbsUp, ThumbsDown, Pencil, Check,
+  ShieldCheck,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { KangNotificationBell } from "./KangNotificationBell";
 import { supabase } from "@/integrations/supabase/client";
@@ -395,9 +397,23 @@ export default function KangAgent() {
           </Button>
           <div className="flex items-center gap-2 min-w-0">
             <img src={kangLogo.url} alt="Kang Agent" className="h-8 w-8 object-contain shrink-0 drop-shadow-sm" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex items-center gap-1.5">
               <h1 className="text-[13px] font-semibold leading-tight truncate">Kang Agent</h1>
-              
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary h-5 w-5 shrink-0"
+                      aria-label="Uses your secure financial data"
+                    >
+                      <ShieldCheck className="h-3 w-3" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[220px] text-[11px] leading-snug">
+                    Kang Agent uses your secure financial data to personalise advice. Your data never leaves your account.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
@@ -425,6 +441,14 @@ export default function KangAgent() {
           </Button>
         </div>
       </header>
+
+      {messages.length > 0 && (
+        <div className="px-4 pt-1.5 pb-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <ShieldCheck className="h-3 w-3 text-primary" />
+          <span>Kang Agent is using your secure financial data to personalise advice.</span>
+        </div>
+      )}
+
 
       {isTrial && (
         <div className="px-4 pt-2 pb-1">
