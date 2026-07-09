@@ -442,6 +442,14 @@ export default function KangAgent() {
         </div>
       </header>
 
+      {messages.length > 0 && (
+        <div className="px-4 pt-1.5 pb-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <ShieldCheck className="h-3 w-3 text-primary" />
+          <span>Kang Agent is using your secure financial data to personalise advice.</span>
+        </div>
+      )}
+
+
       {isTrial && (
         <div className="px-4 pt-2 pb-1">
           <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
