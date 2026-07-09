@@ -397,9 +397,23 @@ export default function KangAgent() {
           </Button>
           <div className="flex items-center gap-2 min-w-0">
             <img src={kangLogo.url} alt="Kang Agent" className="h-8 w-8 object-contain shrink-0 drop-shadow-sm" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex items-center gap-1.5">
               <h1 className="text-[13px] font-semibold leading-tight truncate">Kang Agent</h1>
-              
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary h-5 w-5 shrink-0"
+                      aria-label="Uses your secure financial data"
+                    >
+                      <ShieldCheck className="h-3 w-3" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[220px] text-[11px] leading-snug">
+                    Kang Agent uses your secure financial data to personalise advice. Your data never leaves your account.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
