@@ -66,7 +66,8 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const embeddingKey =
-      Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
+      Deno.env.get("EMBEDDING_API_KEY") ?? Deno.env.get("OPENROUTER_API_KEY") ?? Deno.env.get("QWEN_API_KEY");
+
     if (!embeddingKey) {
       return json({ success: false, error: "embedding_key_missing" }, 500);
     }
