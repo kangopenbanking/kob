@@ -205,35 +205,111 @@ export default function KangAgent() {
     if (blocked) { setShowPaywall(true); return; }
 
     setSending(true);
-    const optimistic: Message = {
-      id: `tmp-${Date.now()}`, role: "user", content: text, created_at: new Date().toISOString(),
+    const userMsg: Message = {
+      id: `tmp-user-${Date.now()}`, role: "user", content: text, created_at: new Date().toISOString(),
     };
-    setMessages((m) => [...m, optimistic]);
+    const assistantId = `tmp-asst-${Date.now()}`;
+    setMessages((m) => [...m, userMsg]);
     setInput("");
 
     try {
-      const { data, error } = await supabase.functions.invoke("kang-chat-handler", {
-        body: { message: text, session_id: sessionId },
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated.");
+
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kang-chat-handler`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+          Accept: "text/event-stream",
+        },
+        body: JSON.stringify({ message: text, session_id: sessionId }),
       });
-      if (error) throw error;
-      const body: any = data;
-      if (!body.success) {
-        if (body.error === "limit_reached") {
+
+      // Non-stream JSON error (quota, auth, upstream failure)
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("text/event-stream")) {
+        const body = await res.json().catch(() => ({}));
+        if (body?.error === "limit_reached") {
           setShowPaywall(true);
           setSub((s) => s ? { ...s, questions_asked_count: s.free_questions_limit } : s);
         } else {
-          toast.error(body.message ?? "Could not send message.");
+          toast.error(body?.message ?? "Could not send message.");
         }
-        setMessages((m) => m.filter((x) => x.id !== optimistic.id));
+        setMessages((m) => m.filter((x) => x.id !== userMsg.id));
         return;
       }
-      if (body.session_id && body.session_id !== sessionId) setSessionId(body.session_id);
-      if (body.session_id) await loadSessionMessages(body.session_id);
-      await loadProfileAndSub();
+      if (!res.body) throw new Error("No response stream.");
+
+      // Insert placeholder assistant bubble that will fill in as tokens arrive.
+      setMessages((m) => [
+        ...m,
+        { id: assistantId, role: "assistant", content: "", created_at: new Date().toISOString() },
+      ]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let receivedMeta = false;
+
+      const flushEvent = (raw: string) => {
+        const lines = raw.split("\n");
+        let event = "message";
+        let dataLine = "";
+        for (const l of lines) {
+          if (l.startsWith("event:")) event = l.slice(6).trim();
+          else if (l.startsWith("data:")) dataLine += l.slice(5).trim();
+        }
+        if (!dataLine) return;
+        try {
+          const payload = JSON.parse(dataLine);
+          if (event === "meta") {
+            receivedMeta = true;
+            if (payload.session_id && payload.session_id !== sessionId) {
+              setSessionId(payload.session_id);
+            }
+            setSub((s) => s ? {
+              ...s,
+              questions_asked_count: payload.questions_asked_count ?? s.questions_asked_count,
+              free_questions_limit: payload.free_questions_limit ?? s.free_questions_limit,
+              status: payload.status ?? s.status,
+            } : s);
+          } else if (event === "error") {
+            toast.error(payload.message ?? "Streaming error.");
+          } else if (payload.delta) {
+            setMessages((m) =>
+              m.map((x) => x.id === assistantId ? { ...x, content: x.content + payload.delta } : x),
+            );
+            requestAnimationFrame(() =>
+              bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }),
+            );
+          }
+        } catch {
+          // ignore
+        }
+      };
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buffer.indexOf("\n\n")) !== -1) {
+          const raw = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+          flushEvent(raw);
+        }
+      }
+      if (buffer.trim()) flushEvent(buffer);
+      if (!receivedMeta) {
+        // Backend closed without meta — refresh state defensively.
+        await loadProfileAndSub();
+      }
       loadSessions();
     } catch (e: any) {
       toast.error(e?.message ?? "Network error. Please try again.");
-      setMessages((m) => m.filter((x) => x.id !== optimistic.id));
+      setMessages((m) => m.filter((x) => x.id !== userMsg.id && x.id !== assistantId));
     } finally {
       setSending(false);
     }
@@ -387,7 +463,7 @@ export default function KangAgent() {
                   ))}
                 </AnimatePresence>
 
-                {sending && (
+                {sending && !messages.some((m) => m.role === "assistant" && m.id.startsWith("tmp-asst-")) && (
                   <div className="flex items-center gap-2">
                     <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain" />
                     <div className="rounded-2xl rounded-bl-md bg-card border border-border/60 px-3.5 py-2.5">
