@@ -216,6 +216,8 @@ Deno.serve(async (req) => {
       headers: {
         Authorization: `Bearer ${qwenKey}`,
         "Content-Type": "application/json",
+        "HTTP-Referer": OPENROUTER_REFERER,
+        "X-Title": OPENROUTER_TITLE,
       },
       body: JSON.stringify({
         model: QWEN_MODEL,
