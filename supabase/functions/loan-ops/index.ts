@@ -215,7 +215,15 @@ async function handleApprove(req: Request, body: any) {
   }
 
   const emi = (principal * paymentRate * Math.pow(1 + paymentRate, numberOfPayments)) / (Math.pow(1 + paymentRate, numberOfPayments) - 1);
-  const processingFee = principal * 0.01;
+  // Fee resolution: unified admin-managed fee_structures.
+  // Admin edits to `loan_processing_fee` in /admin/fee-management apply here live.
+  const { resolveFee } = await import('../_shared/resolve-fee.ts');
+  const _procQuote = await resolveFee(supabase, {
+    transaction_type: 'loan_processing_fee',
+    amount: principal,
+    fallback: { percentage_rate: 1.0, fixed_amount: 0 }, // matches legacy 1%
+  });
+  const processingFee = _procQuote.final_fee;
   const totalInterest = emi * numberOfPayments - principal;
   const totalPayable = principal + totalInterest + processingFee;
   const loanAccountNumber = `LN-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
