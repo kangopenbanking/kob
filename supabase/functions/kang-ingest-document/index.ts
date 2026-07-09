@@ -8,9 +8,13 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const EMBEDDING_ENDPOINT =
   Deno.env.get("EMBEDDING_ENDPOINT") ??
-  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/embeddings";
-const EMBEDDING_MODEL = Deno.env.get("EMBEDDING_MODEL") ?? "text-embedding-v3";
+  "https://openrouter.ai/api/v1/embeddings";
+const EMBEDDING_MODEL =
+  Deno.env.get("EMBEDDING_MODEL") ?? "openai/text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 1536;
+const OPENROUTER_REFERER =
+  Deno.env.get("OPENROUTER_REFERER") ?? "https://kangopenbanking.com";
+const OPENROUTER_TITLE = Deno.env.get("OPENROUTER_TITLE") ?? "kang Agent";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), {
@@ -24,23 +28,29 @@ async function embed(text: string, apiKey: string): Promise<number[]> {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "HTTP-Referer": OPENROUTER_REFERER,
+      "X-Title": OPENROUTER_TITLE,
     },
     body: JSON.stringify({
       model: EMBEDDING_MODEL,
       input: text,
-      dimensions: EMBEDDING_DIMENSIONS,
-      encoding_format: "float",
     }),
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`embedding_failed: ${res.status} ${body}`);
+    throw new Error(`embedding_failed: ${res.status} ${body.slice(0, 500)}`);
   }
   const data = await res.json();
   const vec = data?.data?.[0]?.embedding;
   if (!Array.isArray(vec)) throw new Error("embedding_missing");
+  if (vec.length !== EMBEDDING_DIMENSIONS) {
+    throw new Error(
+      `embedding_dimension_mismatch: expected ${EMBEDDING_DIMENSIONS}, got ${vec.length}`,
+    );
+  }
   return vec;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
