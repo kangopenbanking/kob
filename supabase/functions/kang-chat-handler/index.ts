@@ -7,6 +7,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { buildFinancialContext } from "../_shared/kang-financial-context.ts";
 
 const QWEN_ENDPOINT =
   Deno.env.get("QWEN_ENDPOINT") ??
