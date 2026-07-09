@@ -505,13 +505,13 @@ export default function KangAgent() {
                       )}
                       <div className={`flex flex-col max-w-[82%] ${isUser ? "items-end" : "items-start"}`}>
                         <div
-                          className={`rounded-2xl px-3.5 py-2 text-[13px] leading-[1.5] break-words ${
+                          className={`rounded-2xl px-3.5 py-2 text-[13px] leading-[1.55] break-words ${
                             isUser
-                              ? "bg-primary text-primary-foreground rounded-br-md shadow-sm whitespace-pre-wrap"
+                              ? "bg-primary text-primary-foreground rounded-br-md shadow-sm"
                               : "bg-card border border-border/60 text-foreground rounded-bl-md"
                           }`}
                         >
-                          {isUser ? m.content : <KangMarkdown content={m.content} />}
+                          <KangMarkdown content={m.content} variant={isUser ? "onPrimary" : "default"} />
                         </div>
                         {!isStreaming && m.content && (
                           <div className={`mt-1 flex items-center gap-0.5 ${isUser ? "justify-end" : "justify-start"}`}>
