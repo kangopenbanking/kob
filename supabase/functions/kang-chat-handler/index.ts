@@ -240,6 +240,15 @@ Deno.serve(async (req) => {
         messages: chatMessages,
         stream: true,
         temperature: 0.5,
+        provider: {
+          ignore: ["Novita"],
+          allow_fallbacks: true,
+        },
+        models: [
+          QWEN_MODEL,
+          "qwen/qwen-2.5-7b-instruct",
+          "meta-llama/llama-3.1-8b-instruct",
+        ],
       }),
     });
 
