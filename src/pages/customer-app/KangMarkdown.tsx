@@ -1,7 +1,8 @@
-// Rich markdown renderer for Kang Agent assistant messages.
-// Renders GFM markdown (bold, headings, lists, code, tables) and shows a
-// favicon next to external links — ChatGPT-style.
-import ReactMarkdown from "react-markdown";
+// Rich markdown renderer for Kang Agent messages.
+// Renders GFM markdown safely (react-markdown never emits raw HTML unless
+// rehype-raw is supplied — we deliberately don't) and shows a favicon next
+// to external links, ChatGPT-style.
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ExternalLink } from "lucide-react";
 
@@ -15,11 +16,34 @@ function faviconFor(url: string): string | null {
   }
 }
 
-export function KangMarkdown({ content }: { content: string }) {
+// Only allow http(s) and mailto/tel — blocks javascript:, data:, vbscript:, etc.
+function safeUrl(url: string): string {
+  const transformed = defaultUrlTransform(url);
+  if (!transformed) return "";
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(transformed)) return transformed;
+  return "";
+}
+
+export function KangMarkdown({
+  content,
+  variant = "default",
+}: {
+  content: string;
+  variant?: "default" | "onPrimary";
+}) {
+  const onPrimary = variant === "onPrimary";
+  const linkColor = onPrimary
+    ? "text-primary-foreground underline decoration-primary-foreground/60 hover:decoration-primary-foreground"
+    : "text-primary hover:underline";
+  const codeBg = onPrimary ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted";
+  const preBg = onPrimary ? "bg-primary-foreground/10 text-primary-foreground" : "bg-muted";
+  const quoteBorder = onPrimary ? "border-primary-foreground/40 text-primary-foreground/85" : "border-primary/40 text-muted-foreground";
+
   return (
-    <div className="kang-md text-[13px] leading-[1.55] break-words">
+    <div className="kang-md break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        urlTransform={safeUrl}
         components={{
           h1: ({ node, ...p }) => <h1 className="text-[15px] font-semibold mt-2 mb-1" {...p} />,
           h2: ({ node, ...p }) => <h2 className="text-[14px] font-semibold mt-2 mb-1" {...p} />,
