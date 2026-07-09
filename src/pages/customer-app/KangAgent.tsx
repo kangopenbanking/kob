@@ -65,7 +65,6 @@ export default function KangAgent() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
-  const [showPreview, setShowPreview] = useState(false);
 
 
 
