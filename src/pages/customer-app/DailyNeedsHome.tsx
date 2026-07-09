@@ -9,6 +9,7 @@ import { StoreCard } from "@/components/daily-needs/StoreCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import foodCardAsset from "@/assets/food_card.png.asset.json";
 import pharmacyCardAsset from "@/assets/pharmacy_card.png.asset.json";
+import { SafeImage } from "@/components/common/SafeImage";
 
 function CardImage({ src, alt, className, heightRatioClass }: { src: string; alt: string; className?: string; heightRatioClass?: string }) {
   const [loaded, setLoaded] = useState(false);
@@ -18,7 +19,7 @@ function CardImage({ src, alt, className, heightRatioClass }: { src: string; alt
   return (
     <div className={`pointer-events-none absolute -right-3 bottom-0 h-full w-[70%] ${heightRatioClass ?? ""}`}>
       {!loaded && <Skeleton className="absolute inset-y-0 right-0 w-1/2 rounded-none bg-white/20" />}
-      <img
+      <SafeImage
         ref={imgRef}
         src={src}
         alt={alt}
@@ -183,7 +184,7 @@ export default function DailyNeedsHome() {
               {recent.map((o) => (
                 <Card key={o.id} onClick={() => navigate(`/app/daily-needs/orders/${o.id}/details`)} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-accent transition-colors">
                   <div className="size-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                    {o.daily_needs_stores?.banner_url && <img src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
+                    {o.daily_needs_stores?.banner_url && <SafeImage src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{o.daily_needs_stores?.name ?? "Order"}</p>

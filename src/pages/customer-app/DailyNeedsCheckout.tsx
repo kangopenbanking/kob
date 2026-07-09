@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useDailyNeedsCart, formatXAF } from "@/hooks/useDailyNeedsCart";
+import { SafeImage } from "@/components/common/SafeImage";
 
 function uuidv4() {
   return ([1e7] as any + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
