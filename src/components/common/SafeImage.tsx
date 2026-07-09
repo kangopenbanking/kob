@@ -1,4 +1,4 @@
-import { useState, type ImgHTMLAttributes, type SyntheticEvent } from "react";
+import { forwardRef, useState, type ImgHTMLAttributes, type SyntheticEvent } from "react";
 import { cn } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
@@ -22,18 +22,21 @@ interface SafeImageProps extends ImgHTMLAttributes<HTMLImageElement> {
  * Use this in place of raw <img> for anything sourced from user uploads,
  * Supabase Storage, remote CDNs, or content that may be missing.
  */
-export function SafeImage({
-  src,
-  alt = "",
-  className,
-  fallbackSrc,
-  fallbackClassName,
-  loading = "lazy",
-  decoding = "async",
-  referrerPolicy = "no-referrer",
-  onError,
-  ...rest
-}: SafeImageProps) {
+export const SafeImage = forwardRef<HTMLImageElement, SafeImageProps>(function SafeImage(
+  {
+    src,
+    alt = "",
+    className,
+    fallbackSrc,
+    fallbackClassName,
+    loading = "lazy",
+    decoding = "async",
+    referrerPolicy = "no-referrer",
+    onError,
+    ...rest
+  },
+  ref,
+) {
   const [failed, setFailed] = useState(false);
   const [currentSrc, setCurrentSrc] = useState<string | undefined>(
     typeof src === "string" ? src : undefined,
@@ -67,6 +70,7 @@ export function SafeImage({
   return (
     <img
       {...rest}
+      ref={ref}
       src={currentSrc}
       alt={alt}
       className={className}
@@ -76,6 +80,7 @@ export function SafeImage({
       onError={handleError}
     />
   );
-}
+});
+
 
 export default SafeImage;
