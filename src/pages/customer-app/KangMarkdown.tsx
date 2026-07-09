@@ -1,8 +1,5 @@
 // Rich markdown renderer for Kang Agent messages.
-// Renders GFM markdown safely (react-markdown never emits raw HTML unless
-// rehype-raw is supplied — we deliberately don't) and shows a favicon next
-// to external links, ChatGPT-style.
-import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ExternalLink } from "lucide-react";
 
@@ -16,13 +13,6 @@ function faviconFor(url: string): string | null {
   }
 }
 
-// Only allow http(s) and mailto/tel — blocks javascript:, data:, vbscript:, etc.
-function safeUrl(url: string): string {
-  const transformed = defaultUrlTransform(url);
-  if (!transformed) return "";
-  if (/^(https?:|mailto:|tel:|#|\/)/i.test(transformed)) return transformed;
-  return "";
-}
 
 export function KangMarkdown({
   content,
