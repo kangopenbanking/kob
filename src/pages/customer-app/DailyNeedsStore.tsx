@@ -9,6 +9,7 @@ import { QuantityStepper } from "@/components/daily-needs/QuantityStepper";
 import { CartFloatingBar } from "@/components/daily-needs/CartFloatingBar";
 import { useDailyNeedsCart, formatXAF } from "@/hooks/useDailyNeedsCart";
 import { toast } from "sonner";
+import { SafeImage } from "@/components/common/SafeImage";
 
 interface Product {
   id: string;
@@ -130,7 +131,7 @@ export default function DailyNeedsStore() {
   return (
     <div className="pb-28">
       <div className="relative aspect-[16/9] bg-muted">
-        {store.banner_url && <img src={store.banner_url} alt={store.name} className="size-full object-cover" />}
+        {store.banner_url && <SafeImage src={store.banner_url} alt={store.name} className="size-full object-cover" />}
         <Button variant="secondary" size="icon" onClick={() => navigate(-1)} className="absolute top-3 left-3" aria-label="Back">
           <ChevronLeft />
         </Button>

@@ -21,6 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import kangLogo from "@/assets/kang-mascot/logo.png.asset.json";
 import attentionMascot from "@/assets/kang-mascot/attention.png.asset.json";
 import { KangMarkdown } from "./KangMarkdown";
+import { SafeImage } from "@/components/common/SafeImage";
 
 type Role = "user" | "assistant";
 type Message = { id: string; role: Role; content: string; created_at: string };
@@ -396,7 +397,7 @@ export default function KangAgent() {
             <Menu className="h-4.5 w-4.5" />
           </Button>
           <div className="flex items-center gap-2 min-w-0">
-            <img src={kangLogo.url} alt="Kang Agent" className="h-8 w-8 object-contain shrink-0 drop-shadow-sm" />
+            <SafeImage src={kangLogo.url} alt="Kang Agent" className="h-8 w-8 object-contain shrink-0 drop-shadow-sm" />
             <div className="min-w-0 flex items-center gap-1.5">
               <h1 className="text-[13px] font-semibold leading-tight truncate">Kang Agent</h1>
               <TooltipProvider delayDuration={100}>
@@ -526,7 +527,7 @@ export default function KangAgent() {
                       className={`flex gap-2 ${isUser ? "justify-end" : "justify-start"}`}
                     >
                       {!isUser && (
-                        <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0 mt-0.5" />
+                        <SafeImage src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0 mt-0.5" />
                       )}
                       <div className={`flex flex-col max-w-[82%] ${isUser ? "items-end" : "items-start"}`}>
                         <div
@@ -597,7 +598,7 @@ export default function KangAgent() {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-end gap-2"
                   >
-                    <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0" />
+                    <SafeImage src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0" />
                     <div className="relative rounded-2xl rounded-bl-md bg-card border border-border/60 px-3.5 py-2 shadow-sm">
                       {/* Speech tail */}
                       <span
@@ -643,7 +644,7 @@ export default function KangAgent() {
               className="w-full flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/5 px-3.5 py-2.5 text-left hover:bg-primary/10 transition-colors"
             >
               <div className="flex items-center gap-2.5">
-                <img src={attentionMascot.url} alt="" className="h-9 w-9 object-contain" />
+                <SafeImage src={attentionMascot.url} alt="" className="h-9 w-9 object-contain" />
                 <div>
                   <p className="text-[12px] font-semibold">
                     {isSuspended ? "Subscription suspended" : "Free questions used"}
@@ -693,7 +694,7 @@ export default function KangAgent() {
           <SheetHeader className="px-4 py-4 pr-12 border-b border-border/60">
             <SheetTitle className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-2">
-                <img src={kangLogo.url} alt="" className="h-6 w-6 object-contain" />
+                <SafeImage src={kangLogo.url} alt="" className="h-6 w-6 object-contain" />
                 Conversations
               </span>
               <Button size="sm" variant="outline" onClick={newChat} className="mr-6"><Plus className="h-4 w-4 mr-1" /> New</Button>
@@ -752,7 +753,7 @@ export default function KangAgent() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex justify-center mb-2">
-              <img src={kangLogo.url} alt="" className="h-20 w-20 object-contain" />
+              <SafeImage src={kangLogo.url} alt="" className="h-20 w-20 object-contain" />
             </div>
             <DialogTitle className="text-center">Subscription Renewal Required</DialogTitle>
             <DialogDescription className="text-center">

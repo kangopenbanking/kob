@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { QuantityStepper } from "@/components/daily-needs/QuantityStepper";
 import { useDailyNeedsCart, formatXAF } from "@/hooks/useDailyNeedsCart";
+import { SafeImage } from "@/components/common/SafeImage";
 
 export default function DailyNeedsCart() {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export default function DailyNeedsCart() {
         {cart.items.map((item) => (
           <Card key={item.product_id} className="p-3 flex items-center gap-3">
             <div className="size-14 rounded-lg bg-muted overflow-hidden shrink-0">
-              {item.image_url && <img src={item.image_url} alt={item.name} className="size-full object-cover" />}
+              {item.image_url && <SafeImage src={item.image_url} alt={item.name} className="size-full object-cover" />}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{item.name}</p>

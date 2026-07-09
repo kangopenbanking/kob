@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { SafeImage } from "@/components/common/SafeImage";
 
 export default function DailyNeedsFavorites() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export default function DailyNeedsFavorites() {
             {favorites.map((f) => (
               <Card key={f.id} className="p-3 flex items-center gap-3">
                 <div className="size-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                  {f.daily_needs_stores?.banner_url && <img src={f.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
+                  {f.daily_needs_stores?.banner_url && <SafeImage src={f.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
                 </div>
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigate(`/app/daily-needs/store/${f.store_id}`)}>
                   <p className="font-medium text-sm truncate">{f.daily_needs_stores?.name}</p>
@@ -89,7 +90,7 @@ export default function DailyNeedsFavorites() {
             {recent.map((o) => (
               <Card key={o.id} onClick={() => navigate(`/app/daily-needs/store/${o.store_id}`)} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-accent">
                 <div className="size-12 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                  {o.daily_needs_stores?.banner_url && <img src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
+                  {o.daily_needs_stores?.banner_url && <SafeImage src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{o.daily_needs_stores?.name}</p>

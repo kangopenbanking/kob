@@ -14,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { SafeImage } from "@/components/common/SafeImage";
 
 const CANCELLABLE = new Set(["received", "accepted"]);
 
@@ -183,7 +184,7 @@ export default function DailyNeedsOrders() {
                 >
                   <div className="size-12 rounded-lg bg-muted overflow-hidden flex-shrink-0 relative">
                     {o.daily_needs_stores?.banner_url ? (
-                      <img src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />
+                      <SafeImage src={o.daily_needs_stores.banner_url} alt="" className="size-full object-cover" />
                     ) : (
                       <div className="size-full flex items-center justify-center text-muted-foreground">
                         {o.daily_needs_stores?.vertical === "pharmacy"
