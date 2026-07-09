@@ -63,6 +63,25 @@ export default function KangAgent() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
+  const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
+
+  useEffect(() => {
+    if (!sending) return;
+    const phases = [
+      "Thinking",
+      "Searching knowledge base",
+      "Analysing your finances",
+      "Composing a response",
+      "Almost ready",
+    ];
+    let i = 0;
+    setWorkingStatus(phases[0]);
+    const t = setInterval(() => {
+      i = (i + 1) % phases.length;
+      setWorkingStatus(phases[i]);
+    }, 1800);
+    return () => clearInterval(t);
+  }, [sending]);
 
   async function copyMessage(id: string, content: string) {
     try {
