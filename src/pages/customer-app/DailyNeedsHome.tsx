@@ -117,18 +117,19 @@ export default function DailyNeedsHome() {
             onClick={() => goVertical("food")}
             className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(20,90%,55%)] text-white"
           >
-            <CardImage
+            <SafeImage
               src={foodCardAsset.url}
               alt=""
-              heightRatioClass="h-[78%] sm:h-[82%]"
-              className="sm:-right-2"
+              aria-hidden="true"
+              decoding="async"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
             />
             <div className="relative size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
               <UtensilsCrossed className="size-5" strokeWidth={2} />
             </div>
             <div className="relative">
-              <h2 className="font-bold text-lg">Food</h2>
-              <p className="text-xs text-white/85">Restaurants & meals</p>
+              <h2 className="font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">Food</h2>
+              <p className="text-xs text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">Restaurants & meals</p>
               {activeFor("food") && (
                 <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/95">
                   <span className="size-1.5 rounded-full bg-white animate-pulse" /> Active order
@@ -138,20 +139,21 @@ export default function DailyNeedsHome() {
           </Card>
           <Card
             onClick={() => goVertical("pharmacy")}
-            className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(160,65%,40%)] text-white"
+            className="relative cursor-pointer overflow-hidden aspect-[3/4] flex flex-col justify-between p-4 border-0 shadow-md hover-scale transition-all bg-[hsl(185,45%,40%)] text-white"
           >
-            <CardImage
+            <SafeImage
               src={pharmacyCardAsset.url}
               alt=""
-              heightRatioClass="h-[82%] sm:h-[86%]"
-              className="sm:-right-2"
+              aria-hidden="true"
+              decoding="async"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
             />
             <div className="relative size-11 rounded-2xl border-2 border-white/70 flex items-center justify-center">
               <Pill className="size-5" strokeWidth={2} />
             </div>
             <div className="relative">
-              <h2 className="font-bold text-lg">Pharmacy</h2>
-              <p className="text-xs text-white/85">Medicine & wellness</p>
+              <h2 className="font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">Pharmacy</h2>
+              <p className="text-xs text-white/90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.35)]">Medicine & wellness</p>
               {activeFor("pharmacy") && (
                 <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-white/95">
                   <span className="size-1.5 rounded-full bg-white animate-pulse" /> Active order
