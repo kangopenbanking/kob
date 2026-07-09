@@ -131,17 +131,33 @@ export default function KangAgent() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const db = supabase as any;
-    const [{ data: profile }, { data: subRow }, { data: cfg }, { data: accounts }] = await Promise.all([
+    const today = new Date().toISOString().slice(0, 10);
+    const [{ data: profile }, { data: subRow }, { data: cfg }, { data: accounts }, { data: feeRow }] = await Promise.all([
       db.from("profiles").select("credit_score").eq("id", user.id).maybeSingle(),
       db.from("kang_subscriptions")
         .select("status, questions_asked_count, free_questions_limit, current_period_end, last_payment_status")
         .eq("user_id", user.id).maybeSingle(),
       db.from("kang_config").select("value").eq("key", "monthly_fee").maybeSingle(),
       db.from("accounts").select("id").eq("user_id", user.id).eq("is_active", true).limit(1),
+      // Priority source: admin-managed unified Fee Management
+      db.from("fee_structures")
+        .select("fee_model, fixed_amount, percentage_rate")
+        .eq("transaction_type", "kang_agent_premium_subscription")
+        .eq("is_active", true)
+        .eq("fee_scope", "platform")
+        .lte("effective_from", today)
+        .or(`effective_until.is.null,effective_until.gte.${today}`)
+        .order("effective_from", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     if (profile) setCreditScore((profile as any).credit_score ?? 500);
     setSub((subRow as any) ?? { status: "trial", questions_asked_count: 0, free_questions_limit: 5 });
-    if (cfg?.value) {
+    // Resolver order: fee_structures (admin) → kang_config (legacy) → 2000 default
+    if (feeRow && (feeRow as any).fixed_amount != null && Number((feeRow as any).fixed_amount) > 0) {
+      setMonthlyFee(Number((feeRow as any).fixed_amount));
+      setCurrency("XAF");
+    } else if (cfg?.value) {
       setMonthlyFee(Number((cfg.value as any).amount ?? 2000));
       setCurrency(String((cfg.value as any).currency ?? "XAF"));
     }
