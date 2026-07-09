@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
-  Wallet, AlertTriangle, ArrowUpRight, Receipt,
+  Wallet, AlertTriangle, ArrowUpRight, Receipt, Copy, ThumbsUp, ThumbsDown, Pencil, Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { KangNotificationBell } from "./KangNotificationBell";
@@ -61,6 +61,32 @@ export default function KangAgent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
+
+  async function copyMessage(id: string, content: string) {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((c) => (c === id ? null : c)), 1500);
+    } catch {
+      toast.error("Copy failed");
+    }
+  }
+
+  function reactToMessage(id: string, kind: "up" | "down") {
+    setFeedback((f) => {
+      const next = { ...f };
+      if (next[id] === kind) delete next[id];
+      else next[id] = kind;
+      return next;
+    });
+  }
+
+  function editMessage(content: string) {
+    setInput(content);
+    inputRef.current?.focus();
+  }
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -443,27 +469,80 @@ export default function KangAgent() {
               )}
               <div className="space-y-3">
                 <AnimatePresence initial={false}>
-                  {messages.map((m) => (
+                  {messages.map((m) => {
+                    const isUser = m.role === "user";
+                    const isStreaming = m.id.startsWith("tmp-asst-");
+                    return (
                     <motion.div
                       key={m.id}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                      className={`flex gap-2 ${isUser ? "justify-end" : "justify-start"}`}
                     >
-                      {m.role === "assistant" && (
+                      {!isUser && (
                         <img src={kangLogo.url} alt="" className="h-7 w-7 object-contain shrink-0 mt-0.5" />
                       )}
-                      <div
-                        className={`max-w-[82%] rounded-2xl px-3.5 py-2 text-[13px] leading-[1.5] whitespace-pre-wrap break-words ${
-                          m.role === "user"
-                            ? "bg-primary text-primary-foreground rounded-br-md shadow-sm"
-                            : "bg-card border border-border/60 text-foreground rounded-bl-md"
-                        }`}
-                      >
-                        {m.content}
+                      <div className={`flex flex-col max-w-[82%] ${isUser ? "items-end" : "items-start"}`}>
+                        <div
+                          className={`rounded-2xl px-3.5 py-2 text-[13px] leading-[1.5] whitespace-pre-wrap break-words ${
+                            isUser
+                              ? "bg-primary text-primary-foreground rounded-br-md shadow-sm"
+                              : "bg-card border border-border/60 text-foreground rounded-bl-md"
+                          }`}
+                        >
+                          {m.content}
+                        </div>
+                        {!isStreaming && m.content && (
+                          <div className={`mt-1 flex items-center gap-0.5 ${isUser ? "justify-end" : "justify-start"}`}>
+                            <button
+                              type="button"
+                              onClick={() => copyMessage(m.id, m.content)}
+                              aria-label="Copy"
+                              className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              {copiedId === m.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                            </button>
+                            {isUser ? (
+                              <button
+                                type="button"
+                                onClick={() => editMessage(m.content)}
+                                aria-label="Edit"
+                                className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => reactToMessage(m.id, "up")}
+                                  aria-label="Good response"
+                                  aria-pressed={feedback[m.id] === "up"}
+                                  className={`h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors ${
+                                    feedback[m.id] === "up" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                >
+                                  <ThumbsUp className="h-3 w-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => reactToMessage(m.id, "down")}
+                                  aria-label="Poor response"
+                                  aria-pressed={feedback[m.id] === "down"}
+                                  className={`h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-muted transition-colors ${
+                                    feedback[m.id] === "down" ? "text-destructive" : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                >
+                                  <ThumbsDown className="h-3 w-3" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </AnimatePresence>
 
                 {sending && !messages.some((m) => m.role === "assistant" && m.id.startsWith("tmp-asst-")) && (
