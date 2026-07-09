@@ -743,7 +743,15 @@ serve(async (req) => {
         }
       }
 
-      const feeAmount = 0;
+      // Fee resolution: unified admin-managed fee_structures via resolveFee.
+      // Admin edits to `bill_payment` in /admin/fee-management apply here live.
+      const { resolveFee } = await import('../_shared/resolve-fee.ts');
+      const feeQuote = await resolveFee(supabase, {
+        transaction_type: 'bill_payment',
+        amount: finalAmount,
+        fallback: { fixed_amount: 0, percentage_rate: 0 },
+      });
+      const feeAmount = Math.round(feeQuote.final_fee);
       const totalAmount = finalAmount + feeAmount;
 
       const { data: intent, error: intentErr } = await supabase

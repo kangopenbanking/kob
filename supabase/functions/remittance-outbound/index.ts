@@ -123,9 +123,20 @@ async function getQuote(supabase: any, user: any, body: any) {
   }
 
   const fxRate = corridor.fees_model?.fx_rate || 1;
-  const feePercent = corridor.fees_model?.fee_percent || 2.5;
-  const fixedFee = corridor.fees_model?.fixed_fee || 0;
-  const feeTotal = Math.round(amount * feePercent / 100) + fixedFee;
+  // Fee resolution: unified admin-managed fee_structures.
+  // Admin edits to `remittance_outbound` in /admin/fee-management apply here live.
+  const { resolveFee } = await import('../_shared/resolve-fee.ts');
+  const quote = await resolveFee(supabase, {
+    transaction_type: 'remittance_outbound',
+    amount,
+    fallback: {
+      percentage_rate: Number(corridor.fees_model?.fee_percent ?? 2.5),
+      fixed_amount: Number(corridor.fees_model?.fixed_fee ?? 0),
+    },
+  });
+  const feeTotal = Math.round(quote.final_fee);
+  const feePercent = quote.percentage_rate || Number(corridor.fees_model?.fee_percent ?? 2.5);
+  const fixedFee = quote.fixed_amount || Number(corridor.fees_model?.fixed_fee ?? 0);
   const amountOut = Math.round((amount - feeTotal) * fxRate * 100) / 100;
 
   const { data: quote, error: qErr } = await supabase
