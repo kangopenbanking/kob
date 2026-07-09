@@ -18,8 +18,12 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import kangLogo from "@/assets/kang-mascot/logo.png.asset.json";
-import attentionMascot from "@/assets/kang-mascot/attention.png.asset.json";
+// Bundle mascot PNGs directly so they ship in the built app and work
+// on installed PWAs / custom domains where /__l5e/ CDN paths are unavailable.
+import kangLogoUrl from "@/assets/kang-mascot/kang-logo.png";
+import attentionMascotUrl from "@/assets/kang-mascot/kang-attention.png";
+const kangLogo = { url: kangLogoUrl };
+const attentionMascot = { url: attentionMascotUrl };
 import { KangMarkdown } from "./KangMarkdown";
 import { SafeImage } from "@/components/common/SafeImage";
 
