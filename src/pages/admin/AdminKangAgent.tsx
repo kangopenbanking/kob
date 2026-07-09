@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { RefreshCw, Users, Ban, DollarSign } from "lucide-react";
+import { RefreshCw, Users, Ban, DollarSign, BookOpen } from "lucide-react";
 
 type Sub = {
   user_id: string;
