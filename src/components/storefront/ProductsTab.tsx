@@ -168,7 +168,11 @@ export function ProductsTab({ merchantId, currency, standardAttributes = [], cus
 
   const uploadImageFile = async (file: File): Promise<string> => {
     const ext = file.name.split('.').pop() || 'jpg';
-    const path = `products/${merchantId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    // Storage RLS on `storefront-assets` requires the first folder segment to
+    // match auth.uid(); merchant id is nested to keep product images grouped.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Please sign in to upload product images.');
+    const path = `${user.id}/products/${merchantId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from('storefront-assets').upload(path, file, { upsert: true });
     if (error) throw error;
     const { data } = supabase.storage.from('storefront-assets').getPublicUrl(path);
