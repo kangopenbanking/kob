@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Send, Plus, Menu, Trash2, Sparkles, Loader2, Crown, MessageSquare,
   Wallet, AlertTriangle, ArrowUpRight, Receipt, Copy, ThumbsUp, ThumbsDown, Pencil, Check,
-  Bold, Italic, Heading2, Code2, Link2, List, Eye, EyeOff,
+  Eye, EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { KangNotificationBell } from "./KangNotificationBell";
@@ -68,57 +68,7 @@ export default function KangAgent() {
   const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
   const [showPreview, setShowPreview] = useState(false);
 
-  function wrapSelection(before: string, after: string = before, placeholder = "") {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const selected = el.value.slice(start, end) || placeholder;
-    const next = el.value.slice(0, start) + before + selected + after + el.value.slice(end);
-    setInput(next.slice(0, 4000));
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + before.length + selected.length;
-      el.setSelectionRange(cursor, cursor);
-    });
-  }
 
-  function insertAtLineStart(prefix: string) {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? 0;
-    const lineStart = el.value.lastIndexOf("\n", start - 1) + 1;
-    const next = el.value.slice(0, lineStart) + prefix + el.value.slice(lineStart);
-    setInput(next.slice(0, 4000));
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + prefix.length;
-      el.setSelectionRange(cursor, cursor);
-    });
-  }
-
-  function insertLink() {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const selected = el.value.slice(start, end) || "link text";
-    const url = window.prompt("Enter URL", "https://");
-    if (!url) return;
-    const safe = /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(url.trim()) ? url.trim() : "";
-    if (!safe) {
-      toast.error("Only http(s), mailto, tel, or relative links are allowed.");
-      return;
-    }
-    const snippet = `[${selected}](${safe})`;
-    const next = el.value.slice(0, start) + snippet + el.value.slice(end);
-    setInput(next.slice(0, 4000));
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + snippet.length;
-      el.setSelectionRange(cursor, cursor);
-    });
-  }
 
   useEffect(() => {
     if (!sending) return;
@@ -686,37 +636,17 @@ export default function KangAgent() {
           </div>
         ) : (
           <div className="mx-auto max-w-2xl space-y-2">
-            {/* Markdown toolbar */}
-            <div className="flex items-center gap-0.5 rounded-full border border-border/60 bg-card/70 backdrop-blur px-1 py-1 w-fit shadow-sm">
-              {[
-                { label: "Bold", icon: Bold, onClick: () => wrapSelection("**", "**", "bold text"), shortcut: "Ctrl+B" },
-                { label: "Italic", icon: Italic, onClick: () => wrapSelection("*", "*", "italic text"), shortcut: "Ctrl+I" },
-                { label: "Heading", icon: Heading2, onClick: () => insertAtLineStart("## ") },
-                { label: "List", icon: List, onClick: () => insertAtLineStart("- ") },
-                { label: "Code", icon: Code2, onClick: () => wrapSelection("`", "`", "code") },
-                { label: "Link", icon: Link2, onClick: insertLink, shortcut: "Ctrl+K" },
-              ].map((b) => (
-                <button
-                  key={b.label}
-                  type="button"
-                  onClick={b.onClick}
-                  disabled={sending}
-                  aria-label={b.label}
-                  title={b.shortcut ? `${b.label} (${b.shortcut})` : b.label}
-                  className="h-7 w-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
-                >
-                  <b.icon className="h-3.5 w-3.5" />
-                </button>
-              ))}
-              <span className="mx-1 h-4 w-px bg-border/60" />
+            {/* Preview toggle */}
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowPreview((v) => !v)}
                 aria-pressed={showPreview}
                 aria-label={showPreview ? "Hide preview" : "Show preview"}
-                title={showPreview ? "Hide preview" : "Show preview"}
-                className={`h-7 px-2 inline-flex items-center gap-1 rounded-full text-[11px] font-medium transition-colors ${
-                  showPreview ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                className={`h-7 px-2.5 inline-flex items-center gap-1 rounded-full text-[11px] font-medium border transition-colors ${
+                  showPreview
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {showPreview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -743,18 +673,10 @@ export default function KangAgent() {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value.slice(0, 4000))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); return; }
-                  if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-                    const k = e.key.toLowerCase();
-                    if (k === "b") { e.preventDefault(); wrapSelection("**", "**", "bold text"); }
-                    else if (k === "i") { e.preventDefault(); wrapSelection("*", "*", "italic text"); }
-                    else if (k === "k") { e.preventDefault(); insertLink(); }
-                  }
-                }}
-                placeholder="Ask Kang Agent… (Markdown supported)"
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                placeholder="Ask Kang Agent…"
                 rows={1}
-                className="flex-1 resize-none bg-transparent text-[13px] leading-[1.5] outline-none placeholder:text-muted-foreground/70 py-1.5 max-h-[140px] font-mono"
+                className="flex-1 resize-none bg-transparent text-[13px] leading-[1.5] outline-none placeholder:text-muted-foreground/70 py-1.5 max-h-[140px]"
                 aria-label="Message Kang Agent"
                 disabled={sending}
               />
