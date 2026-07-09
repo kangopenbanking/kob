@@ -54,7 +54,7 @@ export default function DailyNeedsPharmacy() {
 
   return (
     <div className="pb-8 animate-fade-in">
-      <div className="relative bg-[hsl(160,65%,40%)] text-white px-4 pt-4 pb-5">
+      <div className="relative bg-[#29909e] text-white px-4 pt-4 pb-5">
         <div className="relative flex items-center gap-3">
           <Button
             variant="ghost"
