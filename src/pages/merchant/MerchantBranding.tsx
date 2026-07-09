@@ -96,7 +96,11 @@ export default function MerchantBranding() {
     setter(true);
     try {
       const ext = file.name.split(".").pop() || "png";
-      const path = `branding/${merchant.id}/${field.replace("_url", "")}-${Date.now()}.${ext}`;
+      // Storage RLS on `storefront-assets` requires the first folder segment to
+      // equal auth.uid(); the merchant id nested inside keeps assets grouped.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Please sign in to upload branding assets.");
+      const path = `${user.id}/branding/${merchant.id}/${field.replace("_url", "")}-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("storefront-assets").upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from("storefront-assets").getPublicUrl(path);
