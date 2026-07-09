@@ -11,8 +11,9 @@ import {
   ArrowLeftRight, CreditCard, Receipt, Smartphone, PhoneCall, Landmark,
   QrCode, PiggyBank, Users, Home, ArrowUpFromLine, ArrowDownToLine,
   Wallet, Globe2, Hash, Banknote, Zap, Send, Lock, Plug, Radio, FileText,
-  RefreshCw, ChevronDown, ChevronUp
+  RefreshCw, ChevronDown, ChevronUp, Bot, Heart, HeartHandshake, Upload
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { LiveFeePreview } from "./LiveFeePreview";
 
@@ -84,6 +85,16 @@ const TRANSACTION_TYPES = [
   // Statements (PDF downloads)
   { value: "statement_download_consumer", label: "Statement Download — Consumers App", icon: FileText, category: "Statements" },
   { value: "statement_download_banking", label: "Statement Download — Banking App", icon: FileText, category: "Statements" },
+  // Kang Agent (AI assistant)
+  { value: "kang_agent_query", label: "Kang Agent Query (per message)", icon: Bot, category: "Kang Agent" },
+  { value: "kang_agent_premium_subscription", label: "Kang Agent Premium Subscription", icon: Sparkles, category: "Kang Agent" },
+  { value: "kang_agent_document_ingest", label: "Kang Agent Document Ingest", icon: Upload, category: "Kang Agent" },
+  // Giveting (crowdfunding / donations)
+  { value: "giveting_contribution", label: "Giveting Contribution", icon: Heart, category: "Giveting" },
+  { value: "giveting_payout", label: "Giveting Payout to Beneficiary", icon: HeartHandshake, category: "Giveting" },
+  { value: "giveting_platform_fee", label: "Giveting Platform Fee", icon: Percent, category: "Giveting" },
+  { value: "giveting_campaign_creation", label: "Giveting Campaign Creation", icon: Plus, category: "Giveting" },
+
 ];
 
 const FEE_MODELS = [
