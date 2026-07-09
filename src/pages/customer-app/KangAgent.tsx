@@ -68,57 +68,7 @@ export default function KangAgent() {
   const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
   const [showPreview, setShowPreview] = useState(false);
 
-  function wrapSelection(before: string, after: string = before, placeholder = "") {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const selected = el.value.slice(start, end) || placeholder;
-    const next = el.value.slice(0, start) + before + selected + after + el.value.slice(end);
-    setInput(next.slice(0, 4000));
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + before.length + selected.length;
-      el.setSelectionRange(cursor, cursor);
-    });
-  }
 
-  function insertAtLineStart(prefix: string) {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? 0;
-    const lineStart = el.value.lastIndexOf("\n", start - 1) + 1;
-    const next = el.value.slice(0, lineStart) + prefix + el.value.slice(lineStart);
-    setInput(next.slice(0, 4000));
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + prefix.length;
-      el.setSelectionRange(cursor, cursor);
-    });
-  }
-
-  function insertLink() {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const selected = el.value.slice(start, end) || "link text";
-    const url = window.prompt("Enter URL", "https://");
-    if (!url) return;
-    const safe = /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(url.trim()) ? url.trim() : "";
-    if (!safe) {
-      toast.error("Only http(s), mailto, tel, or relative links are allowed.");
-      return;
-    }
-    const snippet = `[${selected}](${safe})`;
-    const next = el.value.slice(0, start) + snippet + el.value.slice(end);
-    setInput(next.slice(0, 4000));
-    requestAnimationFrame(() => {
-      el.focus();
-      const cursor = start + snippet.length;
-      el.setSelectionRange(cursor, cursor);
-    });
-  }
 
   useEffect(() => {
     if (!sending) return;
