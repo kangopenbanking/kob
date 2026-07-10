@@ -11578,6 +11578,7 @@ export type Database = {
           created_at: string
           ends_on: string
           id: string
+          institution_id: string | null
           period_code: string
           starts_on: string
           status: string
@@ -11589,6 +11590,7 @@ export type Database = {
           created_at?: string
           ends_on: string
           id?: string
+          institution_id?: string | null
           period_code: string
           starts_on: string
           status?: string
@@ -11600,6 +11602,7 @@ export type Database = {
           created_at?: string
           ends_on?: string
           id?: string
+          institution_id?: string | null
           period_code?: string
           starts_on?: string
           status?: string
