@@ -31705,6 +31705,28 @@ export type Database = {
         }
         Relationships: []
       }
+      v_gateway_ledger_bridge: {
+        Row: {
+          description: string | null
+          domain: string | null
+          entry_date: string | null
+          entry_number: string | null
+          is_reversed: boolean | null
+          journal_entry_id: string | null
+          posted_at: string | null
+          reference_id: string | null
+          reference_type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_ledger_account_balances: {
         Row: {
           account_class:
@@ -32178,6 +32200,32 @@ export type Database = {
           postiq_code: string
           verified_at: string
         }[]
+      }
+      gw_ledger_account: { Args: { _code: string }; Returns: string }
+      gw_post_charge_success: { Args: { _charge_id: string }; Returns: string }
+      gw_post_journal: {
+        Args: {
+          _description: string
+          _lines: Json
+          _metadata?: Json
+          _reference_id: string
+          _reference_type: string
+        }
+        Returns: string
+      }
+      gw_post_payout_success: { Args: { _payout_id: string }; Returns: string }
+      gw_post_refund_success: { Args: { _refund_id: string }; Returns: string }
+      gw_post_settlement_success: {
+        Args: { _settlement_id: string }
+        Returns: string
+      }
+      gw_reverse_journal: {
+        Args: {
+          _reason: string
+          _reference_id: string
+          _reference_type: string
+        }
+        Returns: string
       }
       has_crediq_premium: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
