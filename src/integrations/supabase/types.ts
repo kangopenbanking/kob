@@ -15784,6 +15784,41 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "interest_accruals_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "interest_accruals_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interest_accruals_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "interest_accruals_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "interest_accruals_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "interest_accruals_savings_account_id_fkey"
             columns: ["savings_account_id"]
             isOneToOne: false
@@ -16240,6 +16275,41 @@ export type Database = {
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
         ]
       }
       journal_lines: {
@@ -16279,6 +16349,41 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "journal_lines_ledger_account_id_fkey"
             columns: ["ledger_account_id"]
             isOneToOne: false
@@ -16289,8 +16394,29 @@ export type Database = {
             foreignKeyName: "journal_lines_ledger_account_id_fkey"
             columns: ["ledger_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "journal_lines_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
         ]
       }
@@ -16984,8 +17110,29 @@ export type Database = {
             foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
             columns: ["ledger_account_id"]
             isOneToOne: true
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: true
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: true
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: true
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
         ]
       }
@@ -17057,8 +17204,29 @@ export type Database = {
             foreignKeyName: "ledger_accounts_parent_account_id_fkey"
             columns: ["parent_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "ledger_accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "ledger_accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "ledger_accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
         ]
       }
@@ -17096,6 +17264,41 @@ export type Database = {
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -17676,8 +17879,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_fee_income_account_id_fkey"
             columns: ["gl_fee_income_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
@@ -17690,8 +17914,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
             columns: ["gl_fund_source_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
+            columns: ["gl_fund_source_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
+            columns: ["gl_fund_source_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
+            columns: ["gl_fund_source_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
@@ -17704,8 +17949,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
             columns: ["gl_interest_income_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
+            columns: ["gl_interest_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
+            columns: ["gl_interest_income_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
+            columns: ["gl_interest_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
@@ -17718,8 +17984,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
             columns: ["gl_interest_receivable_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
+            columns: ["gl_interest_receivable_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
+            columns: ["gl_interest_receivable_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
+            columns: ["gl_interest_receivable_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
@@ -17732,8 +18019,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
             columns: ["gl_loan_portfolio_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
+            columns: ["gl_loan_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
+            columns: ["gl_loan_portfolio_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
+            columns: ["gl_loan_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
@@ -17746,8 +18054,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
             columns: ["gl_overpayment_liability_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
+            columns: ["gl_overpayment_liability_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
+            columns: ["gl_overpayment_liability_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
+            columns: ["gl_overpayment_liability_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
@@ -17760,8 +18089,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
             columns: ["gl_penalty_income_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
@@ -17774,8 +18124,29 @@ export type Database = {
             foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
             columns: ["gl_write_off_expense_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
+            columns: ["gl_write_off_expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
+            columns: ["gl_write_off_expense_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
+            columns: ["gl_write_off_expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
         ]
       }
@@ -17899,6 +18270,41 @@ export type Database = {
             columns: ["journal_entry_id"]
             isOneToOne: false
             referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
             referencedColumns: ["id"]
           },
           {
@@ -22987,8 +23393,29 @@ export type Database = {
             foreignKeyName: "product_charges_gl_income_account_id_fkey"
             columns: ["gl_income_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "product_charges_gl_income_account_id_fkey"
+            columns: ["gl_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "product_charges_gl_income_account_id_fkey"
+            columns: ["gl_income_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "product_charges_gl_income_account_id_fkey"
+            columns: ["gl_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
         ]
       }
@@ -24871,6 +25298,41 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "remittance_ledger_links_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "remittance_ledger_links_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittance_ledger_links_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "remittance_ledger_links_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "remittance_ledger_links_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "remittance_ledger_links_remittance_id_fkey"
             columns: ["remittance_id"]
             isOneToOne: false
@@ -26701,8 +27163,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_fee_income_account_id_fkey"
             columns: ["gl_fee_income_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
@@ -26715,8 +27198,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
             columns: ["gl_interest_on_savings_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
+            columns: ["gl_interest_on_savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
+            columns: ["gl_interest_on_savings_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
+            columns: ["gl_interest_on_savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
@@ -26729,8 +27233,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
             columns: ["gl_interest_payable_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
+            columns: ["gl_interest_payable_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
+            columns: ["gl_interest_payable_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
+            columns: ["gl_interest_payable_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
@@ -26743,8 +27268,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
             columns: ["gl_overdraft_interest_income_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
+            columns: ["gl_overdraft_interest_income_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
+            columns: ["gl_overdraft_interest_income_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
+            columns: ["gl_overdraft_interest_income_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
@@ -26757,8 +27303,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
             columns: ["gl_overdraft_portfolio_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
+            columns: ["gl_overdraft_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
+            columns: ["gl_overdraft_portfolio_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
+            columns: ["gl_overdraft_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
@@ -26771,8 +27338,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
             columns: ["gl_penalty_income_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
@@ -26785,8 +27373,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
             columns: ["gl_savings_control_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
+            columns: ["gl_savings_control_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
+            columns: ["gl_savings_control_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
+            columns: ["gl_savings_control_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
@@ -26799,8 +27408,29 @@ export type Database = {
             foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
             columns: ["gl_savings_reference_account_id"]
             isOneToOne: false
+            referencedRelation: "v_account_activity"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
+            columns: ["gl_savings_reference_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["ledger_account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
+            columns: ["gl_savings_reference_account_id"]
+            isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
             referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
+            columns: ["gl_savings_reference_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_trial_balance"
+            referencedColumns: ["ledger_account_id"]
           },
           {
             foreignKeyName: "savings_products_institution_id_fkey"
@@ -31705,6 +32335,35 @@ export type Database = {
         }
         Relationships: []
       }
+      v_account_activity: {
+        Row: {
+          account_class:
+            | Database["public"]["Enums"]["ledger_account_class"]
+            | null
+          account_code: string | null
+          account_name: string | null
+          account_type: string | null
+          currency: string | null
+          first_posting_date: string | null
+          institution_id: string | null
+          last_posting_date: string | null
+          ledger_account_id: string | null
+          net_balance: number | null
+          normal_balance: string | null
+          posting_count: number | null
+          total_credit: number | null
+          total_debit: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_accounts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_gateway_ledger_bridge: {
         Row: {
           description: string | null
@@ -31725,6 +32384,215 @@ export type Database = {
             referencedRelation: "journal_entries"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "ledger_posting_refs_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_general_ledger: {
+        Row: {
+          account_class:
+            | Database["public"]["Enums"]["ledger_account_class"]
+            | null
+          account_code: string | null
+          account_name: string | null
+          account_type: string | null
+          credit: number | null
+          currency: string | null
+          debit: number | null
+          description: string | null
+          entry_created_at: string | null
+          entry_date: string | null
+          entry_id: string | null
+          entry_number: string | null
+          idempotency_key: string | null
+          institution_id: string | null
+          is_reversed: boolean | null
+          ledger_account_id: string | null
+          line_description: string | null
+          line_id: string | null
+          normal_balance: string | null
+          posted_by: string | null
+          reference_id: string | null
+          reference_type: string | null
+          reversal_of: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_journal_entries_summary: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          entry_date: string | null
+          entry_number: string | null
+          id: string | null
+          idempotency_key: string | null
+          institution_id: string | null
+          is_balanced: boolean | null
+          is_reversed: boolean | null
+          line_count: number | null
+          posted_by: string | null
+          reference_id: string | null
+          reference_type: string | null
+          reversal_of: string | null
+          total_credit: number | null
+          total_debit: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_journal_reversal_pairs: {
+        Row: {
+          institution_id: string | null
+          original_description: string | null
+          original_entry_date: string | null
+          original_entry_id: string | null
+          original_entry_number: string | null
+          reversal_description: string | null
+          reversal_entry_date: string | null
+          reversal_entry_id: string | null
+          reversal_entry_number: string | null
+          reversed_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       v_ledger_account_balances: {
@@ -31743,6 +32611,104 @@ export type Database = {
           total_debit: number | null
         }
         Relationships: []
+      }
+      v_trial_balance: {
+        Row: {
+          account_class:
+            | Database["public"]["Enums"]["ledger_account_class"]
+            | null
+          account_code: string | null
+          account_name: string | null
+          account_type: string | null
+          credit_balance: number | null
+          currency: string | null
+          debit_balance: number | null
+          institution_id: string | null
+          ledger_account_id: string | null
+          normal_balance: string | null
+          total_credit: number | null
+          total_debit: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_accounts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_unbalanced_entries: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          entry_date: string | null
+          entry_number: string | null
+          id: string | null
+          idempotency_key: string | null
+          institution_id: string | null
+          is_balanced: boolean | null
+          is_reversed: boolean | null
+          line_count: number | null
+          posted_by: string | null
+          reference_id: string | null
+          reference_type: string | null
+          reversal_of: string | null
+          total_credit: number | null
+          total_debit: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_general_ledger"
+            referencedColumns: ["entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_entries_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["original_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_journal_reversal_pairs"
+            referencedColumns: ["reversal_entry_id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "v_unbalanced_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -32072,6 +33038,43 @@ export type Database = {
       }
       expire_old_consents: { Args: never; Returns: undefined }
       expire_store_subscriptions: { Args: never; Returns: undefined }
+      fn_balance_sheet: {
+        Args: { p_as_of?: string; p_institution?: string }
+        Returns: {
+          account_code: string
+          account_name: string
+          balance: number
+          currency: string
+          section: string
+        }[]
+      }
+      fn_income_statement: {
+        Args: { p_from: string; p_institution?: string; p_to: string }
+        Returns: {
+          account_code: string
+          account_name: string
+          amount: number
+          currency: string
+          section: string
+        }[]
+      }
+      fn_trial_balance: {
+        Args: { p_as_of?: string; p_institution?: string }
+        Returns: {
+          account_class: Database["public"]["Enums"]["ledger_account_class"]
+          account_code: string
+          account_name: string
+          account_type: string
+          credit_balance: number
+          currency: string
+          debit_balance: number
+          institution_id: string
+          ledger_account_id: string
+          normal_balance: string
+          total_credit: number
+          total_debit: number
+        }[]
+      }
       generate_compliance_report: {
         Args: { _end_date: string; _report_type: string; _start_date: string }
         Returns: string
