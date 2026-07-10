@@ -31195,6 +31195,7 @@ export type Database = {
             | null
           account_code: string | null
           account_name: string | null
+          account_type: string | null
           balance: number | null
           currency: string | null
           institution_id: string | null
@@ -31911,7 +31912,13 @@ export type Database = {
           read_ct: number
         }[]
       }
-      rebuild_ledger_account_balances: { Args: never; Returns: number }
+      rebuild_ledger_account_balances: {
+        Args: never
+        Returns: {
+          accounts_rebuilt: number
+          lines_processed: number
+        }[]
+      }
       record_email_auth_failure: {
         Args: {
           _action: string
