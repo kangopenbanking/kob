@@ -16123,6 +16123,7 @@ export type Database = {
           entry_date: string
           entry_number: string
           id: string
+          idempotency_key: string | null
           institution_id: string | null
           is_reversed: boolean
           metadata: Json | null
@@ -16137,6 +16138,7 @@ export type Database = {
           entry_date?: string
           entry_number: string
           id?: string
+          idempotency_key?: string | null
           institution_id?: string | null
           is_reversed?: boolean
           metadata?: Json | null
@@ -16151,6 +16153,7 @@ export type Database = {
           entry_date?: string
           entry_number?: string
           id?: string
+          idempotency_key?: string | null
           institution_id?: string | null
           is_reversed?: boolean
           metadata?: Json | null
