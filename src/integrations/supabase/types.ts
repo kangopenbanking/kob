@@ -11573,41 +11573,39 @@ export type Database = {
       }
       fiscal_periods: {
         Row: {
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
+          ends_on: string
           id: string
-          institution_id: string | null
-          period_end: string
-          period_start: string
+          period_code: string
+          starts_on: string
           status: string
           updated_at: string
         }
         Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
+          ends_on: string
           id?: string
-          institution_id?: string | null
-          period_end: string
-          period_start: string
-          status: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          institution_id?: string | null
-          period_end?: string
-          period_start?: string
+          period_code: string
+          starts_on: string
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fiscal_periods_institution_id_fkey"
-            columns: ["institution_id"]
-            isOneToOne: false
-            referencedRelation: "institutions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          ends_on?: string
+          id?: string
+          period_code?: string
+          starts_on?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       forum_replies: {
         Row: {
@@ -16125,6 +16123,7 @@ export type Database = {
           entry_date: string
           entry_number: string
           id: string
+          idempotency_key: string | null
           institution_id: string | null
           is_reversed: boolean
           metadata: Json | null
@@ -16139,6 +16138,7 @@ export type Database = {
           entry_date?: string
           entry_number: string
           id?: string
+          idempotency_key?: string | null
           institution_id?: string | null
           is_reversed?: boolean
           metadata?: Json | null
@@ -16153,6 +16153,7 @@ export type Database = {
           entry_date?: string
           entry_number?: string
           id?: string
+          idempotency_key?: string | null
           institution_id?: string | null
           is_reversed?: boolean
           metadata?: Json | null
@@ -16226,7 +16227,7 @@ export type Database = {
             columns: ["ledger_account_id"]
             isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
-            referencedColumns: ["ledger_account_id"]
+            referencedColumns: ["account_id"]
           },
         ]
       }
@@ -16892,7 +16893,7 @@ export type Database = {
         }
         Insert: {
           balance?: number
-          currency: string
+          currency?: string
           last_entry_at?: string | null
           ledger_account_id: string
           total_credit?: number
@@ -16912,16 +16913,16 @@ export type Database = {
           {
             foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
             columns: ["ledger_account_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "ledger_accounts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ledger_account_balances_ledger_account_id_fkey"
             columns: ["ledger_account_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "v_ledger_account_balances"
-            referencedColumns: ["ledger_account_id"]
+            referencedColumns: ["account_id"]
           },
         ]
       }
@@ -16994,7 +16995,7 @@ export type Database = {
             columns: ["parent_account_id"]
             isOneToOne: false
             referencedRelation: "v_ledger_account_balances"
-            referencedColumns: ["ledger_account_id"]
+            referencedColumns: ["account_id"]
           },
         ]
       }
@@ -31194,27 +31195,16 @@ export type Database = {
             | Database["public"]["Enums"]["ledger_account_class"]
             | null
           account_code: string | null
+          account_id: string | null
           account_name: string | null
-          account_type: string | null
           balance: number | null
           currency: string | null
-          institution_id: string | null
           last_entry_at: string | null
-          ledger_account_id: string | null
           normal_balance: string | null
           total_credit: number | null
           total_debit: number | null
-          updated_at: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_accounts_institution_id_fkey"
-            columns: ["institution_id"]
-            isOneToOne: false
-            referencedRelation: "institutions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -31912,13 +31902,7 @@ export type Database = {
           read_ct: number
         }[]
       }
-      rebuild_ledger_account_balances: {
-        Args: never
-        Returns: {
-          accounts_rebuilt: number
-          lines_processed: number
-        }[]
-      }
+      rebuild_ledger_account_balances: { Args: never; Returns: undefined }
       record_email_auth_failure: {
         Args: {
           _action: string
