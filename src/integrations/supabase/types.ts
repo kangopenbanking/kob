@@ -295,6 +295,66 @@ export type Database = {
           },
         ]
       }
+      accrual_runs: {
+        Row: {
+          accounts_failed: number
+          accounts_processed: number
+          accrual_date: string
+          completed_at: string | null
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          idempotency_key: string
+          institution_id: string | null
+          journal_entry_ids: string[]
+          run_type: string
+          started_at: string | null
+          status: string
+          total_accrued: number
+          triggered_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          accounts_failed?: number
+          accounts_processed?: number
+          accrual_date: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key: string
+          institution_id?: string | null
+          journal_entry_ids?: string[]
+          run_type: string
+          started_at?: string | null
+          status?: string
+          total_accrued?: number
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accounts_failed?: number
+          accounts_processed?: number
+          accrual_date?: string
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string
+          institution_id?: string | null
+          journal_entry_ids?: string[]
+          run_type?: string
+          started_at?: string | null
+          status?: string
+          total_accrued?: number
+          triggered_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       address_collection_items: {
         Row: {
           added_at: string | null
@@ -11578,6 +11638,7 @@ export type Database = {
           created_at: string
           ends_on: string
           id: string
+          institution_id: string | null
           period_code: string
           starts_on: string
           status: string
@@ -11589,6 +11650,7 @@ export type Database = {
           created_at?: string
           ends_on: string
           id?: string
+          institution_id?: string | null
           period_code: string
           starts_on: string
           status?: string
@@ -11600,6 +11662,7 @@ export type Database = {
           created_at?: string
           ends_on?: string
           id?: string
+          institution_id?: string | null
           period_code?: string
           starts_on?: string
           status?: string
@@ -17423,11 +17486,65 @@ export type Database = {
           },
         ]
       }
+      loan_product_charges: {
+        Row: {
+          charge_id: string
+          created_at: string
+          id: string
+          is_mandatory: boolean
+          loan_product_id: string
+        }
+        Insert: {
+          charge_id: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean
+          loan_product_id: string
+        }
+        Update: {
+          charge_id?: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean
+          loan_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_product_charges_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "product_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_product_charges_loan_product_id_fkey"
+            columns: ["loan_product_id"]
+            isOneToOne: false
+            referencedRelation: "loan_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loan_products: {
         Row: {
+          accounting_rule: string
+          amortization_type: string
           created_at: string | null
+          days_in_month_type: string
+          days_in_year_type: string
           description: string | null
           eligibility_criteria: Json | null
+          gl_fee_income_account_id: string | null
+          gl_fund_source_account_id: string | null
+          gl_interest_income_account_id: string | null
+          gl_interest_receivable_account_id: string | null
+          gl_loan_portfolio_account_id: string | null
+          gl_overpayment_liability_account_id: string | null
+          gl_penalty_income_account_id: string | null
+          gl_write_off_expense_account_id: string | null
+          grace_on_arrears_ageing_days: number
+          grace_on_interest_periods: number
+          grace_on_principal_periods: number
           id: string
           institution_id: string | null
           interest_calculation_method: string
@@ -17449,15 +17566,31 @@ export type Database = {
           ptp_missed_fee_grace_days: number
           ptp_missed_fee_type: string
           ptp_missed_fee_value: number
+          repayment_strategy: string
           required_documents: Json | null
           requires_collateral: boolean | null
           requires_guarantor: boolean | null
           updated_at: string | null
         }
         Insert: {
+          accounting_rule?: string
+          amortization_type?: string
           created_at?: string | null
+          days_in_month_type?: string
+          days_in_year_type?: string
           description?: string | null
           eligibility_criteria?: Json | null
+          gl_fee_income_account_id?: string | null
+          gl_fund_source_account_id?: string | null
+          gl_interest_income_account_id?: string | null
+          gl_interest_receivable_account_id?: string | null
+          gl_loan_portfolio_account_id?: string | null
+          gl_overpayment_liability_account_id?: string | null
+          gl_penalty_income_account_id?: string | null
+          gl_write_off_expense_account_id?: string | null
+          grace_on_arrears_ageing_days?: number
+          grace_on_interest_periods?: number
+          grace_on_principal_periods?: number
           id?: string
           institution_id?: string | null
           interest_calculation_method?: string
@@ -17479,15 +17612,31 @@ export type Database = {
           ptp_missed_fee_grace_days?: number
           ptp_missed_fee_type?: string
           ptp_missed_fee_value?: number
+          repayment_strategy?: string
           required_documents?: Json | null
           requires_collateral?: boolean | null
           requires_guarantor?: boolean | null
           updated_at?: string | null
         }
         Update: {
+          accounting_rule?: string
+          amortization_type?: string
           created_at?: string | null
+          days_in_month_type?: string
+          days_in_year_type?: string
           description?: string | null
           eligibility_criteria?: Json | null
+          gl_fee_income_account_id?: string | null
+          gl_fund_source_account_id?: string | null
+          gl_interest_income_account_id?: string | null
+          gl_interest_receivable_account_id?: string | null
+          gl_loan_portfolio_account_id?: string | null
+          gl_overpayment_liability_account_id?: string | null
+          gl_penalty_income_account_id?: string | null
+          gl_write_off_expense_account_id?: string | null
+          grace_on_arrears_ageing_days?: number
+          grace_on_interest_periods?: number
+          grace_on_principal_periods?: number
           id?: string
           institution_id?: string | null
           interest_calculation_method?: string
@@ -17509,12 +17658,126 @@ export type Database = {
           ptp_missed_fee_grace_days?: number
           ptp_missed_fee_type?: string
           ptp_missed_fee_value?: number
+          repayment_strategy?: string
           required_documents?: Json | null
           requires_collateral?: boolean | null
           requires_guarantor?: boolean | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "loan_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
+            columns: ["gl_fund_source_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_fund_source_account_id_fkey"
+            columns: ["gl_fund_source_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
+            columns: ["gl_interest_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_income_account_id_fkey"
+            columns: ["gl_interest_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
+            columns: ["gl_interest_receivable_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_interest_receivable_account_id_fkey"
+            columns: ["gl_interest_receivable_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
+            columns: ["gl_loan_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_loan_portfolio_account_id_fkey"
+            columns: ["gl_loan_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
+            columns: ["gl_overpayment_liability_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_overpayment_liability_account_id_fkey"
+            columns: ["gl_overpayment_liability_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
+            columns: ["gl_write_off_expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_products_gl_write_off_expense_account_id_fkey"
+            columns: ["gl_write_off_expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+        ]
       }
       loan_repayment_schedules: {
         Row: {
@@ -22654,6 +22917,81 @@ export type Database = {
           },
         ]
       }
+      product_charges: {
+        Row: {
+          amount: number
+          applies_to: string
+          charge_calculation_type: string
+          charge_code: string
+          charge_name: string
+          charge_time_type: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          gl_income_account_id: string | null
+          id: string
+          institution_id: string | null
+          is_active: boolean
+          is_penalty: boolean
+          max_cap: number | null
+          min_cap: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          applies_to: string
+          charge_calculation_type: string
+          charge_code: string
+          charge_name: string
+          charge_time_type: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          gl_income_account_id?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean
+          is_penalty?: boolean
+          max_cap?: number | null
+          min_cap?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          applies_to?: string
+          charge_calculation_type?: string
+          charge_code?: string
+          charge_name?: string
+          charge_time_type?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          gl_income_account_id?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean
+          is_penalty?: boolean
+          max_cap?: number | null
+          min_cap?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_charges_gl_income_account_id_fkey"
+            columns: ["gl_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_charges_gl_income_account_id_fkey"
+            columns: ["gl_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+        ]
+      }
       product_glossary: {
         Row: {
           created_at: string
@@ -26218,12 +26556,60 @@ export type Database = {
           },
         ]
       }
+      savings_product_charges: {
+        Row: {
+          charge_id: string
+          created_at: string
+          id: string
+          is_mandatory: boolean
+          savings_product_id: string
+        }
+        Insert: {
+          charge_id: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean
+          savings_product_id: string
+        }
+        Update: {
+          charge_id?: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean
+          savings_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_product_charges_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "product_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_product_charges_savings_product_id_fkey"
+            columns: ["savings_product_id"]
+            isOneToOne: false
+            referencedRelation: "savings_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       savings_products: {
         Row: {
+          accounting_rule: string
           base_interest_rate: number
           created_at: string | null
           description: string | null
           early_closure_penalty: number | null
+          gl_fee_income_account_id: string | null
+          gl_interest_on_savings_account_id: string | null
+          gl_interest_payable_account_id: string | null
+          gl_overdraft_interest_income_id: string | null
+          gl_overdraft_portfolio_account_id: string | null
+          gl_penalty_income_account_id: string | null
+          gl_savings_control_account_id: string | null
+          gl_savings_reference_account_id: string | null
           id: string
           institution_id: string | null
           interest_payment_frequency: string
@@ -26242,10 +26628,19 @@ export type Database = {
           withdrawal_penalty_rate: number | null
         }
         Insert: {
+          accounting_rule?: string
           base_interest_rate: number
           created_at?: string | null
           description?: string | null
           early_closure_penalty?: number | null
+          gl_fee_income_account_id?: string | null
+          gl_interest_on_savings_account_id?: string | null
+          gl_interest_payable_account_id?: string | null
+          gl_overdraft_interest_income_id?: string | null
+          gl_overdraft_portfolio_account_id?: string | null
+          gl_penalty_income_account_id?: string | null
+          gl_savings_control_account_id?: string | null
+          gl_savings_reference_account_id?: string | null
           id?: string
           institution_id?: string | null
           interest_payment_frequency: string
@@ -26264,10 +26659,19 @@ export type Database = {
           withdrawal_penalty_rate?: number | null
         }
         Update: {
+          accounting_rule?: string
           base_interest_rate?: number
           created_at?: string | null
           description?: string | null
           early_closure_penalty?: number | null
+          gl_fee_income_account_id?: string | null
+          gl_interest_on_savings_account_id?: string | null
+          gl_interest_payable_account_id?: string | null
+          gl_overdraft_interest_income_id?: string | null
+          gl_overdraft_portfolio_account_id?: string | null
+          gl_penalty_income_account_id?: string | null
+          gl_savings_control_account_id?: string | null
+          gl_savings_reference_account_id?: string | null
           id?: string
           institution_id?: string | null
           interest_payment_frequency?: string
@@ -26286,6 +26690,118 @@ export type Database = {
           withdrawal_penalty_rate?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "savings_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_fee_income_account_id_fkey"
+            columns: ["gl_fee_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
+            columns: ["gl_interest_on_savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_on_savings_account_id_fkey"
+            columns: ["gl_interest_on_savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
+            columns: ["gl_interest_payable_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_interest_payable_account_id_fkey"
+            columns: ["gl_interest_payable_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
+            columns: ["gl_overdraft_interest_income_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_interest_income_id_fkey"
+            columns: ["gl_overdraft_interest_income_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
+            columns: ["gl_overdraft_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_overdraft_portfolio_account_id_fkey"
+            columns: ["gl_overdraft_portfolio_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_penalty_income_account_id_fkey"
+            columns: ["gl_penalty_income_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
+            columns: ["gl_savings_control_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_control_account_id_fkey"
+            columns: ["gl_savings_control_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
+            columns: ["gl_savings_reference_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_products_gl_savings_reference_account_id_fkey"
+            columns: ["gl_savings_reference_account_id"]
+            isOneToOne: false
+            referencedRelation: "v_ledger_account_balances"
+            referencedColumns: ["account_id"]
+          },
           {
             foreignKeyName: "savings_products_institution_id_fkey"
             columns: ["institution_id"]
