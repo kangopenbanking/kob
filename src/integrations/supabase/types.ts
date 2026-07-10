@@ -299,7 +299,6 @@ export type Database = {
         Row: {
           accounts_failed: number
           accounts_processed: number
-          accrual_date: string
           completed_at: string | null
           created_at: string
           currency: string
@@ -308,6 +307,7 @@ export type Database = {
           idempotency_key: string
           institution_id: string | null
           journal_entry_ids: string[]
+          run_date: string
           run_type: string
           started_at: string | null
           status: string
@@ -318,7 +318,6 @@ export type Database = {
         Insert: {
           accounts_failed?: number
           accounts_processed?: number
-          accrual_date: string
           completed_at?: string | null
           created_at?: string
           currency?: string
@@ -327,6 +326,7 @@ export type Database = {
           idempotency_key: string
           institution_id?: string | null
           journal_entry_ids?: string[]
+          run_date: string
           run_type: string
           started_at?: string | null
           status?: string
@@ -337,7 +337,6 @@ export type Database = {
         Update: {
           accounts_failed?: number
           accounts_processed?: number
-          accrual_date?: string
           completed_at?: string | null
           created_at?: string
           currency?: string
@@ -346,6 +345,7 @@ export type Database = {
           idempotency_key?: string
           institution_id?: string | null
           journal_entry_ids?: string[]
+          run_date?: string
           run_type?: string
           started_at?: string | null
           status?: string
