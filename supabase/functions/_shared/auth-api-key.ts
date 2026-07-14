@@ -228,5 +228,5 @@ export async function resolveAuth(
     };
   }
 
-  return { response: unauthorized("Unrecognized credential format. Expected sk_test_* / sk_live_* / sbx_* / JWT.") };
+  return { response: unauthorized("Unrecognized credential format. Expected sk_test_* / sk_live_* / kob_sec_* / sbx_* / JWT.") };
 }
