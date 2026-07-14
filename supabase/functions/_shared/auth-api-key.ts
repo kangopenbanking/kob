@@ -18,9 +18,11 @@ export interface ResolvedAuth {
   user_id: string;
   email?: string;
   merchant_id?: string;
-  environment: "live" | "sandbox" | "user";
+  institution_id?: string;
+  scopes?: string[];
+  environment: "live" | "sandbox" | "user" | "test";
   key_id?: string;
-  key_table?: "gateway_merchant_keys" | "sandbox_api_keys";
+  key_table?: "gateway_merchant_keys" | "sandbox_api_keys" | "api_credentials";
   auth_method: "api_key" | "jwt";
 }
 
