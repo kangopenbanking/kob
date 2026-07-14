@@ -18,9 +18,11 @@ export interface ResolvedAuth {
   user_id: string;
   email?: string;
   merchant_id?: string;
-  environment: "live" | "sandbox" | "user";
+  institution_id?: string;
+  scopes?: string[];
+  environment: "live" | "sandbox" | "user" | "test";
   key_id?: string;
-  key_table?: "gateway_merchant_keys" | "sandbox_api_keys";
+  key_table?: "gateway_merchant_keys" | "sandbox_api_keys" | "api_credentials";
   auth_method: "api_key" | "jwt";
 }
 
@@ -170,6 +172,44 @@ export async function resolveAuth(
     };
   }
 
+  // ── Path 2b: KOB tenant institution secret key (kob_sec_test_* / kob_sec_live_*) ──
+  if (token.startsWith("kob_sec_")) {
+    const environment: "live" | "test" = token.startsWith("kob_sec_live_") ? "live" : "test";
+    const hash = await sha256Hex(token);
+
+    const { data: kobKey } = await supabase
+      .from("api_credentials")
+      .select("id, institution_id, environment, scopes, status, key_type")
+      .eq("key_hash", hash)
+      .eq("key_type", "secret")
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (!kobKey) {
+      return { response: unauthorized("KOB API key is invalid, revoked, or inactive.") };
+    }
+    if (kobKey.environment !== environment) {
+      return { response: unauthorized("KOB API key environment mismatch.") };
+    }
+
+    supabase.from("api_credentials")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("id", kobKey.id)
+      .then(() => {}, () => {});
+
+    return {
+      auth: {
+        user_id: "", // tenant-scoped, no single user
+        institution_id: kobKey.institution_id,
+        scopes: Array.isArray(kobKey.scopes) ? kobKey.scopes : [],
+        environment,
+        key_id: kobKey.id,
+        key_table: "api_credentials",
+        auth_method: "api_key",
+      },
+    };
+  }
+
   // ── Path 3: Supabase user JWT (dashboard / PAT) ──
   // Heuristic: JWTs are 3 base64 segments separated by dots.
   if (token.split(".").length === 3) {
@@ -188,5 +228,5 @@ export async function resolveAuth(
     };
   }
 
-  return { response: unauthorized("Unrecognized credential format. Expected sk_test_* / sk_live_* / sbx_* / JWT.") };
+  return { response: unauthorized("Unrecognized credential format. Expected sk_test_* / sk_live_* / kob_sec_* / sbx_* / JWT.") };
 }
