@@ -27,16 +27,25 @@ export interface IdempotencyMiss     { kind: "miss" }
 export type IdempotencyResult =
   | IdempotencyHit | IdempotencyConflict | IdempotencyInFlight | IdempotencyInvalid | IdempotencyMiss;
 
-// UUID v4 (RFC 4122 §4.4)
+// RFC 4122 §4 layout. v4 (random, §4.4) is the recommended client format;
+// v5 (name-based SHA-1, §4.3) is accepted so server-derived deterministic
+// operation-lock keys can reuse the same reservation contract.
 const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_V4_OR_V5_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[45][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MAX_KEY_LEN = 255;
 
 export function validateIdempotencyKey(key: string | null | undefined): IdempotencyInvalid | null {
   if (!key) return null; // optional — absence is allowed; only validate when supplied
   if (typeof key !== "string") return { kind: "invalid", reason: "not_a_string" };
   if (key.length > MAX_KEY_LEN) return { kind: "invalid", reason: "exceeds_255_chars" };
-  if (!UUID_V4_RE.test(key)) return { kind: "invalid", reason: "not_uuid_v4" };
+  if (!UUID_V4_OR_V5_RE.test(key)) return { kind: "invalid", reason: "not_uuid_v4_or_v5" };
   return null;
+}
+
+// Exposed for callers that must gate strictly on client-supplied v4 (e.g.
+// public API endpoints); server-derived v5 keys use the broader validator.
+export function isStrictUuidV4(key: string): boolean {
+  return UUID_V4_RE.test(key);
 }
 
 export async function sha256(input: string): Promise<string> {
