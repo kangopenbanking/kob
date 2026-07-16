@@ -1,7 +1,9 @@
 # Phase 1B-R1I-c.2R — Runtime Implementation Block Record
 
-**Status:** BLOCKED
-**Reason:** Shared idempotency helper cannot represent an empty-body `204 No Content` response as required by Section 9 of the c.2R mandate.
+**Status:** UNBLOCKED by Phase 1B-R1I-c.2B (see `phase-1b-r1i-c2b-final-report.md`).
+**Original blocker:** Shared idempotency helper could not represent an empty-body `204 No Content` response as required by Section 9 of the c.2R mandate.
+**Resolution:** c.2B added `isBodylessStatus`, `IdempotencyHit.hasBody`, storage normalisation and a bodyless replay branch in `supabase/functions/_shared/integration-layer/idempotency.ts`. 115/115 targeted tests pass; no persistence migration required; API 4.53.1 / 484 ops / 183 gates preserved.
+**Reason (historical):** documented below for the audit trail.
 **API version:** 4.53.1 (unchanged)
 **Operation count:** 484 (unchanged)
 **Gate total:** 183 (unchanged)
