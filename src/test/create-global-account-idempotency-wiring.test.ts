@@ -78,12 +78,14 @@ describe("Phase 1B-R1I-b.1 — createGlobalAccount idempotency wiring", () => {
     expect(handler).toContain("canonicalStringify");
   });
 
-  it("provider ambiguity path does NOT store a completed response", () => {
-    // The catch block after createGlobalAccount must return without calling storeIdempotency.
-    // Isolate the provider-catch block by anchoring on the console.error marker.
-    const catchBlock = handler.match(/console\.error\("nium createGlobalAccount failed"[\s\S]*?\}, 502\);/);
+  it("provider ambiguity path stores an unknown-provider-result completion (b.1V)", () => {
+    // b.1V correction: the catch block MUST store an idempotency completion so
+    // a same-key retry cannot blindly re-invoke the provider after ambiguity.
+    const catchBlock = handler.match(/console\.error\("nium createGlobalAccount failed"[\s\S]*?json\(ambiguity, 502\);/);
     expect(catchBlock).toBeTruthy();
-    expect(catchBlock![0]).not.toContain("storeIdempotency");
+    expect(catchBlock![0]).toContain("storeIdempotency");
+    expect(catchBlock![0]).toContain("PROVIDER_RESULT_UNKNOWN");
+    expect(catchBlock![0]).toMatch(/status:\s*502/);
   });
 
   it("success path stores the response for future replay", () => {
