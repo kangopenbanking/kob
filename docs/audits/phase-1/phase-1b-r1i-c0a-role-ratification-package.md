@@ -402,22 +402,22 @@ Scope: goal archive/status-transition handler; roundup-disable handler; pending 
 **R1I-c.4 — combined closure**
 Scope: cross-operation isolation; cascade-safety tests; security tests; full-suite regression; clean build; quality gates; SDK/Postman drift assessment; final Phase 1B runtime-wiring update.
 
-`budgetingDeleteRule` must not be implemented unless the API Product Owner rejects removal and separately authorises a category-rules product and data model.
+`budgetingDeleteRule` must not be implemented unless the API Product Owner rejects removal and separately authorises a category-rules product and data model. The API Product Owner has APPROVED removal from the unreleased 4.53.1 contract; execution of that removal is deferred to R1I-c.4 and requires a new Chief Architect authorization.
 
 ## 11. Current gate
 
 ```
 AUTHORIZATION STATUS:
-PENDING MULTI-ROLE APPROVAL
+RATIFIED — ALL SIX ROLES APPROVED WITH CONDITIONS
 
-IMPLEMENTATION:
-NOT AUTHORIZED
+IMPLEMENTATION (R1I-c.1+):
+NOT AUTHORIZED — requires new Chief Architect authorization
 
 CONTRACT MODIFICATION:
-NOT AUTHORIZED
+NOT AUTHORIZED IN THIS SLICE — approved for R1I-c.4 execution under separate authorization
 
-DATABASE MIGRATION:
-NOT AUTHORIZED
+DATABASE MIGRATION (PRODUCTION):
+NOT AUTHORIZED — local/test design + migration preparation only
 
 PRODUCTION ACTION:
 PROHIBITED
@@ -426,5 +426,6 @@ PROHIBITED
 Final result:
 
 ```text
-PHASE 1B-R1I-c.0 BLOCKED — REQUIRED ROLE DECISIONS OUTSTANDING
+PHASE 1B-R1I-c.0A PASS — ROLE RATIFICATION COMPLETE
 ```
+
