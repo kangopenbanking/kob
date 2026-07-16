@@ -274,9 +274,9 @@ info:
     go: 1.6.1
   x-phase-10-audit: https://kangopenbanking.com/developer/changelog#phase-10-cemac-coverage
 servers:
-  - url: https://sandbox-api.kangopenbanking.com/v1
+  - url: https://sandbox-api.kangopenbanking.com
     description: Sandbox
-  - url: https://api.kangopenbanking.com/v1
+  - url: https://api.kangopenbanking.com
     description: Production
 security:
   - bearerAuth: []
