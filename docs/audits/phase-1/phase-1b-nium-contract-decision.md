@@ -59,3 +59,15 @@ If the Guardian prefers a strict exemption requiring all three markers to be `tr
 
 - Revert a.3 diff (single OpenAPI edit + one extension block) → restores prior contract exactly.
 - No runtime, DB, dependency, or SDK artifact changes accompany a.1.
+
+---
+
+## Phase 1B-R1I-a.2 · Gate capability landed, production marker still deferred
+
+The provider-event exemption is now recognised by the OpenAPI G3 quality gate (Model A from a.1). The Nium production operation MUST continue to advertise the temporary generic `Idempotency-Key` header and MUST NOT yet carry `x-kob-idempotency` / `x-kob-webhook` extensions until a.3 completes and evidences:
+
+1. **Changed-payload fingerprint protection** — persist SHA-256 of raw body alongside `webhook_inbox.event_id`, reject re-delivery when fingerprint changes.
+2. **Explicit replay-window enforcement** — reject deliveries whose provider timestamp is outside the documented tolerance (≤ 5 min).
+3. **Reserve-then-crash recovery** — atomic reservation row inserted before downstream ledger writes; resumable finish path on restart.
+
+Only after all three controls are implemented, unit-tested, and demonstrated end-to-end may the production Nium operation add the extensions and remove the generic header. See `phase-1b-r1i-a2-final-report.md` for the extension schema and rollback path.
