@@ -284,9 +284,12 @@ Deno.serve(async (req) => {
         .eq("budget_id", budgetId)
         .eq("category_key", catKey)
         .eq("consumer_id", user.id)
+        .eq("status", "active")           // c.2R guard: reject deleted categories
+        .eq("is_system", false)           // c.2R guard: system categories immutable
         .select()
-        .single();
+        .maybeSingle();
       if (error) throw error;
+      if (!data) return json({ error: "not_found_or_deleted" }, 404);
       return json(data);
     }
 
