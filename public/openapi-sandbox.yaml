@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.53.0
+  version: 4.54.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
