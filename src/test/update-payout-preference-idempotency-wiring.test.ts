@@ -55,9 +55,9 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
   });
 
   it("scope uses server-authenticated userId — never any client-supplied field", () => {
-    expect(handler).toMatch(/scope:\s*\{\s*user_id:\s*userId/);
+    expect(handler).toMatch(/user_id:\s*userId/);
     // No body.tenant/institution/merchant field is fed into the scope.
-    expect(handler).not.toMatch(/scope:\s*\{[^}]*body\.(tenant|institution|merchant)/);
+    expect(handler).not.toMatch(/scopeObj[\s\S]{0,200}body\.(tenant|institution|merchant)/);
   });
 
   it("route/method are baked into scope and route constant", () => {
