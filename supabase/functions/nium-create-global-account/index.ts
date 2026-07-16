@@ -15,6 +15,7 @@ import {
   sha256,
 } from "../_shared/integration-layer/idempotency.ts";
 import { canonicalStringify } from "../_shared/integration-layer/canonical.ts";
+import { deriveOperationKey, OPERATION_LOCK_PREFIX } from "../_shared/integration-layer/operation-lock.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
