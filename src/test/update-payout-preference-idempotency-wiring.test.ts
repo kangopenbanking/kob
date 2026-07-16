@@ -1,14 +1,16 @@
-// Phase 1B-R1I-b.2.1 — updateGlobalAccountPayoutPreference idempotency wiring.
+// Phase 1B-R1I-b.2.1 / b.2.1V — updateGlobalAccountPayoutPreference wiring.
 // Handler-boundary source guards (executed by Vitest against the Deno file):
 //   1. Shared idempotency helper is wired (no bespoke framework).
 //   2. Idempotency-Key is read case-insensitively, optional (absence preserved).
-//   3. Scope is derived from server-authenticated userId + canonical route only.
+//   3. Scope is derived from server-authenticated userId + canonical route +
+//      environment; for account-scope the authorised target account_id is
+//      part of the uniqueness boundary (b.2.1V §5).
 //   4. Fingerprint is SHA-256 of canonical(scope + normalised body).
-//   5. Reservation happens AFTER authentication + validation, BEFORE the UPDATE.
+//   5. Ownership pre-check happens BEFORE reservation; account_not_found
+//      returns 404 with ZERO reservations created (b.2.1V §7, §8).
 //   6. Success paths (user + account) store the completed response for replay.
-//   7. account_not_found (404) is stored — but validation/auth failures are not.
-//   8. CORS allows the Idempotency-Key request header.
-//   9. Canonical body normalisation is stable across property ordering.
+//   7. CORS allows the Idempotency-Key request header.
+//   8. Canonical body normalisation is stable across property ordering.
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
