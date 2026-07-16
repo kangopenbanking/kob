@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "openapi:gates": "node scripts/openapi-quality-gates.mjs",
+    "openapi:gates:test": "vitest run src/test/openapi-quality-gates.test.ts",
     "openapi:check-version": "node scripts/check-openapi-version.mjs",
     "version:check-sync": "node scripts/check-version-sync.mjs",
     "version:print": "node scripts/print-expected-version.mjs",
