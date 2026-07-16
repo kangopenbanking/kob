@@ -145,10 +145,10 @@
     "vitest": "^3.2.6"
   },
   "overrides": {
-    "protobufjs": "^7.5.5"
+    "protobufjs": "^7.5.5",
+    "rollup": "4.44.2"
   },
   "resolutions": {
     "protobufjs": "^7.5.5"
   }
 }
-
