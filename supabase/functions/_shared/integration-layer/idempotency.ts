@@ -17,7 +17,14 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 export interface IdempotencyHit {
   kind: "replay";
   status: number;
+  /**
+   * Stored JSON body. For bodyless statuses (204/205/304) this is always `null`
+   * and MUST NOT be serialised on the wire. `hasBody` is the authoritative
+   * discriminator to avoid ambiguous truthiness checks (valid JSON bodies may
+   * legitimately be `null`, `false`, `0`, `""`, `[]`, `{}`).
+   */
   body: unknown;
+  hasBody: boolean;
 }
 export interface IdempotencyConflict { kind: "conflict"; reason: "request_hash_mismatch" }
 export interface IdempotencyInFlight { kind: "in_flight" }
@@ -26,6 +33,17 @@ export interface IdempotencyMiss     { kind: "miss" }
 
 export type IdempotencyResult =
   | IdempotencyHit | IdempotencyConflict | IdempotencyInFlight | IdempotencyInvalid | IdempotencyMiss;
+
+/**
+ * RFC 9110 §6.4.1, §15.3.5, §15.3.6, §15.4.5:
+ * 204 No Content, 205 Reset Content and 304 Not Modified MUST NOT include a
+ * message body. Treated as authoritative bodyless statuses so replay emits
+ * `new Response(null, ...)` with no `Content-Type` and no non-zero
+ * `Content-Length`.
+ */
+export function isBodylessStatus(status: number): boolean {
+  return status === 204 || status === 205 || status === 304;
+}
 
 // RFC 4122 §4 layout. v4 (random, §4.4) is the recommended client format;
 // v5 (name-based SHA-1, §4.3) is accepted so server-derived deterministic
@@ -135,7 +153,9 @@ export async function reserveIdempotency(args: {
     return { kind: "miss" };
   }
 
-  return { kind: "replay", status: existing.response_status, body: existing.response_body };
+  const status = existing.response_status;
+  const hasBody = !isBodylessStatus(status);
+  return { kind: "replay", status, body: hasBody ? existing.response_body : null, hasBody };
 }
 
 /**
@@ -172,13 +192,17 @@ export async function storeIdempotency(args: {
 }): Promise<void> {
   if (!args.key) return;
   const sb = admin();
+  // RFC 9110 §15.3.5/§15.3.6/§15.4.5: 204/205/304 MUST have no message body.
+  // Normalise any accidental body to null so replay is byte-identical bodyless.
+  const bodyless = isBodylessStatus(args.status);
+  const persistedBody = bodyless ? null : (args.body ?? null);
   await sb.from("integration_idempotency_keys").upsert({
     idempotency_key: args.key,
     merchant_id: args.merchantId,
     resource: args.resource,
     request_hash: args.requestHash,
     response_status: args.status,
-    response_body: args.body as Record<string, unknown>,
+    response_body: persistedBody as Record<string, unknown> | null,
   }, { onConflict: "merchant_id,idempotency_key" });
 }
 
@@ -190,6 +214,15 @@ export function idempotencyResponse(result: IdempotencyResult, corsHeaders: Reco
   if (result.kind === "miss") return null;
 
   if (result.kind === "replay") {
+    // Bodyless statuses (204/205/304): emit `Response(null, ...)` with NO
+    // Content-Type. Runtime will not set a non-zero Content-Length for a
+    // null body. `X-Idempotent-Replay: true` remains the replay marker.
+    if (!result.hasBody) {
+      return new Response(null, {
+        status: result.status,
+        headers: { ...corsHeaders, "X-Idempotent-Replay": "true" },
+      });
+    }
     return new Response(JSON.stringify(result.body), {
       status: result.status,
       headers: { ...corsHeaders, "Content-Type": "application/json", "X-Idempotent-Replay": "true" },
