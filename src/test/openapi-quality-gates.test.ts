@@ -39,7 +39,7 @@ function runGates(spec, opts = {}) {
   const proc = spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
   let byGate = {};
   const m = proc.stdout.match(/"byGate":\s*({[\s\S]*?})/);
-  if (m) { try { byGate = JSON.parse(m[1]); } catch {} }
+  if (m) { try { byGate = JSON.parse(m[1]); } catch { /* non-JSON tail is ignored; byGate stays empty */ } }
   return { status: proc.status, stdout: proc.stdout, stderr: proc.stderr, byGate };
 }
 
