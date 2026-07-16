@@ -35,6 +35,11 @@ function walk(dir: string, files: string[] = []): string[] {
 }
 
 describe("i18n keys", () => {
+  // Explicit 30s timeout: this test walks the entire src/ tree synchronously.
+  // Under full-suite parallel load the walk exceeds the default 5s vitest
+  // timeout on lower-spec CI runners, producing a timing-only flake with no
+  // semantic regression. The generous ceiling preserves the assertion
+  // strength while eliminating the false negative.
   it("contains no `t('...' as any)` calls in production source", () => {
     const offenders: { file: string; line: number; text: string }[] = [];
 
@@ -61,5 +66,5 @@ describe("i18n keys", () => {
     }
 
     expect(offenders).toHaveLength(0);
-  });
+  }, 30_000);
 });
