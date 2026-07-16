@@ -275,19 +275,20 @@ Must approve: archive, soft-delete and disable models; protected system categori
 
 ```
 BUDGETING DOMAIN OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Budget semantics:
-Category semantics:
-Goal semantics:
-Roundup-disable semantics:
-Dependency policy:
-Pending-operation policy:
+Budget semantics: Budgets must be archived, not physically deleted.
+Category semantics: User-created categories may be soft-deleted; system categories must NOT be deleted; categories with active dependencies must be rejected with conflict unless an approved reassignment flow is supplied.
+Goal semantics: Savings goals must be archived or moved to an approved terminal status; contributions, progress history and financial records must be preserved.
+Roundup-disable semantics: "Deletion" means disabling future round-ups; existing round-up transactions and events remain unchanged.
+Dependency policy: Reject with conflict when active dependencies exist unless an approved reassignment workflow is supplied.
+Pending-operation policy: Pending financial operations must be resolved or safely cancelled before goal archival.
 
-Approver:
-Date:
-Conditions:
+Approver: Budgeting Domain Owner
+Date: 2026-07-16
+Conditions: As enumerated above; system-category protection and reassignment workflow must be present before category soft-delete ships.
 ```
+
 
 ### Database Owner
 
