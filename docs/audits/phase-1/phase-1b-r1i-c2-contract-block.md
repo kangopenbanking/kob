@@ -1,6 +1,8 @@
-# Phase 1B-R1I-c.2 — Contract Response Decision Required (BLOCKED)
+# Phase 1B-R1I-c.2 — Contract Response Decision Required (BLOCKED → RESOLVED by c.2A)
 
-**Status:** BLOCKED — no runtime code, tests, guards, migrations, or reports beyond this decision record were produced.
+> **UPDATE:** This block was resolved by `PHASE 1B-R1I-c.2A PASS — BUDGETING DELETE RESPONSE CONTRACT RATIFIED`. See `phase-1b-r1i-c2a-response-decision.md` and `phase-1b-r1i-c2a-final-report.md`. Runtime handler implementation for `R1I-c.2` remains gated on a fresh authorization; only the contract has been corrected.
+
+**Status:** BLOCKED — no runtime code, tests, guards, migrations, or reports beyond this decision record were produced during the c.2 slice. (Contract subsequently corrected under c.2A.)
 
 **Prohibitions honoured this turn:**
 - No changes under `src/`, `supabase/functions/`, `supabase/migrations/`, or `public/openapi.*`.

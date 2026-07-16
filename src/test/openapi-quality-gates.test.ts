@@ -699,17 +699,19 @@ describe('Phase 1B-R1I-a.2 · ordinary G3 behaviour preserved', () => {
   });
 });
 
-describe('Phase 1B-R1I-a.3C · production spec integrity', () => {
-  it('production OpenAPI reports exactly 187 failures with post-reconciliation gate counts', () => {
-    // Post a.3C: niumIncomingWebhook is now provider-event exempt (G3 stays 0)
-    // AND its added 409 Conflict uses application/problem+json which drops G6
-    // by exactly one (77 → 76). Total 188 → 187. No other gate moves.
+describe('Phase 1B-R1I-c.2A · production spec integrity', () => {
+  it('production OpenAPI reports exactly 183 failures with post-c.2A gate counts', () => {
+    // Post c.2A: budgetingDeleteBudget and budgetingDeleteCategory now
+    // additively document 400/401/404/409/429/500 using the reusable
+    // Problem Details responses. This drops G6 by 4 (77 → 72 minus the
+    // a.3C -1 nium delta, i.e. 76 → 72). Total 187 → 183. No other
+    // gate moves. Version, operation count and G1/G3/G4/G7/G8 unchanged.
     const proc = spawnSync(process.execPath, [SCRIPT, '--spec', 'public/openapi.json'], { encoding: 'utf8' });
     expect(proc.status).toBe(1);
     const m = proc.stdout.match(/"byGate":\s*({[\s\S]*?})/);
     const byGate = m ? JSON.parse(m[1]) : {};
-    expect(byGate).toEqual({ G1: 0, G2: 3, G3: 0, G4: 0, G5: 29, G6: 76, G7: 0, G8: 0, G9: 79 });
-    expect(proc.stdout).toContain('"failures": 187');
+    expect(byGate).toEqual({ G1: 0, G2: 3, G3: 0, G4: 0, G5: 29, G6: 72, G7: 0, G8: 0, G9: 79 });
+    expect(proc.stdout).toContain('"failures": 183');
     expect(proc.stdout).toContain('"apiVersion": "4.53.1"');
     expect(proc.stdout).toContain('"totalOperations": 484');
   });
