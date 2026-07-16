@@ -107,3 +107,14 @@ No coercion required. No backfill of archive/delete audit fields.
 - No column drops, no renames.
 - No trigger on `roundup_transactions` / `roundup_events` / ledger / payments / settlements.
 - No RLS weakening.
+
+---
+
+## R1I-c.1F closure banner
+
+- **Canonical artifact:** `supabase/pending-migrations/phase-1/20260101000000_phase-1b-budgeting-additive.sql`
+- **SHA-256:** `53a7228f345c52e43c467a1869e1fb1965754181d34c106c0fc92179cd0e76bf`
+- **Byte-identical to** the c.1E harness input (`docs/audits/phase-1/executable/01_additive_migration.sql`).
+- **Packaging model:** B (pending-migrations directory; not auto-applied by Lovable Cloud).
+- **Managed PG:** 17.6. Compatible with tested syntax.
+- **Production promotion:** requires Database Owner + Security Officer + Compliance/DPO + Release Manager + Chief Architect approval (see `supabase/pending-migrations/phase-1/README.md`).
