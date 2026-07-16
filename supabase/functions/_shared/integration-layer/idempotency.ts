@@ -214,6 +214,15 @@ export function idempotencyResponse(result: IdempotencyResult, corsHeaders: Reco
   if (result.kind === "miss") return null;
 
   if (result.kind === "replay") {
+    // Bodyless statuses (204/205/304): emit `Response(null, ...)` with NO
+    // Content-Type. Runtime will not set a non-zero Content-Length for a
+    // null body. `X-Idempotent-Replay: true` remains the replay marker.
+    if (!result.hasBody) {
+      return new Response(null, {
+        status: result.status,
+        headers: { ...corsHeaders, "X-Idempotent-Replay": "true" },
+      });
+    }
     return new Response(JSON.stringify(result.body), {
       status: result.status,
       headers: { ...corsHeaders, "Content-Type": "application/json", "X-Idempotent-Replay": "true" },
