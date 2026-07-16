@@ -35,3 +35,9 @@
 ## Scope / isolation / fingerprint
 
 Unchanged. `reserveIdempotency`'s tenant scope (`merchant_id + idempotency_key`), request-hash conflict detection, in-flight TTL and stale-reservation reclaim are all outside the c.2B diff.
+
+---
+
+## c.2B-V re-confirmation
+
+Post-clean-install re-run of all nine caller suites: 115/115 pass, 0 skipped. Lockfile hash unchanged (`137def28…c7a5`). Rollup unchanged (4.44.2). Vite unchanged (5.4.21). OpenAPI JSON/YAML unchanged. Budgeting DELETE handlers still unimplemented. Gate total remains 183.

@@ -17,3 +17,9 @@ Change is confined to response persistence and replay representation. Confirmed 
 - **Body-smuggling via 204:** blocked. `storeIdempotency` overwrites body with `null` when `isBodylessStatus(status)`; `idempotencyResponse` bodyless branch never reads `result.body`.
 - **Downgrade attack via header injection:** `X-Idempotent-Replay: true` is the sole marker; no upstream input reaches the replay header set.
 - **Cache-poisoning across tenants:** unchanged — helper still requires `merchant_id` match on lookup.
+
+---
+
+## c.2B-V confirmation
+
+Verification slice added no new attack surface. All tenant/actor/operation/resource isolation assertions re-passed under three full runs and a post-clean-install re-run. No secrets, tokens or private keys appear in any command output captured during verification.

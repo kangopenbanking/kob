@@ -36,3 +36,33 @@ Zero failures, zero skips, zero unhandled rejections.
 | Same-key replay remains 204 | yes | yes (stored `response_status=204` returned as replay) | ✅ |
 | `application/json` on 204 | never | never | ✅ |
 | `"null"` on wire | never | never (no `JSON.stringify` in bodyless branch) | ✅ |
+
+---
+
+## c.2B-V verification (re-run)
+
+`bunx vitest run` over the nine targeted suites:
+
+```
+Test Files  9 passed (9)
+Tests      115 passed (115)
+Skipped    0
+```
+
+Post-clean-install re-run (after `rm -rf node_modules && npm ci`):
+
+```
+Test Files  9 passed (9)
+Tests      115 passed (115)
+Skipped    0
+```
+
+Three full-suite runs:
+
+| Run | Failed | Passed | Skipped | Unhandled |
+|---|---|---|---|---|
+| 1 | 85 | 1410 | 7 | 0 |
+| 2 | 90 | 1405 | 7 | 0 |
+| 3 | 90 | 1405 | 7 | 0 |
+
+All within the authorised ratchet (raw ≤93, skipped ≤7, unhandled 0). Zero shared-idempotency regressions in every run.
