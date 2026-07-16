@@ -69,3 +69,14 @@ Not re-executed in this slice — the change is confined to `supabase/functions/
 ## Next authorised slice
 
 Runtime implementation of `budgetingDeleteBudget` / `budgetingDeleteCategory` (previously blocked as c.2R) may now proceed under a follow-up authorisation, because the shared helper can faithfully represent their success response.
+
+---
+
+## c.2B-V verification outcome
+
+See `phase-1b-r1i-c2b-v-final-report.md` for the full verification evidence. Summary:
+
+- Targeted tests: 115/115 (2× — original + post-clean-install).
+- Full-suite runs: 85 / 90 / 90 failed within ≤93 raw cap; 7 skipped each; 0 unhandled.
+- Touched-file lint: 0/0. Full lint: 5606 (+10 delta not attributable to this slice — both touched files 0/0; c.2B-V removed one existing `@ts-nocheck`).
+- Build, gates (183), version (4.53.1), operations (484), lockfile, Rollup (4.44.2), Vite (5.4.21), OpenAPI JSON/YAML, budgeting handlers, migrations: all unchanged.
