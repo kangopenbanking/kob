@@ -273,6 +273,9 @@ Deno.serve(async (req) => {
   if (idemKey && requestHash) {
     await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 201, body: respBody });
   }
+  // Complete the operation lock so subsequent fresh-key retries hit the
+  // replay path (which will reconcile against nium_global_accounts).
+  await storeIdempotency({ key: opKey, merchantId: userId, resource: opResource, requestHash: opHash, status: 201, body: respBody });
   return json(respBody, 201);
 });
 
