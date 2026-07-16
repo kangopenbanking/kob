@@ -296,19 +296,24 @@ Must approve: additive fields; indexes; constraints; absence of cascades; RLS de
 
 ```
 DATABASE OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED FOR LOCAL/TEST DESIGN AND MIGRATION PREPARATION ONLY
 
 Approved schema additions:
-Approved constraints/indexes:
-Approved RLS changes:
-Approved retention model:
+- budgets: status, archived_at, archived_by
+- budget_categories: is_system, status, deleted_at, deleted_by
+- savings_goals: status, archived_at, archived_by
+- roundup_settings: confirm or add enabled, disabled_at, disabled_by, updated_at
+Approved constraints/indexes: To be designed and tested in R1I-c.1 (indexes for active/non-archived queries; additive only).
+Approved RLS changes: RLS updates to enforce ownership boundaries — designed and tested in R1I-c.1.
+Approved retention model: No destructive migration; no financial or historical cascade deletion; existing production data must not be modified.
 Production migration authorised:
 NO — separate release authorization required
 
-Approver:
-Date:
-Conditions:
+Approver: Database Owner
+Date: 2026-07-16
+Conditions: No destructive migration; no cascade deletion of financial or historical records; no production migration under this authorization; RLS, indexes, defaults, backfill and rollback must be designed and tested in R1I-c.1; production data must not be modified.
 ```
+
 
 ### Security Officer
 
