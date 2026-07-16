@@ -109,7 +109,7 @@ describe("Phase 1B-R1I-b.1X — handler wiring", () => {
   });
 
   it("reserves the operation lock BEFORE the provider call", () => {
-    const reserveIdx = handler.indexOf("reserveIdempotency({\n      key: opKey");
+    const reserveIdx = handler.search(/reserveIdempotency\(\{\s*\n?\s*key:\s*opKey/);
     const providerIdx = handler.indexOf("await createGlobalAccount(");
     expect(reserveIdx).toBeGreaterThan(-1);
     expect(providerIdx).toBeGreaterThan(-1);
