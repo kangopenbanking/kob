@@ -106,13 +106,14 @@ function compliantWebhook() {
   };
 }
 
-/** Base compliant spec containing one of every op-type the gates evaluate. */
+/** Base compliant spec containing one of every op-type the gates evaluate.
+ *  Deep-cloned on every call so per-test mutations never leak into shared refs. */
 function baseCompliantSpec() {
-  return {
+  return JSON.parse(JSON.stringify({
     openapi: '3.1.0',
     info: { title: 'Fixture', version: '0.0.0' },
     servers: [{ url: 'https://example.test/v1' }],
-    components: JSON.parse(JSON.stringify(COMMON_COMPONENTS)),
+    components: COMMON_COMPONENTS,
     paths: {
       '/things':            { get: compliantListOp() },
       '/things/{id}':       { get: { parameters: [REQ_ID], responses: { '200': OK_JSON, '400': PROBLEM_RESP } },
@@ -121,7 +122,7 @@ function baseCompliantSpec() {
       '/simple':            { post: compliantSimpleMutation() },
       '/webhooks/provider': { post: compliantWebhook() },
     },
-  };
+  }));
 }
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
