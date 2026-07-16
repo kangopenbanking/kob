@@ -29,7 +29,9 @@ describe('Nium webhook — Phase 1B-R1I-a.3 hardening wiring', () => {
   it('enforces the replay window when a timestamp header is present', () => {
     expect(handler).toMatch(/x-nium-timestamp/);
     expect(handler).toMatch(/enforceReplayWindow\(/);
-    expect(handler).toMatch(/outside_replay_window|invalid_timestamp/);
+    // Reason strings are produced by the shared helper; handler forwards them
+    // via `window.reason`. Assert the forwarding shape here.
+    expect(handler).toMatch(/window\.reason/);
   });
 
   it('passes payload fingerprint into checkAndRegisterWebhook', () => {
