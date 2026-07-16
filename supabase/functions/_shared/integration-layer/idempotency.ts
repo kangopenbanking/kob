@@ -153,7 +153,9 @@ export async function reserveIdempotency(args: {
     return { kind: "miss" };
   }
 
-  return { kind: "replay", status: existing.response_status, body: existing.response_body };
+  const status = existing.response_status;
+  const hasBody = !isBodylessStatus(status);
+  return { kind: "replay", status, body: hasBody ? existing.response_body : null, hasBody };
 }
 
 /**
