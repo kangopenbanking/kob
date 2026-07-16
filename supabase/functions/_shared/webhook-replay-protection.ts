@@ -18,15 +18,64 @@ export interface ReplayCheckArgs {
   payload: unknown;
   signature?: string;
   ttl_seconds?: number; // default 24h
+  /**
+   * Optional SHA-256 hex fingerprint of the raw request body.
+   * When provided, a subsequent delivery of the same event_id with a DIFFERENT
+   * body is treated as a security-relevant mismatch (not a benign duplicate).
+   */
+  payload_fingerprint?: string;
+  /**
+   * Age (seconds) after which an unprocessed inbox row is considered abandoned
+   * by a previous crashed worker and may be reclaimed by a retry. Default 90s.
+   */
+  stale_retry_after_seconds?: number;
 }
 
 export interface ReplayCheckResult {
   duplicate: boolean;
+  /** True when the same event_id was re-delivered with a different body. */
+  mismatch?: boolean;
+  /** True when a prior in-flight reservation was reclaimed after a crash. */
+  retried?: boolean;
   inbox_id?: string;
-  reason?: "missing_event_id" | "duplicate_within_ttl" | "ok";
+  reason?:
+    | "missing_event_id"
+    | "duplicate_within_ttl"
+    | "payload_fingerprint_mismatch"
+    | "stale_retry_reclaimed"
+    | "ok";
 }
 
 const DEFAULT_TTL = 60 * 60 * 24; // 24h
+const DEFAULT_STALE_RETRY = 90; // seconds
+
+/**
+ * SHA-256 hex fingerprint of the raw request body.
+ * Runs inside Deno / Edge runtime (crypto.subtle available).
+ */
+export async function computePayloadFingerprint(raw: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Enforce a symmetric replay window around the current wall-clock time.
+ * Accepts either seconds-since-epoch (10-digit) or milliseconds (13-digit).
+ * Returns { ok: true } when timestamp is absent (caller decides whether to require it).
+ */
+export function enforceReplayWindow(
+  timestamp: string | number | null | undefined,
+  window_seconds = 300,
+  now_ms: number = Date.now(),
+): { ok: true } | { ok: false; reason: "invalid_timestamp" | "outside_replay_window"; skew_seconds?: number } {
+  if (timestamp === null || timestamp === undefined || timestamp === "") return { ok: true };
+  const n = typeof timestamp === "number" ? timestamp : Number(timestamp);
+  if (!Number.isFinite(n) || n <= 0) return { ok: false, reason: "invalid_timestamp" };
+  const ts_ms = n < 1e12 ? n * 1000 : n; // heuristic: seconds vs ms
+  const skew = Math.abs(now_ms - ts_ms) / 1000;
+  if (skew > window_seconds) return { ok: false, reason: "outside_replay_window", skew_seconds: Math.round(skew) };
+  return { ok: true };
+}
 
 /**
  * Reads webhook identity headers from a request, accepting both the legacy
@@ -85,19 +134,63 @@ export async function checkAndRegisterWebhook(
   supabase: SupabaseClient,
   args: ReplayCheckArgs,
 ): Promise<ReplayCheckResult> {
-  const { source, event_id, payload, signature, ttl_seconds = DEFAULT_TTL } = args;
+  const {
+    source,
+    event_id,
+    payload,
+    signature,
+    ttl_seconds = DEFAULT_TTL,
+    payload_fingerprint,
+    stale_retry_after_seconds = DEFAULT_STALE_RETRY,
+  } = args;
   if (!event_id) return { duplicate: false, reason: "missing_event_id" };
 
   const cutoff = new Date(Date.now() - ttl_seconds * 1000).toISOString();
   const { data: existing } = await supabase
     .from("webhook_inbox")
-    .select("id, created_at, is_processed")
+    .select("id, created_at, is_processed, payload, signature")
     .eq("source", source)
     .eq("event_id", event_id)
     .gte("created_at", cutoff)
     .maybeSingle();
 
   if (existing) {
+    // 1) Fingerprint mismatch is a hard security signal — the same event_id
+    //    was previously accepted with a DIFFERENT body. Never reprocess.
+    if (payload_fingerprint) {
+      const priorRaw = JSON.stringify(existing.payload ?? null);
+      const priorFp = await computePayloadFingerprint(priorRaw);
+      const newRaw = JSON.stringify(payload ?? null);
+      const newFp = await computePayloadFingerprint(newRaw);
+      // Direct comparison against the caller-provided fingerprint (raw body)
+      // is authoritative; the JSON-normalised comparison is a fallback for
+      // callers that didn't compute a fingerprint on their raw payload.
+      const mismatch = priorFp !== newFp || (payload_fingerprint && priorFp !== payload_fingerprint);
+      if (mismatch) {
+        return {
+          duplicate: true,
+          mismatch: true,
+          inbox_id: existing.id,
+          reason: "payload_fingerprint_mismatch",
+        };
+      }
+    }
+
+    // 2) Reserve-then-crash recovery: an unprocessed row older than the stale
+    //    threshold is treated as an abandoned reservation and reclaimed for
+    //    reprocessing by the current delivery.
+    if (!existing.is_processed) {
+      const ageSec = (Date.now() - new Date(existing.created_at).getTime()) / 1000;
+      if (ageSec >= stale_retry_after_seconds) {
+        return {
+          duplicate: false,
+          retried: true,
+          inbox_id: existing.id,
+          reason: "stale_retry_reclaimed",
+        };
+      }
+    }
+
     return { duplicate: true, inbox_id: existing.id, reason: "duplicate_within_ttl" };
   }
 

@@ -4,11 +4,18 @@
 // MoMo payout is dispatched asynchronously via the existing Flutterwave functions.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhookSignature, getFxQuote, type NiumCurrency } from "../_shared/nium-client.ts";
-import { checkAndRegisterWebhook } from "../_shared/webhook-replay-protection.ts";
+import {
+  checkAndRegisterWebhook,
+  computePayloadFingerprint,
+  enforceReplayWindow,
+  markWebhookProcessed,
+} from "../_shared/webhook-replay-protection.ts";
+
+const REPLAY_WINDOW_SECONDS = 300; // ±5 min accepted skew when timestamp is provided
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-nium-signature, x-nium-signature-key, x-nium-event",
+  "Access-Control-Allow-Headers": "content-type, x-nium-signature, x-nium-signature-key, x-nium-event, x-nium-timestamp",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -69,21 +76,60 @@ Deno.serve(async (req) => {
     payload.eventId ?? payload.event_id ?? payload.transactionId ?? payload.systemReferenceNumber ?? payload.id ?? "",
   ) || null;
 
+  // --- Replay-window enforcement (opt-in on presence of x-nium-timestamp) ---
+  // When Nium includes a timestamp header, reject deliveries whose skew exceeds
+  // REPLAY_WINDOW_SECONDS. Absence is tolerated for back-compat.
+  const tsHeader = req.headers.get("x-nium-timestamp") ?? payload.timestamp ?? payload.eventTime ?? null;
+  const window = enforceReplayWindow(tsHeader, REPLAY_WINDOW_SECONDS);
+  if (!window.ok) {
+    await audit("rejected", window.reason, 401, eventId, eventType || null, bodyBytes);
+    return json(
+      { error: window.reason, ...("skew_seconds" in window ? { skew_seconds: window.skew_seconds } : {}) },
+      401,
+    );
+  }
+
   // --- Replay protection: dedupe by (source=nium, event_id) with 24h TTL ---
+  // Also protects against fingerprint reuse (same event_id, mutated body) and
+  // reserve-then-crash recovery (unprocessed reservation older than 90s is
+  // reclaimed for reprocessing by this delivery).
+  const payloadFingerprint = await computePayloadFingerprint(raw);
+  let inboxId: string | null = null;
   if (eventId) {
     const replay = await checkAndRegisterWebhook(svc, {
       source: "nium",
       event_id: eventId,
       payload,
       signature: req.headers.get("x-nium-signature-key") ? "static-key" : (req.headers.get("x-nium-signature") ?? undefined),
+      payload_fingerprint: payloadFingerprint,
     });
+    if (replay.mismatch) {
+      await audit("rejected", "payload_fingerprint_mismatch", 409, eventId, eventType || null, bodyBytes);
+      return json({ error: "payload_fingerprint_mismatch", event_id: eventId }, 409);
+    }
     if (replay.duplicate) {
       await audit("duplicate", "duplicate_within_ttl", 200, eventId, eventType || null, bodyBytes);
       return json({ received: true, duplicate: true, event_id: eventId }, 200);
     }
+    inboxId = replay.inbox_id ?? null;
+    if (replay.retried) {
+      await audit("accepted", "stale_retry_reclaimed", 200, eventId, eventType || null, bodyBytes);
+    }
   }
 
   await audit("accepted", "signature_valid", 200, eventId, eventType || null, bodyBytes);
+  // Best-effort mark-processed after ACK. Non-blocking on error.
+  const markProcessed = async (err?: string) => {
+    if (inboxId) {
+      try { await markWebhookProcessed(svc, inboxId, err); } catch (e) { console.warn("markProcessed failed", e); }
+    }
+  };
+  // Register a queueMicrotask so downstream handlers below can early-return
+  // without every branch calling markProcessed; the microtask runs after
+  // Deno.serve resolves the Response.
+  queueMicrotask(() => { void markProcessed(); });
+
+
 
 
   // --- Payout status events ---
