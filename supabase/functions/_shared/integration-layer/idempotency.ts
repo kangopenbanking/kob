@@ -192,13 +192,17 @@ export async function storeIdempotency(args: {
 }): Promise<void> {
   if (!args.key) return;
   const sb = admin();
+  // RFC 9110 §15.3.5/§15.3.6/§15.4.5: 204/205/304 MUST have no message body.
+  // Normalise any accidental body to null so replay is byte-identical bodyless.
+  const bodyless = isBodylessStatus(args.status);
+  const persistedBody = bodyless ? null : (args.body ?? null);
   await sb.from("integration_idempotency_keys").upsert({
     idempotency_key: args.key,
     merchant_id: args.merchantId,
     resource: args.resource,
     request_hash: args.requestHash,
     response_status: args.status,
-    response_body: args.body as Record<string, unknown>,
+    response_body: persistedBody as Record<string, unknown> | null,
   }, { onConflict: "merchant_id,idempotency_key" });
 }
 
