@@ -60,7 +60,7 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           TARGET_ENV: ${{ matrix.env }}
         run: |
-          set -e
+          set -eo pipefail  # Phase 1A: preserve curl exit code across `| tee`
           curl -fsS -X POST \
             -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "apikey: $SUPABASE_ANON_KEY" \
