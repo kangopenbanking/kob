@@ -1,0 +1,24 @@
+{
+  "phase": "1B-R1",
+  "apiVersion": "4.53.1",
+  "releaseStatus": "Unreleased",
+  "generatedAt": "2026-07-16",
+  "sharedHelpers": {
+    "idempotency": "supabase/functions/_shared/integration-layer/idempotency.ts",
+    "storageTable": "public.integration_idempotency_keys"
+  },
+  "operations": [
+    { "gate": "G3", "method": "POST",   "path": "/v1/gateway/qr",                                          "operationId": "qrCreate",                              "edgeFunction": null,                              "handlerFile": null,                                                        "status": "MISSING",              "notes": "No handler serves POST /v1/gateway/qr." },
+    { "gate": "G3", "method": "POST",   "path": "/v1/gateway/global-accounts",                             "operationId": "createGlobalAccount",                   "edgeFunction": "nium-create-global-account",      "handlerFile": "supabase/functions/nium-create-global-account/index.ts",     "status": "CORRECTION_REQUIRED", "notes": "Handler present; Idempotency-Key not read; shared helper not called." },
+    { "gate": "G3", "method": "PATCH",  "path": "/v1/gateway/global-accounts/payout-preference",           "operationId": "updateGlobalAccountPayoutPreference",   "edgeFunction": "nium-update-payout-preference",   "handlerFile": "supabase/functions/nium-update-payout-preference/index.ts",  "status": "CORRECTION_REQUIRED", "notes": "Handler present; no idempotency wiring." },
+    { "gate": "G3", "method": "POST",   "path": "/v1/gateway/global-accounts/webhook",                     "operationId": "niumIncomingWebhook",                   "edgeFunction": "nium-webhook",                    "handlerFile": "supabase/functions/nium-webhook/index.ts",                   "status": "PROVEN_BY_DESIGN",    "notes": "Provider webhook; deduplication by provider event id + signature (G2). Idempotency-Key optional per spec §6." },
+    { "gate": "G7", "method": "DELETE", "path": "/v1/budgeting/budgets/{budgetId}",                        "operationId": "budgetingDeleteBudget",                 "edgeFunction": "budgeting-ops",                   "handlerFile": "supabase/functions/budgeting-ops/index.ts",                  "status": "CORRECTION_REQUIRED", "notes": "No Idempotency-Key handling." },
+    { "gate": "G7", "method": "DELETE", "path": "/v1/budgeting/categories/{categoryId}",                   "operationId": "budgetingDeleteCategory",               "edgeFunction": "budgeting-ops",                   "handlerFile": "supabase/functions/budgeting-ops/index.ts",                  "status": "CORRECTION_REQUIRED", "notes": "No Idempotency-Key handling." },
+    { "gate": "G7", "method": "DELETE", "path": "/v1/budgeting/categories/rules/{ruleId}",                 "operationId": "budgetingDeleteRule",                   "edgeFunction": "budgeting-ops",                   "handlerFile": "supabase/functions/budgeting-ops/index.ts",                  "status": "CORRECTION_REQUIRED", "notes": "No Idempotency-Key handling." },
+    { "gate": "G7", "method": "DELETE", "path": "/v1/budgeting/goals/{goalId}",                            "operationId": "budgetingDeleteGoal",                   "edgeFunction": "budgeting-ops",                   "handlerFile": "supabase/functions/budgeting-ops/index.ts",                  "status": "CORRECTION_REQUIRED", "notes": "No Idempotency-Key handling." },
+    { "gate": "G7", "method": "DELETE", "path": "/v1/budgeting/goals/{goalId}/round-up",                   "operationId": "budgetingDisableRoundUp",               "edgeFunction": "budgeting-ops",                   "handlerFile": "supabase/functions/budgeting-ops/index.ts",                  "status": "CORRECTION_REQUIRED", "notes": "No Idempotency-Key handling." },
+    { "gate": "G4", "method": "GET",    "path": "/v1/agents",                                              "operationId": "agentList",                             "edgeFunction": "agent-banking",                   "handlerFile": "supabase/functions/agent-banking/index.ts",                  "status": "CORRECTION_REQUIRED", "notes": "Reads limit only; no starting_after/ending_before, no cursor, no stable tie-breaker." },
+    { "gate": "G4", "method": "GET",    "path": "/v1/remittance/cemac/corridors",                          "operationId": "cemacCorridorsList",                    "edgeFunction": null,                              "handlerFile": null,                                                         "status": "MISSING",             "notes": "No handler serves this route." },
+    { "gate": "G4", "method": "GET",    "path": "/v1/gateway/global-accounts",                             "operationId": "listGlobalAccounts",                    "edgeFunction": "nium-list-global-accounts",       "handlerFile": "supabase/functions/nium-list-global-accounts/index.ts",      "status": "CORRECTION_REQUIRED", "notes": "Hardcoded .limit(50); no pagination params parsed." }
+  ]
+}
