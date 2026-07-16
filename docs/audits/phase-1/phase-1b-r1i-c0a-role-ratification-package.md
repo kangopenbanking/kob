@@ -1,10 +1,11 @@
 # PHASE 1B-R1I-c.0A — Budgeting Deletion Role-Ratification Package
 
-**Status:** PENDING MULTI-ROLE APPROVAL
-**Authorization:** NONE — implementation, contract modification, database migration and production action all NOT AUTHORIZED.
+**Status:** RATIFIED — ALL SIX ROLES APPROVED WITH CONDITIONS
+**Authorization:** DESIGN + LOCAL/TEST MIGRATION PREPARATION ONLY. Runtime implementation, contract modification, production database migration and production action remain NOT AUTHORIZED pending a new Chief Architect authorization to open R1I-c.1.
 **API version:** 4.53.1 (Unreleased) — unchanged
-**Operation count:** 484 — unchanged
+**Operation count:** 484 — unchanged (reduction to 483 pre-approved for R1I-c.4 execution, not applied here)
 **Production gate total:** 187 — unchanged
+
 
 ## 1. Purpose
 
