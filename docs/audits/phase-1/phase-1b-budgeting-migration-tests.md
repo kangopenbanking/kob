@@ -36,3 +36,14 @@ Tests are **defined**, to be executed in the authorized c.2 slice against a loca
 - **Packaging model:** B (pending-migrations directory; not auto-applied by Lovable Cloud).
 - **Managed PG:** 17.6. Compatible with tested syntax.
 - **Production promotion:** requires Database Owner + Security Officer + Compliance/DPO + Release Manager + Chief Architect approval (see `supabase/pending-migrations/phase-1/README.md`).
+
+---
+
+## R1I-c.1G re-execution evidence
+
+- 21/21 c.1E migration + integrity assertions re-run against byte-identical
+  canonical SQL (SHA-256 `53a7228f…cd0e76bf`) — ALL PASS, 0 skipped.
+- 12/12 new c.1G auth/RLS assertions (G0, G-NEG, G1–G10) executed under
+  non-superuser role switching + JWT claim GUCs — ALL PASS.
+- Faithful harness under `/tmp/c1g/` (00_auth_shim, 01_pre, 02_migration
+  [checksum-verified copy of canonical], 03_tests, 04_auth_rls_tests).

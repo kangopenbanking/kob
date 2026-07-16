@@ -153,3 +153,18 @@ satisfied.
 ## 12. Gate
 
 See final line of the acceptance response.
+
+---
+
+## Superseded by R1I-c.1G
+
+Section 11's conditional-pass rationale (deferred regression + auth/RLS
+execution) has been closed by R1I-c.1G:
+
+- Full clean regression executed (`npm ci` → build → gates → tests → lint →
+  version checks) — see `phase-1b-r1i-c1g-final-report.md` Section 3.
+- Faithful non-superuser Supabase-equivalent auth/RLS suite executed —
+  12/12 PASS with a negative control proving RLS active.
+- Gates 187, tests 85 fail / 1365 pass / 7 skip (within ratchet), 0
+  unhandled rejections, lockfile & Rollup unchanged, no runtime/OpenAPI/
+  supabase-migrations modification.

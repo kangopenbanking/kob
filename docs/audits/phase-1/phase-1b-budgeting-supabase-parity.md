@@ -51,3 +51,21 @@ Canonical SQL is compatible with managed PostgreSQL 17.6. RLS predicates use
 only `auth.uid()` and `has_role()` helpers already present in the managed
 `public` schema (verified via `pg_proc` inspection in c.1E). No production
 identifier appears in the SQL body.
+
+---
+
+## R1I-c.1G execution addendum
+
+Executed on this slice (unprivileged local PG 17.9, non-superuser
+`anon`/`authenticated`/`service_role`, `auth.uid()`/`auth.jwt()` reading
+`request.jwt.claims`):
+
+- **G0** non-superuser posture — PASS
+- **G-NEG** negative control (stranger UUID sees 0 rows) — PASS, proves RLS active
+- **G1–G10** anonymous, owner, non-owner, cross-tenant, audit-forge,
+  system-category, roundup-disable-forge, backend transition, cross-tenant
+  archive inference — 10/10 PASS
+
+Documented gap vs. managed Supabase: no GoTrue/PostgREST containers (Docker
+unavailable in sandbox). Auth-container concerns are re-validated at handler
+time in R1I-c.2. RLS-policy correctness is proven here.
