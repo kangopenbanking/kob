@@ -25,6 +25,10 @@ const LOVABLE_AI_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
 
 type Lang = "en" | "fr" | "pid";
+// c.2L — type aliases to remove `any` from touched runtime file without
+// altering runtime behaviour (no cast changes results at run time).
+type SbClient = ReturnType<typeof createClient>;
+type Row = Record<string, unknown>;
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
