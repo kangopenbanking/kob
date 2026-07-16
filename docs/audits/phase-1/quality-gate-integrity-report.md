@@ -143,3 +143,86 @@ These are Phase 1B / 1C scope.
 - Restore old `Install dependencies` / `Run OpenAPI quality gates` block in `.github/workflows/api-contract-gates.yml`.
 - Restore `set -e` in `.github/workflows/dashboard-routing-smoke.yml`.
 - `rm docs/audits/phase-1/quality-gate-integrity-report.md`.
+
+---
+
+## Phase 1A-V — Final Verification (2026-07-16)
+
+Branch `edit/edt-a189bbdf-...` @ commit `e951432b`. Node v22.22.0 / npm 10.9.4.
+Working tree clean. API version **4.53.0**, operation count **484**.
+
+### A. Command results
+
+| Command | Expected | Actual | Result |
+|---|---:|---:|---|
+| `npm ci` | 0 | **1** | **BLOCKED** — preexisting lockfile drift (`@types/estree@1.0.8` vs `1.0.9`). Lockfile not modified by Phase 1A; drift is unrelated to this batch. Existing `node_modules` used for downstream checks. |
+| `npm run openapi:gates:test` | 0 | 0 | ✅ 35/35 pass, 0 unhandled |
+| `node scripts/openapi-quality-gates.mjs --spec public/openapi.json` (direct) | 1 | 1 | ✅ |
+| `npm run openapi:gates` | 1 | 1 | ✅ |
+| `npm run test` | non-zero (legacy) | 1 | ✅ 88 failed, 1193 passed, 7 skipped (1288 total across 121 files); 0 unhandled rejections; 57.97s |
+| Targeted `SecuritySettings.test.tsx` | 0 | 0 | ✅ 2/2 pass |
+| `npm run build` | 0 | 0 | ✅ Vite + PWA + prerender + og-audit all green |
+| YAML parse (js-yaml) | 0 | 0 | ✅ both workflows parse |
+| `actionlint` | — | unavailable | tool not in sandbox |
+
+### B. Full-suite comparison
+
+| Metric | Phase 1R | Phase 1A-V | Δ | Status |
+|---|---:|---:|---:|---|
+| Failing tests | 89 | 88 | −1 | ✅ no regression |
+| Passing tests | — | 1193 | — | ✅ |
+| Skipped | — | 7 | — | ✅ |
+| Unhandled rejections | 0 | 0 | 0 | ✅ |
+| Failing files | 35 | 34 | −1 | ✅ |
+
+### C. Regression analysis
+
+No newly failing test attributable to Phase 1A. Failure delta is −1 (net improvement). Remaining failures are the same legacy Phase 1D scope (BankingAppFontSize, MobileAuthForm QueryClient, etc.).
+
+### D. Workflow validation
+
+| Workflow | YAML valid | Gate order | Pipe safety | Secret safety | Status |
+|---|---|---|---|---|---|
+| `api-contract-gates.yml` | ✅ | `openapi:gates:test` (line 49) before `openapi:gates` (line 52) | n/a | no secret echoed | ✅ |
+| `dashboard-routing-smoke.yml` | ✅ | n/a | `set -eo pipefail` at line 63 | no secret echoed | ✅ |
+
+No `continue-on-error: true`, no `|| true`, no broadened triggers, no added deploy step.
+
+### E. Production integrity
+
+| Item | Before | After | Changed |
+|---|---|---|---|
+| API version | 4.53.0 | 4.53.0 | no |
+| Operation count | 484 | 484 | no |
+| `public/openapi.json` sha256 | de0adeee… | de0adeee… | no |
+| `public/openapi.yaml` sha256 | a6b7c3bd… | a6b7c3bd… | no |
+| Backend handlers | — | — | none |
+| DB migrations | — | — | none |
+| SDKs / Postman | — | — | none |
+
+### F. Production gate breakdown (re-measured)
+
+G1=4, G2=3, G3=4, G4=3, G5=29, G6=77, G7=5, G8=0, G9=79 — **total 204**, matches Phase 1A report exactly.
+
+### G. Build-output scan
+
+- `/v1/v1/` matches: only documentary strings in `dist/CHANGELOG.md`, `dist/changelog.json`, and a translated code sample in `TranslationManager` chunk (comment + `expect(...).not.toContain("/v1/v1/")` regression assertion). **No malformed URL** in generated routes.
+- `scripts/fixtures/openapi-quality-gates`: 0 matches.
+- `SUPABASE_SERVICE_ROLE_KEY`: 0 matches.
+- `-----BEGIN … PRIVATE KEY-----`: 0 matches.
+- No literal `service_role` in bundled JS.
+
+### H. Diff inventory since Phase 1A start commit
+
+Expected Phase 1A files all present. One additional path (`docs/audit/2026-04-28-developer-platform-acceptance.md`) present from an unrelated commit `f19dcff2` outside Phase 1A scope. `package-lock.json` unchanged. `package.json` diff is the single additive `openapi:gates:test` script line.
+
+### I. Blocked validations
+
+- `npm ci` — preexisting `@types/estree` lockfile drift. Not introduced by Phase 1A (lockfile bytes unchanged). Recommend a lockfile refresh in Phase 1D.
+- `actionlint` — binary unavailable in sandbox; YAML structural validation performed instead.
+
+### J. Verdict
+
+Phase 1A introduced no regressions. Production contract unchanged. Gate harness passes. Legacy 88-failure baseline is not increased. Workflows are structurally valid and non-masking.
+
+**PHASE 1A PASS — ELIGIBLE FOR PHASE 1B REVIEW**
