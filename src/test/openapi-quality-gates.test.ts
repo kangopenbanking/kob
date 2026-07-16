@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 /**
  * Phase 1A — OpenAPI Quality Gate integrity harness.
  *
