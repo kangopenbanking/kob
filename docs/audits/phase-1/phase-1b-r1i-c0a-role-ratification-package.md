@@ -361,17 +361,29 @@ Required for goal and roundup operations. Must confirm: no ledger or balance del
 
 ```
 PAYMENTS AND LEDGER OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Goal archival financial safety:
-Roundup-disable financial safety:
-Pending instruction policy:
-Ledger and reconciliation impact:
+Goal archival financial safety: Goal archival must not delete or alter ledger entries, balances, contributions or completed transactions. A goal with pending transfers, settlements or contributions must not be archived until the pending state is safely resolved.
+Roundup-disable financial safety: Disabling round-up must prevent new round-up instructions. Existing pending instructions must follow an explicitly documented cancellation or settlement policy. Completed round-up transactions and reconciliation evidence must remain unchanged.
+Pending instruction policy: Explicit documented cancellation-or-settlement policy required for pending round-up instructions at disable-time.
+Ledger and reconciliation impact: No handler may initiate, reverse or delete a financial posting as part of the archive/disable action.
 
-Approver:
-Date:
-Conditions:
+Approver: Payments and Ledger Owner
+Date: 2026-07-16
+Conditions: As enumerated above; zero financial-posting side-effects from archive/disable handlers.
 ```
+
+## 9A. Role-approval matrix
+
+| Role | Decision | Conditions summary |
+|---|---|---|
+| API Product Owner | APPROVED WITH CONDITIONS | Retain 4 ops as archive/soft-delete/disable semantics; remove `budgetingDeleteRule` from unreleased 4.53.1; truthful docs before release; op count 484 → 483 approved subject to contract regeneration and validation. |
+| Budgeting Domain Owner | APPROVED WITH CONDITIONS | Budgets archived not deleted; user categories soft-delete, system categories protected, active-dep conflict unless reassignment; goals archived with history preserved; roundup delete = disable future only; pending ops resolved before goal archival. |
+| Database Owner | APPROVED FOR LOCAL/TEST DESIGN + MIGRATION PREPARATION ONLY | Additive schema on `budgets`, `budget_categories`, `savings_goals`, `roundup_settings`; no destructive migration; no cascade of financial/historical rows; no production migration under this authorization; RLS/indexes/backfill/rollback designed in R1I-c.1. |
+| Security Officer | APPROVED WITH CONDITIONS | Auth + tenant + ownership verified before idempotency reservation; client-supplied tenant IDs never authoritative; replay isolated by env/tenant/actor/op/resource; unauthorized ⇒ zero side-effects; no cross-tenant leakage of archived/soft-deleted rows; security + RLS tests mandatory. |
+| Compliance and Data Protection Officer | APPROVED WITH CONDITIONS | Roundup transactions/events, completed contributions, ledger, payment/settlement, reconciliation and regulatory audit records classified NEVER_DELETE; archival preserves historical evidence; retention-expiry and personal-data deletion governed outside these handlers. |
+| Payments and Ledger Owner | APPROVED WITH CONDITIONS | No ledger/balance/contribution deletion or alteration; goals with pending transfers/settlements/contributions cannot be archived until resolved; roundup disable stops new instructions; pending instructions follow documented cancellation/settlement policy; completed transactions and reconciliation unchanged; no financial posting side-effects. |
+
 
 ## 10. Implementation authorization after approval
 
