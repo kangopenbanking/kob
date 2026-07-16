@@ -8,6 +8,18 @@ import {
   classifySkip,
   nextRetry,
 } from "../_shared/roundup-engine.ts";
+import {
+  isStrictUuidV4,
+  reserveIdempotency,
+  storeIdempotency,
+  idempotencyResponse,
+  sha256,
+} from "../_shared/integration-layer/idempotency.ts";
+import { problemResponse } from "../_shared/integration-layer/problem.ts";
+
+// RFC 4122 UUID (any version) — used for resource path validation. Idempotency
+// keys must be strict UUIDv4 (isStrictUuidV4) per public API contract.
+const UUID_ANY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const LOVABLE_AI_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 const DEFAULT_MODEL = "google/gemini-3-flash-preview";
