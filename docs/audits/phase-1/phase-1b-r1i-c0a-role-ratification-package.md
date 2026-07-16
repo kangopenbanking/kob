@@ -321,18 +321,19 @@ Must approve: ownership model; replay after archive or deletion; cross-tenant is
 
 ```
 SECURITY OFFICER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Ownership boundary:
-Idempotency scope:
-Replay policy:
-RLS/security conditions:
-Required security tests:
+Ownership boundary: Authentication, authoritative tenant/environment resolution and resource ownership must be verified before any new idempotency reservation. Client-supplied tenant or institution identifiers must never control authorization or idempotency scope.
+Idempotency scope: Isolated by environment, tenant, actor/application, operation and resource.
+Replay policy: Unauthorised requests must create zero reservations and zero mutations. Archived or soft-deleted resources must not leak across tenants.
+RLS/security conditions: RLS must prevent cross-tenant access to archived/soft-deleted resources.
+Required security tests: Security and RLS tests are mandatory before implementation closure.
 
-Approver:
-Date:
-Conditions:
+Approver: Security Officer
+Date: 2026-07-16
+Conditions: As enumerated above; unauthorised requests must produce zero side-effects; cross-tenant leakage tests required.
 ```
+
 
 ### Compliance and Data Protection Officer
 
