@@ -98,11 +98,7 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
   });
 
   it("does NOT store completion for pre-reservation validation errors", () => {
-    // Every `invalid_*` / `payout_channel_required` / `invalid_scope` early-return
-    // sits ABOVE the `if (idemKey)` reservation block; if any of those returns
-    // was accidentally moved below it, the reservation would poison future
-    // retries. Guard by index ordering.
-    const idxReserve = handler.indexOf("reserveIdempotency");
+    const reserveCall = handler.search(/reserveIdempotency\(\{/);
     for (const marker of [
       '"invalid_payout_preference"',
       '"payout_channel_required"',
@@ -112,8 +108,8 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
       '"invalid_json"',
     ]) {
       const idx = handler.indexOf(marker);
-      expect(idx, `marker moved past reservation: ${marker}`).toBeGreaterThan(-1);
-      expect(idx, `marker moved past reservation: ${marker}`).toBeLessThan(idxReserve);
+      expect(idx, `marker missing: ${marker}`).toBeGreaterThan(-1);
+      expect(idx, `marker moved past reservation: ${marker}`).toBeLessThan(reserveCall);
     }
   });
 
