@@ -1,29 +1,9 @@
 {
-  "apiVersion": "4.54.0",
+  "apiVersion": "4.53.0",
   "specUrl": "https://kangopenbanking.com/openapi.json",
   "docsUrl": "https://kangopenbanking.com/developer/changelog",
   "lastUpdated": "2026-07-16",
   "entries": [
-    {
-      "version": "4.54.0",
-      "date": "2026-07-16",
-      "type": "minor",
-      "breaking_changes": false,
-      "summary": "Phase 1 — Reproducible Baseline & Contract Stabilisation. Corrects the effective double-prefix in generated SDKs by stripping the trailing path segment from servers[].url so that server base + path[] no longer concatenates to a duplicated version segment; existing consumers targeting the branded gateway continue to work unchanged. Adds two additive security schemes (MerchantSecretKey, PublishableKey) documenting the kob_sec_ / kob_pub_ key split already emitted by provisioning, and introduces a canonical string-encoded Money component to eliminate floating-point drift in future migrations. Adds a semantic effective-double-prefix gate to CI.",
-      "highlights": [
-        "servers[].url in openapi.json / openapi.yaml / openapi-sandbox.{json,yaml} normalised to https://api.kangopenbanking.com and https://sandbox-api.kangopenbanking.com (no trailing path segment).",
-        "components.securitySchemes.MerchantSecretKey (http bearer, kob_sec_) and PublishableKey (apiKey X-Publishable-Key, kob_pub_) added — additive, dead-code compliant (referenced from provisioning docs and follow-up operations).",
-        "components.schemas.Money added — { amount: decimal string, currency: ISO 4217 }.",
-        "New CI gate src/test/openapi-no-double-v1-effective.test.ts blocks reintroduction of server-URL + path[] duplicated version prefixes."
-      ],
-      "breaking": [],
-      "standard_citations": [
-        "KANG OPEN BANKING API — PERMANENT ENGINEERING EXECUTION CONTRACT (Phase 1)",
-        "Guardian Standing Orders 1 (Lock), 2 (Ratchet), 4 (Surgeon: additive first), 5 (Dead Code), 6 (Version Gate: minor for additive schemas), 3 (Audit Trail)",
-        "OpenAPI 3.1.0 §4.8.5 (Server Object) — server URL is prepended to path templates",
-        "RFC 7807 (ProblemDetails) — cross-referenced by Money for future error migrations"
-      ]
-    },
     {
       "version": "4.53.0",
       "date": "2026-07-15",
