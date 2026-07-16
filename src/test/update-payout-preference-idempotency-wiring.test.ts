@@ -92,11 +92,30 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
     expect(block![0]).toMatch(/status:\s*200/);
   });
 
-  it("account_not_found (404) is stored so replays return the same 404", () => {
-    const block = handler.match(/account_not_found[\s\S]{0,500}?return json\(notFound, 404\)/);
-    expect(block).toBeTruthy();
-    expect(block![0]).toContain("storeIdempotency");
-    expect(block![0]).toMatch(/status:\s*404/);
+  it("account_not_found (404) returns BEFORE any reservation — no negative caching (b.2.1V §8)", () => {
+    const reserveCall = handler.search(/reserveIdempotency\(\{/);
+    const notFoundIdx = handler.indexOf('"account_not_found"');
+    expect(notFoundIdx).toBeGreaterThan(-1);
+    expect(notFoundIdx).toBeLessThan(reserveCall);
+    // The 404 return path must not invoke storeIdempotency.
+    const notFoundBlock = handler.slice(notFoundIdx, notFoundIdx + 300);
+    expect(notFoundBlock).not.toContain("storeIdempotency");
+  });
+
+  it("ownership pre-check loads the target account BEFORE reservation (b.2.1V §7)", () => {
+    const reserveCall = handler.search(/reserveIdempotency\(\{/);
+    const preLookup = handler.search(/from\("nium_global_accounts"\)\s*\.\s*select/);
+    expect(preLookup).toBeGreaterThan(-1);
+    expect(preLookup).toBeLessThan(reserveCall);
+  });
+
+  it("scope includes account_id for account-scope (b.2.1V §5 uniqueness boundary)", () => {
+    expect(handler).toMatch(/scopeObj\.account_id\s*=\s*normalised\.account_id/);
+  });
+
+  it("scope includes environment (b.2.1V §5)", () => {
+    expect(handler).toMatch(/environment:\s*environment/);
+    expect(handler).toMatch(/KOB_ENVIRONMENT/);
   });
 
   it("does NOT store completion for pre-reservation validation errors", () => {
