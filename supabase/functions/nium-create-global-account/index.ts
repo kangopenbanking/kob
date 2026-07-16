@@ -80,9 +80,11 @@ Deno.serve(async (req) => {
 
   const svc = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  // --- Optional Idempotency-Key (Phase 1B-R1I-b.1) ---
+  // --- Optional Idempotency-Key (Phase 1B-R1I-b.1 + b.1V) ---
   // Header omitted → preserve legacy behaviour.
-  // Header supplied → validate, reserve atomically, replay/conflict/in-flight semantics.
+  // Header supplied → validate, reserve atomically, replay/conflict/in-flight
+  // semantics, AND reconcile prior provider-result-unknown responses before
+  // replaying them (b.1V: never blindly retry provider after ambiguity).
   const idemKey = req.headers.get("Idempotency-Key") ?? req.headers.get("idempotency-key");
   let requestHash: string | null = null;
   if (idemKey) {
@@ -98,6 +100,31 @@ Deno.serve(async (req) => {
       resource: RESOURCE,
       requestHash,
     });
+
+    // b.1V reconciliation-on-replay: a prior attempt stored an ambiguous
+    // provider-result-unknown completion. Before replaying that 502, check
+    // whether the provider account has since surfaced locally (e.g. via a
+    // Nium webhook or a natural per-(user,currency) row). If it has, promote
+    // the cached response to a completed success and replay THAT — never
+    // re-invoke the provider from this ambiguity path.
+    if (
+      reservation.kind === "replay" &&
+      reservation.status === 502 &&
+      typeof reservation.body === "object" &&
+      reservation.body !== null &&
+      (reservation.body as { code?: string }).code === "PROVIDER_RESULT_UNKNOWN"
+    ) {
+      const { data: recovered } = await svc.from("nium_global_accounts").select("*")
+        .eq("user_id", userId).eq("currency", currency).eq("status", "active").maybeSingle();
+      if (recovered) {
+        const upgraded = { account: recovered, reused: true, meta: { warnings, reconciled: true } };
+        await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 200, body: upgraded });
+        return json(upgraded, 200);
+      }
+      // Still no local evidence — replay the ambiguity response unchanged.
+      // Do NOT fall through to the provider path.
+    }
+
     const early = idempotencyResponse(reservation, corsHeaders);
     if (early) return early;
   }
@@ -130,9 +157,24 @@ Deno.serve(async (req) => {
     nium = await createGlobalAccount({ user_id: userId, beneficiary_name: beneficiary, currency });
   } catch (e) {
     console.error("nium createGlobalAccount failed", e);
-    // Provider ambiguity: DO NOT store a completed response. The reservation
-    // row (in-flight) will expire, permitting a safe retry after reconciliation.
-    return json({ error: "nium_provider_error", message: String(e instanceof Error ? e.message : e) }, 502);
+    // Provider ambiguity (b.1V). We CANNOT distinguish a pre-send failure from
+    // a post-send failure where the provider account may already exist. Store
+    // an "unknown_provider_result" completion under the idempotency key so an
+    // identical retry replays deterministically (and enters the
+    // reconciliation-on-replay path above) — never blindly re-invoking the
+    // provider. Clients wishing to force a new attempt must use a fresh key,
+    // at which point the natural per-(user,currency) idempotency check on
+    // nium_global_accounts still protects against duplicate provider accounts.
+    const ambiguity = {
+      error: "nium_provider_result_unknown",
+      code: "PROVIDER_RESULT_UNKNOWN",
+      message: "The provider request completed with an unknown outcome. Retries with the same Idempotency-Key will auto-reconcile once the provider result is confirmed.",
+      detail: String(e instanceof Error ? e.message : e),
+    };
+    if (idemKey && requestHash) {
+      await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 502, body: ambiguity });
+    }
+    return json(ambiguity, 502);
   }
 
   const { data: inserted, error: insErr } = await svc.from("nium_global_accounts").insert({
