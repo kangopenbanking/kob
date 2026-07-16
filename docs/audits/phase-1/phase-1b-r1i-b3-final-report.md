@@ -392,11 +392,13 @@ Written or updated in this slice:
 - `docs/audits/phase-1/phase-1b-r1i-b-combined-runtime-report.md`
 - `docs/audits/phase-1/phase-1b-r1i-b-combined-security-report.md`
 - `docs/audits/phase-1/phase-1b-r1i-b-combined-tests-report.md`
+- `docs/audits/phase-1/phase-1b-r1i-b3v-ui-flake-report.md` (b.3V verification)
 - `docs/audits/phase-1/phase-1b-idempotency-storage-report.md` (already present; no change required)
 - `docs/audits/phase-1/phase-1b-runtime-wiring.csv` (updated)
 - `docs/audits/phase-1/phase-1b-runtime-wiring.json` (updated)
-- `docs/audits/phase-1/phase-1b-r1i-b3-final-report.md` (this file)
+- `docs/audits/phase-1/phase-1b-r1i-b3-final-report.md` (this file; §11 refreshed by b.3V)
 
 ---
 
 **PHASE 1B-R1I-b PASS — G3 RUNTIME IDEMPOTENCY CLOSED**
+
