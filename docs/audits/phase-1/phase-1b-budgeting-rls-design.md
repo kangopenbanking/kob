@@ -136,3 +136,13 @@ CREATE POLICY owner_update_roundup_settings ON public.roundup_settings
 - **Packaging model:** B (pending-migrations directory; not auto-applied by Lovable Cloud).
 - **Managed PG:** 17.6. Compatible with tested syntax.
 - **Production promotion:** requires Database Owner + Security Officer + Compliance/DPO + Release Manager + Chief Architect approval (see `supabase/pending-migrations/phase-1/README.md`).
+
+---
+
+## R1I-c.1G execution banner
+
+All policies in this design were executed under a faithful non-superuser
+Supabase-equivalent harness with real `auth.uid()`/`auth.jwt()` and
+`request.jwt.claims` GUCs. 12/12 auth/RLS assertions PASS, including a
+negative control proving RLS is active. See
+`phase-1b-r1i-c1g-final-report.md` Section 3.A.
