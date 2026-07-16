@@ -17,7 +17,14 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 export interface IdempotencyHit {
   kind: "replay";
   status: number;
+  /**
+   * Stored JSON body. For bodyless statuses (204/205/304) this is always `null`
+   * and MUST NOT be serialised on the wire. `hasBody` is the authoritative
+   * discriminator to avoid ambiguous truthiness checks (valid JSON bodies may
+   * legitimately be `null`, `false`, `0`, `""`, `[]`, `{}`).
+   */
   body: unknown;
+  hasBody: boolean;
 }
 export interface IdempotencyConflict { kind: "conflict"; reason: "request_hash_mismatch" }
 export interface IdempotencyInFlight { kind: "in_flight" }
@@ -26,6 +33,17 @@ export interface IdempotencyMiss     { kind: "miss" }
 
 export type IdempotencyResult =
   | IdempotencyHit | IdempotencyConflict | IdempotencyInFlight | IdempotencyInvalid | IdempotencyMiss;
+
+/**
+ * RFC 9110 §6.4.1, §15.3.5, §15.3.6, §15.4.5:
+ * 204 No Content, 205 Reset Content and 304 Not Modified MUST NOT include a
+ * message body. Treated as authoritative bodyless statuses so replay emits
+ * `new Response(null, ...)` with no `Content-Type` and no non-zero
+ * `Content-Length`.
+ */
+export function isBodylessStatus(status: number): boolean {
+  return status === 204 || status === 205 || status === 304;
+}
 
 // RFC 4122 §4 layout. v4 (random, §4.4) is the recommended client format;
 // v5 (name-based SHA-1, §4.3) is accepted so server-derived deterministic
