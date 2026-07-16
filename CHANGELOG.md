@@ -1,12 +1,17 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.53.0** · Last updated: **2026-07-01**
+Current API version: **4.53.1** · Last updated: **2026-07-16**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
 - OpenAPI spec: [`/openapi.json`](./openapi.json) · [`/openapi.yaml`](./openapi.yaml)
 - Sandbox spec: [`/openapi-sandbox.json`](./openapi-sandbox.json) · [`/openapi-sandbox.yaml`](./openapi-sandbox.yaml)
 - Browse online: <https://kangopenbanking.com/developer/changelog>
+
+---
+
+## 4.53.1 — 2026-05-29
+**Type:** patch · **Breaking changes:** none
 
 ---
 
