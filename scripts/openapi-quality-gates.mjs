@@ -28,7 +28,10 @@ import path from 'node:path';
 const args = process.argv.slice(2);
 const specIdx = args.indexOf('--spec');
 const specPath = specIdx >= 0 ? args[specIdx + 1] : 'public/openapi.json';
-const allowExceptionsPath = 'scripts/openapi-quality-gates.allow.json';
+// Phase 1A: optional --allowlist <path> for isolated test harness use.
+// Default remains scripts/openapi-quality-gates.allow.json (fully backward compatible).
+const allowIdx = args.indexOf('--allowlist');
+const allowExceptionsPath = allowIdx >= 0 ? args[allowIdx + 1] : 'scripts/openapi-quality-gates.allow.json';
 
 if (!fs.existsSync(specPath)) {
   console.error(`[quality-gates] spec not found: ${specPath}`);
