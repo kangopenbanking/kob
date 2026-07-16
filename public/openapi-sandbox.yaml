@@ -659,28 +659,6 @@ components:
       x-key-prefix: kob_pub_
       x-added-in: 4.54.0
   schemas:
-    Money:
-      type: object
-      description: >-
-        Canonical monetary value. String-encoded to avoid floating-point drift. Currency is an ISO 4217 code (or
-        XAF/XOF for CEMAC/UEMOA zero-decimal). Introduced 4.54.0; legacy float `amount` fields remain accepted and
-        will be marked deprecated in a future minor.
-      required:
-        - amount
-        - currency
-      properties:
-        amount:
-          type: string
-          pattern: '^-?[0-9]{1,20}(\.[0-9]{1,8})?$'
-          description: Decimal string. For zero-decimal currencies (XAF, XOF, JPY) send integer strings only.
-          example: '15000'
-        currency:
-          type: string
-          pattern: '^[A-Z]{3}$'
-          description: ISO 4217 currency code (uppercase).
-          example: XAF
-      x-added-in: 4.54.0
-      x-status: stable
     DcrRegistrationRequest:
       type: object
       required:
@@ -5091,6 +5069,27 @@ components:
         currency: USD
         senderName: YouTube Adsense
         reference: Creator payout March 2026
+    Money:
+      type: object
+      description: >-
+        Canonical monetary value. String-encoded minor units to avoid floating-point drift. Currency is an ISO 4217 code
+        (or XAF/XOF for CEMAC/UEMOA zero-decimal).
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          pattern: ^-?[0-9]{1,20}(\.[0-9]{1,8})?$
+          description: Decimal string. For zero-decimal currencies (XAF, XOF, JPY) send integer strings only.
+          example: '15000'
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: ISO 4217 currency code (uppercase).
+          example: XAF
+      x-added-in: 4.54.0
+      x-status: stable
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
