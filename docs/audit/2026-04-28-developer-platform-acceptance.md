@@ -2,26 +2,26 @@
 
 **Date:** 2026-04-28  
 **Spec version:** v4.17.3  
-**Score:** 14/15  (9.3/10)
+**Score:** 12/15  (8/10)
 
 ## Acceptance matrix
 
 | # | Criterion | Status | Evidence |
 |---|-----------|--------|----------|
-| 1 | No internal URL leaks | PASS | 0 leak(s) |
-| 2 | Canonical servers | PASS | https://api.kangopenbanking.com/v1,https://sandbox-api.kangopenbanking.com/v1 |
+| 1 | No internal URL leaks | FAIL | 4 leak(s) |
+| 2 | Canonical servers | FAIL | https://api.kangopenbanking.com,https://sandbox-api.kangopenbanking.com |
 | 3 | POST /v1/gateway/charges present | PASS | operation found |
 | 4 | Sandbox simulation routes | PASS | missing: none |
 | 5 | Webhook signature + replay protection | PASS | {"hasSig":true,"hasReplay":true} |
 | 6 | Error catalog complete | PASS | domains=8 |
 | 7 | Cursor pagination documented | PASS | {"limit":{"in":"query","type":"integer","min":1,"max":100,"default":25},"starting_after":{"in":"query","type":"string","description":"Cursor: return items after this resource id"},"ending_before":{"in":"query","type":"string","description":"Cursor: return items before this resource id"}} |
-| 8 | OpenAPI structurally valid | PASS | version=4.31.0 paths=336 |
+| 8 | OpenAPI structurally valid | PASS | version=4.54.0 paths=410 |
 | 9 | Developer doc pages present | PASS | missing=none |
 | 10 | SDK ecosystem | PASS | node.js / typescript,python,php / laravel,postman,java,go |
 | 11 | Postman static files | PASS | missing=none |
 | 12 | Changelog v4.17.3 | FAIL | not found |
 | 13 | Dashboard tooling components | PASS | missing=none |
-| 14 | Contract test count | PASS | 59 test files |
+| 14 | Contract test count | PASS | 84 test files |
 | 15 | Foundational routes preserved | PASS | missing=none |
 
 ## Notes
