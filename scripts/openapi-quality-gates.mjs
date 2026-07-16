@@ -250,6 +250,7 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
     if (!op) continue;
     const opId = op.operationId || `${method.toUpperCase()} ${pathKey}`;
     const opKey = `${method.toUpperCase()} ${pathKey}`;
+    try {
 
     // G1 — 2xx schema (except 204)
     for (const [code, resp] of Object.entries(op.responses || {})) {
@@ -286,12 +287,23 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
     }
     }
 
-    // G3 — Idempotency-Key on financial mutations
+    // G3 — Idempotency-Key on financial mutations, OR a fully-declared
+    // provider-event exemption (Phase 1B-R1I-a.2). Naming ("webhook" in path/
+    // opId/tag/summary/description) never qualifies — only explicit structured
+    // x-kob-idempotency + x-kob-webhook metadata backed by real OpenAPI shape.
     const isMutation = ['post', 'put', 'patch', 'delete'].includes(method);
     const isFinancial = FINANCIAL_PATH_PATTERNS.some((re) => re.test(pathKey));
     if (isMutation && isFinancial && !hasIdempotencyKey(op)) {
-      fail('G3', opKey, `${opId}: financial mutation missing Idempotency-Key header`);
+      const exemption = hasValidProviderEventIdempotency(op, method, pathKey, pathItem);
+      if (!exemption.ok) {
+        if (exemption.present) {
+          fail('G3', opKey, `${opId}: G3 provider-event exemption invalid: ${exemption.reason}`);
+        } else {
+          fail('G3', opKey, `${opId}: financial mutation missing Idempotency-Key header`);
+        }
+      }
     }
+
 
     // G4 — pagination on list endpoints (heuristic: GET on collection paths returning arrays/PaginatedResponse)
     if (method === 'get' && !pathKey.includes('{') && !isPaginated(op)) {
