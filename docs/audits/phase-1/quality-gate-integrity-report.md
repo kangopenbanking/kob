@@ -371,3 +371,12 @@ The G3 gate now recognises a narrowly-scoped provider-event exemption in additio
 - Test totals: gate harness 35 → 74 (+39 new tests, 0 skipped, 0 failing).
 
 The Nium production operation is **not yet migrated** to the exemption — a.3 must first close the changed-payload fingerprint, replay-window enforcement, and reserve-then-crash recovery runtime gaps.
+
+---
+
+## Addendum — a.2V
+
+Touched-file lint closed to 0/0 with no rule disable, no `any`, no
+`@ts-ignore` and no file exclusion. See
+`docs/audits/phase-1/phase-1b-r1i-a2v-final-report.md` for the full
+command table, final hashes and rollback instructions.

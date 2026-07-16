@@ -187,3 +187,15 @@ npx vitest run src/test/openapi-quality-gates.test.ts   # expect 35 tests pass
 - [x] Operation count remains 484.
 - [x] No dependency or lockfile change.
 - [x] Documentation and rollback instructions complete.
+
+---
+
+## Addendum — a.2V lint closure
+
+Touched-file lint (`scripts/openapi-quality-gates.mjs`,
+`src/test/openapi-quality-gates.test.ts`) now exits 0. Root cause and
+surgical corrections are documented in
+`docs/audits/phase-1/phase-1b-r1i-a2v-final-report.md`. Production
+OpenAPI files, Nium handler, database, dependencies and SDK/Postman
+artifacts remain unchanged. Rollback:
+`git checkout HEAD -- src/test/openapi-quality-gates.test.ts`.

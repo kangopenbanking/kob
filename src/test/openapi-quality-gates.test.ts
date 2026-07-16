@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Phase 1A — OpenAPI Quality Gate integrity harness.
  *
@@ -18,10 +17,13 @@ import * as path from 'node:path';
 const SCRIPT = path.resolve(process.cwd(), 'scripts/openapi-quality-gates.mjs');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kob-gates-'));
 
-afterAll(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch {} });
+afterAll(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch { /* best-effort cleanup */ } });
+
+type GateCounts = Partial<Record<'G1' | 'G2' | 'G3' | 'G4' | 'G5' | 'G6' | 'G7' | 'G8' | 'G9', number>>;
+type RunOpts = { allowlist?: unknown };
 
 /** Run the gate script against a fixture and return { status, byGate, failures, stdout, stderr }. */
-function runGates(spec, opts = {}) {
+function runGates(spec: unknown, opts: RunOpts = {}) {
   const specFile = path.join(TMP, `spec-${Math.random().toString(36).slice(2)}.json`);
   fs.writeFileSync(specFile, JSON.stringify(spec, null, 2));
   const args = ['--spec', specFile];
@@ -37,9 +39,9 @@ function runGates(spec, opts = {}) {
     args.push('--allowlist', empty);
   }
   const proc = spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
-  let byGate = {};
+  let byGate: GateCounts = {};
   const m = proc.stdout.match(/"byGate":\s*({[\s\S]*?})/);
-  if (m) { try { byGate = JSON.parse(m[1]); } catch {} }
+  if (m) { try { byGate = JSON.parse(m[1]) as GateCounts; } catch { /* non-JSON tail is ignored; byGate stays empty */ } }
   return { status: proc.status, stdout: proc.stdout, stderr: proc.stderr, byGate };
 }
 
