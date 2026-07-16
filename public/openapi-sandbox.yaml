@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Kang Open Banking API
-  version: 4.53.0
+  version: 4.54.0
   summary: Unified Open Banking API for Cameroon
   description: >-
     COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit
@@ -274,9 +274,9 @@ info:
     go: 1.6.1
   x-phase-10-audit: https://kangopenbanking.com/developer/changelog#phase-10-cemac-coverage
 servers:
-  - url: https://sandbox-api.kangopenbanking.com/v1
+  - url: https://sandbox-api.kangopenbanking.com
     description: Sandbox
-  - url: https://api.kangopenbanking.com/v1
+  - url: https://api.kangopenbanking.com
     description: Production
 security:
   - bearerAuth: []
@@ -640,7 +640,47 @@ components:
       description: >-
         HMAC-SHA256 signature over `${timestamp}.${body}` using the endpoint secret. Format `t=<ts>,v1=<hex>`. Reject if
         `|now - t| > 300s` (Stripe/OWASP convention).
+    MerchantSecretKey:
+      type: http
+      scheme: bearer
+      bearerFormat: MerchantSecretKey
+      description: >-
+        Server-side merchant secret key prefixed with `kob_sec_`. Never expose in browsers or mobile clients. Grants
+        full merchant scope subject to per-key scope allow-list.
+      x-key-prefix: kob_sec_
+      x-added-in: 4.54.0
+    PublishableKey:
+      type: apiKey
+      in: header
+      name: X-Publishable-Key
+      description: >-
+        Client-safe publishable key prefixed with `kob_pub_`. Read-only surface (tokenisation, checkout session
+        creation). Safe to embed in browser or mobile clients.
+      x-key-prefix: kob_pub_
+      x-added-in: 4.54.0
   schemas:
+    Money:
+      type: object
+      description: >-
+        Canonical monetary value. String-encoded to avoid floating-point drift. Currency is an ISO 4217 code (or
+        XAF/XOF for CEMAC/UEMOA zero-decimal). Introduced 4.54.0; legacy float `amount` fields remain accepted and
+        will be marked deprecated in a future minor.
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: string
+          pattern: '^-?[0-9]{1,20}(\.[0-9]{1,8})?$'
+          description: Decimal string. For zero-decimal currencies (XAF, XOF, JPY) send integer strings only.
+          example: '15000'
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: ISO 4217 currency code (uppercase).
+          example: XAF
+      x-added-in: 4.54.0
+      x-status: stable
     DcrRegistrationRequest:
       type: object
       required:
