@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_signature" }, 401);
   }
 
-  let payload: any;
+  let payload: Record<string, unknown> & Record<string, any>;
   try { payload = JSON.parse(raw); } catch {
     await audit("rejected", "invalid_json", 400, null, null, bodyBytes);
     return json({ error: "invalid_json" }, 400);
