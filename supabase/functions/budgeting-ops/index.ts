@@ -76,7 +76,7 @@ function periodDates(period: string) {
   return { start_date: start.toISOString().slice(0, 10), end_date: end.toISOString().slice(0, 10) };
 }
 
-async function buildSummary(sb: any, budget: any) {
+async function buildSummary(sb: SbClient, budget: Row) {
   const { data: cats } = await sb
     .from("budget_categories")
     .select("*")
@@ -94,14 +94,14 @@ async function buildSummary(sb: any, budget: any) {
   const byCat: Record<string, { count: number; merchants: Record<string, number> }> = {};
   for (const t of periodTx ?? []) {
     if (t.credit_debit_indicator && t.credit_debit_indicator !== "DEBIT") continue;
-    const catKey = (t.metadata as any)?.budget_category ?? "other";
-    const m = (t.merchant_details as any)?.name ?? null;
+    const catKey = String((t.metadata as Row | null)?.budget_category ?? "other");
+    const m = (t.merchant_details as Row | null)?.name as string | undefined;
     const slot = (byCat[catKey] ??= { count: 0, merchants: {} });
     slot.count += 1;
     if (m) slot.merchants[m] = (slot.merchants[m] ?? 0) + Number(t.amount || 0);
   }
 
-  const categories = (cats ?? []).map((c: any) => {
+  const categories = (cats ?? []).map((c: Row) => {
     const limit = Number(c.category_limit) || 0;
     const spent = Number(c.spent) || 0;
     const remaining = Math.max(0, limit - spent);
@@ -124,8 +124,8 @@ async function buildSummary(sb: any, budget: any) {
     };
   });
 
-  const total_limit = Number(budget.total_limit) || categories.reduce((s: number, c: any) => s + c.limit, 0);
-  const total_spent = categories.reduce((s: number, c: any) => s + c.spent, 0);
+  const total_limit = Number(budget.total_limit) || categories.reduce((s: number, c: { limit: number }) => s + c.limit, 0);
+  const total_spent = categories.reduce((s: number, c: { spent: number }) => s + c.spent, 0);
   const total_remaining = Math.max(0, total_limit - total_spent);
   const today = new Date();
   const end = new Date(budget.end_date);
@@ -155,7 +155,7 @@ async function buildSummary(sb: any, budget: any) {
 }
 
 
-async function getCurrentBudget(sb: any, userId: string) {
+async function getCurrentBudget(sb: SbClient, userId: string) {
   const { data } = await sb
     .from("budgets")
     .select("*")
@@ -167,7 +167,7 @@ async function getCurrentBudget(sb: any, userId: string) {
   return data;
 }
 
-async function aiInsight(opts: { lang: Lang; summary: any; question?: string }) {
+async function aiInsight(opts: { lang: Lang; summary: unknown; question?: string }) {
   if (!LOVABLE_AI_KEY) {
     const fallback: Record<Lang, string> = {
       en: "Connect your account to receive personalised advice. Try setting category limits first.",
@@ -306,7 +306,7 @@ Deno.serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(50);
       return json({
-        alerts: (data ?? []).map((a: any) => ({
+        alerts: (data ?? []).map((a: Row) => ({
           id: a.id,
           type: a.alert_type,
           severity: a.severity,
@@ -393,7 +393,7 @@ Deno.serve(async (req) => {
             .eq("goal_id", g.id)
             .eq("state", "successful")
             .gte("created_at", start.toISOString());
-          return (rups ?? []).reduce((s: number, r: any) => s + Number(r.roundup_amount), 0);
+          return (rups ?? []).reduce((s: number, r: Row) => s + Number(r.roundup_amount), 0);
         })(),
       });
     }
@@ -408,7 +408,7 @@ Deno.serve(async (req) => {
         .order("due_date", { ascending: true })
         .limit(10);
       const today = Date.now();
-      const schedules = (contribs ?? []).map((c: any) => ({
+      const schedules = (contribs ?? []).map((c: Row) => ({
         group_id: c.group_id,
         group_name: c.group_name ?? "Njangi group",
         next_contribution_date: c.due_date,
@@ -470,9 +470,9 @@ Deno.serve(async (req) => {
         .limit(1000);
       const agg: Record<string, { total: number; count: number; cat: string }> = {};
       for (const t of tx ?? []) {
-        const name = (t.merchant_details as any)?.name;
+        const name = (t.merchant_details as Row | null)?.name as string | undefined;
         if (!name) continue;
-        const cat = (t.metadata as any)?.budget_category ?? "other";
+        const cat = String((t.metadata as Row | null)?.budget_category ?? "other");
         const slot = (agg[name] ??= { total: 0, count: 0, cat });
         slot.total += Number(t.amount) || 0;
         slot.count += 1;
@@ -498,7 +498,7 @@ Deno.serve(async (req) => {
       for (const t of tx ?? []) {
         const d = new Date(t.booking_datetime);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        const cat = (t.metadata as any)?.budget_category ?? "other";
+        const cat = String((t.metadata as Row | null)?.budget_category ?? "other");
         const slot = (buckets[key] ??= { total: 0, by_category: {} });
         slot.total += Number(t.amount) || 0;
         slot.by_category[cat] = (slot.by_category[cat] ?? 0) + Number(t.amount) || 0;
@@ -528,7 +528,7 @@ Deno.serve(async (req) => {
       return created;
     }
 
-    async function logEvent(eventType: string, payload: any, txId?: string | null) {
+    async function logEvent(eventType: string, payload: unknown, txId?: string | null) {
       await sb.from("roundup_events").insert({
         consumer_id: user.id,
         transaction_id: txId ?? null,
@@ -644,7 +644,7 @@ Deno.serve(async (req) => {
         .eq("consumer_id", user.id)
         .eq("state", "successful")
         .gte("created_at", startOfDay.toISOString());
-      const todaysTotal = (todays ?? []).reduce((s: number, r: any) => s + Number(r.roundup_amount), 0);
+      const todaysTotal = (todays ?? []).reduce((s: number, r: Row) => s + Number(r.roundup_amount), 0);
 
       const skipReason = classifySkip({
         enabled: settings.enabled,
@@ -778,7 +778,7 @@ Deno.serve(async (req) => {
         sourceTxId,
         amount,
         walletBalance: Number(body.wallet_balance ?? 0),
-        sourceKind: (body.source_kind as any) ?? "wallet",
+        sourceKind: (body.source_kind as string | undefined) ?? "wallet",
         merchantName: body.merchant_name ?? null,
         idempotencyKey: body.idempotency_key,
       });
@@ -851,7 +851,7 @@ Deno.serve(async (req) => {
         .eq("state", "successful")
         .gte("created_at", startOfMonth.toISOString());
       const monthTotal = (monthData ?? []).reduce(
-        (s: number, r: any) => s + Number(r.roundup_amount),
+        (s: number, r: Row) => s + Number(r.roundup_amount),
         0,
       );
       return json({ transactions: data ?? [], saved_this_month: monthTotal });
@@ -1079,8 +1079,8 @@ Deno.serve(async (req) => {
     }
 
     return json({ error: "not_found", path, method }, 404);
-  } catch (e: any) {
-    const msg = e?.message ?? "internal_error";
+  } catch (e: unknown) {
+    const msg = (e instanceof Error ? e.message : String(e)) || "internal_error";
     const status = msg === "unauthorized" ? 401 : 500;
     console.error("budgeting-ops error", msg);
     return json({ error: msg }, status);
