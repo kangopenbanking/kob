@@ -341,18 +341,19 @@ Must approve: preservation of financial history; deletion restrictions; audit re
 
 ```
 COMPLIANCE AND DATA PROTECTION DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Financial retention:
-Audit retention:
-Personal-data handling:
-Records classified NEVER_DELETE:
-Approved archival policy:
+Financial retention: Round-up transactions, round-up events, completed goal contributions, payment/settlement records, ledger entries and reconciliation records are preserved financial history and must not be deleted by these handlers.
+Audit retention: Regulatory audit records must not be deleted by these handlers.
+Personal-data handling: Any separate retention-expiry or personal-data deletion process is governed OUTSIDE these handlers.
+Records classified NEVER_DELETE: round-up transactions; round-up events; completed goal contributions; payment and settlement records; ledger entries; reconciliation records; regulatory audit records.
+Approved archival policy: Archival or soft-deletion must preserve required historical evidence while limiting future active use of the resource.
 
-Approver:
-Date:
-Conditions:
+Approver: Compliance and Data Protection Officer
+Date: 2026-07-16
+Conditions: As enumerated above; retention-expiry and personal-data deletion processes remain outside the scope of these handlers.
 ```
+
 
 ### Payments and Ledger Owner
 
