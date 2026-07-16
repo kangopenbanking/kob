@@ -4,11 +4,18 @@
 // MoMo payout is dispatched asynchronously via the existing Flutterwave functions.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyWebhookSignature, getFxQuote, type NiumCurrency } from "../_shared/nium-client.ts";
-import { checkAndRegisterWebhook } from "../_shared/webhook-replay-protection.ts";
+import {
+  checkAndRegisterWebhook,
+  computePayloadFingerprint,
+  enforceReplayWindow,
+  markWebhookProcessed,
+} from "../_shared/webhook-replay-protection.ts";
+
+const REPLAY_WINDOW_SECONDS = 300; // ±5 min accepted skew when timestamp is provided
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-nium-signature, x-nium-signature-key, x-nium-event",
+  "Access-Control-Allow-Headers": "content-type, x-nium-signature, x-nium-signature-key, x-nium-event, x-nium-timestamp",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
