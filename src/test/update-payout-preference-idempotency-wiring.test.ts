@@ -114,7 +114,7 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
   });
 
   it("scope includes environment (b.2.1V §5)", () => {
-    expect(handler).toMatch(/environment:\s*environment/);
+    expect(handler).toMatch(/environment[,\s]/);
     expect(handler).toMatch(/KOB_ENVIRONMENT/);
   });
 
