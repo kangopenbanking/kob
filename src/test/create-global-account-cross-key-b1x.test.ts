@@ -128,9 +128,9 @@ describe("Phase 1B-R1I-b.1X — handler wiring", () => {
   });
 
   it("replay op-lock reconciles against nium_global_accounts before returning", () => {
-    const block = handler.match(/opReservation\.kind === "replay"[\s\S]*?nium_global_accounts[\s\S]*?maybeSingle\(\);/);
+    const block = handler.match(/opReservation\.kind === "replay"[\s\S]*?cross_key_reconciled/);
     expect(block).toBeTruthy();
-    expect(block![0]).toContain("cross_key_reconciled");
+    expect(block![0]).toContain("nium_global_accounts");
   });
 
   it("replay op-lock without a local row returns pending-reconciliation (no provider call)", () => {
