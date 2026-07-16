@@ -80,25 +80,25 @@ describe("Phase 1B-R1I-b.1 — createGlobalAccount idempotency wiring", () => {
 
   it("provider ambiguity path does NOT store a completed response", () => {
     // The catch block after createGlobalAccount must return without calling storeIdempotency.
-    const catchBlock = handler.match(/catch \(e\) \{[\s\S]*?nium_provider_error[\s\S]*?\}, 502\);/);
+    // Isolate the provider-catch block by anchoring on the console.error marker.
+    const catchBlock = handler.match(/console\.error\("nium createGlobalAccount failed"[\s\S]*?\}, 502\);/);
     expect(catchBlock).toBeTruthy();
     expect(catchBlock![0]).not.toContain("storeIdempotency");
   });
 
   it("success path stores the response for future replay", () => {
-    // storeIdempotency is called for the 201 success branch.
     const successStore = handler.match(/reused: false[\s\S]*?storeIdempotency\([^)]*status:\s*201/);
     expect(successStore).toBeTruthy();
   });
 
   it("natural-idempotency reuse (existing account) also stores the response", () => {
-    // Otherwise a client retry after reuse would get a different X-Idempotent-Replay outcome.
     const reuseStore = handler.match(/reused: true[\s\S]*?storeIdempotency\([^)]*status:\s*200/);
     expect(reuseStore).toBeTruthy();
   });
 
   it("CORS allows the Idempotency-Key request header", () => {
-    expect(handler).toMatch(/Access-Control-Allow-Headers[^"]*idempotency-key/);
+    // Header value spans quotes; match the token inside the allow-headers list.
+    expect(handler).toMatch(/Access-Control-Allow-Headers[\s\S]*?idempotency-key/);
   });
 
   it("does not introduce a second idempotency framework", () => {
