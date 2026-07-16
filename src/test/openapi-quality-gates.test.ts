@@ -160,7 +160,7 @@ describe('Phase 1A · G1 (2xx schema)', () => {
 describe('Phase 1A · G2 (webhook signature + dedupe)', () => {
   it('G2A: missing signature evidence fails G2', () => {
     const s = baseCompliantSpec();
-    s.paths['/webhooks/provider'].post.description = 'dedupes on event_id but no signature';
+    s.paths['/webhooks/provider'].post.description = 'Dedupes on event_id.';
     s.paths['/webhooks/provider'].post.parameters = [REQ_ID]; // strip signature header
     const r = runGates(s);
     expect(r.byGate.G2).toBe(1);
