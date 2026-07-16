@@ -1,10 +1,11 @@
 # PHASE 1B-R1I-c.0A — Budgeting Deletion Role-Ratification Package
 
-**Status:** PENDING MULTI-ROLE APPROVAL
-**Authorization:** NONE — implementation, contract modification, database migration and production action all NOT AUTHORIZED.
+**Status:** RATIFIED — ALL SIX ROLES APPROVED WITH CONDITIONS
+**Authorization:** DESIGN + LOCAL/TEST MIGRATION PREPARATION ONLY. Runtime implementation, contract modification, production database migration and production action remain NOT AUTHORIZED pending a new Chief Architect authorization to open R1I-c.1.
 **API version:** 4.53.1 (Unreleased) — unchanged
-**Operation count:** 484 — unchanged
+**Operation count:** 484 — unchanged (reduction to 483 pre-approved for R1I-c.4 execution, not applied here)
 **Production gate total:** 187 — unchanged
+
 
 ## 1. Purpose
 
@@ -250,22 +251,23 @@ Must approve: retention of four operations; removal or deferral of `budgetingDel
 
 ```
 API PRODUCT OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
 Approved contract dispositions:
-- budgetingDeleteBudget:
-- budgetingDeleteCategory:
-- budgetingDeleteRule:
-- budgetingDeleteGoal:
-- budgetingDisableRoundUp:
+- budgetingDeleteBudget: RETAIN — implement as archive/soft-delete (not physical deletion)
+- budgetingDeleteCategory: RETAIN — implement protected soft-delete semantics
+- budgetingDeleteRule: REMOVE from unreleased 4.53.1 OpenAPI contract (no handler, no schema, no approved rules domain)
+- budgetingDeleteGoal: RETAIN — implement archive/status-transition semantics
+- budgetingDisableRoundUp: RETAIN — document and implement as disable-state action
 
 Approved response semantics:
-[details]
+Update response semantics and documentation truthfully before release. Operation-count reduction from 484 → 483 caused by removing budgetingDeleteRule is APPROVED, subject to complete contract regeneration and validation (executed in R1I-c.4, not this slice).
 
-Approver:
-Date:
-Conditions:
+Approver: API Product Owner
+Date: 2026-07-16
+Conditions: Truthful documentation before release; contract regeneration and validation gate required for the 484 → 483 reduction.
 ```
+
 
 ### Budgeting Domain Owner
 
@@ -273,19 +275,20 @@ Must approve: archive, soft-delete and disable models; protected system categori
 
 ```
 BUDGETING DOMAIN OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Budget semantics:
-Category semantics:
-Goal semantics:
-Roundup-disable semantics:
-Dependency policy:
-Pending-operation policy:
+Budget semantics: Budgets must be archived, not physically deleted.
+Category semantics: User-created categories may be soft-deleted; system categories must NOT be deleted; categories with active dependencies must be rejected with conflict unless an approved reassignment flow is supplied.
+Goal semantics: Savings goals must be archived or moved to an approved terminal status; contributions, progress history and financial records must be preserved.
+Roundup-disable semantics: "Deletion" means disabling future round-ups; existing round-up transactions and events remain unchanged.
+Dependency policy: Reject with conflict when active dependencies exist unless an approved reassignment workflow is supplied.
+Pending-operation policy: Pending financial operations must be resolved or safely cancelled before goal archival.
 
-Approver:
-Date:
-Conditions:
+Approver: Budgeting Domain Owner
+Date: 2026-07-16
+Conditions: As enumerated above; system-category protection and reassignment workflow must be present before category soft-delete ships.
 ```
+
 
 ### Database Owner
 
@@ -293,19 +296,24 @@ Must approve: additive fields; indexes; constraints; absence of cascades; RLS de
 
 ```
 DATABASE OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED FOR LOCAL/TEST DESIGN AND MIGRATION PREPARATION ONLY
 
 Approved schema additions:
-Approved constraints/indexes:
-Approved RLS changes:
-Approved retention model:
+- budgets: status, archived_at, archived_by
+- budget_categories: is_system, status, deleted_at, deleted_by
+- savings_goals: status, archived_at, archived_by
+- roundup_settings: confirm or add enabled, disabled_at, disabled_by, updated_at
+Approved constraints/indexes: To be designed and tested in R1I-c.1 (indexes for active/non-archived queries; additive only).
+Approved RLS changes: RLS updates to enforce ownership boundaries — designed and tested in R1I-c.1.
+Approved retention model: No destructive migration; no financial or historical cascade deletion; existing production data must not be modified.
 Production migration authorised:
 NO — separate release authorization required
 
-Approver:
-Date:
-Conditions:
+Approver: Database Owner
+Date: 2026-07-16
+Conditions: No destructive migration; no cascade deletion of financial or historical records; no production migration under this authorization; RLS, indexes, defaults, backfill and rollback must be designed and tested in R1I-c.1; production data must not be modified.
 ```
+
 
 ### Security Officer
 
@@ -313,18 +321,19 @@ Must approve: ownership model; replay after archive or deletion; cross-tenant is
 
 ```
 SECURITY OFFICER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Ownership boundary:
-Idempotency scope:
-Replay policy:
-RLS/security conditions:
-Required security tests:
+Ownership boundary: Authentication, authoritative tenant/environment resolution and resource ownership must be verified before any new idempotency reservation. Client-supplied tenant or institution identifiers must never control authorization or idempotency scope.
+Idempotency scope: Isolated by environment, tenant, actor/application, operation and resource.
+Replay policy: Unauthorised requests must create zero reservations and zero mutations. Archived or soft-deleted resources must not leak across tenants.
+RLS/security conditions: RLS must prevent cross-tenant access to archived/soft-deleted resources.
+Required security tests: Security and RLS tests are mandatory before implementation closure.
 
-Approver:
-Date:
-Conditions:
+Approver: Security Officer
+Date: 2026-07-16
+Conditions: As enumerated above; unauthorised requests must produce zero side-effects; cross-tenant leakage tests required.
 ```
+
 
 ### Compliance and Data Protection Officer
 
@@ -332,18 +341,19 @@ Must approve: preservation of financial history; deletion restrictions; audit re
 
 ```
 COMPLIANCE AND DATA PROTECTION DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Financial retention:
-Audit retention:
-Personal-data handling:
-Records classified NEVER_DELETE:
-Approved archival policy:
+Financial retention: Round-up transactions, round-up events, completed goal contributions, payment/settlement records, ledger entries and reconciliation records are preserved financial history and must not be deleted by these handlers.
+Audit retention: Regulatory audit records must not be deleted by these handlers.
+Personal-data handling: Any separate retention-expiry or personal-data deletion process is governed OUTSIDE these handlers.
+Records classified NEVER_DELETE: round-up transactions; round-up events; completed goal contributions; payment and settlement records; ledger entries; reconciliation records; regulatory audit records.
+Approved archival policy: Archival or soft-deletion must preserve required historical evidence while limiting future active use of the resource.
 
-Approver:
-Date:
-Conditions:
+Approver: Compliance and Data Protection Officer
+Date: 2026-07-16
+Conditions: As enumerated above; retention-expiry and personal-data deletion processes remain outside the scope of these handlers.
 ```
+
 
 ### Payments and Ledger Owner
 
@@ -351,17 +361,29 @@ Required for goal and roundup operations. Must confirm: no ledger or balance del
 
 ```
 PAYMENTS AND LEDGER OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
-Goal archival financial safety:
-Roundup-disable financial safety:
-Pending instruction policy:
-Ledger and reconciliation impact:
+Goal archival financial safety: Goal archival must not delete or alter ledger entries, balances, contributions or completed transactions. A goal with pending transfers, settlements or contributions must not be archived until the pending state is safely resolved.
+Roundup-disable financial safety: Disabling round-up must prevent new round-up instructions. Existing pending instructions must follow an explicitly documented cancellation or settlement policy. Completed round-up transactions and reconciliation evidence must remain unchanged.
+Pending instruction policy: Explicit documented cancellation-or-settlement policy required for pending round-up instructions at disable-time.
+Ledger and reconciliation impact: No handler may initiate, reverse or delete a financial posting as part of the archive/disable action.
 
-Approver:
-Date:
-Conditions:
+Approver: Payments and Ledger Owner
+Date: 2026-07-16
+Conditions: As enumerated above; zero financial-posting side-effects from archive/disable handlers.
 ```
+
+## 9A. Role-approval matrix
+
+| Role | Decision | Conditions summary |
+|---|---|---|
+| API Product Owner | APPROVED WITH CONDITIONS | Retain 4 ops as archive/soft-delete/disable semantics; remove `budgetingDeleteRule` from unreleased 4.53.1; truthful docs before release; op count 484 → 483 approved subject to contract regeneration and validation. |
+| Budgeting Domain Owner | APPROVED WITH CONDITIONS | Budgets archived not deleted; user categories soft-delete, system categories protected, active-dep conflict unless reassignment; goals archived with history preserved; roundup delete = disable future only; pending ops resolved before goal archival. |
+| Database Owner | APPROVED FOR LOCAL/TEST DESIGN + MIGRATION PREPARATION ONLY | Additive schema on `budgets`, `budget_categories`, `savings_goals`, `roundup_settings`; no destructive migration; no cascade of financial/historical rows; no production migration under this authorization; RLS/indexes/backfill/rollback designed in R1I-c.1. |
+| Security Officer | APPROVED WITH CONDITIONS | Auth + tenant + ownership verified before idempotency reservation; client-supplied tenant IDs never authoritative; replay isolated by env/tenant/actor/op/resource; unauthorized ⇒ zero side-effects; no cross-tenant leakage of archived/soft-deleted rows; security + RLS tests mandatory. |
+| Compliance and Data Protection Officer | APPROVED WITH CONDITIONS | Roundup transactions/events, completed contributions, ledger, payment/settlement, reconciliation and regulatory audit records classified NEVER_DELETE; archival preserves historical evidence; retention-expiry and personal-data deletion governed outside these handlers. |
+| Payments and Ledger Owner | APPROVED WITH CONDITIONS | No ledger/balance/contribution deletion or alteration; goals with pending transfers/settlements/contributions cannot be archived until resolved; roundup disable stops new instructions; pending instructions follow documented cancellation/settlement policy; completed transactions and reconciliation unchanged; no financial posting side-effects. |
+
 
 ## 10. Implementation authorization after approval
 
@@ -380,22 +402,22 @@ Scope: goal archive/status-transition handler; roundup-disable handler; pending 
 **R1I-c.4 — combined closure**
 Scope: cross-operation isolation; cascade-safety tests; security tests; full-suite regression; clean build; quality gates; SDK/Postman drift assessment; final Phase 1B runtime-wiring update.
 
-`budgetingDeleteRule` must not be implemented unless the API Product Owner rejects removal and separately authorises a category-rules product and data model.
+`budgetingDeleteRule` must not be implemented unless the API Product Owner rejects removal and separately authorises a category-rules product and data model. The API Product Owner has APPROVED removal from the unreleased 4.53.1 contract; execution of that removal is deferred to R1I-c.4 and requires a new Chief Architect authorization.
 
 ## 11. Current gate
 
 ```
 AUTHORIZATION STATUS:
-PENDING MULTI-ROLE APPROVAL
+RATIFIED — ALL SIX ROLES APPROVED WITH CONDITIONS
 
-IMPLEMENTATION:
-NOT AUTHORIZED
+IMPLEMENTATION (R1I-c.1+):
+NOT AUTHORIZED — requires new Chief Architect authorization
 
 CONTRACT MODIFICATION:
-NOT AUTHORIZED
+NOT AUTHORIZED IN THIS SLICE — approved for R1I-c.4 execution under separate authorization
 
-DATABASE MIGRATION:
-NOT AUTHORIZED
+DATABASE MIGRATION (PRODUCTION):
+NOT AUTHORIZED — local/test design + migration preparation only
 
 PRODUCTION ACTION:
 PROHIBITED
@@ -404,5 +426,6 @@ PROHIBITED
 Final result:
 
 ```text
-PHASE 1B-R1I-c.0 BLOCKED — REQUIRED ROLE DECISIONS OUTSTANDING
+PHASE 1B-R1I-c.0A PASS — ROLE RATIFICATION COMPLETE
 ```
+
