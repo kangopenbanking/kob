@@ -1,14 +1,16 @@
-// Phase 1B-R1I-b.2.1 — updateGlobalAccountPayoutPreference idempotency wiring.
+// Phase 1B-R1I-b.2.1 / b.2.1V — updateGlobalAccountPayoutPreference wiring.
 // Handler-boundary source guards (executed by Vitest against the Deno file):
 //   1. Shared idempotency helper is wired (no bespoke framework).
 //   2. Idempotency-Key is read case-insensitively, optional (absence preserved).
-//   3. Scope is derived from server-authenticated userId + canonical route only.
+//   3. Scope is derived from server-authenticated userId + canonical route +
+//      environment; for account-scope the authorised target account_id is
+//      part of the uniqueness boundary (b.2.1V §5).
 //   4. Fingerprint is SHA-256 of canonical(scope + normalised body).
-//   5. Reservation happens AFTER authentication + validation, BEFORE the UPDATE.
+//   5. Ownership pre-check happens BEFORE reservation; account_not_found
+//      returns 404 with ZERO reservations created (b.2.1V §7, §8).
 //   6. Success paths (user + account) store the completed response for replay.
-//   7. account_not_found (404) is stored — but validation/auth failures are not.
-//   8. CORS allows the Idempotency-Key request header.
-//   9. Canonical body normalisation is stable across property ordering.
+//   7. CORS allows the Idempotency-Key request header.
+//   8. Canonical body normalisation is stable across property ordering.
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -53,9 +55,9 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
   });
 
   it("scope uses server-authenticated userId — never any client-supplied field", () => {
-    expect(handler).toMatch(/scope:\s*\{\s*user_id:\s*userId/);
+    expect(handler).toMatch(/user_id:\s*userId/);
     // No body.tenant/institution/merchant field is fed into the scope.
-    expect(handler).not.toMatch(/scope:\s*\{[^}]*body\.(tenant|institution|merchant)/);
+    expect(handler).not.toMatch(/scopeObj[\s\S]{0,200}body\.(tenant|institution|merchant)/);
   });
 
   it("route/method are baked into scope and route constant", () => {
@@ -90,11 +92,30 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
     expect(block![0]).toMatch(/status:\s*200/);
   });
 
-  it("account_not_found (404) is stored so replays return the same 404", () => {
-    const block = handler.match(/account_not_found[\s\S]{0,500}?return json\(notFound, 404\)/);
-    expect(block).toBeTruthy();
-    expect(block![0]).toContain("storeIdempotency");
-    expect(block![0]).toMatch(/status:\s*404/);
+  it("account_not_found (404) returns BEFORE any reservation — no negative caching (b.2.1V §8)", () => {
+    const reserveCall = handler.search(/reserveIdempotency\(\{/);
+    const notFoundIdx = handler.indexOf('"account_not_found"');
+    expect(notFoundIdx).toBeGreaterThan(-1);
+    expect(notFoundIdx).toBeLessThan(reserveCall);
+    // The 404 return path must not invoke storeIdempotency.
+    const notFoundBlock = handler.slice(notFoundIdx, notFoundIdx + 300);
+    expect(notFoundBlock).not.toContain("storeIdempotency");
+  });
+
+  it("ownership pre-check loads the target account BEFORE reservation (b.2.1V §7)", () => {
+    const reserveCall = handler.search(/reserveIdempotency\(\{/);
+    const preLookup = handler.search(/from\("nium_global_accounts"\)\s*\.\s*select/);
+    expect(preLookup).toBeGreaterThan(-1);
+    expect(preLookup).toBeLessThan(reserveCall);
+  });
+
+  it("scope includes account_id for account-scope (b.2.1V §5 uniqueness boundary)", () => {
+    expect(handler).toMatch(/scopeObj\.account_id\s*=\s*normalised\.account_id/);
+  });
+
+  it("scope includes environment (b.2.1V §5)", () => {
+    expect(handler).toMatch(/environment[,\s]/);
+    expect(handler).toMatch(/KOB_ENVIRONMENT/);
   });
 
   it("does NOT store completion for pre-reservation validation errors", () => {

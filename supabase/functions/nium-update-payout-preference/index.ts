@@ -96,15 +96,38 @@ Deno.serve(async (req) => {
     return json({ error: "invalid_scope", message: "scope must be 'user' or 'account'" }, 400);
   }
 
-  // ---- Optional Idempotency-Key (Phase 1B-R1I-b.2.1) ----
+  // ---- Ownership / resource pre-check BEFORE reservation (b.2.1V §7, §8) ----
+  // For account-scope, resolve and authorise the target account BEFORE any
+  // idempotency reservation. A missing/foreign account yields 404 with ZERO
+  // reservations created (no negative caching — Section 8).
+  if (normalised.scope === "account") {
+    const { data: owned, error: lookupErr } = await sb
+      .from("nium_global_accounts")
+      .select("id")
+      .eq("id", normalised.account_id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (lookupErr) return json({ error: "lookup_failed", message: lookupErr.message }, 500);
+    if (!owned) return json({ error: "account_not_found" }, 404);
+  }
+
+  // ---- Optional Idempotency-Key (Phase 1B-R1I-b.2.1 / b.2.1V) ----
+  // Trusted scope includes the environment, authenticated userId, canonical
+  // route, method AND — for account-scope — the authorised target account ID
+  // (§5). Account ID is thus part of the uniqueness boundary, not merely the
+  // fingerprint, preventing cross-account key collision.
+  const environment = Deno.env.get("KOB_ENVIRONMENT") ?? "production";
   const idemKey = req.headers.get("Idempotency-Key") ?? req.headers.get("idempotency-key");
   let requestHash: string | null = null;
   if (idemKey) {
-    // Trusted scope: authenticated userId + canonical route (never client-supplied).
-    const canonical = canonicalStringify({
-      scope: { user_id: userId, method: "PATCH", route: RESOURCE },
-      body: normalised,
-    });
+    const scopeObj: Record<string, string> = {
+      environment,
+      user_id: userId,
+      method: "PATCH",
+      route: RESOURCE,
+    };
+    if (normalised.scope === "account") scopeObj.account_id = normalised.account_id;
+    const canonical = canonicalStringify({ scope: scopeObj, body: normalised });
     requestHash = await sha256(canonical);
     const reservation = await reserveIdempotency({
       key: idemKey,
@@ -130,21 +153,12 @@ Deno.serve(async (req) => {
     return json(resp);
   }
 
-  // scope === "account"
+  // scope === "account" — ownership already proven above.
   const { data, error } = await sb.from("nium_global_accounts").update({
     payout_preference_override: normalised.payout_preference_override,
     payout_channel_override: normalised.payout_channel_override,
-  }).eq("id", normalised.account_id).eq("user_id", userId).select().maybeSingle();
+  }).eq("id", normalised.account_id).eq("user_id", userId).select().single();
   if (error) return json({ error: "update_failed", message: error.message }, 500);
-  if (!data) {
-    // Ownership/authorization failure — DO NOT store a completed response so
-    // the caller can retry with the correct account_id under a fresh key.
-    const notFound = { error: "account_not_found" };
-    if (idemKey && requestHash) {
-      await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 404, body: notFound });
-    }
-    return json(notFound, 404);
-  }
   const resp = { account: data };
   if (idemKey && requestHash) {
     await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 200, body: resp });
