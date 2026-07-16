@@ -342,6 +342,10 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
     if (!reqIdPresent) {
       fail('G9', opKey, `${opId}: missing optional X-Request-ID correlation header parameter`);
     }
+    } catch (err) {
+      // Fail-safe: malformed operation metadata must never abort the sweep.
+      fail('G3', opKey, `${opId}: gate evaluation threw ${err && err.message ? err.message : String(err)}`);
+    }
   }
 }
 
