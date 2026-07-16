@@ -18,7 +18,7 @@ import * as path from 'node:path';
 const SCRIPT = path.resolve(process.cwd(), 'scripts/openapi-quality-gates.mjs');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'kob-gates-'));
 
-afterAll(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch {} });
+afterAll(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch { /* best-effort cleanup */ } });
 
 /** Run the gate script against a fixture and return { status, byGate, failures, stdout, stderr }. */
 function runGates(spec, opts = {}) {
