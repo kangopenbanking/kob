@@ -1,4 +1,4 @@
-// @ts-nocheck
+// Phase 1B-R1I-c.2B-V — lint clean (no ts-nocheck; pure string assertions).
 /**
  * Phase 1B-R1I-c.2B — Shared idempotency helper 204 No Content support.
  *
