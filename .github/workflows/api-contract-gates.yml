@@ -43,7 +43,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Run OpenAPI quality gates
+      # Phase 1A: gate-implementation tests run FIRST so we prove the gates
+      # themselves work before letting them adjudicate the production contract.
+      - name: Gate implementation harness (fixtures)
+        run: npm run openapi:gates:test
+
+      - name: Run OpenAPI quality gates (production spec)
         run: npm run openapi:gates
 
       - name: Confirm changelog matches OpenAPI version
