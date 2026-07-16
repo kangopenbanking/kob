@@ -63,3 +63,18 @@ Shared helper: `supabase/functions/_shared/integration-layer/idempotency.ts` bac
 | HARD_DELETE | N/A (not selected for any operation) | Would require tombstone | Excluded by design. |
 
 **Public replay guarantee:** 24 hours retained; after expiry, a repeat DELETE against an already-archived resource returns the same `204` result (idempotent by outcome, not by cached response). No sensitive resource data is echoed in the `204` body.
+
+---
+
+## Ratification update (R1I-c.0A, 2026-07-16)
+
+All six required roles have ratified the Chief Architect direction — see `docs/audits/phase-1/phase-1b-r1i-c0a-role-ratification-package.md`.
+
+- **API Product Owner:** APPROVED WITH CONDITIONS. Retain `budgetingDeleteBudget`, `budgetingDeleteCategory`, `budgetingDeleteGoal`, `budgetingDisableRoundUp` with archive/soft-delete/disable semantics. Remove `budgetingDeleteRule` from unreleased 4.53.1. Op count 484 → 483 approved, executed in R1I-c.4.
+- **Budgeting Domain Owner:** APPROVED WITH CONDITIONS. Archive budgets; user-category soft-delete with system-category protection and reassignment for active dependencies; goal archival preserves history; roundup delete = disable future only; pending ops resolved before goal archival.
+- **Database Owner:** APPROVED FOR LOCAL/TEST DESIGN AND MIGRATION PREPARATION ONLY. Additive schema on `budgets`, `budget_categories`, `savings_goals`, `roundup_settings`. No destructive migration; no cascade of financial/historical rows; no production migration under this authorization.
+- **Security Officer:** APPROVED WITH CONDITIONS. Auth + tenant + ownership verified before idempotency reservation; client-supplied tenant IDs never authoritative; unauthorised requests produce zero side-effects; no cross-tenant leakage of archived/soft-deleted rows; security + RLS tests mandatory.
+- **Compliance and Data Protection Officer:** APPROVED WITH CONDITIONS. Roundup transactions/events, completed contributions, ledger, payment/settlement, reconciliation and regulatory audit records classified NEVER_DELETE. Retention-expiry and personal-data deletion governed outside these handlers.
+- **Payments and Ledger Owner:** APPROVED WITH CONDITIONS. No ledger/balance/contribution deletion. Goals with pending transfers/settlements/contributions cannot be archived until resolved. Roundup disable stops new instructions; pending instructions follow documented cancellation/settlement policy; no financial posting side-effects.
+
+Gate: `PHASE 1B-R1I-c.0A PASS — ROLE RATIFICATION COMPLETE`. R1I-c.1 remains NOT AUTHORIZED until a new Chief Architect authorization is issued.
