@@ -313,30 +313,25 @@ describe('Phase 1A · G7 (DELETE idempotency)', () => {
 // ─── G8 ──────────────────────────────────────────────────────────────────────
 
 describe('Phase 1A · G8 (cursor parity on paginated lists)', () => {
+  const LIMIT = { name: 'limit', in: 'query', schema: { type: 'integer' } };
+  const OFFSET = { name: 'offset', in: 'query', schema: { type: 'integer' } };
+  const CURSOR_AFTER = { name: 'starting_after', in: 'query', schema: { type: 'string' } };
+  const CURSOR_BEFORE = { name: 'ending_before', in: 'query', schema: { type: 'string' } };
   it('negative: paginated list with offset but no cursor fails G8', () => {
     const s = baseCompliantSpec();
-    s.paths['/things'].get.parameters = [REQ_ID,
-      { $ref: '#/components/parameters/Limit' },
-      { $ref: '#/components/parameters/Offset' }];
+    s.paths['/things'].get.parameters = [REQ_ID, LIMIT, OFFSET];
     const r = runGates(s);
     expect(r.byGate.G8).toBe(1);
   });
   it('positive: adding cursor (starting_after/ending_before) clears G8', () => {
     const s = baseCompliantSpec();
-    s.paths['/things'].get.parameters = [REQ_ID,
-      { $ref: '#/components/parameters/Limit' },
-      { $ref: '#/components/parameters/Offset' },
-      { $ref: '#/components/parameters/StartingAfter' },
-      { $ref: '#/components/parameters/EndingBefore' }];
+    s.paths['/things'].get.parameters = [REQ_ID, LIMIT, OFFSET, CURSOR_AFTER, CURSOR_BEFORE];
     const r = runGates(s);
     expect(r.byGate.G8).toBe(0);
   });
   it('behaviour: single cursor param satisfies gate (either direction)', () => {
     const s = baseCompliantSpec();
-    s.paths['/things'].get.parameters = [REQ_ID,
-      { $ref: '#/components/parameters/Limit' },
-      { $ref: '#/components/parameters/Offset' },
-      { $ref: '#/components/parameters/StartingAfter' }];
+    s.paths['/things'].get.parameters = [REQ_ID, LIMIT, OFFSET, CURSOR_AFTER];
     const r = runGates(s);
     expect(r.byGate.G8).toBe(0);
   });
