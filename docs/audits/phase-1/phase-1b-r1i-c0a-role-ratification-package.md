@@ -251,22 +251,23 @@ Must approve: retention of four operations; removal or deferral of `budgetingDel
 
 ```
 API PRODUCT OWNER DECISION:
-[APPROVED / REJECTED / APPROVED WITH CONDITIONS]
+APPROVED WITH CONDITIONS
 
 Approved contract dispositions:
-- budgetingDeleteBudget:
-- budgetingDeleteCategory:
-- budgetingDeleteRule:
-- budgetingDeleteGoal:
-- budgetingDisableRoundUp:
+- budgetingDeleteBudget: RETAIN — implement as archive/soft-delete (not physical deletion)
+- budgetingDeleteCategory: RETAIN — implement protected soft-delete semantics
+- budgetingDeleteRule: REMOVE from unreleased 4.53.1 OpenAPI contract (no handler, no schema, no approved rules domain)
+- budgetingDeleteGoal: RETAIN — implement archive/status-transition semantics
+- budgetingDisableRoundUp: RETAIN — document and implement as disable-state action
 
 Approved response semantics:
-[details]
+Update response semantics and documentation truthfully before release. Operation-count reduction from 484 → 483 caused by removing budgetingDeleteRule is APPROVED, subject to complete contract regeneration and validation (executed in R1I-c.4, not this slice).
 
-Approver:
-Date:
-Conditions:
+Approver: API Product Owner
+Date: 2026-07-16
+Conditions: Truthful documentation before release; contract regeneration and validation gate required for the 484 → 483 reduction.
 ```
+
 
 ### Budgeting Domain Owner
 
