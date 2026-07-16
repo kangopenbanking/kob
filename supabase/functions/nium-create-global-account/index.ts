@@ -8,12 +8,21 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createGlobalAccount, NIUM_MODE, assertNiumCurrency, type NiumCurrency } from "../_shared/nium-client.ts";
 import { DEFAULT_NIUM_POP_CODE, isAllowedNiumPopCode } from "../_shared/nium-compliance.ts";
+import {
+  reserveIdempotency,
+  storeIdempotency,
+  idempotencyResponse,
+  sha256,
+} from "../_shared/integration-layer/idempotency.ts";
+import { canonicalStringify } from "../_shared/integration-layer/canonical.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, idempotency-key",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const RESOURCE = "POST /v1/gateway/global-accounts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
