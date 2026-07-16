@@ -153,19 +153,90 @@ Deno.serve(async (req) => {
     return json(respBody, 200);
   }
 
+  // --- Cross-key business-operation lock (Phase 1B-R1I-b.1X) ---
+  // Prevents duplicate provider create calls when the caller retries the SAME
+  // logical operation (user+provider+currency+account_kind) under DIFFERENT
+  // Idempotency-Key values, before the local nium_global_accounts row exists.
+  //
+  // Trusted scope — NEVER includes client-supplied identifiers.
+  const opScope = {
+    provider: "nium",
+    resource: "global_account",
+    user_id: userId,
+    currency,
+    account_kind: accountKind,
+  };
+  const opKey = await deriveOperationKey(opScope);
+  const opResource = `${OPERATION_LOCK_PREFIX}${RESOURCE}`;
+  const opHash = await sha256(canonicalStringify(opScope));
+  const opReservation = await reserveIdempotency({
+    key: opKey,
+    merchantId: userId,
+    resource: opResource,
+    requestHash: opHash,
+  });
+
+  // If an equivalent operation is already in-flight or completed under a
+  // different client key, resolve deterministically WITHOUT re-invoking the
+  // provider.
+  if (opReservation.kind === "in_flight") {
+    const body = {
+      error: "operation_in_progress",
+      code: "GLOBAL_ACCOUNT_OPERATION_IN_PROGRESS",
+      message: "A global-account creation for this user/currency is already being processed. Retry after a short delay.",
+    };
+    if (idemKey && requestHash) {
+      await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 409, body });
+    }
+    return new Response(JSON.stringify(body), {
+      status: 409,
+      headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "2" },
+    });
+  }
+  if (opReservation.kind === "replay") {
+    // Prior identical operation completed (possibly under another key).
+    // Reconcile against the authoritative local table before echoing a
+    // provider-ambiguous cache.
+    const { data: recovered } = await svc.from("nium_global_accounts").select("*")
+      .eq("user_id", userId).eq("currency", currency).eq("status", "active").maybeSingle();
+    if (recovered) {
+      const respBody = { account: recovered, reused: true, meta: { warnings, cross_key_reconciled: true } };
+      if (idemKey && requestHash) {
+        await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 200, body: respBody });
+      }
+      return json(respBody, 200);
+    }
+    // No local row yet, but a prior operation reached provider — refuse to
+    // re-invoke. Surface the cached status.
+    const body = {
+      error: "operation_result_pending",
+      code: "GLOBAL_ACCOUNT_OPERATION_PENDING_RECONCILIATION",
+      message: "A prior creation for this user/currency has an unresolved provider result. It will reconcile automatically via the provider webhook.",
+    };
+    if (idemKey && requestHash) {
+      await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 409, body });
+    }
+    return new Response(JSON.stringify(body), {
+      status: 409,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  // opReservation.kind === "conflict" is impossible here: opHash is derived
+  // deterministically from opScope, so any collision means identical scope
+  // (should have hit "replay"). Treat defensively as in_flight.
+  if (opReservation.kind === "conflict" || opReservation.kind === "invalid") {
+    return json({ error: "operation_lock_failed", code: "OPERATION_LOCK_UNEXPECTED" }, 500);
+  }
+
   let nium;
   try {
     nium = await createGlobalAccount({ user_id: userId, beneficiary_name: beneficiary, currency });
   } catch (e) {
     console.error("nium createGlobalAccount failed", e);
-    // Provider ambiguity (b.1V). We CANNOT distinguish a pre-send failure from
-    // a post-send failure where the provider account may already exist. Store
-    // an "unknown_provider_result" completion under the idempotency key so an
-    // identical retry replays deterministically (and enters the
-    // reconciliation-on-replay path above) — never blindly re-invoking the
-    // provider. Clients wishing to force a new attempt must use a fresh key,
-    // at which point the natural per-(user,currency) idempotency check on
-    // nium_global_accounts still protects against duplicate provider accounts.
+    // Provider ambiguity (b.1V + b.1X). Persist the unknown result under BOTH
+    // the client Idempotency-Key AND the operation lock, so any fresh-key
+    // retry hits the op-lock replay path (never blind provider re-invocation)
+    // until webhook reconciliation surfaces the account locally.
     const ambiguity = {
       error: "nium_provider_result_unknown",
       code: "PROVIDER_RESULT_UNKNOWN",
@@ -175,6 +246,7 @@ Deno.serve(async (req) => {
     if (idemKey && requestHash) {
       await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 502, body: ambiguity });
     }
+    await storeIdempotency({ key: opKey, merchantId: userId, resource: opResource, requestHash: opHash, status: 502, body: ambiguity });
     return json(ambiguity, 502);
   }
 
