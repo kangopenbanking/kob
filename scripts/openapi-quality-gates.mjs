@@ -85,6 +85,150 @@ function hasIdempotencyKey(op) {
   return false;
 }
 
+// ─── Phase 1B-R1I-a.2 · Provider-event idempotency exemption ────────────────
+// Narrowly-scoped G3 exemption for genuine provider webhooks that use
+// provider-supplied event IDs + atomic dedupe instead of a generic client
+// Idempotency-Key. All controls MUST be explicitly declared — no field
+// defaults silently to true. Naming ("webhook" in path/opId/tag/summary/
+// description) never qualifies on its own; only explicit structured
+// x-kob-webhook + x-kob-idempotency metadata backed by real OpenAPI shape
+// (POST, required signature header, resolvable required event-ID) qualifies.
+function resolveRef(ref) {
+  if (typeof ref !== 'string' || !ref.startsWith('#/')) return null;
+  const parts = ref.slice(2).split('/');
+  let node = spec;
+  for (const p of parts) {
+    if (node == null || typeof node !== 'object') return null;
+    node = node[p];
+  }
+  return node ?? null;
+}
+function resolveParam(p) {
+  if (p && p.$ref) return resolveRef(p.$ref);
+  return p;
+}
+function jsonPointerLookup(root, pointer) {
+  if (typeof pointer !== 'string' || !pointer.startsWith('/')) return undefined;
+  const parts = pointer.slice(1).split('/').map((s) => s.replace(/~1/g, '/').replace(/~0/g, '~'));
+  let node = root;
+  for (const part of parts) {
+    if (node == null || typeof node !== 'object') return undefined;
+    if (node.$ref) node = resolveRef(node.$ref);
+    if (node && node.properties && Object.prototype.hasOwnProperty.call(node.properties, part)) {
+      node = node.properties[part];
+      if (node && node.$ref) node = resolveRef(node.$ref);
+      continue;
+    }
+    return undefined;
+  }
+  return node;
+}
+
+const REQUIRED_PROVIDER_EVENT_BOOLEANS = [
+  'event-id-required',
+  'signature-required',
+  'atomic-deduplication-required',
+  'replay-window-enforced',
+  'payload-consistency-enforced',
+  'failure-recovery-enforced',
+];
+
+function hasValidProviderEventIdempotency(operation, method, _pathKey, pathItem) {
+  const idem = operation['x-kob-idempotency'];
+  if (idem === undefined) return { ok: false, present: false };
+  if (idem === null || typeof idem !== 'object' || Array.isArray(idem)) {
+    return { ok: false, present: true, reason: 'x-kob-idempotency must be an object' };
+  }
+  if (idem.mode !== 'provider-event') {
+    return { ok: false, present: true, reason: `invalid mode "${String(idem.mode)}" (expected "provider-event")` };
+  }
+  if (typeof idem.provider !== 'string' || idem.provider.length === 0) {
+    return { ok: false, present: true, reason: 'provider must be a non-empty string' };
+  }
+  for (const k of REQUIRED_PROVIDER_EVENT_BOOLEANS) {
+    if (!(k in idem)) return { ok: false, present: true, reason: `${k} is required` };
+    if (idem[k] !== true) return { ok: false, present: true, reason: `${k} must be true` };
+  }
+  if (method !== 'post') {
+    return { ok: false, present: true, reason: 'provider-event exemption applies only to POST' };
+  }
+  const wh = operation['x-kob-webhook'];
+  if (wh === undefined) {
+    return { ok: false, present: true, reason: 'x-kob-webhook receiver metadata missing' };
+  }
+  if (wh === null || typeof wh !== 'object' || Array.isArray(wh)) {
+    return { ok: false, present: true, reason: 'x-kob-webhook must be an object' };
+  }
+  if (wh.receiver !== true) {
+    return { ok: false, present: true, reason: 'x-kob-webhook.receiver must be true' };
+  }
+  if (typeof wh.provider !== 'string' || wh.provider.length === 0) {
+    return { ok: false, present: true, reason: 'x-kob-webhook.provider must be a non-empty string' };
+  }
+  if (wh.provider !== idem.provider) {
+    return { ok: false, present: true, reason: 'provider differs between x-kob-webhook and x-kob-idempotency' };
+  }
+  const sigHeaderName = wh['signature-header'];
+  if (typeof sigHeaderName !== 'string' || sigHeaderName.length === 0) {
+    return { ok: false, present: true, reason: 'x-kob-webhook.signature-header must be a non-empty string' };
+  }
+  const allParams = [...(pathItem.parameters || []), ...(operation.parameters || [])]
+    .map(resolveParam)
+    .filter(Boolean);
+  const sigParam = allParams.find(
+    (p) => p && (p.in || '').toLowerCase() === 'header'
+      && typeof p.name === 'string' && p.name.toLowerCase() === sigHeaderName.toLowerCase(),
+  );
+  if (!sigParam) {
+    return { ok: false, present: true, reason: `required signature header "${sigHeaderName}" not found` };
+  }
+  if (sigParam.required !== true) {
+    return { ok: false, present: true, reason: `signature header "${sigHeaderName}" must be required` };
+  }
+  const loc = wh['event-id-location'];
+  const ptr = wh['event-id-pointer'];
+  if (loc !== 'body' && loc !== 'header') {
+    return { ok: false, present: true, reason: 'x-kob-webhook.event-id-location must be "body" or "header"' };
+  }
+  if (typeof ptr !== 'string' || ptr.length === 0) {
+    return { ok: false, present: true, reason: 'x-kob-webhook.event-id-pointer must be a non-empty string' };
+  }
+  if (loc === 'header') {
+    const evtParam = allParams.find(
+      (p) => p && (p.in || '').toLowerCase() === 'header'
+        && typeof p.name === 'string' && p.name.toLowerCase() === ptr.toLowerCase(),
+    );
+    if (!evtParam) return { ok: false, present: true, reason: `event ID header "${ptr}" not found` };
+    if (evtParam.required !== true) return { ok: false, present: true, reason: `event ID header "${ptr}" must be required` };
+  } else {
+    if (!ptr.startsWith('/')) {
+      return { ok: false, present: true, reason: 'event-id-pointer must be a JSON pointer starting with "/"' };
+    }
+    const rb = operation.requestBody;
+    if (!rb) return { ok: false, present: true, reason: 'requestBody missing for event-id-pointer resolution' };
+    const body = rb.$ref ? resolveRef(rb.$ref) : rb;
+    const schema = body && body.content && body.content['application/json'] && body.content['application/json'].schema;
+    if (!schema) return { ok: false, present: true, reason: 'application/json request body schema missing' };
+    const rootSchema = schema.$ref ? resolveRef(schema.$ref) : schema;
+    if (!rootSchema) return { ok: false, present: true, reason: 'event ID pointer does not resolve (schema unresolved)' };
+    const target = jsonPointerLookup(rootSchema, ptr);
+    if (target === undefined) return { ok: false, present: true, reason: 'event ID pointer does not resolve' };
+    const parts = ptr.slice(1).split('/');
+    const leaf = parts[parts.length - 1];
+    let parent = rootSchema;
+    for (let i = 0; i < parts.length - 1; i += 1) {
+      if (parent && parent.$ref) parent = resolveRef(parent.$ref);
+      parent = parent && parent.properties ? parent.properties[parts[i]] : undefined;
+    }
+    if (parent && parent.$ref) parent = resolveRef(parent.$ref);
+    const required = (parent && parent.required) || [];
+    if (!required.includes(leaf)) {
+      return { ok: false, present: true, reason: `event ID field "${leaf}" must be listed in required[]` };
+    }
+  }
+  return { ok: true, present: true };
+}
+
 function describesWebhookSignature(pathItem, op) {
   // Look at path-level parameters AND operation parameters AND the description text.
   const desc = `${pathItem.description || ''}\n${op.description || ''}\n${op.summary || ''}`.toLowerCase();
@@ -106,6 +250,7 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
     if (!op) continue;
     const opId = op.operationId || `${method.toUpperCase()} ${pathKey}`;
     const opKey = `${method.toUpperCase()} ${pathKey}`;
+    try {
 
     // G1 — 2xx schema (except 204)
     for (const [code, resp] of Object.entries(op.responses || {})) {
@@ -142,12 +287,23 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
     }
     }
 
-    // G3 — Idempotency-Key on financial mutations
+    // G3 — Idempotency-Key on financial mutations, OR a fully-declared
+    // provider-event exemption (Phase 1B-R1I-a.2). Naming ("webhook" in path/
+    // opId/tag/summary/description) never qualifies — only explicit structured
+    // x-kob-idempotency + x-kob-webhook metadata backed by real OpenAPI shape.
     const isMutation = ['post', 'put', 'patch', 'delete'].includes(method);
     const isFinancial = FINANCIAL_PATH_PATTERNS.some((re) => re.test(pathKey));
     if (isMutation && isFinancial && !hasIdempotencyKey(op)) {
-      fail('G3', opKey, `${opId}: financial mutation missing Idempotency-Key header`);
+      const exemption = hasValidProviderEventIdempotency(op, method, pathKey, pathItem);
+      if (!exemption.ok) {
+        if (exemption.present) {
+          fail('G3', opKey, `${opId}: G3 provider-event exemption invalid: ${exemption.reason}`);
+        } else {
+          fail('G3', opKey, `${opId}: financial mutation missing Idempotency-Key header`);
+        }
+      }
     }
+
 
     // G4 — pagination on list endpoints (heuristic: GET on collection paths returning arrays/PaginatedResponse)
     if (method === 'get' && !pathKey.includes('{') && !isPaginated(op)) {
@@ -185,6 +341,10 @@ for (const [pathKey, pathItem] of Object.entries(spec.paths || {})) {
     });
     if (!reqIdPresent) {
       fail('G9', opKey, `${opId}: missing optional X-Request-ID correlation header parameter`);
+    }
+    } catch (err) {
+      // Fail-safe: malformed operation metadata must never abort the sweep.
+      fail('G3', opKey, `${opId}: gate evaluation threw ${err && err.message ? err.message : String(err)}`);
     }
   }
 }

@@ -356,3 +356,18 @@ Rollback is *not* recommended: it re-introduces the drift.
 ### L. Verdict
 
 Root cause identified, minimal correction applied (lockfile only), clean install reproducible, no regression, contract untouched.
+
+---
+
+## Phase 1B-R1I-a.2 · Provider-event G3 exemption (gate capability only)
+
+The G3 gate now recognises a narrowly-scoped provider-event exemption in addition to the canonical `Idempotency-Key` header. See `phase-1b-r1i-a2-final-report.md` for the full extension schema, qualifying rules, anti-gaming rules, fixture inventory, and rollback instructions.
+
+- Extension: operation-level `x-kob-idempotency` (7 required fields, all strict `=== true` booleans) + `x-kob-webhook` (receiver marker, provider identity, required signature header, resolvable required event-ID pointer).
+- Anti-gaming: naming ("webhook" in path/opId/tag/summary/description) never qualifies; misspelled extension keys treated as absent; provider mismatch, optional signature header, missing event-ID pointer, or copying the extension onto an ordinary client mutation all fail G3 with named reasons.
+- Cross-gate isolation: exemption suppresses G3 only; G1, G2, G5, G6, G9 continue to fire independently.
+- Fail-safe: per-operation try/catch guarantees malformed metadata cannot abort the sweep.
+- Production impact: none. `public/openapi.json`, `public/openapi.yaml`, `package.json`, `package-lock.json` SHA-256 hashes unchanged. Production gate totals remain exactly `188` (G1=0, G2=3, G3=0, G4=0, G5=29, G6=77, G7=0, G8=0, G9=79).
+- Test totals: gate harness 35 → 74 (+39 new tests, 0 skipped, 0 failing).
+
+The Nium production operation is **not yet migrated** to the exemption — a.3 must first close the changed-payload fingerprint, replay-window enforcement, and reserve-then-crash recovery runtime gaps.
