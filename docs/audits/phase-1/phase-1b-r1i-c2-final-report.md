@@ -86,3 +86,20 @@ All prior c.2A / c.2B / c.1 suites remain green (no source changes to those laye
 `PHASE 1B-R1I-c.2 PASS — BUDGET ARCHIVE AND CATEGORY SOFT-DELETE RUNTIME CLOSED`
 
 R1I-c.3 not begun.
+
+---
+
+## c.2V verification stamp (2026-07-16)
+
+Verification-only slice `R1I-c.2V` re-confirmed this outcome without design
+change. Full evidence in
+`docs/audits/phase-1/phase-1b-r1i-c2v-final-report.md`:
+
+- Targeted suites: 60/60 PASS (`budgeting-delete-runtime-c2` 15, `openapi-phase-1b-c2a-contract` 37, `idempotency-204-bodyless` 8).
+- Three full-suite runs: 71 / 73 / 73 failures, 7 skipped, 0 unhandled — within approved policy (≤89 stable / ≤93 raw / ≤7 skipped).
+- Build exit 0. Gate total 183 unchanged (G2=3, G5=29, G6=72, G9=79).
+- Version 4.53.1, operations 484, release Unreleased — all unchanged.
+- Clean `npm ci` reproduces `package-lock.json` sha256 `137def28…c7a5`; pending migration checksum `53a7228f…0e76bf` unchanged.
+- Runtime-wiring integrity re-verified; no operation marked production-deployed.
+
+`PHASE 1B-R1I-c.2 PASS — BUDGET ARCHIVE AND CATEGORY SOFT-DELETE RUNTIME CLOSED`
