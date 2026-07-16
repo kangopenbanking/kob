@@ -66,13 +66,14 @@ describe("Phase 1B-R1I-b.2.1 — updatePayoutPreference idempotency wiring", () 
   it("reservation happens AFTER validation (auth → validate → reserve → mutate)", () => {
     const idxValidateUser = handler.indexOf('body.scope === "user"');
     const idxValidateAccount = handler.indexOf('body.scope === "account"');
-    const idxReserve = handler.indexOf("reserveIdempotency");
+    // Locate the reserveIdempotency CALL (arg block), not the import symbol.
+    const reserveCall = handler.search(/reserveIdempotency\(\{/);
     const idxUpdate = handler.indexOf('from("profiles").update');
     expect(idxValidateUser).toBeGreaterThan(-1);
     expect(idxValidateAccount).toBeGreaterThan(-1);
-    expect(idxReserve).toBeGreaterThan(idxValidateUser);
-    expect(idxReserve).toBeGreaterThan(idxValidateAccount);
-    expect(idxUpdate).toBeGreaterThan(idxReserve);
+    expect(reserveCall).toBeGreaterThan(idxValidateUser);
+    expect(reserveCall).toBeGreaterThan(idxValidateAccount);
+    expect(idxUpdate).toBeGreaterThan(reserveCall);
   });
 
   it("user-scope success path stores the response for replay", () => {
