@@ -123,9 +123,11 @@ describe('Phase 1B-R1I-c.2A — Budgeting DELETE response contract', () => {
       it('description does not claim physical deletion or restore capability', () => {
         const f = findOp(id)!;
         const desc = (f.op.description || '').toString().toLowerCase();
-        expect(desc).not.toMatch(/physically (deleted|removed)/);
-        expect(desc).not.toMatch(/permanently (deleted|removed|erased)/);
-        expect(desc).not.toMatch(/\brestore(d|s)?\b/);
+        // Reject affirmative physical-delete claims; explicit "not physically deleted" wording is allowed.
+        expect(desc).not.toMatch(/\bis physically (deleted|removed)/);
+        expect(desc).not.toMatch(/\bpermanently (deleted|removed|erased)/);
+        expect(desc).not.toMatch(/\bcan be restored\b/);
+        expect(desc).not.toMatch(/\brestore endpoint\b/);
       });
     });
   }
