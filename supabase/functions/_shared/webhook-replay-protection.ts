@@ -134,19 +134,63 @@ export async function checkAndRegisterWebhook(
   supabase: SupabaseClient,
   args: ReplayCheckArgs,
 ): Promise<ReplayCheckResult> {
-  const { source, event_id, payload, signature, ttl_seconds = DEFAULT_TTL } = args;
+  const {
+    source,
+    event_id,
+    payload,
+    signature,
+    ttl_seconds = DEFAULT_TTL,
+    payload_fingerprint,
+    stale_retry_after_seconds = DEFAULT_STALE_RETRY,
+  } = args;
   if (!event_id) return { duplicate: false, reason: "missing_event_id" };
 
   const cutoff = new Date(Date.now() - ttl_seconds * 1000).toISOString();
   const { data: existing } = await supabase
     .from("webhook_inbox")
-    .select("id, created_at, is_processed")
+    .select("id, created_at, is_processed, payload, signature")
     .eq("source", source)
     .eq("event_id", event_id)
     .gte("created_at", cutoff)
     .maybeSingle();
 
   if (existing) {
+    // 1) Fingerprint mismatch is a hard security signal — the same event_id
+    //    was previously accepted with a DIFFERENT body. Never reprocess.
+    if (payload_fingerprint) {
+      const priorRaw = JSON.stringify(existing.payload ?? null);
+      const priorFp = await computePayloadFingerprint(priorRaw);
+      const newRaw = JSON.stringify(payload ?? null);
+      const newFp = await computePayloadFingerprint(newRaw);
+      // Direct comparison against the caller-provided fingerprint (raw body)
+      // is authoritative; the JSON-normalised comparison is a fallback for
+      // callers that didn't compute a fingerprint on their raw payload.
+      const mismatch = priorFp !== newFp || (payload_fingerprint && priorFp !== payload_fingerprint);
+      if (mismatch) {
+        return {
+          duplicate: true,
+          mismatch: true,
+          inbox_id: existing.id,
+          reason: "payload_fingerprint_mismatch",
+        };
+      }
+    }
+
+    // 2) Reserve-then-crash recovery: an unprocessed row older than the stale
+    //    threshold is treated as an abandoned reservation and reclaimed for
+    //    reprocessing by the current delivery.
+    if (!existing.is_processed) {
+      const ageSec = (Date.now() - new Date(existing.created_at).getTime()) / 1000;
+      if (ageSec >= stale_retry_after_seconds) {
+        return {
+          duplicate: false,
+          retried: true,
+          inbox_id: existing.id,
+          reason: "stale_retry_reclaimed",
+        };
+      }
+    }
+
     return { duplicate: true, inbox_id: existing.id, reason: "duplicate_within_ttl" };
   }
 
