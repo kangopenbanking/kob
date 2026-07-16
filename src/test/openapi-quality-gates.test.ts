@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck -- Fixtures use dynamic OpenAPI shapes intentionally; typing every partial spec adds no safety and obscures gate semantics.
 /**
  * Phase 1A — OpenAPI Quality Gate integrity harness.
  *
