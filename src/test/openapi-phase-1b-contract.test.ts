@@ -68,7 +68,11 @@ describe('Phase 1B — OpenAPI contract guards', () => {
     });
   }
 
-  const G3 = ['qrCreate','createGlobalAccount','updateGlobalAccountPayoutPreference','niumIncomingWebhook'];
+  // niumIncomingWebhook is intentionally excluded from this list post a.3C:
+  // it uses provider-event idempotency (x-kob-idempotency / x-kob-webhook)
+  // instead of a generic client Idempotency-Key header. See
+  // src/test/nium-webhook-contract-reconciliation.test.ts for its dedicated guards.
+  const G3 = ['qrCreate','createGlobalAccount','updateGlobalAccountPayoutPreference'];
   for (const id of G3) {
     it(`G3 ${id} — declares Idempotency-Key header`, () => {
       const found = findOp(id)!;
