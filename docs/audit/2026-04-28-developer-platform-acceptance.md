@@ -21,7 +21,7 @@
 | 11 | Postman static files | PASS | missing=none |
 | 12 | Changelog v4.17.3 | FAIL | not found |
 | 13 | Dashboard tooling components | PASS | missing=none |
-| 14 | Contract test count | PASS | 91 test files |
+| 14 | Contract test count | PASS | 92 test files |
 | 15 | Foundational routes preserved | PASS | missing=none |
 
 ## Notes
