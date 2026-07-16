@@ -267,3 +267,19 @@ No operation is marked production deployed.
 ## 15. Final gate
 
 `PHASE 1B-R1I-c.2 PASS — BUDGET ARCHIVE AND CATEGORY SOFT-DELETE RUNTIME CLOSED`
+
+---
+
+## 16. c.2L lint-closure appendix (2026-07-16)
+
+Post-verification lint slice `R1I-c.2L` closed the last 20 `no-explicit-any`
+errors on `supabase/functions/budgeting-ops/index.ts` (0 errors, 0 warnings) and
+reconciled the repository lint baseline to **5586** — 10 below the 5596 ceiling
+established prior to c.2. c.2's net lint contribution is **0**. No runtime
+expression, response contract, database predicate, idempotency scope, or
+OpenAPI element changed. Gate total remains **183**, version **4.53.1**, ops
+**484**. Full evidence in
+`docs/audits/phase-1/phase-1b-r1i-c2l-lint-reconciliation.md` and
+`docs/audits/phase-1/phase-1b-r1i-c2l-final-report.md`.
+
+`PHASE 1B-R1I-c.2 PASS — BUDGET ARCHIVE AND CATEGORY SOFT-DELETE RUNTIME CLOSED`
