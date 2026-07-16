@@ -1,4 +1,5 @@
-// @ts-nocheck -- Fixtures use dynamic OpenAPI shapes intentionally; typing every partial spec adds no safety and obscures gate semantics.
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 /**
  * Phase 1A — OpenAPI Quality Gate integrity harness.
  *
