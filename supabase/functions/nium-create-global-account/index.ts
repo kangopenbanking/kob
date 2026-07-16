@@ -153,15 +153,27 @@ Deno.serve(async (req) => {
     return json(respBody, 200);
   }
 
-  // --- Cross-key business-operation lock (Phase 1B-R1I-b.1X) ---
+  // --- Cross-key business-operation lock (Phase 1B-R1I-b.1X + b.1XV) ---
   // Prevents duplicate provider create calls when the caller retries the SAME
-  // logical operation (user+provider+currency+account_kind) under DIFFERENT
-  // Idempotency-Key values, before the local nium_global_accounts row exists.
+  // logical operation under DIFFERENT client-supplied Idempotency-Key values,
+  // before the local nium_global_accounts row exists.
   //
-  // Trusted scope — NEVER includes client-supplied identifiers.
+  // Operation identity (all fields TRUSTED — see operation-lock.ts):
+  //   provider     : CONSTANT_SERVER_NAMESPACE
+  //   resource     : CONSTANT_SERVER_NAMESPACE
+  //   environment  : AUTHORITATIVE_SERVER_CONTEXT (Deno env)
+  //   tenant_id    : AUTHORITATIVE_SERVER_CONTEXT (per-user route → user_id)
+  //   user_id      : AUTHORITATIVE_SERVER_CONTEXT (JWT sub)
+  //   currency     : VALIDATED_CLIENT_DOMAIN_INPUT (assertNiumCurrency ✔)
+  //   account_kind : VALIDATED_CLIENT_DOMAIN_INPUT (enum-narrowed ✔)
+  //
+  // Client-supplied tenant/institution/merchant/beneficiary fields are
+  // STRUCTURALLY EXCLUDED from the scope.
   const opScope = {
     provider: "nium",
     resource: "global_account",
+    environment: (Deno.env.get("KOB_ENV") ?? "unknown"),
+    tenant_id: userId, // per-user route: tenant boundary == authenticated user
     user_id: userId,
     currency,
     account_kind: accountKind,
