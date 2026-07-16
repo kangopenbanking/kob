@@ -103,3 +103,24 @@ change. Full evidence in
 - Runtime-wiring integrity re-verified; no operation marked production-deployed.
 
 `PHASE 1B-R1I-c.2 PASS — BUDGET ARCHIVE AND CATEGORY SOFT-DELETE RUNTIME CLOSED`
+
+---
+
+## c.2L lint-closure stamp (2026-07-16)
+
+Lint-only closure slice `R1I-c.2L` removed the last 20
+`@typescript-eslint/no-explicit-any` findings from
+`supabase/functions/budgeting-ops/index.ts` (0 errors, 0 warnings on the touched
+file) and reconciled the repository lint baseline to **5586** — 10 below the
+prior 5596 ceiling. c.2's net lint contribution is **0**. Full evidence in
+`docs/audits/phase-1/phase-1b-r1i-c2l-lint-reconciliation.md` and
+`docs/audits/phase-1/phase-1b-r1i-c2l-final-report.md`.
+
+- Targeted suites: 68/68 PASS (adds `idempotency-runtime-contract` 8/8).
+- Full suite: 1424 passed / 86 failed / 7 skipped / 0 unhandled — within policy.
+- Build exit 0. Gate total **183** unchanged (G2=3, G5=29, G6=72, G9=79).
+- Version **4.53.1**, operations **484**, release Unreleased — all unchanged.
+- OpenAPI, migrations, runtime-wiring statuses, and production posture unchanged.
+- No new handler; no goal or round-up disable implementation.
+
+`PHASE 1B-R1I-c.2 PASS — BUDGET ARCHIVE AND CATEGORY SOFT-DELETE RUNTIME CLOSED`
