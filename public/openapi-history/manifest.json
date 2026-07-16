@@ -1,7 +1,14 @@
 {
   "_comment": "Manifest of OpenAPI version snapshots available for /v1/spec/diff. 'snapshot' entries have a full JSON file in this folder; 'changelog_only' entries point to the human changelog because the historical spec was not preserved in machine-readable form.",
-  "current": "4.53.0",
+  "current": "4.53.1",
   "versions": [
+    {
+      "version": "4.53.1",
+      "released_at": "2026-07-16T13:38:37.288Z",
+      "type": "snapshot",
+      "file": "openapi-4.53.1.json",
+      "notes": "Snapshot for v4.53.1"
+    },
     {
       "version": "4.53.0",
       "released_at": "2026-07-01T19:31:53.570Z",
