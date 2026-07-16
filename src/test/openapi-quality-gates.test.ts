@@ -210,6 +210,9 @@ describe('Phase 1A · G4 (list pagination)', () => {
   it('negative: array-returning GET list without pagination fails G4', () => {
     const s = baseCompliantSpec();
     s.paths['/things'].get.parameters = [REQ_ID]; // strip limit/cursor
+    // G4 only fires when the 200 response body text contains "type":"array" or PaginatedResponse.
+    s.paths['/things'].get.responses['200'] = { description: 'ok',
+      content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Thing' } } } } };
     const r = runGates(s);
     expect(r.byGate.G4).toBe(1);
   });
