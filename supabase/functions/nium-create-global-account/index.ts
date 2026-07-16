@@ -80,6 +80,28 @@ Deno.serve(async (req) => {
 
   const svc = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+  // --- Optional Idempotency-Key (Phase 1B-R1I-b.1) ---
+  // Header omitted → preserve legacy behaviour.
+  // Header supplied → validate, reserve atomically, replay/conflict/in-flight semantics.
+  const idemKey = req.headers.get("Idempotency-Key") ?? req.headers.get("idempotency-key");
+  let requestHash: string | null = null;
+  if (idemKey) {
+    // Trusted scope: authenticated userId + canonical route (never client-supplied).
+    const canonical = canonicalStringify({
+      scope: { user_id: userId, method: "POST", route: RESOURCE },
+      body: { currency, pop_code: popCode, account_kind: accountKind },
+    });
+    requestHash = await sha256(canonical);
+    const reservation = await reserveIdempotency({
+      key: idemKey,
+      merchantId: userId, // per-user scope (no merchant identity on consumer route)
+      resource: RESOURCE,
+      requestHash,
+    });
+    const early = idempotencyResponse(reservation, corsHeaders);
+    if (early) return early;
+  }
+
   // Resolve beneficiary name from the verified KYC profile ONLY.
   const { data: profile } = await svc.from("profiles")
     .select("full_name, kyc_status")
@@ -92,16 +114,24 @@ Deno.serve(async (req) => {
     }, 409);
   }
 
-  // Idempotency: if user already has an account in this currency, return it.
+  // Existing per-(user,currency) natural idempotency: return the existing active account.
   const { data: existing } = await svc.from("nium_global_accounts").select("*")
     .eq("user_id", userId).eq("currency", currency).eq("status", "active").maybeSingle();
-  if (existing) return json({ account: existing, reused: true, meta: { warnings } }, 200);
+  if (existing) {
+    const respBody = { account: existing, reused: true, meta: { warnings } };
+    if (idemKey && requestHash) {
+      await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 200, body: respBody });
+    }
+    return json(respBody, 200);
+  }
 
   let nium;
   try {
     nium = await createGlobalAccount({ user_id: userId, beneficiary_name: beneficiary, currency });
   } catch (e) {
     console.error("nium createGlobalAccount failed", e);
+    // Provider ambiguity: DO NOT store a completed response. The reservation
+    // row (in-flight) will expire, permitting a safe retry after reconciliation.
     return json({ error: "nium_provider_error", message: String(e instanceof Error ? e.message : e) }, 502);
   }
 
@@ -124,7 +154,11 @@ Deno.serve(async (req) => {
   }).select().single();
 
   if (insErr) return json({ error: "persist_failed", message: insErr.message }, 500);
-  return json({ account: inserted, reused: false, meta: { warnings } }, 201);
+  const respBody = { account: inserted, reused: false, meta: { warnings } };
+  if (idemKey && requestHash) {
+    await storeIdempotency({ key: idemKey, merchantId: userId, resource: RESOURCE, requestHash, status: 201, body: respBody });
+  }
+  return json(respBody, 201);
 });
 
 function json(b: unknown, status = 200) {
