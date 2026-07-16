@@ -890,6 +890,189 @@ Deno.serve(async (req) => {
     }
 
 
+    // ============================================================
+    // Phase 1B-R1I-c.2R — Budget archive & Category soft-delete
+    // Ratified contract: 204 / 400 / 401 / 404 / 409 / 429 / 500.
+    // Masked 404 for cross-owner / cross-tenant. No 403.
+    // ============================================================
+    const ERR_TYPE = "https://api.kangopenbanking.com/errors";
+
+    function badReqProblem(reason: string, code: string) {
+      return problemResponse(req, 400, "Bad Request", reason, {
+        type: `${ERR_TYPE}/${code.toLowerCase().replace(/_/g, "-")}`,
+        extensions: { code },
+      });
+    }
+    function notFoundProblem() {
+      return problemResponse(req, 404, "Not Found",
+        "The requested resource does not exist or is not accessible to this caller.",
+        { type: `${ERR_TYPE}/not-found`, extensions: { code: "RESOURCE_NOT_FOUND" } });
+    }
+    function conflictProblem(code: string, detail: string) {
+      return problemResponse(req, 409, "Conflict", detail, {
+        type: `${ERR_TYPE}/${code.toLowerCase().replace(/_/g, "-")}`,
+        extensions: { code },
+      });
+    }
+
+    function validateIdemHeader(): { key: string | null; error?: Response } {
+      const raw = req.headers.get("Idempotency-Key");
+      if (raw == null) return { key: null };
+      if (raw.length === 0 || raw.length > 255) {
+        return { key: null, error: badReqProblem("Idempotency-Key length invalid", "INVALID_IDEMPOTENCY_KEY") };
+      }
+      if (!isStrictUuidV4(raw)) {
+        return { key: null, error: badReqProblem("Idempotency-Key must be a UUID v4.", "INVALID_IDEMPOTENCY_KEY") };
+      }
+      return { key: raw };
+    }
+
+    function no204(): Response {
+      return new Response(null, {
+        status: 204,
+        headers: { ...corsHeaders, "X-Idempotent-Replay": "false" },
+      });
+    }
+
+    // --- DELETE /budgets/{budgetId}  → budgetingDeleteBudget (ARCHIVE)
+    const delBudgetMatch = path.match(/^\/budgets\/([^/]+)$/);
+    if (method === "DELETE" && delBudgetMatch) {
+      const budgetId = delBudgetMatch[1];
+      if (!UUID_ANY_RE.test(budgetId)) return badReqProblem("Malformed budget identifier.", "INVALID_RESOURCE_ID");
+
+      const idem = validateIdemHeader();
+      if (idem.error) return idem.error;
+
+      // Ownership + terminal-state pre-check (no reservation for terminal/404).
+      const { data: existing } = await sb
+        .from("budgets")
+        .select("id, consumer_id, status")
+        .eq("id", budgetId)
+        .maybeSingle();
+      if (!existing || existing.consumer_id !== user.id) return notFoundProblem();
+      if (existing.status === "archived") {
+        return no204(); // terminal-state idempotent success; no reservation, no side effect
+      }
+
+      // Idempotency reservation AFTER ownership + domain checks pass.
+      const resource = `DELETE /v1/budgeting/budgets/${budgetId}`;
+      const requestHash = await sha256(`${user.id}|${resource}|`);
+      if (idem.key) {
+        const r = await reserveIdempotency({
+          key: idem.key, merchantId: user.id, resource, requestHash,
+        });
+        if (r.kind === "invalid") return badReqProblem(`Idempotency-Key invalid: ${r.reason}`, "INVALID_IDEMPOTENCY_KEY");
+        if (r.kind === "conflict") return conflictProblem("IDEMPOTENCY_KEY_REUSED",
+          "Idempotency-Key previously used with a different request.");
+        if (r.kind === "in_flight") return conflictProblem("IDEMPOTENCY_REQUEST_IN_PROGRESS",
+          "A concurrent request with this Idempotency-Key is still processing.");
+        if (r.kind === "replay") {
+          return idempotencyResponse(r, corsHeaders)!;
+        }
+      }
+
+      // Atomic conditional archive — at most one logical transition.
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updErr } = await sb
+        .from("budgets")
+        .update({ status: "archived", archived_at: nowIso, archived_by: user.id })
+        .eq("id", budgetId)
+        .eq("consumer_id", user.id)
+        .eq("status", "active")
+        .select("id")
+        .maybeSingle();
+      if (updErr) throw updErr;
+      if (!updated) {
+        // Lost the race to another archiver — terminal-state idempotent 204.
+        if (idem.key) {
+          await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+        }
+        return no204();
+      }
+
+      if (idem.key) {
+        await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+      }
+      return no204();
+    }
+
+    // --- DELETE /categories/{categoryId} → budgetingDeleteCategory (PROTECTED SOFT DELETE)
+    const delCatMatch = path.match(/^\/categories\/([^/]+)$/);
+    if (method === "DELETE" && delCatMatch) {
+      const categoryId = delCatMatch[1];
+      if (!UUID_ANY_RE.test(categoryId)) return badReqProblem("Malformed category identifier.", "INVALID_RESOURCE_ID");
+
+      const idem = validateIdemHeader();
+      if (idem.error) return idem.error;
+
+      const { data: existing } = await sb
+        .from("budget_categories")
+        .select("id, consumer_id, status, is_system, spent")
+        .eq("id", categoryId)
+        .maybeSingle();
+      if (!existing || existing.consumer_id !== user.id) return notFoundProblem();
+      if (existing.is_system) {
+        return conflictProblem("SYSTEM_CATEGORY_PROTECTED",
+          "System-managed categories cannot be soft-deleted.");
+      }
+      if (existing.status === "deleted") return no204(); // terminal-state idempotent
+
+      const resource = `DELETE /v1/budgeting/categories/${categoryId}`;
+      const requestHash = await sha256(`${user.id}|${resource}|`);
+      if (idem.key) {
+        const r = await reserveIdempotency({
+          key: idem.key, merchantId: user.id, resource, requestHash,
+        });
+        if (r.kind === "invalid") return badReqProblem(`Idempotency-Key invalid: ${r.reason}`, "INVALID_IDEMPOTENCY_KEY");
+        if (r.kind === "conflict") return conflictProblem("IDEMPOTENCY_KEY_REUSED",
+          "Idempotency-Key previously used with a different request.");
+        if (r.kind === "in_flight") return conflictProblem("IDEMPOTENCY_REQUEST_IN_PROGRESS",
+          "A concurrent request with this Idempotency-Key is still processing.");
+        if (r.kind === "replay") return idempotencyResponse(r, corsHeaders)!;
+      }
+
+      // Atomic conditional soft-delete — dependency check + transition in one statement.
+      // Dependency = tracked spend for the period (spent > 0). Historical
+      // transaction-category assignments remain untouched.
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updErr } = await sb
+        .from("budget_categories")
+        .update({ status: "deleted", deleted_at: nowIso, deleted_by: user.id })
+        .eq("id", categoryId)
+        .eq("consumer_id", user.id)
+        .eq("status", "active")
+        .eq("is_system", false)
+        .or("spent.is.null,spent.eq.0")
+        .select("id")
+        .maybeSingle();
+      if (updErr) throw updErr;
+
+      if (!updated) {
+        // Re-read to distinguish terminal state from active dependency.
+        const { data: after } = await sb
+          .from("budget_categories")
+          .select("status, spent")
+          .eq("id", categoryId)
+          .eq("consumer_id", user.id)
+          .maybeSingle();
+        if (after?.status === "deleted") {
+          if (idem.key) {
+            await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+          }
+          return no204();
+        }
+        if (after && Number(after.spent) > 0) {
+          return conflictProblem("CATEGORY_HAS_ACTIVE_DEPENDENCIES",
+            "Category has tracked spend in the current period and cannot be soft-deleted.");
+        }
+        return notFoundProblem();
+      }
+
+      if (idem.key) {
+        await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+      }
+      return no204();
+    }
 
     return json({ error: "not_found", path, method }, 404);
   } catch (e: any) {
