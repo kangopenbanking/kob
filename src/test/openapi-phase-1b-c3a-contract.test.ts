@@ -260,8 +260,8 @@ describe('Phase 1B-R1I-c.3A — Goal & round-up DELETE response contract', () =>
     expect(isObject(param) && param.required === true).toBe(false);
   });
 
-  it('budgetingDeleteRule remains present (not removed by this slice)', () => {
+  it('budgetingDeleteRule removed by Phase 1B-R1I-c.4 (never released; no runtime; no backing table)', () => {
     const rule = findOp('budgetingDeleteRule');
-    expect(rule).not.toBeNull();
+    expect(rule).toBeNull();
   });
 });
