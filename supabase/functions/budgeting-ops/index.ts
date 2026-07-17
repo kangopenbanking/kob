@@ -605,6 +605,12 @@ Deno.serve(async (req) => {
       const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID();
       const settings = await getOrCreateSettings();
 
+      // c.3R atomicity gate: honour a disabled configuration BEFORE inserting
+      // a new roundup_transactions row. classifySkip would otherwise persist
+      // a state='skipped' row after disable, violating the ratified "New
+      // round-up instructions created: 0" guarantee.
+      if (!settings.enabled) return { skipped: true, reason: "disabled" as const };
+
       // Source filter gate (bank vs wallet)
       if (settings.source_filter === "wallet" && opts.sourceKind === "bank") {
         return { skipped: true, reason: "source_filtered" as const };
@@ -612,6 +618,7 @@ Deno.serve(async (req) => {
       if (settings.source_filter === "bank" && opts.sourceKind === "wallet") {
         return { skipped: true, reason: "source_filtered" as const };
       }
+
 
       // Idempotency on (consumer_id, source_tx_id)
       const { data: existing } = await sb
