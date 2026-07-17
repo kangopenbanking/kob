@@ -17,6 +17,21 @@ publish. Anything under `supabase/pending-migrations/` is inert to the platform.
 | `20260101000000_phase-1b-budgeting-additive.rollback.sql` | Local/test rollback (not for production) | see file |
 | `20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.sql` | Phase 1B-R1I-c.3D: BEFORE INSERT trigger enforcing round-up instruction eligibility (disabled / archived-goal / missing / inconsistent) with FOR SHARE row locks — additive only | `64a779dbcfb4a39b1b795dec57107df9d1c24e0cccad78071fbca57242e4d37e` |
 | `20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.rollback.sql` | Local/test rollback — removes only the c.3D trigger and function | `716eb01765942fce1e24897ee5b6414b1e2f3b750c181fe8507b87a4916f89ea` |
+| `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.sql` | Phase 1B-R1I-c.3H: adds `savings_goals.archived_from_status`, lifecycle-integrity CHECK constraints, and hardened INSERT/UPDATE RLS forbidding client-side provenance forgery. Fail-closed migration-order guard + backfill safety guard | `cb383f407a42161cdc9fe34f2e2235c9079e51534ba78aa84ea8f0473fde3a96` |
+| `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.rollback.sql` | Local/test rollback — drops `archived_from_status` and c.3H constraints; warns on populated provenance; c.1E and c.3D objects untouched | `104e55dac4f6eb485cc104f4572d22fa294f86be929ddb9ded67bdf7205a41db` |
+
+### Promotion order
+
+The three pending migrations MUST be promoted in this order:
+
+1. `20260101000000_phase-1b-budgeting-additive.sql` (c.1E)
+2. `20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.sql` (c.3D)
+3. `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.sql` (c.3H)
+
+c.3H fails closed with a clear migration-order error if c.1E's `archived_at` /
+`archived_by` columns are absent, and refuses to run if any pre-existing
+`status='archived'` row lacks reconstructable prior-state evidence. Neither
+condition is silently fabricated.
 
 
 The canonical SQL is byte-identical to
