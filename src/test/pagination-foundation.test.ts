@@ -117,21 +117,21 @@ describe("R1I-d.1F — cursor round trip", () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["2026-06-01", "tx_1"] }, { secret: TEST_SECRET });
     const res = await decodeCursor(token, await makeExpected({ operation: "aispListAccounts" }), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("OPERATION_MISMATCH");
+    if (!res.ok) expect((res as { code: string }).code).toBe("OPERATION_MISMATCH");
   });
   it("is scope-bound", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
     const otherScope = await hashScope({ env: "test", tenant: "t2", user: "u1", account: "acc_1" });
     const res = await decodeCursor(token, await makeExpected({ scopeHash: otherScope }), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("SCOPE_MISMATCH");
+    if (!res.ok) expect((res as { code: string }).code).toBe("SCOPE_MISMATCH");
   });
   it("is filter-bound", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
     const otherFilter = await hashFilters({ sort: "booked_at", direction: "desc", from: "2026-02-01" });
     const res = await decodeCursor(token, await makeExpected({ filterHash: otherFilter }), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("FILTER_MISMATCH");
+    if (!res.ok) expect((res as { code: string }).code).toBe("FILTER_MISMATCH");
   });
   it("is ordering-profile-bound", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
@@ -144,7 +144,7 @@ describe("R1I-d.1F — cursor round trip", () => {
     };
     const res = await decodeCursor(token, await makeExpected({ orderProfile: otherProfile }), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("ORDER_MISMATCH");
+    if (!res.ok) expect((res as { code: string }).code).toBe("ORDER_MISMATCH");
   });
   it("fails on tampered payload", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
@@ -166,7 +166,7 @@ describe("R1I-d.1F — cursor round trip", () => {
     const flipped = sig.slice(0, mid) + swapped + sig.slice(mid + 1);
     const res = await decodeCursor(`${p}.${payload}.${flipped}`, await makeExpected(), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("INVALID_SIGNATURE");
+    if (!res.ok) expect((res as { code: string }).code).toBe("INVALID_SIGNATURE");
   });
   it("fails on expired cursor", async () => {
     const past = Math.floor(Date.now() / 1000) - 4000;
@@ -174,14 +174,14 @@ describe("R1I-d.1F — cursor round trip", () => {
     const token = await encodeCursor(ctx, { secret: TEST_SECRET });
     const res = await decodeCursor(token, await makeExpected(), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("EXPIRED");
+    if (!res.ok) expect((res as { code: string }).code).toBe("EXPIRED");
   });
   it("fails on unsupported version prefix", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
     const bumped = `kobp99.${token.split(".").slice(1).join(".")}`;
     const res = await decodeCursor(bumped, await makeExpected(), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("UNSUPPORTED_VERSION");
+    if (!res.ok) expect((res as { code: string }).code).toBe("UNSUPPORTED_VERSION");
   });
   it("fails on malformed token", async () => {
     for (const bad of ["", "not.a.token.extra", "kobp1.***.***", "kobp1.only-two"]) {
@@ -292,7 +292,7 @@ describe("R1I-d.1F — position validation", () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["only-one"] }, { secret: TEST_SECRET });
     const res = await decodeCursor(token, await makeExpected(), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.code).toBe("POSITION_INVALID");
+    if (!res.ok) expect((res as { code: string }).code).toBe("POSITION_INVALID");
   });
   it("rejects invalid scalar via encode", async () => {
     await expect(encodeCursor(
