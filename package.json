@@ -27,7 +27,14 @@
     "changelog:md": "node scripts/build-changelog-md.mjs",
     "postman:contract": "node scripts/postman-contract-check.mjs",
     "sdk:generate": "node scripts/generate-typed-sdks.mjs",
-    "version:sync": "node scripts/sync-version-artifacts.mjs"
+    "version:sync": "node scripts/sync-version-artifacts.mjs",
+    "phase1b:d2a:env:guard": "node scripts/phase1b-d2a/guard.mjs",
+    "phase1b:d2a:env:start": "node scripts/phase1b-d2a/bootstrap.mjs",
+    "phase1b:d2a:env:stop": "node scripts/phase1b-d2a/teardown.mjs",
+    "phase1b:d2a:fixture": "node scripts/phase1b-d2a/fixture.mjs",
+    "phase1b:d2a:plans": "node scripts/phase1b-d2a/query-plans.mjs",
+    "phase1b:d2a:runtime": "node scripts/phase1b-d2a/runtime-tests.mjs",
+    "phase1b:d2a:static": "vitest run src/test/phase1b-d2a-infra-guard.test.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
