@@ -33535,6 +33535,53 @@ export type Database = {
         Args: { p_institution_type?: string; p_source: string }
         Returns: Json
       }
+      roundup_insert_if_enabled: {
+        Args: {
+          p_bank_id: string
+          p_consumer_id: string
+          p_goal_id: string
+          p_idempotency_key: string
+          p_merchant_name: string
+          p_original_amount: number
+          p_rounded_amount: number
+          p_roundup_amount: number
+          p_skip_reason: string
+          p_source_account_id: string
+          p_source_kind: string
+          p_source_tx_id: string
+          p_state: string
+          p_threshold_used: number
+        }
+        Returns: {
+          bank_id: string | null
+          consumer_id: string
+          created_at: string
+          credit_event_id: string | null
+          goal_id: string | null
+          id: string
+          idempotency_key: string
+          merchant_name: string | null
+          next_retry_at: string | null
+          original_amount: number
+          provider_ref: string | null
+          retry_count: number
+          rounded_amount: number
+          roundup_amount: number
+          skip_reason: string | null
+          source_account_id: string | null
+          source_kind: string
+          source_tx_id: string
+          state: string
+          threshold_used: number
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "roundup_transactions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       search_profiles_by_name: {
         Args: { _limit?: number; _query: string }
         Returns: {
