@@ -57,3 +57,23 @@ no longer part of the correctness proof.
 numeric, numeric, integer, text, text, text)` — approved and applied via the
 Lovable Cloud migration workflow under c.3R-F authorization. No table
 structure changed, no data deleted.
+
+---
+
+## R1I-c.3D supersession note
+
+The application-layer RPC gate documented above is now backstopped by a
+database-atomic invariant delivered under R1I-c.3D:
+
+- Migration: `supabase/pending-migrations/phase-1/20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.sql`
+  (SHA-256 `64a779dbcfb4a39b1b795dec57107df9d1c24e0cccad78071fbca57242e4d37e`).
+- Trigger: `roundup_instruction_eligibility_before_insert` on
+  `public.roundup_transactions` — SECURITY DEFINER function with pinned
+  `search_path`, deterministic `FOR SHARE` lock order (settings → goal),
+  raising SQLSTATE 23514 / `roundup_instruction_eligibility` on failure.
+- Worker: `processRoundup()` catches the invariant rejection and returns a
+  no-op skip; all other errors retain existing failure handling.
+
+Result: `atomicityStatus` for both `budgetingDeleteGoal` and
+`budgetingDisableRoundUp` is now `DATABASE_ENFORCED`. Full evidence in
+`phase-1b-r1i-c3d-final-report.md` and `phase-1b-r1i-c3d-race-tests.md`.
