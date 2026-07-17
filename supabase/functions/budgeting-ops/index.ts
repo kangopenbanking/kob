@@ -553,8 +553,22 @@ Deno.serve(async (req) => {
         if (typeof body[k] === "number" && body[k] >= 0) patch[k] = Math.round(body[k]);
       }
       if (body.default_goal_id === null || typeof body.default_goal_id === "string") {
+        // c.3R guard: refuse to attach an archived goal as the default target.
+        if (typeof body.default_goal_id === "string") {
+          const { data: goalRow } = await sb
+            .from("savings_goals")
+            .select("status")
+            .eq("id", body.default_goal_id)
+            .eq("consumer_id", user.id)
+            .maybeSingle();
+          if (!goalRow) return json({ error: "goal_not_found" }, 404);
+          if (goalRow.status === "archived") {
+            return json({ error: "goal_archived" }, 409);
+          }
+        }
         patch.default_goal_id = body.default_goal_id;
       }
+
       if (body.paused_until === null || typeof body.paused_until === "string") {
         patch.paused_until = body.paused_until;
       }
@@ -605,6 +619,12 @@ Deno.serve(async (req) => {
       const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID();
       const settings = await getOrCreateSettings();
 
+      // c.3R atomicity gate: honour a disabled configuration BEFORE inserting
+      // a new roundup_transactions row. classifySkip would otherwise persist
+      // a state='skipped' row after disable, violating the ratified "New
+      // round-up instructions created: 0" guarantee.
+      if (!settings.enabled) return { skipped: true, reason: "disabled" as const };
+
       // Source filter gate (bank vs wallet)
       if (settings.source_filter === "wallet" && opts.sourceKind === "bank") {
         return { skipped: true, reason: "source_filtered" as const };
@@ -612,6 +632,7 @@ Deno.serve(async (req) => {
       if (settings.source_filter === "bank" && opts.sourceKind === "wallet") {
         return { skipped: true, reason: "source_filtered" as const };
       }
+
 
       // Idempotency on (consumer_id, source_tx_id)
       const { data: existing } = await sb
@@ -657,6 +678,36 @@ Deno.serve(async (req) => {
         dailyCap: settings.daily_cap,
       });
 
+
+      // c.3R atomicity re-verify: consult the authoritative DB state for
+      // `enabled` immediately before inserting the round-up instruction. This
+      // narrows the disable/instruction-creation race to a single DB round-trip
+      // window and provides the shared database-backed check required for the
+      // ratified "New round-up instructions created: 0 after disable"
+      // guarantee. No handler-local memory lock is used.
+      const { data: liveSettings } = await sb
+        .from("roundup_settings")
+        .select("enabled")
+        .eq("consumer_id", user.id)
+        .eq("enabled", true)
+        .maybeSingle();
+      if (!liveSettings) return { skipped: true, reason: "disabled" as const };
+
+      // c.3R goal-linked guard: reject new instructions targeting an archived
+      // goal. The archived goal is the terminal state; contributions and
+      // round-ups may not be added to it.
+      if (settings.default_goal_id) {
+        const { data: goalRow } = await sb
+          .from("savings_goals")
+          .select("status")
+          .eq("id", settings.default_goal_id)
+          .eq("consumer_id", user.id)
+          .maybeSingle();
+        if (goalRow?.status === "archived") {
+          return { skipped: true, reason: "goal_archived" as const };
+        }
+      }
+
       const { data: tx, error: insErr } = await sb
         .from("roundup_transactions")
         .insert({
@@ -678,6 +729,7 @@ Deno.serve(async (req) => {
         .select()
         .single();
       if (insErr) throw insErr;
+
 
       await logEvent("ROUNDUP_CALCULATED", { roundup, threshold: settings.threshold }, tx.id);
 
@@ -1077,6 +1129,149 @@ Deno.serve(async (req) => {
       }
       return no204();
     }
+
+    // ============================================================
+    // Phase 1B-R1I-c.3R — Goal archive & Round-up disable
+    // Ratified contract: 204 / 400 / 401 / 404 / 409 / 429 / 500.
+    // Masked 404 for cross-owner / cross-tenant. No 403.
+    // Financial-history preservation: rows in savings_goals /
+    // roundup_transactions / roundup_settings are never deleted.
+    // ============================================================
+
+    // --- DELETE /goals/{goalId} → budgetingDeleteGoal (ARCHIVE)
+    const delGoalMatch = path.match(/^\/goals\/([^/]+)$/);
+    if (method === "DELETE" && delGoalMatch) {
+      const goalId = delGoalMatch[1];
+      if (!UUID_ANY_RE.test(goalId)) {
+        return badReqProblem("Malformed goal identifier.", "INVALID_RESOURCE_ID");
+      }
+
+      const idem = validateIdemHeader();
+      if (idem.error) return idem.error;
+
+      // Ownership + terminal-state pre-check (no reservation for terminal/404).
+      const { data: existing } = await sb
+        .from("savings_goals")
+        .select("id, consumer_id, status")
+        .eq("id", goalId)
+        .maybeSingle();
+      if (!existing || existing.consumer_id !== user.id) return notFoundProblem();
+      if (existing.status === "archived") {
+        return no204(); // terminal-state idempotent success
+      }
+
+      // Pending-financial dependency check: any pending / retrying round-up
+      // instruction targeting this goal blocks the archive. Historical
+      // successful / skipped / failed rows are preserved and do not block.
+      const { data: pendingRoundups } = await sb
+        .from("roundup_transactions")
+        .select("id")
+        .eq("consumer_id", user.id)
+        .eq("goal_id", goalId)
+        .in("state", ["pending", "retrying"])
+        .limit(1);
+      if (pendingRoundups && pendingRoundups.length > 0) {
+        return conflictProblem("GOAL_HAS_PENDING_FINANCIAL_OPERATIONS",
+          "Goal has pending round-up instructions and cannot be archived.");
+      }
+
+      const resource = `DELETE /v1/budgeting/goals/${goalId}`;
+      const requestHash = await sha256(`${user.id}|${resource}|`);
+      if (idem.key) {
+        const r = await reserveIdempotency({
+          key: idem.key, merchantId: user.id, resource, requestHash,
+        });
+        if (r.kind === "invalid") return badReqProblem(`Idempotency-Key invalid: ${r.reason}`, "INVALID_IDEMPOTENCY_KEY");
+        if (r.kind === "conflict") return conflictProblem("IDEMPOTENCY_KEY_REUSED",
+          "Idempotency-Key previously used with a different request.");
+        if (r.kind === "in_flight") return conflictProblem("IDEMPOTENCY_REQUEST_IN_PROGRESS",
+          "A concurrent request with this Idempotency-Key is still processing.");
+        if (r.kind === "replay") return idempotencyResponse(r, corsHeaders)!;
+      }
+
+      // Atomic conditional archive: only transitions non-archived rows owned
+      // by this caller. `neq("status","archived")` covers active / paused /
+      // completed / cancelled → archived per the ratified lifecycle.
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updErr } = await sb
+        .from("savings_goals")
+        .update({ status: "archived", archived_at: nowIso, archived_by: user.id })
+        .eq("id", goalId)
+        .eq("consumer_id", user.id)
+        .neq("status", "archived")
+        .select("id")
+        .maybeSingle();
+      if (updErr) throw updErr;
+      if (!updated) {
+        // Lost race to a concurrent archiver — terminal-state idempotent 204.
+        if (idem.key) {
+          await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+        }
+        return no204();
+      }
+
+      if (idem.key) {
+        await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+      }
+      return no204();
+    }
+
+    // --- DELETE /roundup/settings → budgetingDisableRoundUp (DISABLE)
+    if (method === "DELETE" && path === "/roundup/settings") {
+      const idem = validateIdemHeader();
+      if (idem.error) return idem.error;
+
+      // Ownership + terminal-state pre-check. Absence of the settings row is
+      // treated as masked 404 (caller has never configured round-up).
+      const { data: existing } = await sb
+        .from("roundup_settings")
+        .select("consumer_id, enabled")
+        .eq("consumer_id", user.id)
+        .maybeSingle();
+      if (!existing) return notFoundProblem();
+      if (existing.enabled === false) return no204(); // terminal-state idempotent
+
+      const resource = `DELETE /v1/budgeting/roundup/settings`;
+      const requestHash = await sha256(`${user.id}|${resource}|`);
+      if (idem.key) {
+        const r = await reserveIdempotency({
+          key: idem.key, merchantId: user.id, resource, requestHash,
+        });
+        if (r.kind === "invalid") return badReqProblem(`Idempotency-Key invalid: ${r.reason}`, "INVALID_IDEMPOTENCY_KEY");
+        if (r.kind === "conflict") return conflictProblem("IDEMPOTENCY_KEY_REUSED",
+          "Idempotency-Key previously used with a different request.");
+        if (r.kind === "in_flight") return conflictProblem("IDEMPOTENCY_REQUEST_IN_PROGRESS",
+          "A concurrent request with this Idempotency-Key is still processing.");
+        if (r.kind === "replay") return idempotencyResponse(r, corsHeaders)!;
+      }
+
+      // Atomic conditional disable: transitions enabled=true → false with a
+      // DB predicate. Pending / retrying round-up rows are preserved for the
+      // worker to finish; new instruction creation is blocked by the
+      // enabled=true re-verify inside processRoundup().
+      const nowIso = new Date().toISOString();
+      const { data: updated, error: updErr } = await sb
+        .from("roundup_settings")
+        .update({ enabled: false, disabled_at: nowIso, disabled_by: user.id })
+        .eq("consumer_id", user.id)
+        .eq("enabled", true)
+        .select("consumer_id")
+        .maybeSingle();
+      if (updErr) throw updErr;
+      if (!updated) {
+        if (idem.key) {
+          await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+        }
+        return no204();
+      }
+
+      if (idem.key) {
+        await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+      }
+      return no204();
+    }
+
+
 
     return json({ error: "not_found", path, method }, 404);
   } catch (e: unknown) {
