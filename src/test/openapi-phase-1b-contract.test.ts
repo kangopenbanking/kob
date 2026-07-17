@@ -113,7 +113,7 @@ describe('Phase 1B — OpenAPI contract guards', () => {
         if (['get','post','put','patch','delete'].includes(m)) n++;
       }
     }
-    expect(n).toBe(484);
+    expect(n).toBe(483);
   });
 
   it('info.version bumped to 4.53.1 (Standing Order #6 — Version Gate)', () => {
