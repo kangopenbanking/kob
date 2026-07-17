@@ -3,7 +3,7 @@
   "apiVersion": "4.53.1",
   "releaseStatus": "Unreleased",
   "generatedAt": "2026-07-16",
-  "lastPhase": "1B-R1I-c.2 (budget archive + protected category soft-delete runtime — local/test)",
+  "lastPhase": "1B-R1I-c.3H (goal archive lifecycle provenance — local/test)",
   "sharedHelpers": {
     "idempotency": "supabase/functions/_shared/integration-layer/idempotency.ts",
     "storageTable": "public.integration_idempotency_keys"
