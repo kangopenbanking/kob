@@ -71,8 +71,12 @@ jobs:
       - name: Install dependencies (clean)
         run: npm ci
 
+      - name: Verify PostgreSQL driver
+        run: node -e "import('pg').then(() => console.log('pg import PASS'))"
+
       - name: Environment guard (fail-closed)
         run: node scripts/phase1b-d2a/guard.mjs
+
 
       - name: Bootstrap disposable environment
         run: node scripts/phase1b-d2a/bootstrap.mjs
