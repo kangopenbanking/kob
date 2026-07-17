@@ -10,9 +10,9 @@ The equivalent corrected contract for `budgetingDeleteGoal` and `budgetingDisabl
 | ------ | -------------------------------------------------------------------------------------------------- | --------------------- |
 | c.1    | Additive schema, indexes, CHECK constraints, RLS design, migration tests, rollback prep (local/test) | Completed             |
 | c.2A   | Contract correction — 400/401/404/409/500 (+429) on the two budget/category DELETE ops, masked-404 semantics, category-specific 409 codes | Completed             |
-| c.2    | Implement 2 DELETE handlers (`budgetingDeleteBudget`, `budgetingDeleteCategory`) against the corrected contract, with idempotency + audit | Awaits fresh authz    |
+| c.2    | Implement 2 DELETE handlers (`budgetingDeleteBudget`, `budgetingDeleteCategory`) against the corrected contract, with idempotency + audit | Completed (local/test) |
 | c.3A   | Contract correction — 400/401/404/409/500 (+429) on `budgetingDeleteGoal` and `budgetingDisableRoundUp`, masked-404 semantics, goal- and round-up-specific 409 codes | Completed             |
-| c.3    | Implement `budgetingDeleteGoal` and `budgetingDisableRoundUp` runtime handlers against the c.3A ratified contract, with idempotency + audit | Awaits fresh authz    |
+| c.3R   | Implement `budgetingDeleteGoal` and `budgetingDisableRoundUp` runtime handlers against the c.3A ratified contract, with idempotency + audit + instruction-creation gate | Completed (local/test) |
 | c.4    | Remove `budgetingDeleteRule` from OpenAPI (unreleased contract), version reconciliation             | Awaits authz          |
 
 
