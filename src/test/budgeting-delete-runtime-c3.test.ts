@@ -171,21 +171,23 @@ describe('Phase 1B-R1I-c.3R — Goal archive & Round-up disable (source contract
     );
   });
 
-  it('processRoundup re-verifies enabled=true against the DB immediately before insert', () => {
-    // The re-verify SELECT must appear between getOrCreateSettings and the
-    // INSERT into roundup_transactions.
-    const proc = src.slice(src.indexOf('async function processRoundup'));
-    const gateIdx = proc.indexOf('.eq("enabled", true)');
-    const insertIdx = proc.indexOf('.from("roundup_transactions")\n        .insert');
-    expect(gateIdx).toBeGreaterThan(-1);
-    expect(insertIdx).toBeGreaterThan(-1);
-    expect(gateIdx).toBeLessThan(insertIdx);
+  it('processRoundup uses the atomic roundup_insert_if_enabled RPC as the sole insert path', () => {
+    // c.3R-F: the DB-side SECURITY DEFINER RPC performs INSERT ... SELECT
+    // gated on roundup_settings.enabled=true in a single statement. The
+    // handler must not perform a direct .from("roundup_transactions").insert(...).
+    const proc = src.slice(
+      src.indexOf('async function processRoundup'),
+      src.indexOf('async function processRoundup') + 5000,
+    );
+    expect(proc).toMatch(/sb\.rpc\("roundup_insert_if_enabled"/);
+    expect(proc).not.toMatch(/\.from\("roundup_transactions"\)\s*\.insert\(/);
   });
 
-  it('processRoundup refuses to create instructions targeting an archived default goal', () => {
+  it('processRoundup treats an empty RPC result as a disabled-race skip (no row created)', () => {
     const proc = src.slice(src.indexOf('async function processRoundup'));
-    expect(proc).toMatch(/goalRow\?\.status === "archived"[\s\S]{0,80}reason: "goal_archived"/);
+    expect(proc).toMatch(/if \(!tx\) return \{ skipped: true, reason: "disabled" as const \}/);
   });
+
 
   it('PATCH /roundup/settings rejects attaching an archived goal (409)', () => {
     const patchBlock = src.slice(

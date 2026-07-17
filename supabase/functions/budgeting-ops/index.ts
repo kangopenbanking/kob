@@ -679,56 +679,32 @@ Deno.serve(async (req) => {
       });
 
 
-      // c.3R atomicity re-verify: consult the authoritative DB state for
-      // `enabled` immediately before inserting the round-up instruction. This
-      // narrows the disable/instruction-creation race to a single DB round-trip
-      // window and provides the shared database-backed check required for the
-      // ratified "New round-up instructions created: 0 after disable"
-      // guarantee. No handler-local memory lock is used.
-      const { data: liveSettings } = await sb
-        .from("roundup_settings")
-        .select("enabled")
-        .eq("consumer_id", user.id)
-        .eq("enabled", true)
-        .maybeSingle();
-      if (!liveSettings) return { skipped: true, reason: "disabled" as const };
-
-      // c.3R goal-linked guard: reject new instructions targeting an archived
-      // goal. The archived goal is the terminal state; contributions and
-      // round-ups may not be added to it.
-      if (settings.default_goal_id) {
-        const { data: goalRow } = await sb
-          .from("savings_goals")
-          .select("status")
-          .eq("id", settings.default_goal_id)
-          .eq("consumer_id", user.id)
-          .maybeSingle();
-        if (goalRow?.status === "archived") {
-          return { skipped: true, reason: "goal_archived" as const };
-        }
-      }
-
-      const { data: tx, error: insErr } = await sb
-        .from("roundup_transactions")
-        .insert({
-          consumer_id: user.id,
-          source_tx_id: opts.sourceTxId,
-          source_kind: opts.sourceKind,
-          source_account_id: opts.sourceAccountId ?? null,
-          bank_id: opts.bankId ?? null,
-          merchant_name: opts.merchantName ?? null,
-          goal_id: settings.default_goal_id,
-          original_amount: opts.amount,
-          rounded_amount: rounded,
-          roundup_amount: Math.max(roundup, 0),
-          threshold_used: settings.threshold,
-          idempotency_key: idempotencyKey,
-          state: skipReason ? "skipped" : "pending",
-          skip_reason: skipReason,
-        })
-        .select()
-        .single();
+      // c.3R-F atomicity: single-statement INSERT ... SELECT gated on
+      // roundup_settings.enabled=true via SECURITY DEFINER RPC. This closes
+      // the disable/instruction-creation race deterministically at the DB —
+      // if the row is disabled at the instant of the write, zero rows are
+      // inserted and the RPC returns an empty set. Archived-goal linkage is
+      // also nulled atomically inside the same statement.
+      const { data: rpcRows, error: insErr } = await sb.rpc("roundup_insert_if_enabled", {
+        p_consumer_id: user.id,
+        p_source_tx_id: opts.sourceTxId,
+        p_source_kind: opts.sourceKind,
+        p_source_account_id: opts.sourceAccountId ?? null,
+        p_bank_id: opts.bankId ?? null,
+        p_merchant_name: opts.merchantName ?? null,
+        p_goal_id: settings.default_goal_id,
+        p_original_amount: opts.amount,
+        p_rounded_amount: rounded,
+        p_roundup_amount: Math.max(roundup, 0),
+        p_threshold_used: settings.threshold,
+        p_idempotency_key: idempotencyKey,
+        p_state: skipReason ? "skipped" : "pending",
+        p_skip_reason: skipReason,
+      });
       if (insErr) throw insErr;
+      const tx = Array.isArray(rpcRows) && rpcRows.length > 0 ? (rpcRows[0] as Row) : null;
+      if (!tx) return { skipped: true, reason: "disabled" as const };
+
 
 
       await logEvent("ROUNDUP_CALCULATED", { roundup, threshold: settings.threshold }, tx.id);
