@@ -154,7 +154,7 @@ describe("R1I-d.1F — cursor round trip", () => {
     const tampered = `${p}.${swappedPayload}.${sig}`;
     const res = await decodeCursor(tampered, await makeExpected(), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(["INVALID_SIGNATURE", "MALFORMED"]).toContain(res.code);
+    if (!res.ok) expect(["INVALID_SIGNATURE", "MALFORMED"]).toContain((res as { code: string }).code);
   });
   it("fails on tampered signature", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
@@ -187,7 +187,7 @@ describe("R1I-d.1F — cursor round trip", () => {
     for (const bad of ["", "not.a.token.extra", "kobp1.***.***", "kobp1.only-two"]) {
       const res = await decodeCursor(bad, await makeExpected(), { secret: TEST_SECRET });
       expect(res.ok, `bad=${bad}`).toBe(false);
-      if (!res.ok) expect(["MALFORMED", "UNSUPPORTED_VERSION"]).toContain(res.code);
+      if (!res.ok) expect(["MALFORMED", "UNSUPPORTED_VERSION"]).toContain((res as { code: string }).code);
     }
   });
 });
