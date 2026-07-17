@@ -54,31 +54,43 @@ describe('Phase 1B-R1I-c.3R — Goal archive & Round-up disable (source contract
     expect(roundupBlock).toMatch(/if \(!existing\) return notFoundProblem\(\)/);
   });
 
-  it('archives goals non-destructively (status=archived + archived_at + archived_by)', () => {
+  it('archives goals non-destructively with c.3H provenance (status=archived + archived_from_status + archived_at + archived_by)', () => {
+    // c.3H shape: the observed prior status is captured as
+    // archived_from_status so the logical predecessor state remains
+    // reconstructable, and archived_at/archived_by carry the trusted
+    // server-side timestamp and authenticated actor.
     expect(c3Region).toMatch(
-      /status:\s*"archived",\s*archived_at:\s*nowIso,\s*archived_by:\s*user\.id/,
+      /status:\s*"archived",\s*archived_from_status:\s*observedStatus,\s*archived_at:\s*nowIso,\s*archived_by:\s*user\.id/,
     );
   });
 
-  it('atomic goal archive predicate excludes already-archived rows and scopes to owner', () => {
+  it('atomic goal archive predicate scopes to owner AND pins the observed prior status (c.3H)', () => {
     const goalBlock = c3Region.slice(
       c3Region.indexOf('delGoalMatch'),
       c3Region.indexOf('/roundup/settings'),
     );
+    // c.3H: the conditional-update predicate pins the observed status so a
+    // stale lifecycle observation can never overwrite provenance. The
+    // .in("status", APPROVED_PRIOR) predicate additionally guarantees the
+    // update cannot promote a non-approved prior state into archived.
     expect(goalBlock).toMatch(
-      /\.from\("savings_goals"\)[\s\S]{0,400}\.eq\("consumer_id",\s*user\.id\)[\s\S]{0,80}\.neq\("status",\s*"archived"\)/,
+      /\.from\("savings_goals"\)[\s\S]{0,600}\.eq\("consumer_id",\s*user\.id\)[\s\S]{0,300}\.eq\("status",\s*observedStatus\)/,
     );
+    expect(goalBlock).toMatch(/\.in\("status",\s*APPROVED_PRIOR\)/);
   });
 
-  it('supports the full ratified goal lifecycle → archived (active/paused/completed/cancelled)', () => {
-    // The neq('status','archived') predicate admits every non-terminal
-    // ratified state without enumerating them; this is the required shape.
+  it('supports the full ratified goal lifecycle → archived (active/paused/completed/cancelled) via APPROVED_PRIOR (c.3H)', () => {
+    // c.3H enumerates the four approved prior states through the
+    // APPROVED_PRIOR constant and enforces them with a .in(...) predicate,
+    // replacing the earlier .neq("status","archived") admission rule.
     const goalBlock = c3Region.slice(
       c3Region.indexOf('delGoalMatch'),
       c3Region.indexOf('/roundup/settings'),
     );
-    expect(goalBlock).toMatch(/\.neq\("status",\s*"archived"\)/);
-    expect(goalBlock).not.toMatch(/\.eq\("status",\s*"active"\)/);
+    expect(goalBlock).toMatch(/\.in\("status",\s*APPROVED_PRIOR\)/);
+    expect(c3Region).toMatch(
+      /APPROVED_PRIOR[\s\S]{0,160}"active"[\s\S]{0,40}"paused"[\s\S]{0,40}"completed"[\s\S]{0,40}"cancelled"/,
+    );
   });
 
   it('rejects goal archive when pending round-up instructions target the goal (409 GOAL_HAS_PENDING_FINANCIAL_OPERATIONS)', () => {
