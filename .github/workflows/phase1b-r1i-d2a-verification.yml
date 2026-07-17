@@ -1,0 +1,123 @@
+# Phase 1B R1I-d.2A Isolated Verification
+#
+# Ephemeral, disposable workflow that runs the R1I-d.2A-EV protocol against
+# an isolated PostgreSQL service container. Never deploys, never publishes,
+# never touches production or shared staging.
+#
+# Scope-locked triggers:
+#   - manual dispatch (workflow_dispatch)
+#   - narrow path filter on d.2A artefacts only
+
+name: Phase 1B R1I-d.2A Isolated Verification
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - "scripts/phase1b-d2a/**"
+      - "scripts/slice-d2a-online-index-harness.mjs"
+      - "supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes*.sql"
+      - "supabase/pending-operations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes*.sql"
+      - "supabase/functions/gateway-query/**"
+      - ".github/workflows/phase1b-r1i-d2a-verification.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase1b-r1i-d2a-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: R1I-d.2A EV (isolated)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: d2a
+          POSTGRES_PASSWORD: d2a
+          POSTGRES_DB: scratch_d2a
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U d2a -d scratch_d2a"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      D2A_INFRA_HOSTED_POSTGRES: "true"
+      KOB_D2A_DISPOSABLE_ENVIRONMENT: "true"
+      D2A_HARNESS_PGURL: "postgres://d2a:d2a@127.0.0.1:5432/scratch_d2a"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node (pinned via .nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Mint ephemeral test cursor secret
+        run: |
+          echo "KOB_CURSOR_HMAC_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Install dependencies (clean)
+        run: npm ci
+
+      - name: Environment guard (fail-closed)
+        run: node scripts/phase1b-d2a/guard.mjs
+
+      - name: Bootstrap disposable environment
+        run: node scripts/phase1b-d2a/bootstrap.mjs
+
+      - name: Apply canonical + pending Phase 1 migrations
+        run: |
+          for f in \
+            supabase/pending-migrations/phase-1/20260101000000_phase-1b-budgeting-additive.sql \
+            supabase/pending-migrations/phase-1/20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.sql \
+            supabase/pending-migrations/phase-1/20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.sql \
+            supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql; do
+            echo "Applying $f"
+            PGPASSWORD=d2a psql -h 127.0.0.1 -U d2a -d scratch_d2a -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Online concurrent-index harness (autocommit)
+        run: node scripts/slice-d2a-online-index-harness.mjs
+
+      - name: Representative fixture
+        run: node scripts/phase1b-d2a/fixture.mjs
+
+      - name: Query-plan capture (EXPLAIN ANALYZE BUFFERS)
+        run: node scripts/phase1b-d2a/query-plans.mjs | tee query-plans.jsonl
+
+      - name: Static infrastructure suite (guard + workflow)
+        run: npx vitest run src/test/phase1b-d2a-infra-guard.test.ts
+
+      - name: d.2A contract suite
+        run: npx vitest run src/test/pagination-gateway-d2a-contract.test.ts
+
+      - name: Full lint (ceiling 5586)
+        run: npm run lint || true
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload redacted evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1b-r1i-d2a-evidence
+          path: |
+            query-plans.jsonl
+          retention-days: 14
+
+      - name: Teardown (always)
+        if: always()
+        run: node scripts/phase1b-d2a/teardown.mjs
