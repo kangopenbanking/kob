@@ -126,3 +126,10 @@ Post-c.3D wiring:
   `productionStatus=NOT_DEPLOYED`.
 - `budgetingDisableRoundUp` — same as above.
 - `budgetingDeleteRule` — `DOCUMENTED_NOT_IMPLEMENTED` (unchanged).
+
+
+---
+
+## Superseded by c.3H
+
+See `phase-1b-r1i-c3h-final-report.md`. Goal archive lifecycle provenance is now DATABASE_ENFORCED via `savings_goals.archived_from_status` + biconditional CHECK constraints + hardened RLS. Handler `budgetingDeleteGoal` captures the observed prior status atomically and refuses to return 204 if any provenance field is missing at persistence.
