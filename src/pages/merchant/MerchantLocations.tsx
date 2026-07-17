@@ -81,11 +81,11 @@ export default function MerchantLocations() {
     try {
       const payload = { merchant_id: merchantId, name: locForm.name, address: locForm.address, city: locForm.city, country: locForm.country, phone: locForm.phone };
       if (editingLoc) {
-        const { error } = await supabase.from("merchant_locations").update(payload).eq("id", editingLoc.id);
+        const { error } = await supabase.from("merchant_locations").update(payload as any).eq("id", editingLoc.id);
         if (error) throw error;
         toast.success("Location updated");
       } else {
-        const { error } = await supabase.from("merchant_locations").insert(payload);
+        const { error } = await supabase.from("merchant_locations").insert(payload as any);
         if (error) throw error;
         toast.success("Location created");
       }

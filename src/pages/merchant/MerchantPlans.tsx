@@ -123,11 +123,11 @@ export default function MerchantPlans() {
       };
 
       if (editingPlan) {
-        const { error } = await supabase.from("gateway_payment_plans").update(payload).eq("id", editingPlan.id);
+        const { error } = await supabase.from("gateway_payment_plans").update(payload as any).eq("id", editingPlan.id);
         if (error) throw error;
         toast.success("Plan updated");
       } else {
-        const { error } = await supabase.from("gateway_payment_plans").insert(payload);
+        const { error } = await supabase.from("gateway_payment_plans").insert(payload as any);
         if (error) throw error;
         toast.success("Plan created");
       }

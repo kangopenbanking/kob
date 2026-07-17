@@ -131,7 +131,7 @@ const SecuritySettings = () => {
 
     const { error } = await supabase
       .from("user_security_settings")
-      .update({ [field]: value })
+      .update({ [field]: value } as any)
       .eq("user_id", user.id);
 
     if (error) {
