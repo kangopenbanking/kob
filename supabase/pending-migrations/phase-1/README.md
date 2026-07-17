@@ -19,6 +19,8 @@ publish. Anything under `supabase/pending-migrations/` is inert to the platform.
 | `20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.rollback.sql` | Local/test rollback — removes only the c.3D trigger and function | `716eb01765942fce1e24897ee5b6414b1e2f3b750c181fe8507b87a4916f89ea` |
 | `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.sql` | Phase 1B-R1I-c.3H: adds `savings_goals.archived_from_status`, lifecycle-integrity CHECK constraints, and hardened INSERT/UPDATE RLS forbidding client-side provenance forgery. Fail-closed migration-order guard + backfill safety guard | `cb383f407a42161cdc9fe34f2e2235c9079e51534ba78aa84ea8f0473fde3a96` |
 | `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.rollback.sql` | Local/test rollback — drops `archived_from_status` and c.3H constraints; warns on populated provenance; c.1E and c.3D objects untouched | `104e55dac4f6eb485cc104f4572d22fa294f86be929ddb9ded67bdf7205a41db` |
+| `20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql` | Phase 1B-R1I-d.2A-DB1: canonical transactional creation + exact-definition verification for the four ratified Gateway pagination composite indexes. `CONCURRENTLY` intentionally NOT used — the online concurrent operation lives at `supabase/pending-operations/phase-1/…concurrent.sql` and runs first in production, so this migration verifies and no-ops. Previous variant checksum: `SUPERSEDED_BEFORE_PROMOTION` | `c12e370aba360e45531f4332bc1cf4575ea00025665122c97a671527569cae87` |
+| `20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.rollback.sql` | Local/test rollback — drops only the four d.2A indexes | `1fb06d0bc65e573f5a34971df0d94714198c6029dfdecbf1224dd61a1e79446d` |
 
 ### Promotion order
 

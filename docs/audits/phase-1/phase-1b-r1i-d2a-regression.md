@@ -1,48 +1,51 @@
-# Phase 1B — R1I-d.2A — Regression & Reproducibility
+# Phase 1B — R1I-d.2A-DB1 — Regression & Scope Integrity
 
-## 1. Repository invariants (post-slice)
-
-| Check | Command | Result |
-|-------|---------|--------|
-| OpenAPI version | `node scripts/check-openapi-version.mjs` | `OK · openapi=3.1.0 · version=4.53.1 · paths=409` |
-| Operation count | contract test suite | **483** |
-| Quality gates | `node scripts/openapi-quality-gates.mjs` | **176 failures** (baseline preserved) |
-| Build | `npm run build` | **exit 0** |
-| d.2A contract tests | `bunx vitest run src/test/pagination-gateway-d2a-contract.test.ts` | **25/25 pass** |
-| Foundation tests | `bunx vitest run src/test/pagination-foundation.test.ts` | **43/43 pass** |
-
-## 2. SHA-256 checksums (post-slice)
+## 1. Scope integrity (§21)
 
 ```
-a7cdbeadc40015f552edf7110af095721512fa9467188c021dca727151891792  supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql
-0a7739b2ddd9f9b236aa95d5c001c6da4acd2b968a380dc377d9c71fcd1c7585  supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.rollback.sql
-e9ae763656adc2b5c05ea52adfd29723c99e18e49486e81c19713c490049188f  supabase/functions/gateway-query/_pagination.ts
-b50737a2879b74152a44221960adb8224a79ed7324fb0933744f52071f6d8eab  supabase/functions/gateway-query/index.ts
-decbc344995f5c2792de71a0b61fdca41b4b72a745ef2815dd8874adc33db5dc  public/openapi.json
-e62c35874d4bbec6243e5006ffa5272700d4f64c2dff6b8439148dda4ddb72a7  public/openapi.yaml
+d.2A operations changed:               4 (canonical migration + online operation packaging only)
+d.2B–d.2F operations changed:          0
+Shared pagination foundation changed:  0
+OpenAPI operation count changed:       0 (still 483)
+Version changed:                       0 (still 4.53.1)
+Production migration executed:         0
+Deployment executed:                   0
+SDK/Postman publication:               0
 ```
 
-## 3. Prohibitions verified
+R1I-d.2B remains **NOT AUTHORISED**.
 
-| Prohibited action | Verified untouched |
-|-------------------|--------------------|
-| d.2B–d.2F operations | ✓ (grep for `handleD2aList` shows only the four target actions rewired) |
-| Shared pagination foundation | ✓ (`supabase/functions/_shared/pagination.ts` unchanged) |
-| Production migration promotion | ✓ (migration lives under `supabase/pending-migrations/phase-1/`) |
-| API version / operation count | ✓ (4.53.1 / 483) |
-| Server URL correction | ✓ (out of scope) |
-| SDK/Postman publication | ✓ (not touched) |
-| R1I-d.3 work | ✓ (not started) |
+## 2. Files modified this slice
 
-## 4. Reproducibility handoff
+- `supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql` — CONCURRENTLY removed, exact-definition verification helper added, transaction-scoped `SET LOCAL` guards.
+- `supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.rollback.sql` — CONCURRENTLY removed.
+- `supabase/pending-operations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.concurrent.sql` — new (online path).
+- `supabase/pending-operations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.concurrent.rollback.sql` — new (online rollback).
+- `supabase/pending-operations/phase-1/README.md` — new.
+- `scripts/slice-d2a-online-index-harness.mjs` — new local-only harness (§8).
+- `docs/audits/phase-1/phase-1b-r1i-d2a-*.md` — updated/created per §22.
 
-Both patch scripts are idempotent and re-runnable. Rerunning:
+Files not modified this slice:
+
+- `supabase/functions/gateway-query/index.ts` (runtime unchanged)
+- `supabase/functions/gateway-query/_pagination.ts` (adapter unchanged)
+- `supabase/functions/_shared/pagination.ts` (foundation unchanged)
+- `public/openapi.json`, `public/openapi.yaml` (contract unchanged)
+- `src/test/pagination-*` (existing suites unchanged)
+
+## 3. Automation confirmation
+
+Grep of `.github/workflows/` for any reference to `pending-operations` or
+`pending-migrations` found no auto-application job. The Supabase migration
+runner only reads `supabase/migrations/`, which contains none of the new
+artifacts.
+
+## 4. Predecessor gate
 
 ```
-node scripts/slice-d2a-gateway-pagination-contract.mjs
-node scripts/slice-d2a-gateway-pagination-contract-yaml.mjs
+PHASE 1B-R1I-d.2A BLOCKED — CONCURRENT INDEX MIGRATION RUNNER INCOMPATIBLE
 ```
 
-is a no-op after this slice — the contract corrections are convergent.
-
-The R1I-d.1V3 clean-install reproducibility evidence (Rollup 4.44.2, `package-lock.json` hash) still applies — d.2A introduces no dependency change.
+The R1I-d.2A-DB1 packaging correction resolves the *packaging* dimension of
+this block. The *evidence* dimension (§§7–14) remains outstanding — see
+`phase-1b-r1i-d2a-db1-final-report.md`.
