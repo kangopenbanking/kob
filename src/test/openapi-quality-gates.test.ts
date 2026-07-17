@@ -713,7 +713,7 @@ describe('Phase 1B-R1I-c.3A · production spec integrity', () => {
     expect(byGate).toEqual({ G1: 0, G2: 3, G3: 0, G4: 0, G5: 29, G6: 68, G7: 0, G8: 0, G9: 79 });
     expect(proc.stdout).toContain('"failures": 179');
     expect(proc.stdout).toContain('"apiVersion": "4.53.1"');
-    expect(proc.stdout).toContain('"totalOperations": 484');
+    expect(proc.stdout).toContain('"totalOperations": 483');
   });
 });
 

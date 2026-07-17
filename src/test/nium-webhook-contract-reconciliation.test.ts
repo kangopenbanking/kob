@@ -9,7 +9,7 @@
  *   - signature header remains required;
  *   - 409 Conflict response documented via Problem Details;
  *   - method/path/operationId/tags/security unchanged;
- *   - operation count remains 484.
+ *   - operation count is 483 (post c.4 removal).
  */
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
@@ -139,14 +139,14 @@ describe('Phase 1B-R1I-a.3C · niumIncomingWebhook contract', () => {
     expect(d).toMatch(/signature/i);
   });
 
-  it('operation count stays exactly 484 (Standing Order #1 — Lock)', () => {
+  it('operation count stays exactly 483 (post c.4) (Standing Order #1 — Lock)', () => {
     let n = 0;
     for (const [, ms] of Object.entries(paths)) {
       for (const m of Object.keys(asObj(ms))) {
         if (['get', 'post', 'put', 'patch', 'delete'].includes(m)) n++;
       }
     }
-    expect(n).toBe(484);
+    expect(n).toBe(483);
   });
 
   it('info.version remains 4.53.1 (Standing Order #6 — no increment)', () => {

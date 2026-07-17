@@ -113,7 +113,7 @@ describe('Phase 1B-R1I-c.3A — Goal & round-up DELETE response contract', () =>
     expect((spec.info as JsonObject).version).toBe('4.53.1');
   });
 
-  it('operation count remains 484', () => {
+  it('operation count is 483 (post c.4 removal)', () => {
     let n = 0;
     for (const ms of Object.values(paths)) {
       if (!isObject(ms)) continue;
@@ -121,7 +121,7 @@ describe('Phase 1B-R1I-c.3A — Goal & round-up DELETE response contract', () =>
         if (['get', 'post', 'put', 'patch', 'delete'].includes(m)) n++;
       }
     }
-    expect(n).toBe(484);
+    expect(n).toBe(483);
   });
 
   it('reusable Problem Details components exist', () => {
