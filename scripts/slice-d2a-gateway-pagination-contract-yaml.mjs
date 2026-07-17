@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 /**
  * Phase 1B — R1I-d.2A — YAML parity sync for four gateway list operations.
- *
- * Applies the same additive contract corrections directly to public/openapi.yaml
- * without re-serialising the entire spec (which would perturb unrelated
- * formatting). Uses the js-yaml parser to load->patch->dump only the four
- * target operations, then splices them back into the on-disk YAML by
- * matching operationId anchors.
+ * See slice-d2a-gateway-pagination-contract.mjs for the JSON twin.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import yaml from "js-yaml";
@@ -17,6 +12,14 @@ const TARGETS = new Set([
   "gatewayListPaymentLinks",
   "gatewayListVirtualAccounts",
 ]);
+
+const LIMIT_INLINE = {
+  name: "limit",
+  in: "query",
+  required: false,
+  description: "Number of items per page. Defaults to 25. Maximum 100.",
+  schema: { type: "integer", minimum: 1, maximum: 100, default: 25, example: 25 },
+};
 
 const PAGINATION_HEADERS = {
   "X-Pagination-Mode": {
@@ -44,8 +47,14 @@ for (const p of Object.values(doc.paths || {})) {
   for (const op of Object.values(p)) {
     if (!op || typeof op !== "object" || !TARGETS.has(op.operationId)) continue;
     op.parameters = op.parameters || [];
-    for (const pr of op.parameters) {
-      if (pr if (pr && pr.name === "limit" && pr.schema)if (pr && pr.name === "limit" && pr.schema) pr.$ref === "#/components/parameters/LimitParam") { Object.assign(pr, { name: "limit", in: "query", required: false, description: "Number of items per page. Defaults to 25. Maximum 100.", schema: { type: "integer", minimum: 1, maximum: 100, default: 25, example: 25 } }); delete pr.$ref; continue; } if (pr && pr.name === "limit" && pr.schema) {
+    for (let i = 0; i < op.parameters.length; i++) {
+      const pr = op.parameters[i];
+      if (!pr || typeof pr !== "object") continue;
+      if (pr.$ref === "#/components/parameters/LimitParam") {
+        op.parameters[i] = { ...LIMIT_INLINE };
+        continue;
+      }
+      if (pr.name === "limit" && pr.schema) {
         pr.schema.default = 25;
         pr.schema.maximum = 100;
         if (typeof pr.schema.minimum !== "number") pr.schema.minimum = 1;
