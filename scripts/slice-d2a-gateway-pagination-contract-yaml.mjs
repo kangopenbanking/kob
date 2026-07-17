@@ -45,7 +45,7 @@ for (const p of Object.values(doc.paths || {})) {
     if (!op || typeof op !== "object" || !TARGETS.has(op.operationId)) continue;
     op.parameters = op.parameters || [];
     for (const pr of op.parameters) {
-      if (pr && pr.name === "limit" && pr.schema) {
+      if (pr if (pr && pr.name === "limit" && pr.schema)if (pr && pr.name === "limit" && pr.schema) pr.$ref === "#/components/parameters/LimitParam") { Object.assign(pr, { name: "limit", in: "query", required: false, description: "Number of items per page. Defaults to 25. Maximum 100.", schema: { type: "integer", minimum: 1, maximum: 100, default: 25, example: 25 } }); delete pr.$ref; continue; } if (pr && pr.name === "limit" && pr.schema) {
         pr.schema.default = 25;
         pr.schema.maximum = 100;
         if (typeof pr.schema.minimum !== "number") pr.schema.minimum = 1;
