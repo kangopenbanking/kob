@@ -111,3 +111,18 @@ Under Policy A, the contract code `ROUNDUP_HAS_PENDING_INSTRUCTIONS` remains doc
 - No SDK / Postman publication.
 
 **PHASE 1B-R1I-c.3R PASS — GOAL ARCHIVE & ROUND-UP DISABLE RUNTIME IMPLEMENTED (LOCAL/TEST).**
+
+---
+
+## R1I-c.3D closure amendment
+
+The c.3R runtime PASS is now backed by the database-atomic invariant
+delivered in R1I-c.3D. See `phase-1b-r1i-c3d-final-report.md`.
+
+Post-c.3D wiring:
+
+- `budgetingDeleteGoal` — `runtimeStatus=IMPLEMENTED_LOCAL_TEST`,
+  `idempotencyRuntimeStatus=ENFORCED`, `atomicityStatus=DATABASE_ENFORCED`,
+  `productionStatus=NOT_DEPLOYED`.
+- `budgetingDisableRoundUp` — same as above.
+- `budgetingDeleteRule` — `DOCUMENTED_NOT_IMPLEMENTED` (unchanged).

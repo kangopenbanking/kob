@@ -701,9 +701,41 @@ Deno.serve(async (req) => {
         p_state: skipReason ? "skipped" : "pending",
         p_skip_reason: skipReason,
       });
-      if (insErr) throw insErr;
+      if (insErr) {
+        // c.3D DB-atomic invariant: the BEFORE INSERT trigger on
+        // public.roundup_transactions raises SQLSTATE 23514 with
+        // CONSTRAINT roundup_instruction_eligibility whenever the
+        // eligibility check fails (disabled / archived goal / missing
+        // or inconsistent settings-to-goal relationship). Treat this as
+        // an eligibility no-op: no instruction, no financial posting,
+        // no retry. All other DB errors retain existing failure handling.
+        const errCode = (insErr as { code?: string }).code;
+        const errMsg = (insErr as { message?: string }).message ?? "";
+        const errDetail = (insErr as { details?: string }).details ?? "";
+        const isEligibilityReject =
+          errCode === "23514" ||
+          errMsg.includes("ROUNDUP_INSTRUCTION_NOT_ALLOWED") ||
+          errMsg.includes("roundup_instruction_eligibility") ||
+          errDetail.includes("ROUNDUP_DISABLED") ||
+          errDetail.includes("GOAL_ARCHIVED") ||
+          errDetail.includes("MISSING_ELIGIBILITY_RECORD") ||
+          errDetail.includes("INVALID_GOAL_SETTINGS_RELATION");
+        if (isEligibilityReject) {
+          const reason =
+            errDetail.includes("GOAL_ARCHIVED")
+              ? ("goal_archived" as const)
+              : errDetail.includes("INVALID_GOAL_SETTINGS_RELATION")
+              ? ("invalid_goal_settings_relation" as const)
+              : errDetail.includes("MISSING_ELIGIBILITY_RECORD")
+              ? ("missing_eligibility_record" as const)
+              : ("disabled" as const);
+          return { skipped: true, reason };
+        }
+        throw insErr;
+      }
       const tx = Array.isArray(rpcRows) && rpcRows.length > 0 ? (rpcRows[0] as Row) : null;
       if (!tx) return { skipped: true, reason: "disabled" as const };
+
 
 
 
