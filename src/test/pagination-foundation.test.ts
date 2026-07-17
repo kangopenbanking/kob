@@ -159,7 +159,11 @@ describe("R1I-d.1F — cursor round trip", () => {
   it("fails on tampered signature", async () => {
     const token = await encodeCursor({ ...(await baseEncodeCtx()), position: ["a", "b"] }, { secret: TEST_SECRET });
     const [p, payload, sig] = token.split(".");
-    const flipped = sig.slice(0, -1) + (sig.slice(-1) === "A" ? "B" : "A");
+    // Flip a mid-signature char across a wide alphabet distance so the
+    // decoded byte differs regardless of any bit-slack in the final segment.
+    const mid = Math.floor(sig.length / 2);
+    const swapped = sig[mid] === "z" ? "a" : "z";
+    const flipped = sig.slice(0, mid) + swapped + sig.slice(mid + 1);
     const res = await decodeCursor(`${p}.${payload}.${flipped}`, await makeExpected(), { secret: TEST_SECRET });
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.code).toBe("INVALID_SIGNATURE");
