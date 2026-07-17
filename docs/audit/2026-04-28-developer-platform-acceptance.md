@@ -15,13 +15,13 @@
 | 5 | Webhook signature + replay protection | PASS | {"hasSig":true,"hasReplay":true} |
 | 6 | Error catalog complete | PASS | domains=8 |
 | 7 | Cursor pagination documented | PASS | {"limit":{"in":"query","type":"integer","min":1,"max":100,"default":25},"starting_after":{"in":"query","type":"string","description":"Cursor: return items after this resource id"},"ending_before":{"in":"query","type":"string","description":"Cursor: return items before this resource id"}} |
-| 8 | OpenAPI structurally valid | PASS | version=4.53.1 paths=410 |
+| 8 | OpenAPI structurally valid | PASS | version=4.53.1 paths=409 |
 | 9 | Developer doc pages present | PASS | missing=none |
 | 10 | SDK ecosystem | PASS | node.js / typescript,python,php / laravel,postman,java,go |
 | 11 | Postman static files | PASS | missing=none |
 | 12 | Changelog v4.17.3 | FAIL | not found |
 | 13 | Dashboard tooling components | PASS | missing=none |
-| 14 | Contract test count | PASS | 99 test files |
+| 14 | Contract test count | PASS | 100 test files |
 | 15 | Foundational routes preserved | PASS | missing=none |
 
 ## Notes
