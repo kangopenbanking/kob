@@ -132,7 +132,7 @@ function base64UrlEncode(bytes: Uint8Array): string {
   for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
   const b64 = typeof btoa === "function"
     ? btoa(str)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     : (globalThis as unknown as { Buffer: { from: (s: string, enc: string) => { toString: (e: string) => string } } })
         .Buffer.from(str, "binary").toString("base64");
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
