@@ -553,8 +553,22 @@ Deno.serve(async (req) => {
         if (typeof body[k] === "number" && body[k] >= 0) patch[k] = Math.round(body[k]);
       }
       if (body.default_goal_id === null || typeof body.default_goal_id === "string") {
+        // c.3R guard: refuse to attach an archived goal as the default target.
+        if (typeof body.default_goal_id === "string") {
+          const { data: goalRow } = await sb
+            .from("savings_goals")
+            .select("status")
+            .eq("id", body.default_goal_id)
+            .eq("consumer_id", user.id)
+            .maybeSingle();
+          if (!goalRow) return json({ error: "goal_not_found" }, 404);
+          if (goalRow.status === "archived") {
+            return json({ error: "goal_archived" }, 409);
+          }
+        }
         patch.default_goal_id = body.default_goal_id;
       }
+
       if (body.paused_until === null || typeof body.paused_until === "string") {
         patch.paused_until = body.paused_until;
       }
