@@ -2,6 +2,19 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 import { resolveAuth } from "../_shared/auth-api-key.ts";
+import {
+  computeD2aFilterHash,
+  computeD2aScopeHash,
+  D2A_DEFAULT_LIMIT,
+  D2A_MAX_LIMIT,
+  decodeD2aCursor,
+  finalizeD2aPage,
+  parseD2aParams,
+  type Env,
+  type GatewayD2aOperation,
+  type PaginationErrorProblem,
+} from "./_pagination.ts";
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -36,14 +49,15 @@ serve(async (req) => {
       case 'list-payouts': return await listPayouts(p);
       case 'list-settlements': return await listSimple(p, 'gateway_settlements', 'list-settlements');
       case 'list-disputes': return await listSimple(p, 'gateway_disputes', 'list-disputes');
-      case 'list-beneficiaries': return await listBeneficiaries(p);
+      case 'list-beneficiaries': return await handleD2aList(p, { id: 'gatewayListBeneficiaries', table: 'gateway_beneficiaries' });
       case 'list-customers': return await listCustomers(p);
       case 'list-customer-tokens': return await listCustomerTokens(p);
-      case 'list-payment-links': return await listMerchantResource(p, 'gateway_payment_links', 'list-payment-links');
+      case 'list-payment-links': return await handleD2aList(p, { id: 'gatewayListPaymentLinks', table: 'gateway_payment_links' });
       case 'list-payment-plans': return await listMerchantResource(p, 'gateway_payment_plans', 'list-payment-plans');
-      case 'list-subaccounts': return await listMerchantResourceNoCount(p, 'gateway_subaccounts', 'list-subaccounts');
+      case 'list-subaccounts': return await handleD2aList(p, { id: 'gatewayListSubaccounts', table: 'gateway_subaccounts' });
       case 'list-subscriptions': return await listSubscriptions(p);
-      case 'list-virtual-accounts': return await listMerchantResourceNoCount(p, 'gateway_virtual_accounts', 'list-virtual-accounts');
+      case 'list-virtual-accounts': return await handleD2aList(p, { id: 'gatewayListVirtualAccounts', table: 'gateway_virtual_accounts' });
+
       case 'list-funding-intents': return await listFundingIntents(p);
       case 'list-wallet-ledger': return await listWalletLedger(p);
       // ─── GET actions ───
@@ -318,4 +332,144 @@ async function getPayoutBatch(p: any) {
   const { data: items } = await p.supabase.from('gateway_payouts').select('*').eq('batch_id', batchId).order('created_at', { ascending: true });
   const { gateway_merchants, ...batchData } = batch;
   return ok({ ...batchData, items: items || [] });
+}
+
+// ─── Phase 1B — R1I-d.2A: keyset pagination for four gateway list ops ───
+function detectEnv(url?: URL): Env {
+  const raw = (Deno.env.get('KOB_ENV') || Deno.env.get('SUPABASE_ENV') || '').toLowerCase();
+  if (raw === 'production' || raw === 'prod') return 'production';
+  if (raw === 'sandbox' || raw === 'sbx') return 'sandbox';
+  if (raw === 'test') return 'test';
+  const host = (url?.hostname || '').toLowerCase();
+  if (host.includes('sandbox')) return 'sandbox';
+  return 'unknown';
+}
+
+
+function d2aErrorResponse(err: PaginationErrorProblem): Response {
+  return new Response(JSON.stringify(err), {
+    status: err.status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+}
+
+function d2aOk<T>(payload: { body: unknown; headers: Record<string, string> }): Response {
+  return new Response(JSON.stringify(payload.body), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json', ...payload.headers },
+  });
+}
+
+async function handleD2aList(p: any, op: GatewayD2aOperation): Promise<Response> {
+  const environment = detectEnv(p.url as URL | undefined);
+  const actorSub = String(p.user?.id || '');
+  if (!actorSub) return err('unauthorized', 401);
+
+  // Resolve authoritative merchant scope for this actor. Client-supplied
+  // merchant_id is only honoured if it belongs to the authenticated actor.
+  const requestedMerchantId = getParam(p, 'merchant_id') || null;
+  const merchantIds = await getMerchantIds(p);
+  let merchantScope: string[];
+  if (requestedMerchantId) {
+    if (!merchantIds.includes(requestedMerchantId)) {
+      // Never disclose whether an unrelated merchant exists.
+      return ok({ data: [], pagination: { mode: 'cursor', has_more: false, next_cursor: null, limit: D2A_DEFAULT_LIMIT } });
+    }
+    merchantScope = [requestedMerchantId];
+  } else {
+    merchantScope = merchantIds;
+  }
+  if (merchantScope.length === 0) {
+    return d2aOk({
+      body: { data: [], pagination: { mode: 'cursor', has_more: false, next_cursor: null, limit: D2A_DEFAULT_LIMIT } },
+      headers: {
+        'X-Pagination-Mode': 'cursor',
+        'X-Pagination-Has-More': 'false',
+        'X-Pagination-Limit': String(D2A_DEFAULT_LIMIT),
+      },
+    });
+  }
+
+  const parsed = parseD2aParams({
+    limit: getParam(p, 'limit'),
+    cursor: getParam(p, 'cursor'),
+  });
+  if (!parsed.ok) return d2aErrorResponse(parsed.error);
+  const { limit, cursor } = parsed.value;
+
+  // Operation-specific filter binding — must remain in sync with per-operation
+  // ratified filter surface (d.2S contract-decisions §1).
+  const filters: Record<string, unknown> = {};
+  if (op.id === 'gatewayListPaymentLinks') {
+    const slug = getParam(p, 'slug');
+    if (slug) filters.slug = String(slug);
+  }
+  if (op.id === 'gatewayListVirtualAccounts') {
+    const accountKind = getParam(p, 'account_kind');
+    if (accountKind) filters.account_kind = String(accountKind);
+  }
+  if (op.id === 'gatewayListBeneficiaries') {
+    // is_active is a hard-coded server-side predicate; it is part of the
+    // filter surface for hash binding so cursor reuse across changes is safe.
+    filters.is_active = true;
+  }
+
+  const scopeHash = await computeD2aScopeHash({
+    environment,
+    operation: op.id,
+    actorSub,
+    merchantScope,
+  });
+  const filterHash = await computeD2aFilterHash(filters);
+
+  let cursorPosition: { createdAt: string; id: string } | null = null;
+  if (cursor) {
+    const decoded = await decodeD2aCursor(cursor, {
+      operation: op.id,
+      scopeHash,
+      filterHash,
+    });
+    if (!decoded.ok) return d2aErrorResponse(decoded.error);
+    cursorPosition = { createdAt: decoded.createdAt, id: decoded.id };
+  }
+
+  // Build scoped keyset query.
+  let query = p.supabase.from(op.table).select('*');
+  if (merchantScope.length === 1) {
+    query = query.eq('merchant_id', merchantScope[0]);
+  } else {
+    query = query.in('merchant_id', merchantScope);
+  }
+  if (op.id === 'gatewayListBeneficiaries') query = query.eq('is_active', true);
+  if (op.id === 'gatewayListPaymentLinks' && filters.slug) query = query.eq('slug', filters.slug);
+  if (op.id === 'gatewayListVirtualAccounts' && filters.account_kind) query = query.eq('account_kind', filters.account_kind);
+
+  if (cursorPosition) {
+    // Descending lexicographic continuation:
+    //   created_at < :cursorCreatedAt
+    //   OR (created_at = :cursorCreatedAt AND id < :cursorId)
+    // Uses PostgREST `or()` with a bound-limit query. No client-controlled
+    // column name enters the query.
+    const c = cursorPosition;
+    query = query.or(
+      `and(created_at.lt.${c.createdAt}),and(created_at.eq.${c.createdAt},id.lt.${c.id})`,
+    );
+  }
+
+  query = query
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(limit + 1);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  const rows = (data as Array<{ created_at: string; id: string }>) || [];
+  const finalised = await finalizeD2aPage({
+    operation: op.id,
+    scopeHash,
+    filterHash,
+    limit,
+    fetchedItems: rows,
+  });
+  return d2aOk(finalised);
 }
