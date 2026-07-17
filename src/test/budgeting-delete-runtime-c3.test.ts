@@ -20,10 +20,13 @@ const c3Region = (() => {
 })();
 
 describe('Phase 1B-R1I-c.3R — Goal archive & Round-up disable (source contract)', () => {
-  it('routes both DELETE operations under budgeting-ops', () => {
+  it('routes both DELETE operations under budgeting-ops (canonical + legacy alias)', () => {
     expect(c3Region).toMatch(/const delGoalMatch = path\.match\(\/\^\\\/goals\\\/\(\[\^\/\]\+\)\$\/\)/);
     expect(c3Region).toMatch(/method === "DELETE" && delGoalMatch/);
-    expect(c3Region).toMatch(/method === "DELETE" && path === "\/roundup\/settings"/);
+    // c.3R-F: canonical path is /goals/{goalId}/round-up; legacy /roundup/settings alias preserved.
+    expect(c3Region).toMatch(/delRoundupMatch = path\.match\(\/\^\\\/goals\\\/\(\[\^\/\]\+\)\\\/round-up\$\/\)/);
+    expect(c3Region).toMatch(/path === "\/roundup\/settings"/);
+    expect(c3Region).toMatch(/method === "DELETE" && \(delRoundupMatch \|\| isLegacyRoundupPath\)/);
   });
 
   it('validates goal identifier as UUID before any DB call (400 INVALID_RESOURCE_ID)', () => {
@@ -32,12 +35,11 @@ describe('Phase 1B-R1I-c.3R — Goal archive & Round-up disable (source contract
   });
 
   it('validates Idempotency-Key as strict UUIDv4 for both handlers (400)', () => {
-    // Delegates to shared validateIdemHeader which uses isStrictUuidV4.
     const goalBlock = c3Region.slice(
       c3Region.indexOf('delGoalMatch'),
-      c3Region.indexOf('/roundup/settings'),
+      c3Region.indexOf('delRoundupMatch'),
     );
-    const roundupBlock = c3Region.slice(c3Region.indexOf('/roundup/settings'));
+    const roundupBlock = c3Region.slice(c3Region.indexOf('delRoundupMatch'));
     expect(goalBlock).toMatch(/validateIdemHeader\(\)/);
     expect(roundupBlock).toMatch(/validateIdemHeader\(\)/);
   });
