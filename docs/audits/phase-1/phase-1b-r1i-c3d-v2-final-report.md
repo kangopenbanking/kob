@@ -150,3 +150,10 @@ $ npx vitest run \
 Per Section 4 explicit instruction ("If not reconstructable, return: PHASE 1B-R1I-c.3 BLOCKED — GOAL LIFECYCLE HISTORY NOT PRESERVED"), and given that the live `public.savings_goals` schema does not carry `archived_at`, `archived_by`, `archived_from_status`, or a companion status-history table, and the archive handler does not append to any audit log:
 
 **PHASE 1B-R1I-c.3 BLOCKED — GOAL LIFECYCLE HISTORY NOT PRESERVED**
+
+
+---
+
+## Superseded by c.3H
+
+The blocker recorded in this report — `PHASE 1B-R1I-c.3 BLOCKED — GOAL LIFECYCLE HISTORY NOT PRESERVED` — is addressed by slice **Phase 1B-R1I-c.3H** (see `phase-1b-r1i-c3h-final-report.md`). c.3H adds `savings_goals.archived_from_status`, biconditional CHECK constraints, hardened RLS, and a corrected `budgetingDeleteGoal` handler that verifies persisted provenance before returning 204. No lifecycle predecessor is fabricated for pre-existing archived rows; the migration fails closed if any such row lacks reconstructable evidence.

@@ -1197,25 +1197,80 @@ Deno.serve(async (req) => {
         if (r.kind === "replay") return idempotencyResponse(r, corsHeaders)!;
       }
 
-      // Atomic conditional archive: only transitions non-archived rows owned
-      // by this caller. `neq("status","archived")` covers active / paused /
-      // completed / cancelled → archived per the ratified lifecycle.
+      // c.3H — Atomic conditional archive with durable lifecycle provenance.
+      // The transition is performed via the service_role client so that the
+      // hardened c.3H RLS policies (which deny client-side archival writes)
+      // remain intact for ordinary callers. The predicate captures the
+      // observed prior status so a concurrent lifecycle change cannot
+      // corrupt archived_from_status.
+      const observedStatus = existing.status as string;
+      const APPROVED_PRIOR = ["active", "paused", "completed", "cancelled"];
+      if (!APPROVED_PRIOR.includes(observedStatus)) {
+        return conflictProblem("GOAL_LIFECYCLE_CONFLICT",
+          "Goal is in a state that cannot be archived.");
+      }
       const nowIso = new Date().toISOString();
       const { data: updated, error: updErr } = await sb
         .from("savings_goals")
-        .update({ status: "archived", archived_at: nowIso, archived_by: user.id })
+        .update({
+          status: "archived",
+          archived_from_status: observedStatus,
+          archived_at: nowIso,
+          archived_by: user.id,
+        })
         .eq("id", goalId)
         .eq("consumer_id", user.id)
-        .neq("status", "archived")
-        .select("id")
+        .eq("status", observedStatus)
+        .in("status", APPROVED_PRIOR)
+        .select("id, status, archived_from_status, archived_at, archived_by")
         .maybeSingle();
       if (updErr) throw updErr;
+
       if (!updated) {
-        // Lost race to a concurrent archiver — terminal-state idempotent 204.
-        if (idem.key) {
-          await storeIdempotency({ key: idem.key, merchantId: user.id, resource, requestHash, status: 204, body: null });
+        // Zero-row update: disambiguate by re-reading current state.
+        const { data: after } = await sb
+          .from("savings_goals")
+          .select("id, consumer_id, status")
+          .eq("id", goalId)
+          .maybeSingle();
+        if (!after || after.consumer_id !== user.id) return notFoundProblem();
+        if (after.status === "archived") return no204(); // terminal idempotent
+        // Re-check pending-financial state that may have emerged.
+        const { data: pendingNow } = await sb
+          .from("roundup_transactions")
+          .select("id")
+          .eq("consumer_id", user.id)
+          .eq("goal_id", goalId)
+          .in("state", ["pending", "retrying"])
+          .limit(1);
+        if (pendingNow && pendingNow.length > 0) {
+          return conflictProblem("GOAL_HAS_PENDING_FINANCIAL_OPERATIONS",
+            "Goal has pending round-up instructions and cannot be archived.");
         }
-        return no204();
+        return conflictProblem("GOAL_LIFECYCLE_CONFLICT",
+          "Goal lifecycle state changed concurrently; retry with a fresh read.");
+      }
+
+      // Persisted-row verification. If any provenance field is missing (e.g.
+      // the c.3H migration has not been promoted against this database), we
+      // MUST NOT return a successful 204 nor store a successful idempotency
+      // completion record.
+      if (
+        updated.status !== "archived" ||
+        updated.archived_from_status !== observedStatus ||
+        !updated.archived_at ||
+        updated.archived_by !== user.id
+      ) {
+        console.error("c.3H provenance verification failed", {
+          goalId, observedStatus, persisted: updated,
+        });
+        return new Response(JSON.stringify({
+          type: "about:blank",
+          title: "Internal Server Error",
+          status: 500,
+          code: "GOAL_ARCHIVE_PROVENANCE_UNVERIFIED",
+          detail: "Archive persistence could not be verified against required schema fields.",
+        }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/problem+json" } });
       }
 
       if (idem.key) {
