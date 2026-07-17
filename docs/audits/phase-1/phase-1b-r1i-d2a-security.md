@@ -1,48 +1,29 @@
-# Phase 1B — R1I-d.2A — Security
+# Phase 1B — R1I-d.2A-DB1 — Security (Delta from R1I-d.2A)
 
-## 1. Cursor binding matrix
+The cursor binding matrix, cross-scope rejection matrix, DoS controls, secret
+handling and error hygiene ratified in the original
+`phase-1b-r1i-d2a-security.md` are unchanged by R1I-d.2A-DB1. This slice does
+not modify:
 
-Every d.2A cursor binds to (per `_shared/pagination.ts` codec):
+- `supabase/functions/_shared/pagination.ts` (cursor codec)
+- `supabase/functions/gateway-query/_pagination.ts` (d.2A adapter)
+- `supabase/functions/gateway-query/index.ts` (route branches)
 
-| Binding | Source in d.2A adapter |
-|---------|------------------------|
-| operation | `op.id` (one of the four ratified ids) |
-| environment | `detectEnv()` — env var, never client-controlled |
-| tenant/actor | `actorSub = user.id` from `resolveAuth` |
-| merchant scope | authoritative `getMerchantIds(user)`; requested `merchant_id` only honoured if in that set |
-| filter surface | operation-specific canonical filter object |
-| ordering | `D2A_ORDER_PROFILE.id` |
+## Deltas introduced by R1I-d.2A-DB1
 
-Raw scope identifiers **do not** appear in the cursor payload — only their SHA-256 hex hashes (`sh`, `fh`).
+| Area | Change | Security impact |
+|---|---|---|
+| Canonical migration hardening | Adds `pg_temp.d2a_ensure_index` verifying exact definition + `indisvalid` + `indisready` | Prevents silent acceptance of a same-named but attacker-substituted index (fails closed inside the transaction). |
+| Online CONCURRENTLY operation | Moved out of `pending-migrations/` into `pending-operations/` (inert to migration runner) | Removes risk of transactional runner attempting a forbidden statement in production. |
+| Harness environment guard | Refuses non-local hosts and port 6543 | Prevents accidental execution against production or transaction pooler. |
+| Secret exposure | None (harness reads `D2A_HARNESS_PGURL` only, does not log it) | Preserved. |
 
-## 2. Cross-scope rejection
+## Failure mapping (§15) — unchanged
 
-Inherited from foundation codec (see `phase-1b-r1i-d1-cursor-security.md`):
+Foundation cursor failures continue to map to canonical client `400` per the
+d.2A adapter. Missing or weak `KOB_CURSOR_HMAC_SECRET` continues to map to a
+canonical internal configuration failure (`500`), never a `400` client leak.
 
-| Reuse scenario | Foundation code | Adapter surface |
-|----------------|-----------------|-----------------|
-| Cross-operation | `OPERATION_MISMATCH` | `PAGINATION_CURSOR_OPERATION_MISMATCH` |
-| Cross-tenant / cross-owner | `SCOPE_MISMATCH` | `PAGINATION_CURSOR_SCOPE_MISMATCH` |
-| Cross-environment | `SCOPE_MISMATCH` (env is a scope input) | `PAGINATION_CURSOR_SCOPE_MISMATCH` |
-| Changed filter | `FILTER_MISMATCH` | `PAGINATION_CURSOR_FILTER_MISMATCH` |
-| Changed ordering profile | `ORDER_MISMATCH` | `PAGINATION_CURSOR_INVALID` |
-| Malformed / bad sig | `MALFORMED`/`INVALID_SIGNATURE` | `PAGINATION_CURSOR_INVALID` |
-| Expired | `EXPIRED` | `PAGINATION_CURSOR_EXPIRED` |
-
-## 3. Enumeration / DoS controls
-
-- Max fetched rows per request = `limit + 1` where `limit ≤ 100` → **101** rows worst case per operation.
-- Cursor lifetime capped at 3600 s (well within foundation `[60, 86400]`).
-- No exact-count query issued (`select('*')` without `{ count: 'exact' }`).
-- Client-supplied `merchant_id` that does not belong to the actor's scope produces the same empty response as "no matching rows" — no cross-tenant enumeration signal.
-
-## 4. Secret handling
-
-- Uses `KOB_CURSOR_HMAC_SECRET` exclusively (never `SUPABASE_JWT_SECRET`).
-- Missing/weak secret fails **closed** with `PaginationConfigurationError` → 500 (internal), never a 400 leak.
-- No secret literal appears in adapter, tests, or fixtures.
-
-## 5. Error hygiene
-
-- No `sh` / `fh` / signature material surfaces in error bodies (`detail` uses generic strings).
-- No secret configuration values are logged.
+No secret names, signatures, hashes, internal SQL, table names, or merchant /
+tenant identifiers are exposed in error bodies or logs by the new harness or
+migration.
