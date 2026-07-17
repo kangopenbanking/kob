@@ -50,14 +50,27 @@ const PAGINATION_HEADERS = {
 };
 
 function correctLimitParam(params) {
-  for (const param of params) {
-    if (param && typeof param === "object" && param.name === "limit" && param.schema) {
+  for (let i = 0; i < params.length; i++) {
+    const param = params[i];
+    if (!param || typeof param !== "object") continue;
+    if (param.$ref === "#/components/parameters/LimitParam") {
+      params[i] = {
+        name: "limit",
+        in: "query",
+        required: false,
+        description: "Number of items per page. Defaults to 25. Maximum 100.",
+        schema: { type: "integer", minimum: 1, maximum: 100, default: 25, example: 25 },
+      };
+      continue;
+    }
+    if (param.name === "limit" && param.schema) {
       param.schema.default = 25;
       param.schema.maximum = 100;
       if (typeof param.schema.minimum !== "number") param.schema.minimum = 1;
     }
   }
 }
+
 
 function ensureCursorParam(params) {
   const hasCursor = params.some(
