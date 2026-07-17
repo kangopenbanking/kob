@@ -5,7 +5,7 @@
  * transactions). No live handler code is exercised. The tests inject a fixed
  * test-only secret; no live secret is required.
  */
-// @ts-nocheck — tsconfig for src excludes supabase functions dir; import path resolves at test time
+// Import path resolves at test time via vitest esbuild transformer.
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   encodeCursor,
