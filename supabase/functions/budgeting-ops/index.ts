@@ -664,6 +664,36 @@ Deno.serve(async (req) => {
         dailyCap: settings.daily_cap,
       });
 
+
+      // c.3R atomicity re-verify: consult the authoritative DB state for
+      // `enabled` immediately before inserting the round-up instruction. This
+      // narrows the disable/instruction-creation race to a single DB round-trip
+      // window and provides the shared database-backed check required for the
+      // ratified "New round-up instructions created: 0 after disable"
+      // guarantee. No handler-local memory lock is used.
+      const { data: liveSettings } = await sb
+        .from("roundup_settings")
+        .select("enabled")
+        .eq("consumer_id", user.id)
+        .eq("enabled", true)
+        .maybeSingle();
+      if (!liveSettings) return { skipped: true, reason: "disabled" as const };
+
+      // c.3R goal-linked guard: reject new instructions targeting an archived
+      // goal. The archived goal is the terminal state; contributions and
+      // round-ups may not be added to it.
+      if (settings.default_goal_id) {
+        const { data: goalRow } = await sb
+          .from("savings_goals")
+          .select("status")
+          .eq("id", settings.default_goal_id)
+          .eq("consumer_id", user.id)
+          .maybeSingle();
+        if (goalRow?.status === "archived") {
+          return { skipped: true, reason: "goal_archived" as const };
+        }
+      }
+
       const { data: tx, error: insErr } = await sb
         .from("roundup_transactions")
         .insert({
@@ -685,6 +715,7 @@ Deno.serve(async (req) => {
         .select()
         .single();
       if (insErr) throw insErr;
+
 
       await logEvent("ROUNDUP_CALCULATED", { roundup, threshold: settings.threshold }, tx.id);
 
