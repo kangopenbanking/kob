@@ -1,5 +1,11 @@
 # Phase 1B-R1I-d.1V2 — Final Regression & Reproducibility Evidence
 
+> **Superseded by** `phase-1b-r1i-d1-v3-final-report.md`, which contains actual
+> full-suite counts (92/92/91 failed, 7 skipped, 0 unhandled), clean-install
+> evidence (lockfile SHA-256 `137def28…c7a5` unchanged; Rollup 4.44.2), full
+> repository lint (5586 problems at ceiling), and migration checksum listing.
+
+
 ## Outcome
 
 **PHASE 1B-R1I-d.1 PASS — SHARED PAGINATION FOUNDATION CLOSED**
