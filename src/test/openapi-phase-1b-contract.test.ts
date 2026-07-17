@@ -80,7 +80,9 @@ describe('Phase 1B — OpenAPI contract guards', () => {
     });
   }
 
-  const G7 = ['budgetingDeleteBudget','budgetingDeleteCategory','budgetingDeleteRule','budgetingDeleteGoal','budgetingDisableRoundUp'];
+  // Phase 1B-R1I-c.4: budgetingDeleteRule removed from the unreleased 4.53.1
+  // contract (no runtime handler; no backing category_rules table).
+  const G7 = ['budgetingDeleteBudget','budgetingDeleteCategory','budgetingDeleteGoal','budgetingDisableRoundUp'];
   for (const id of G7) {
     it(`G7 ${id} — DELETE declares Idempotency-Key header (optional, backward compatible)`, () => {
       const found = findOp(id)!;
@@ -111,7 +113,7 @@ describe('Phase 1B — OpenAPI contract guards', () => {
         if (['get','post','put','patch','delete'].includes(m)) n++;
       }
     }
-    expect(n).toBe(484);
+    expect(n).toBe(483);
   });
 
   it('info.version bumped to 4.53.1 (Standing Order #6 — Version Gate)', () => {

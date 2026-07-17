@@ -22,7 +22,10 @@
       "compatibility": [
         "Existing clients that omit Idempotency-Key continue to work.",
         "Existing clients that omit pagination parameters preserve prior response behaviour.",
-        "No public path or operationId removed. Operation count unchanged at 484."
+        "No previously released public operation removed. Unreleased 4.53.1 contract removes budgetingDeleteRule only (never released). Operation count 484 → 483."
+      ],
+      "removed": [
+        "Removed budgetingDeleteRule (DELETE /v1/budgeting/categories/rules/{ruleId}) from the unreleased 4.53.1 contract. It had no runtime handler and no backing category_rules table; retaining it would have advertised unsupported functionality. Never released, never deployed — this is not a breaking change to any released version. Operation count 484 → 483. The four retained budgeting deletion/disable operations (budgetingDeleteBudget, budgetingDeleteCategory, budgetingDeleteGoal, budgetingDisableRoundUp) use archive, protected soft-delete, archive-with-provenance, and disable-flag semantics respectively; no physical financial-history deletion."
       ]
     },
     {
@@ -2680,6 +2683,6 @@
       "entry_offset": 0
     },
     "total_entries": 88,
-    "generated_at": "2026-07-16T13:38:37.196Z"
+    "generated_at": "2026-07-17T10:12:07.965Z"
   }
 }

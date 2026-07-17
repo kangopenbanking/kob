@@ -699,21 +699,20 @@ describe('Phase 1B-R1I-a.2 · ordinary G3 behaviour preserved', () => {
   });
 });
 
-describe('Phase 1B-R1I-c.3A · production spec integrity', () => {
-  it('production OpenAPI reports exactly 179 failures with post-c.3A gate counts', () => {
-    // Post c.3A: budgetingDeleteGoal and budgetingDisableRoundUp additively
-    // document 400/401/404/409/429/500 using the reusable Problem Details
-    // responses. This drops G6 by 4 (72 → 68) relative to post-c.2A.
-    // Total 183 → 179. No other gate moves. Version, operation count and
-    // G1/G3/G4/G7/G8 unchanged.
+describe('Phase 1B-R1I-c.4 · production spec integrity', () => {
+  it('production OpenAPI reports exactly 176 failures with post-c.4 gate counts', () => {
+    // Post c.4: budgetingDeleteRule is removed from the unreleased 4.53.1
+    // contract. This drops G6 by 2 (68 → 66) and G9 by 1 (79 → 78) relative
+    // to post-c.3A. Total 179 → 176. Operation count 484 → 483. Version
+    // unchanged; no other gate moves.
     const proc = spawnSync(process.execPath, [SCRIPT, '--spec', 'public/openapi.json'], { encoding: 'utf8' });
     expect(proc.status).toBe(1);
     const m = proc.stdout.match(/"byGate":\s*({[\s\S]*?})/);
     const byGate = m ? JSON.parse(m[1]) : {};
-    expect(byGate).toEqual({ G1: 0, G2: 3, G3: 0, G4: 0, G5: 29, G6: 68, G7: 0, G8: 0, G9: 79 });
-    expect(proc.stdout).toContain('"failures": 179');
+    expect(byGate).toEqual({ G1: 0, G2: 3, G3: 0, G4: 0, G5: 29, G6: 66, G7: 0, G8: 0, G9: 78 });
+    expect(proc.stdout).toContain('"failures": 176');
     expect(proc.stdout).toContain('"apiVersion": "4.53.1"');
-    expect(proc.stdout).toContain('"totalOperations": 484');
+    expect(proc.stdout).toContain('"totalOperations": 483');
   });
 });
 
