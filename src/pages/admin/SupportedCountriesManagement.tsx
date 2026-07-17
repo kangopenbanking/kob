@@ -88,7 +88,7 @@ export default function SupportedCountriesManagement() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, field, value }: { id: string; field: string; value: boolean }) => {
-      const { error } = await supabase.from("supported_countries").update({ [field]: value, updated_at: new Date().toISOString() }).eq("id", id);
+      const { error } = await supabase.from("supported_countries").update({ [field]: value, updated_at: new Date().toISOString() } as any).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

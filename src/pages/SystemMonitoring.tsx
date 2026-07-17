@@ -120,7 +120,7 @@ const SystemMonitoring = () => {
       .update({ 
         is_acknowledged: true,
         acknowledged_at: new Date().toISOString()
-      })
+      } as any)
       .eq("id", alertId);
 
     if (error) {

@@ -80,7 +80,7 @@ export default function SystemAlerts() {
           resolved_at: new Date().toISOString(),
           resolved_by: user?.id,
           resolution_notes: resolution
-        })
+        } as any)
         .eq("id", alertId);
 
       if (error) throw error;
