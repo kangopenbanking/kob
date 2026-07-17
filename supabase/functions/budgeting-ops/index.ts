@@ -1216,22 +1216,52 @@ Deno.serve(async (req) => {
       return no204();
     }
 
-    // --- DELETE /roundup/settings → budgetingDisableRoundUp (DISABLE)
-    if (method === "DELETE" && path === "/roundup/settings") {
+    // --- DELETE /goals/{goalId}/round-up → budgetingDisableRoundUp (DISABLE)
+    //     Canonical public path: /v1/budgeting/goals/{goalId}/round-up
+    //     Legacy alias preserved: /roundup/settings (internal callers only).
+    //     Owner + tenant isolation are masked 404 per the c.3A ratified
+    //     contract; only when the round-up settings row exists AND its
+    //     default_goal_id matches the caller's owned goal is the resource
+    //     considered found.
+    const delRoundupMatch = path.match(/^\/goals\/([^/]+)\/round-up$/);
+    const isLegacyRoundupPath = path === "/roundup/settings";
+    if (method === "DELETE" && (delRoundupMatch || isLegacyRoundupPath)) {
+      const scopedGoalId = delRoundupMatch ? delRoundupMatch[1] : null;
+      if (scopedGoalId && !UUID_ANY_RE.test(scopedGoalId)) {
+        return badReqProblem("Malformed goal identifier.", "INVALID_RESOURCE_ID");
+      }
+
       const idem = validateIdemHeader();
       if (idem.error) return idem.error;
 
       // Ownership + terminal-state pre-check. Absence of the settings row is
-      // treated as masked 404 (caller has never configured round-up).
+      // masked 404 (caller has never configured round-up).
       const { data: existing } = await sb
         .from("roundup_settings")
-        .select("consumer_id, enabled")
+        .select("consumer_id, enabled, default_goal_id")
         .eq("consumer_id", user.id)
         .maybeSingle();
       if (!existing) return notFoundProblem();
+
+      // Canonical path binds the disable to a specific owned goal. Cross-goal
+      // and cross-owner attempts collapse to masked 404 with no side effect.
+      if (scopedGoalId) {
+        if (!existing.default_goal_id || existing.default_goal_id !== scopedGoalId) {
+          return notFoundProblem();
+        }
+        const { data: goalRow } = await sb
+          .from("savings_goals")
+          .select("consumer_id")
+          .eq("id", scopedGoalId)
+          .maybeSingle();
+        if (!goalRow || goalRow.consumer_id !== user.id) return notFoundProblem();
+      }
+
       if (existing.enabled === false) return no204(); // terminal-state idempotent
 
-      const resource = `DELETE /v1/budgeting/roundup/settings`;
+      const resource = scopedGoalId
+        ? `DELETE /v1/budgeting/goals/${scopedGoalId}/round-up`
+        : `DELETE /v1/budgeting/roundup/settings`;
       const requestHash = await sha256(`${user.id}|${resource}|`);
       if (idem.key) {
         const r = await reserveIdempotency({
@@ -1246,9 +1276,12 @@ Deno.serve(async (req) => {
       }
 
       // Atomic conditional disable: transitions enabled=true → false with a
-      // DB predicate. Pending / retrying round-up rows are preserved for the
-      // worker to finish; new instruction creation is blocked by the
-      // enabled=true re-verify inside processRoundup().
+      // DB predicate in a single statement. Pending / retrying round-up rows
+      // are preserved for the worker to finish; new instruction creation is
+      // narrowed by the enabled=true re-verify inside processRoundup().
+      // NOTE: full single-statement atomicity of the *instruction-creation*
+      // gate would require an RPC or partial unique index — flagged for
+      // Database Owner authorization in the c.3R-F atomicity report.
       const nowIso = new Date().toISOString();
       const { data: updated, error: updErr } = await sb
         .from("roundup_settings")
