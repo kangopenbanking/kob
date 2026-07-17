@@ -1210,7 +1210,7 @@ Deno.serve(async (req) => {
           "Goal is in a state that cannot be archived.");
       }
       const nowIso = new Date().toISOString();
-      const { data: updated, error: updErr } = await admin
+      const { data: updated, error: updErr } = await sb
         .from("savings_goals")
         .update({
           status: "archived",
@@ -1228,7 +1228,7 @@ Deno.serve(async (req) => {
 
       if (!updated) {
         // Zero-row update: disambiguate by re-reading current state.
-        const { data: after } = await admin
+        const { data: after } = await sb
           .from("savings_goals")
           .select("id, consumer_id, status")
           .eq("id", goalId)
@@ -1236,7 +1236,7 @@ Deno.serve(async (req) => {
         if (!after || after.consumer_id !== user.id) return notFoundProblem();
         if (after.status === "archived") return no204(); // terminal idempotent
         // Re-check pending-financial state that may have emerged.
-        const { data: pendingNow } = await admin
+        const { data: pendingNow } = await sb
           .from("roundup_transactions")
           .select("id")
           .eq("consumer_id", user.id)
