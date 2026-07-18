@@ -82,12 +82,61 @@ function normalise(sqlDef) {
   return sqlDef.replace(/\s+/g, " ").trim();
 }
 
-async function splitConcurrentStatements(text) {
-  // Simple splitter that preserves CONCURRENTLY statements one at a time.
-  return text
-    .split(/;\s*(?:\r?\n|$)/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !/^--/.test(s));
+/**
+ * Comment-safe parser for the tightly-scoped d.2A CONCURRENTLY artifacts
+ * (R1I-d.2A-CI2 §5). The previous splitter dropped any semicolon-delimited
+ * chunk whose first non-whitespace characters were `--`, which discarded
+ * every valid statement in these files because they are all preceded by
+ * numbered comments.
+ *
+ * Steps:
+ *   1. Strip complete `-- …` line comments (whole-line and trailing).
+ *   2. Split on semicolons.
+ *   3. Trim, collapse whitespace, drop empty statements.
+ *   4. Every forward statement MUST start with `CREATE INDEX CONCURRENTLY`.
+ *      Every rollback statement MUST start with `DROP INDEX CONCURRENTLY`.
+ *      Anything else fails closed.
+ *   5. Exactly four statements are expected.
+ */
+export function parseConcurrentStatements(text, kind /* "forward" | "rollback" */) {
+  if (kind !== "forward" && kind !== "rollback") {
+    throw new Error(`parseConcurrentStatements: invalid kind ${kind}`);
+  }
+  const stripped = text
+    .split(/\r?\n/)
+    .map((line) => {
+      const idx = line.indexOf("--");
+      return idx === -1 ? line : line.slice(0, idx);
+    })
+    .join("\n");
+
+  const stmts = stripped
+    .split(";")
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 0);
+
+  const expectedPrefix = kind === "forward"
+    ? /^CREATE INDEX CONCURRENTLY\b/i
+    : /^DROP INDEX CONCURRENTLY\b/i;
+
+  for (const stmt of stmts) {
+    if (!expectedPrefix.test(stmt)) {
+      throw new Error(
+        `parseConcurrentStatements: unexpected ${kind} statement rejected: ${stmt.slice(0, 80)}`,
+      );
+    }
+  }
+
+  if (stmts.length !== 4) {
+    throw new Error(
+      `parseConcurrentStatements: expected exactly 4 ${kind} statements, got ${stmts.length}`,
+    );
+  }
+  return stmts;
+}
+
+async function splitConcurrentStatements(text, kind = "forward") {
+  return parseConcurrentStatements(text, kind);
 }
 
 async function assertNoActiveTx(client) {
