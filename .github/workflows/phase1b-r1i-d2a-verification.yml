@@ -7,7 +7,7 @@
 # uploads the complete evidence bundle.
 #
 # Zero production access. Zero managed-project access. No SUPABASE_ACCESS_TOKEN,
-# no SUPABASE_DB_PASSWORD, no `supabase link`, no `supabase db push`.
+# no SUPABASE_DB_PASSWORD, no project-linking CLI verbs, no remote db push.
 
 name: Phase 1B R1I-d.2A Isolated Verification
 
