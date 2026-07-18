@@ -232,7 +232,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("[d.2A-DB1] FAIL:", err.message);
-  process.exit(1);
-});
+// CLI guard — the parser is import-safe; only run main() when invoked directly.
+const isCli = import.meta.url === `file://${process.argv[1]}` ||
+  (process.argv[1] && process.argv[1].endsWith("slice-d2a-online-index-harness.mjs"));
+if (isCli) {
+  main().catch((err) => {
+    console.error("[d.2A-DB1] FAIL:", err.message);
+    process.exit(1);
+  });
+}
