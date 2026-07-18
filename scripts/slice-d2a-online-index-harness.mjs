@@ -82,12 +82,61 @@ function normalise(sqlDef) {
   return sqlDef.replace(/\s+/g, " ").trim();
 }
 
-async function splitConcurrentStatements(text) {
-  // Simple splitter that preserves CONCURRENTLY statements one at a time.
-  return text
-    .split(/;\s*(?:\r?\n|$)/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !/^--/.test(s));
+/**
+ * Comment-safe parser for the tightly-scoped d.2A CONCURRENTLY artifacts
+ * (R1I-d.2A-CI2 §5). The previous splitter dropped any semicolon-delimited
+ * chunk whose first non-whitespace characters were `--`, which discarded
+ * every valid statement in these files because they are all preceded by
+ * numbered comments.
+ *
+ * Steps:
+ *   1. Strip complete `-- …` line comments (whole-line and trailing).
+ *   2. Split on semicolons.
+ *   3. Trim, collapse whitespace, drop empty statements.
+ *   4. Every forward statement MUST start with `CREATE INDEX CONCURRENTLY`.
+ *      Every rollback statement MUST start with `DROP INDEX CONCURRENTLY`.
+ *      Anything else fails closed.
+ *   5. Exactly four statements are expected.
+ */
+export function parseConcurrentStatements(text, kind /* "forward" | "rollback" */) {
+  if (kind !== "forward" && kind !== "rollback") {
+    throw new Error(`parseConcurrentStatements: invalid kind ${kind}`);
+  }
+  const stripped = text
+    .split(/\r?\n/)
+    .map((line) => {
+      const idx = line.indexOf("--");
+      return idx === -1 ? line : line.slice(0, idx);
+    })
+    .join("\n");
+
+  const stmts = stripped
+    .split(";")
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 0);
+
+  const expectedPrefix = kind === "forward"
+    ? /^CREATE INDEX CONCURRENTLY\b/i
+    : /^DROP INDEX CONCURRENTLY\b/i;
+
+  for (const stmt of stmts) {
+    if (!expectedPrefix.test(stmt)) {
+      throw new Error(
+        `parseConcurrentStatements: unexpected ${kind} statement rejected: ${stmt.slice(0, 80)}`,
+      );
+    }
+  }
+
+  if (stmts.length !== 4) {
+    throw new Error(
+      `parseConcurrentStatements: expected exactly 4 ${kind} statements, got ${stmts.length}`,
+    );
+  }
+  return stmts;
+}
+
+async function splitConcurrentStatements(text, kind = "forward") {
+  return parseConcurrentStatements(text, kind);
 }
 
 async function assertNoActiveTx(client) {
@@ -120,7 +169,7 @@ async function inspect(client, entry) {
 }
 
 async function runForward(client) {
-  const stmts = await splitConcurrentStatements(readFileSync(FWD, "utf8"));
+  const stmts = await splitConcurrentStatements(readFileSync(FWD, "utf8"), "forward");
   for (const stmt of stmts) {
     // Each CONCURRENTLY statement executes on its own in autocommit.
     await client.query(stmt);
@@ -128,7 +177,7 @@ async function runForward(client) {
 }
 
 async function runRollback(client) {
-  const stmts = await splitConcurrentStatements(readFileSync(RBK, "utf8"));
+  const stmts = await splitConcurrentStatements(readFileSync(RBK, "utf8"), "rollback");
   for (const stmt of stmts) {
     await client.query(stmt);
   }
@@ -183,7 +232,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("[d.2A-DB1] FAIL:", err.message);
-  process.exit(1);
-});
+// CLI guard — the parser is import-safe; only run main() when invoked directly.
+const isCli = import.meta.url === `file://${process.argv[1]}` ||
+  (process.argv[1] && process.argv[1].endsWith("slice-d2a-online-index-harness.mjs"));
+if (isCli) {
+  main().catch((err) => {
+    console.error("[d.2A-DB1] FAIL:", err.message);
+    process.exit(1);
+  });
+}

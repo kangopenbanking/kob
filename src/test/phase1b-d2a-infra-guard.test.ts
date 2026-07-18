@@ -127,27 +127,32 @@ describe("R1I-d.2A-INFRA — CI workflow shape", () => {
 
   it("contains no production secret references", () => {
     const yml = readFileSync(WORKFLOW, "utf8");
+    // The workflow may set SUPABASE_SERVICE_ROLE_KEY from the ISOLATED local
+    // stack output (`supabase status -o env`); production/hosted references
+    // remain forbidden.
     for (const bad of [
-      "SUPABASE_SERVICE_ROLE",
       "PRODUCTION",
       "PROD_",
       "NETLIFY_AUTH",
       "VERCEL_TOKEN",
       "NPM_TOKEN",
+      "supabase link",
+      "supabase db push",
     ]) {
       expect(yml, `workflow must not reference ${bad}`).not.toContain(bad);
     }
   });
 
-  it("uses a disposable Postgres service container and sets the marker", () => {
+  it("uses the local Supabase stack (pinned CLI) instead of a bare Postgres container", () => {
     const yml = readFileSync(WORKFLOW, "utf8");
-    expect(yml).toMatch(/services:/);
-    expect(yml).toMatch(/postgres:/);
+    expect(yml).toMatch(/supabase\/setup-cli@v2/);
+    expect(yml).toMatch(/version:\s*"\d+\.\d+\.\d+"/);
+    expect(yml).not.toMatch(/image:\s*postgres:15/);
     expect(yml).toMatch(/KOB_D2A_DISPOSABLE_ENVIRONMENT:\s*['"]?true['"]?/);
   });
 
   it("runs teardown even on failure", () => {
     const yml = readFileSync(WORKFLOW, "utf8");
-    expect(yml).toMatch(/if:\s*always\(\)[\s\S]*teardown/);
+    expect(yml).toMatch(/if:\s*always\(\)[\s\S]*teardown/i);
   });
 });

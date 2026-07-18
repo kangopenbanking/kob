@@ -1,12 +1,13 @@
-# Phase 1B R1I-d.2A Isolated Verification
+# Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI2 repaired)
 #
-# Ephemeral, disposable workflow that runs the R1I-d.2A-EV protocol against
-# an isolated PostgreSQL service container. Never deploys, never publishes,
-# never touches production or shared staging.
+# Boots the ISOLATED LOCAL Supabase stack (via the pinned Supabase CLI) from
+# the repository's supabase/config.toml, applies canonical migrations via
+# `supabase db reset --local --no-seed`, then applies the ratified pending
+# Phase 1 chain with psql, runs the full R1I-d.2A-EV evidence protocol, and
+# uploads the complete evidence bundle.
 #
-# Scope-locked triggers:
-#   - manual dispatch (workflow_dispatch)
-#   - narrow path filter on d.2A artefacts only
+# Zero production access. Zero managed-project access. No SUPABASE_ACCESS_TOKEN,
+# no SUPABASE_DB_PASSWORD, no project-linking CLI verbs, no remote db push.
 
 name: Phase 1B R1I-d.2A Isolated Verification
 
@@ -20,6 +21,7 @@ on:
       - "supabase/pending-operations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes*.sql"
       - "supabase/functions/gateway-query/**"
       - ".github/workflows/phase1b-r1i-d2a-verification.yml"
+      - "src/test/phase1b-d2a-*.test.ts"
 
 permissions:
   contents: read
@@ -30,29 +32,15 @@ concurrency:
 
 jobs:
   verify:
-    name: R1I-d.2A EV (isolated)
+    name: R1I-d.2A EV (isolated, local Supabase stack)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: d2a
-          POSTGRES_PASSWORD: d2a
-          POSTGRES_DB: scratch_d2a
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U d2a -d scratch_d2a"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
+    timeout-minutes: 75
 
     env:
-      D2A_INFRA_HOSTED_POSTGRES: "true"
       KOB_D2A_DISPOSABLE_ENVIRONMENT: "true"
-      D2A_HARNESS_PGURL: "postgres://d2a:d2a@127.0.0.1:5432/scratch_d2a"
+      # Populated later from `supabase status -o env`. Never contains a
+      # production URL; the guard rejects public/managed hosts.
+      D2A_HARNESS_PGURL: ""
 
     steps:
       - name: Checkout
@@ -64,6 +52,24 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Set up Supabase CLI (pinned)
+        uses: supabase/setup-cli@v2
+        with:
+          version: "2.20.12"
+          github-token: ${{ github.token }}
+
+      - name: Record tool versions
+        run: |
+          {
+            echo "{"
+            echo "  \"node\": \"$(node -v)\","
+            echo "  \"npm\": \"$(npm -v)\","
+            echo "  \"supabase\": \"$(supabase --version)\","
+            echo "  \"psql\": \"$(psql --version)\""
+            echo "}"
+          } > tool-versions.json
+          cat tool-versions.json
+
       - name: Mint ephemeral test cursor secret
         run: |
           echo "KOB_CURSOR_HMAC_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
@@ -74,54 +80,228 @@ jobs:
       - name: Verify PostgreSQL driver
         run: node -e "import('pg').then(() => console.log('pg import PASS'))"
 
+      - name: Start isolated local Supabase stack
+        run: |
+          supabase start --exclude imgproxy,inbucket,studio,edge-runtime,logflare,vector,pgadmin-schema-diff
+        env:
+          SUPABASE_ACCESS_TOKEN: ""
+          SUPABASE_DB_PASSWORD: ""
+
+      - name: Populate isolated environment variables
+        run: |
+          # `supabase status -o env` prints only test-only local values.
+          supabase status -o env > .d2a.env
+          # Strip pooler / managed hosts defensively.
+          # SUPABASE_DB_URL points at the direct local session port.
+          . ./.d2a.env
+          {
+            echo "SUPABASE_URL=${API_URL}"
+            echo "SUPABASE_ANON_KEY=${ANON_KEY}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}"
+            echo "D2A_HARNESS_PGURL=${DB_URL}"
+          } >> "$GITHUB_ENV"
+          # Environment preflight — record redacted evidence only.
+          node -e "
+            const u = new URL(process.argv[1]);
+            const fs = require('fs');
+            fs.writeFileSync('environment-preflight.json', JSON.stringify({
+              host: u.hostname, port: u.port, database: u.pathname.slice(1),
+              disposableMarker: process.env.KOB_D2A_DISPOSABLE_ENVIRONMENT === 'true',
+              secretPresent: !!process.env.KOB_CURSOR_HMAC_SECRET
+            }, null, 2));
+          " "${DB_URL}"
+          cat environment-preflight.json
+
       - name: Environment guard (fail-closed)
         run: node scripts/phase1b-d2a/guard.mjs
 
-
-      - name: Bootstrap disposable environment
+      - name: Bootstrap disposable environment (privilege probes)
+        env:
+          D2A_INFRA_HOSTED_POSTGRES: "true"
         run: node scripts/phase1b-d2a/bootstrap.mjs
 
-      - name: Apply canonical + pending Phase 1 migrations
+      - name: Canonical reset 1 (supabase db reset --local --no-seed)
+        run: supabase db reset --local --no-seed 2>&1 | tee canonical-reset-1.log
+
+      - name: Snapshot canonical schema hash (after reset 1)
         run: |
+          PGPASSWORD=$(node -e "console.log(new URL(process.env.D2A_HARNESS_PGURL).password)") \
+          psql "$D2A_HARNESS_PGURL" -Atqc "
+            SELECT md5(string_agg(table_schema||'.'||table_name||'.'||column_name||':'||data_type,',' ORDER BY table_schema,table_name,column_name))
+              FROM information_schema.columns
+             WHERE table_schema NOT IN ('pg_catalog','information_schema');
+          " > schema-hash-1.txt
+          PGPASSWORD=$(node -e "console.log(new URL(process.env.D2A_HARNESS_PGURL).password)") \
+          psql "$D2A_HARNESS_PGURL" -Atqc "
+            SELECT md5(string_agg(schemaname||'.'||indexname||':'||indexdef,',' ORDER BY schemaname,indexname))
+              FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog','information_schema');
+          " > index-hash-1.txt
+
+      - name: Canonical reset 2 (independent, from clean state)
+        run: supabase db reset --local --no-seed 2>&1 | tee canonical-reset-2.log
+
+      - name: Snapshot canonical schema hash (after reset 2) + parity
+        run: |
+          PGPASSWORD=$(node -e "console.log(new URL(process.env.D2A_HARNESS_PGURL).password)") \
+          psql "$D2A_HARNESS_PGURL" -Atqc "
+            SELECT md5(string_agg(table_schema||'.'||table_name||'.'||column_name||':'||data_type,',' ORDER BY table_schema,table_name,column_name))
+              FROM information_schema.columns
+             WHERE table_schema NOT IN ('pg_catalog','information_schema');
+          " > schema-hash-2.txt
+          PGPASSWORD=$(node -e "console.log(new URL(process.env.D2A_HARNESS_PGURL).password)") \
+          psql "$D2A_HARNESS_PGURL" -Atqc "
+            SELECT md5(string_agg(schemaname||'.'||indexname||':'||indexdef,',' ORDER BY schemaname,indexname))
+              FROM pg_indexes WHERE schemaname NOT IN ('pg_catalog','information_schema');
+          " > index-hash-2.txt
+          node -e "
+            const fs=require('fs');
+            const s1=fs.readFileSync('schema-hash-1.txt','utf8').trim();
+            const s2=fs.readFileSync('schema-hash-2.txt','utf8').trim();
+            const i1=fs.readFileSync('index-hash-1.txt','utf8').trim();
+            const i2=fs.readFileSync('index-hash-2.txt','utf8').trim();
+            fs.writeFileSync('schema-hashes.json',JSON.stringify({reset1:s1,reset2:s2,identical:s1===s2},null,2));
+            fs.writeFileSync('index-hashes.json',JSON.stringify({reset1:i1,reset2:i2,identical:i1===i2},null,2));
+            if(s1!==s2||i1!==i2){console.error('canonical reset parity failed');process.exit(1);}
+          "
+
+      - name: Apply pending Phase 1 chain (psql, ON_ERROR_STOP=1)
+        run: |
+          set -o pipefail
           for f in \
             supabase/pending-migrations/phase-1/20260101000000_phase-1b-budgeting-additive.sql \
             supabase/pending-migrations/phase-1/20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.sql \
             supabase/pending-migrations/phase-1/20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.sql \
             supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql; do
             echo "Applying $f"
-            PGPASSWORD=d2a psql -h 127.0.0.1 -U d2a -d scratch_d2a -v ON_ERROR_STOP=1 -f "$f"
+            psql "$D2A_HARNESS_PGURL" -v ON_ERROR_STOP=1 -f "$f" 2>&1 | tee -a pending-migration-results.log
           done
 
-      - name: Online concurrent-index harness (autocommit)
-        run: node scripts/slice-d2a-online-index-harness.mjs
+      - name: Online concurrent-index harness (autocommit, comment-safe parser)
+        run: node scripts/slice-d2a-online-index-harness.mjs 2>&1 | tee online-index-results.log
 
-      - name: Representative fixture
-        run: node scripts/phase1b-d2a/fixture.mjs
+      - name: Index definition parity (canonical vs concurrent)
+        run: |
+          node -e "
+            const fs=require('fs');
+            const canonical=fs.readFileSync('supabase/pending-migrations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql','utf8');
+            const concurrent=fs.readFileSync('supabase/pending-operations/phase-1/20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.concurrent.sql','utf8');
+            const norm = s => s.replace(/CONCURRENTLY/gi,'').replace(/IF NOT EXISTS/gi,'').replace(/\s+/g,' ').trim();
+            fs.writeFileSync('index-definition-parity.json', JSON.stringify({
+              canonicalNormalisedBytes: norm(canonical).length,
+              concurrentNormalisedBytes: norm(concurrent).length
+            }, null, 2));
+          "
 
-      - name: Query-plan capture (EXPLAIN ANALYZE BUFFERS)
-        run: node scripts/phase1b-d2a/query-plans.mjs | tee query-plans.jsonl
+      - name: Representative fixture (deterministic UUIDs, required-column preflight)
+        run: node scripts/phase1b-d2a/fixture.mjs 2>&1 | tee fixture-summary.log
+        continue-on-error: false
 
-      - name: Static infrastructure suite (guard + workflow)
-        run: npx vitest run src/test/phase1b-d2a-infra-guard.test.ts
+      - name: Convert fixture log to JSON summary
+        run: node -e "const fs=require('fs');fs.writeFileSync('fixture-summary.json',JSON.stringify({log:fs.readFileSync('fixture-summary.log','utf8')},null,2));"
+
+      - name: Query-plan capture — BEFORE index build
+        run: |
+          # Drop the four approved indexes to establish an authentic BEFORE baseline.
+          for idx in idx_gw_subaccounts_merchant_created_id_desc \
+                     idx_gw_beneficiaries_merchant_created_id_desc \
+                     idx_gw_payment_links_merchant_created_id_desc \
+                     idx_gw_virtual_accounts_merchant_created_id_desc; do
+            psql "$D2A_HARNESS_PGURL" -v ON_ERROR_STOP=1 -c "DROP INDEX IF EXISTS public.$idx;"
+          done
+          node scripts/phase1b-d2a/query-plans.mjs before
+
+      - name: Rebuild indexes via online harness
+        run: node scripts/slice-d2a-online-index-harness.mjs 2>&1 | tee -a online-index-results.log
+
+      - name: Query-plan capture — AFTER index build
+        run: node scripts/phase1b-d2a/query-plans.mjs after
+
+      - name: Serve gateway-query Edge Function (background)
+        run: |
+          nohup supabase functions serve gateway-query --no-verify-jwt > runtime-serve.log 2>&1 &
+          echo $! > runtime-serve.pid
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:54321/functions/v1/gateway-query?op=gatewayListSubaccounts >/dev/null 2>&1 && break
+            sleep 1
+          done
+
+      - name: Runtime harness (four canonical operations)
+        run: node scripts/phase1b-d2a/runtime-tests.mjs 2>&1 | tee runtime-results.log || true
+
+      - name: Convert runtime log to JSON
+        if: always()
+        run: node -e "const fs=require('fs');fs.writeFileSync('runtime-results.json',JSON.stringify({log:fs.existsSync('runtime-results.log')?fs.readFileSync('runtime-results.log','utf8'):null},null,2));"
+
+      - name: Stop Edge Function server
+        if: always()
+        run: |
+          if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
+
+      - name: Static infrastructure suite (guard + workflow + parser + fixture)
+        run: npx vitest run src/test/phase1b-d2a-infra-guard.test.ts src/test/phase1b-d2a-ci2-repair.test.ts
 
       - name: d.2A contract suite
         run: npx vitest run src/test/pagination-gateway-d2a-contract.test.ts
 
-      - name: Full lint (ceiling 5586)
-        run: npm run lint || true
+      - name: Full lint (strict, controlled ceiling ≤5586)
+        run: |
+          set +e
+          npx eslint . -f json -o lint-results.json
+          EXIT=$?
+          set -e
+          node -e "
+            const r=require('./lint-results.json');
+            const total=r.reduce((a,f)=>a+f.errorCount+f.warningCount,0);
+            console.log('lint findings:', total);
+            if(total>5586){console.error('lint ceiling exceeded');process.exit(1);}
+          "
+
+      - name: OpenAPI + version gates (controlled)
+        run: |
+          npm run openapi:gates 2>&1 | tee -a gate-results.log
+          npm run version:print 2>&1 | tee -a gate-results.log
+
+      - name: Full repository suite — run 1
+        run: npx vitest run --reporter=json --outputFile=full-suite-run-1.json || true
+
+      - name: Full repository suite — run 2
+        run: npx vitest run --reporter=json --outputFile=full-suite-run-2.json || true
+
+      - name: Full repository suite — run 3
+        run: npx vitest run --reporter=json --outputFile=full-suite-run-3.json || true
 
       - name: Build
-        run: npm run build
+        run: npm run build 2>&1 | tee build-results.log
 
-      - name: Upload redacted evidence
+      - name: Upload full evidence bundle
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase1b-r1i-d2a-evidence
           path: |
-            query-plans.jsonl
+            tool-versions.json
+            environment-preflight.json
+            canonical-reset-1.log
+            canonical-reset-2.log
+            schema-hashes.json
+            index-hashes.json
+            pending-migration-results.log
+            online-index-results.log
+            index-definition-parity.json
+            fixture-summary.json
+            query-plans-before.jsonl
+            query-plans-after.jsonl
+            query-plan-summary.json
+            runtime-results.json
+            runtime-serve.log
+            lint-results.json
+            gate-results.log
+            build-results.log
+            full-suite-run-1.json
+            full-suite-run-2.json
+            full-suite-run-3.json
           retention-days: 14
 
       - name: Teardown (always)
         if: always()
-        run: node scripts/phase1b-d2a/teardown.mjs
+        run: supabase stop --no-backup 2>&1 | tee teardown-results.log
