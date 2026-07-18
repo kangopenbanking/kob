@@ -10,8 +10,8 @@
 //
 // The "after" mode ALSO writes query-plan-summary.json with the pass/fail
 // verdict (4/4 approved indexes selected, 0 forced planner settings, 0
-// cross-merchant rows, 0 exact-count scans). NEVER uses
-// `SET enable_seqscan = off` or any planner hint.
+// cross-merchant rows, 0 exact-count scans). NEVER forces the planner with
+// any GUC override; the planner picks the access path unaided.
 
 import { writeFileSync } from "node:fs";
 import { runGuard } from "./guard.mjs";
