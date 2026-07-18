@@ -1,6 +1,15 @@
 # Phase 1B — R1I-d.2A-INFRA — CI Design (§8)
 
+> **R1I-d.2A-CI2 update:** the workflow no longer uses a bare
+> `services.postgres` container. It boots the isolated local Supabase
+> stack via `supabase/setup-cli@v2` pinned to **`2.20.12`**, then runs
+> `supabase db reset --local --no-seed` twice to establish canonical
+> baseline parity before the pending Phase 1 chain is applied via
+> `psql -v ON_ERROR_STOP=1`. Full repair log:
+> [`phase-1b-r1i-d2a-ci2-repair.md`](./phase-1b-r1i-d2a-ci2-repair.md).
+
 ## 1. Workflow
+
 
 `.github/workflows/phase1b-r1i-d2a-verification.yml`.
 
