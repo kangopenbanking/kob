@@ -169,7 +169,7 @@ async function inspect(client, entry) {
 }
 
 async function runForward(client) {
-  const stmts = await splitConcurrentStatements(readFileSync(FWD, "utf8"));
+  const stmts = await splitConcurrentStatements(readFileSync(FWD, "utf8"), "forward");
   for (const stmt of stmts) {
     // Each CONCURRENTLY statement executes on its own in autocommit.
     await client.query(stmt);
@@ -177,7 +177,7 @@ async function runForward(client) {
 }
 
 async function runRollback(client) {
-  const stmts = await splitConcurrentStatements(readFileSync(RBK, "utf8"));
+  const stmts = await splitConcurrentStatements(readFileSync(RBK, "utf8"), "rollback");
   for (const stmt of stmts) {
     await client.query(stmt);
   }
