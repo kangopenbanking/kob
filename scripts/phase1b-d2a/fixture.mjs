@@ -109,69 +109,81 @@ function rowValues({ table, merchantIdx, rowIdx, baseTs }) {
   };
 }
 
-runGuard();
+async function main() {
+  runGuard();
 
-const pg = (await import("pg")).default;
-const client = new pg.Client({ connectionString: process.env.D2A_HARNESS_PGURL });
-await client.connect();
+  const pg = (await import("pg")).default;
+  const client = new pg.Client({ connectionString: process.env.D2A_HARNESS_PGURL });
+  await client.connect();
 
-try {
-  await client.query("BEGIN");
-  for (const table of TABLES) {
-    await client.query(`TRUNCATE public.${table} CASCADE`);
-  }
-
-  const baseTs = new Date("2026-01-01T00:00:00Z").getTime();
-  const summary = { tables: {}, merchants: MERCHANTS, rowsPerMerchant: ROWS_PER_MERCHANT };
-
-  for (const table of TABLES) {
-    const required = await requiredColumns(client, table);
-    const sample = rowValues({ table, merchantIdx: 0, rowIdx: 0, baseTs });
-    const providedKeys = new Set(Object.keys(sample));
-    const missing = required.filter((c) => !providedKeys.has(c));
-    if (missing.length > 0) {
-      log("FIXTURE_MISSING_REQUIRED_COLUMN", { table, missing, required });
-      throw new Error(
-        `Fixture cannot satisfy required columns ${missing.join(", ")} on ${table}`,
-      );
+  try {
+    await client.query("BEGIN");
+    for (const table of TABLES) {
+      await client.query(`TRUNCATE public.${table} CASCADE`);
     }
-    // Compute the intersection of provided keys and actual table columns.
-    const { rows: actualCols } = await client.query(
-      `SELECT column_name FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = $1`,
-      [table],
-    );
-    const actualSet = new Set(actualCols.map((r) => r.column_name));
-    const insertCols = [...providedKeys].filter((c) => actualSet.has(c));
 
-    let inserted = 0;
-    for (let m = 0; m < MERCHANTS; m += 1) {
-      const values = [];
-      const params = [];
-      for (let r = 0; r < ROWS_PER_MERCHANT; r += 1) {
-        const row = rowValues({ table, merchantIdx: m, rowIdx: r, baseTs });
-        const rowParams = insertCols.map((c) => row[c]);
-        const startIdx = params.length + 1;
-        params.push(...rowParams);
-        const placeholders = insertCols.map((_, i) => `$${startIdx + i}`).join(",");
-        values.push(`(${placeholders})`);
+    const baseTs = new Date("2026-01-01T00:00:00Z").getTime();
+    const summary = { tables: {}, merchants: MERCHANTS, rowsPerMerchant: ROWS_PER_MERCHANT };
+
+    for (const table of TABLES) {
+      const required = await requiredColumns(client, table);
+      const sample = rowValues({ table, merchantIdx: 0, rowIdx: 0, baseTs });
+      const providedKeys = new Set(Object.keys(sample));
+      const missing = required.filter((c) => !providedKeys.has(c));
+      if (missing.length > 0) {
+        log("FIXTURE_MISSING_REQUIRED_COLUMN", { table, missing, required });
+        throw new Error(
+          `Fixture cannot satisfy required columns ${missing.join(", ")} on ${table}`,
+        );
       }
-      await client.query(
-        `INSERT INTO public.${table} (${insertCols.join(",")}) VALUES ${values.join(",")}`,
-        params,
+      const { rows: actualCols } = await client.query(
+        `SELECT column_name FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = $1`,
+        [table],
       );
-      inserted += ROWS_PER_MERCHANT;
+      const actualSet = new Set(actualCols.map((r) => r.column_name));
+      const insertCols = [...providedKeys].filter((c) => actualSet.has(c));
+
+      let inserted = 0;
+      for (let m = 0; m < MERCHANTS; m += 1) {
+        const values = [];
+        const params = [];
+        for (let r = 0; r < ROWS_PER_MERCHANT; r += 1) {
+          const row = rowValues({ table, merchantIdx: m, rowIdx: r, baseTs });
+          const rowParams = insertCols.map((c) => row[c]);
+          const startIdx = params.length + 1;
+          params.push(...rowParams);
+          const placeholders = insertCols.map((_, i) => `$${startIdx + i}`).join(",");
+          values.push(`(${placeholders})`);
+        }
+        await client.query(
+          `INSERT INTO public.${table} (${insertCols.join(",")}) VALUES ${values.join(",")}`,
+          params,
+        );
+        inserted += ROWS_PER_MERCHANT;
+      }
+      const { rows } = await client.query(`SELECT count(*)::int AS c FROM public.${table}`);
+      summary.tables[table] = { inserted, total: rows[0].c, columns: insertCols };
+      log("fixture_loaded", { table, inserted, total: rows[0].c, columns: insertCols });
     }
-    const { rows } = await client.query(`SELECT count(*)::int AS c FROM public.${table}`);
-    summary.tables[table] = { inserted, total: rows[0].c, columns: insertCols };
-    log("fixture_loaded", { table, inserted, total: rows[0].c, columns: insertCols });
+    await client.query("COMMIT");
+    log("fixture_ok", summary);
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => {});
+    log("fixture_error", { message: String(err.message || err) });
+    process.exit(1);
+  } finally {
+    await client.end();
   }
-  await client.query("COMMIT");
-  log("fixture_ok", summary);
-} catch (err) {
-  await client.query("ROLLBACK").catch(() => {});
-  log("fixture_error", { message: String(err.message || err) });
-  process.exit(1);
-} finally {
-  await client.end();
 }
+
+// CLI guard — helpers above are import-safe; main runs only when invoked directly.
+const isCli = import.meta.url === `file://${process.argv[1]}` ||
+  (process.argv[1] && process.argv[1].endsWith("fixture.mjs"));
+if (isCli) {
+  main().catch((err) => {
+    log("fixture_fatal", { message: String(err.message || err) });
+    process.exit(1);
+  });
+}
+
