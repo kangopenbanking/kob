@@ -324,7 +324,7 @@ describe('CI14 — OpenAPI gate-ceiling evaluator', () => {
 
   it('C31: workflow cleans both generated files before execution', () => {
     const wf = fs.readFileSync(WORKFLOW_PATH, 'utf8');
-    const cleanBlock = wf.match(/Clean generated CI evidence[\s\S]*?(?=\n      - name:)/);
+    const cleanBlock = wf.match(/Clean generated CI evidence[\s\S]*?(?=\n {6}- name:)/);
     expect(cleanBlock).not.toBeNull();
     expect(cleanBlock[0]).toMatch(/gate-results\.log/);
     expect(cleanBlock[0]).toMatch(/openapi-gate-ceiling-results\.json/);
