@@ -32,6 +32,7 @@ import {
   PaginationConfigurationError,
   PaginationValidationError,
   type CursorSecretOptions,
+  type DecodedCursorResult,
   type PaginationOrderProfile,
   type PaginationScalar,
 } from "../_shared/pagination.ts";
