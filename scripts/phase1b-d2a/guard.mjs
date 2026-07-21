@@ -135,9 +135,10 @@ export function runGuard(env = process.env) {
     );
   }
   const host = u.hostname;
+  const hostLower = normalizeHostname(host);
   const port = u.port || "5432";
   const database = (u.pathname || "").replace(/^\//, "");
-  evidence.host = redactHost(host);
+  evidence.host = redactHost(hostLower);
   evidence.port = port;
   evidence.database = database || "<absent>";
 
