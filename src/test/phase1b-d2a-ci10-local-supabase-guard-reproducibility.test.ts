@@ -2,7 +2,7 @@
 // Narrow exception is fail-closed and requires every attestation condition.
 
 import { describe, expect, it } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -172,7 +172,6 @@ describe("CI10 — local Supabase guard attestation", () => {
     const yml = readFileSync(WORKFLOW, "utf8");
     expect(yml).toMatch(/D2A_LOCAL_SUPABASE_STACK:\s*"true"/);
     const workflowsDir = resolve(ROOT, ".github/workflows");
-    const { readdirSync } = require("node:fs") as typeof import("node:fs");
     const files = readdirSync(workflowsDir).filter((f: string) => /\.ya?ml$/.test(f));
     const offenders: string[] = [];
     for (const f of files) {

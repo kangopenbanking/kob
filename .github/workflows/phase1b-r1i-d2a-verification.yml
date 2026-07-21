@@ -17,6 +17,7 @@
 # CI13 actual-response CORS exposure and merchant query-scope verification
 # CI14 ratified OpenAPI quality-gate ceiling evaluator
 # CI14A forward-compatible cumulative static-suite assertion
+# CI14B non-runtime lint-ceiling reconciliation
 
 
 

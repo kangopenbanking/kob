@@ -310,7 +310,7 @@ describe('CI14 — OpenAPI gate-ceiling evaluator', () => {
     const wf = fs.readFileSync(WORKFLOW_PATH, 'utf8');
     // Locate the OpenAPI gates (structural + performance ...) step and its
     // run block. Ensure no || true / continue-on-error inside it.
-    const stepRegex = /- name: OpenAPI gates[\s\S]*?ratified per-gate ceiling[\s\S]*?run: \|([\s\S]*?)(?=\n      - name:|\Z)/;
+    const stepRegex = /- name: OpenAPI gates[\s\S]*?ratified per-gate ceiling[\s\S]*?run: \|([\s\S]*?)(?=\n {6}- name:|$)/;
     const m = wf.match(stepRegex);
     expect(m).not.toBeNull();
     const block = m[1];
@@ -324,7 +324,7 @@ describe('CI14 — OpenAPI gate-ceiling evaluator', () => {
 
   it('C31: workflow cleans both generated files before execution', () => {
     const wf = fs.readFileSync(WORKFLOW_PATH, 'utf8');
-    const cleanBlock = wf.match(/Clean generated CI evidence[\s\S]*?(?=\n      - name:)/);
+    const cleanBlock = wf.match(/Clean generated CI evidence[\s\S]*?(?=\n {6}- name:)/);
     expect(cleanBlock).not.toBeNull();
     expect(cleanBlock[0]).toMatch(/gate-results\.log/);
     expect(cleanBlock[0]).toMatch(/openapi-gate-ceiling-results\.json/);

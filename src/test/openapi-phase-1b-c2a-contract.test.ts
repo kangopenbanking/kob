@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Phase 1B-R1I-c.2A — Budgeting DELETE response contract guards.
  *
@@ -15,30 +14,84 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const spec = JSON.parse(fs.readFileSync(path.join(root, 'public/openapi.json'), 'utf-8'));
+type OpenApiParameter = {
+  name?: string;
+  $ref?: string;
+  required?: boolean;
+  schema?: { format?: string } & Record<string, unknown>;
+} & Record<string, unknown>;
 
-function findOp(id: string) {
-  for (const [p, ms] of Object.entries<any>(spec.paths || {})) {
-    for (const [m, o] of Object.entries<any>(ms)) {
+type OpenApiSchemaRef = { $ref?: string; allOf?: Array<{ $ref?: string }> } & Record<
+  string,
+  unknown
+>;
+
+type OpenApiMedia = {
+  schema?: OpenApiSchemaRef;
+  examples?: Record<string, { $ref?: string } & Record<string, unknown>>;
+} & Record<string, unknown>;
+
+type OpenApiResponse = {
+  $ref?: string;
+  description?: string;
+  content?: Record<string, OpenApiMedia>;
+} & Record<string, unknown>;
+
+type OpenApiOperation = {
+  operationId?: string;
+  description?: string;
+  parameters?: OpenApiParameter[];
+  responses?: Record<string, OpenApiResponse>;
+} & Record<string, unknown>;
+
+type OpenApiPathItem = Record<string, OpenApiOperation>;
+
+type OpenApiSpec = {
+  info: { version: string };
+  paths: Record<string, OpenApiPathItem>;
+  components?: {
+    examples?: Record<string, unknown>;
+    parameters?: Record<string, OpenApiParameter>;
+  } & Record<string, unknown>;
+};
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const spec = JSON.parse(
+  fs.readFileSync(path.join(root, 'public/openapi.json'), 'utf-8'),
+) as OpenApiSpec;
+
+function isObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
+}
+
+function findOp(id: string): { path: string; method: string; op: OpenApiOperation } | null {
+  for (const [p, ms] of Object.entries(spec.paths || {})) {
+    for (const [m, o] of Object.entries(ms as OpenApiPathItem)) {
       if (o && typeof o === 'object' && o.operationId === id) return { path: p, method: m, op: o };
     }
   }
   return null;
 }
-function paramNames(op: any): string[] {
-  return (op.parameters || []).map((p: any) => (p.$ref ? p.$ref.split('/').pop() : p.name));
+function paramNames(op: OpenApiOperation): string[] {
+  return (op.parameters || []).map((p) => (p.$ref ? p.$ref.split('/').pop() || '' : p.name || ''));
 }
-function resolveRef(ref: string): any {
+function resolveRef(ref: string): unknown {
   const parts = ref.replace(/^#\//, '').split('/');
-  let cur: any = spec;
-  for (const p of parts) cur = cur?.[p];
+  let cur: unknown = spec;
+  for (const p of parts) {
+    if (!isObject(cur)) return undefined;
+    cur = (cur as Record<string, unknown>)[p];
+  }
   return cur;
 }
-function responseBody(op: any, code: string) {
+function responseBody(op: OpenApiOperation, code: string): OpenApiResponse | null {
   const r = op.responses?.[code];
   if (!r) return null;
-  return r.$ref ? resolveRef(r.$ref) : r;
+  if (r.$ref) {
+    const resolved = resolveRef(r.$ref);
+    return isObject(resolved) ? (resolved as OpenApiResponse) : null;
+  }
+  return r;
 }
 
 const OPS = [
@@ -53,7 +106,7 @@ describe('Phase 1B-R1I-c.2A — Budgeting DELETE response contract', () => {
 
   it('operation count is 483 (post c.4 removal)', () => {
     let n = 0;
-    for (const ms of Object.values<any>(spec.paths || {})) {
+    for (const ms of Object.values(spec.paths || {})) {
       for (const m of Object.keys(ms)) {
         if (['get', 'post', 'put', 'patch', 'delete'].includes(m)) n++;
       }
@@ -73,25 +126,27 @@ describe('Phase 1B-R1I-c.2A — Budgeting DELETE response contract', () => {
       it('retains optional Idempotency-Key header (IdempotencyKeyHeader $ref)', () => {
         const f = findOp(id)!;
         expect(paramNames(f.op)).toContain('IdempotencyKeyHeader');
-        const param = resolveRef('#/components/parameters/IdempotencyKeyHeader');
-        expect(param.required).toBe(false);
-        expect(param.name).toBe('Idempotency-Key');
-        expect(param.schema.format).toBe('uuid');
+        const param = resolveRef('#/components/parameters/IdempotencyKeyHeader') as
+          | OpenApiParameter
+          | undefined;
+        expect(param?.required).toBe(false);
+        expect(param?.name).toBe('Idempotency-Key');
+        expect(param?.schema?.format).toBe('uuid');
       });
 
       it.each(['204', '400', '401', '404', '409', '500'] as const)('documents %s', (code) => {
         const f = findOp(id)!;
-        expect(Object.keys(f.op.responses)).toContain(code);
+        expect(Object.keys(f.op.responses ?? {})).toContain(code);
       });
 
       it('every 4xx/5xx response uses application/problem+json with ProblemDetails schema', () => {
         const f = findOp(id)!;
-        for (const code of Object.keys(f.op.responses)) {
+        for (const code of Object.keys(f.op.responses ?? {})) {
           if (!/^[45]\d\d$/.test(code)) continue;
           const body = responseBody(f.op, code);
           const media = body?.content?.['application/problem+json'];
           expect(media, `${id} ${code} missing application/problem+json`).toBeTruthy();
-          const schema = media.schema;
+          const schema = media!.schema ?? {};
           const ref = schema.$ref || schema.allOf?.[0]?.$ref;
           expect(ref, `${id} ${code} missing ProblemDetails ref`).toBeTruthy();
           expect(ref).toMatch(/ProblemDetails/);
@@ -100,7 +155,7 @@ describe('Phase 1B-R1I-c.2A — Budgeting DELETE response contract', () => {
 
       it('all response $refs resolve', () => {
         const f = findOp(id)!;
-        for (const [code, r] of Object.entries<any>(f.op.responses)) {
+        for (const [code, r] of Object.entries(f.op.responses ?? {})) {
           if (r.$ref) {
             expect(resolveRef(r.$ref), `${id} ${code} $ref unresolved`).toBeTruthy();
           }
@@ -146,8 +201,12 @@ describe('Phase 1B-R1I-c.2A — Budgeting DELETE response contract', () => {
     it('409 examples include the two conflict cases + idempotency reuse', () => {
       const body = responseBody(findOp('budgetingDeleteCategory')!.op, '409');
       const examples = body?.content?.['application/problem+json']?.examples || {};
-      expect(examples.system_category_protected?.$ref).toBe('#/components/examples/ProblemDetailsSystemCategoryProtected');
-      expect(examples.category_has_active_dependencies?.$ref).toBe('#/components/examples/ProblemDetailsCategoryActiveDependencies');
+      expect(examples.system_category_protected?.$ref).toBe(
+        '#/components/examples/ProblemDetailsSystemCategoryProtected',
+      );
+      expect(examples.category_has_active_dependencies?.$ref).toBe(
+        '#/components/examples/ProblemDetailsCategoryActiveDependencies',
+      );
       expect(examples.idempotency_key_reused?.$ref).toBeTruthy();
     });
   });

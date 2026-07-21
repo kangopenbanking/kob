@@ -171,7 +171,7 @@ describe("Phase 1B R1I-d.2A · CI13 runtime CORS + merchant-scope reproducibilit
 
   it("21. CORS exposure is parsed as a case-insensitive comma-separated set", () => {
     expect(RUNTIME).toMatch(/function parseExposedHeaders/);
-    expect(RUNTIME).toMatch(/\.split\(",\"\)/);
+    expect(RUNTIME).toMatch(/\.split\(","\)/);
     expect(RUNTIME).toMatch(/\.toLowerCase\(\)/);
   });
 
