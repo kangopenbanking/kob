@@ -1,20 +1,9 @@
-# Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI3 corrections)
+# Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI4 corrections)
 #
-# Boots the ISOLATED LOCAL Supabase stack (via the pinned Supabase CLI) from
-# the repository's supabase/config.toml, applies canonical migrations via
-# `supabase db reset --local --no-seed`, then applies the ratified pending
-# Phase 1 chain with psql, runs the full R1I-d.2A-EV evidence protocol, and
-# uploads the complete evidence bundle.
-#
-# CI3 corrections (§CI3-A..§CI3-H):
-#   * Removed `|| true` from runtime verification (no failure masking).
-#   * Full-suite policy evaluator produces full-suite-policy-results.json.
-#   * All ratified OpenAPI/version commands run and produce evidence.
-#   * `supabase functions serve` starts EXACTLY ONCE and its URL is passed to
-#     runtime-tests.mjs via D2A_RUNTIME_BASE_URL.
-#   * Structural index-definition parity replaces byte-length comparison.
-#   * Targeted vitest suite emits targeted-suite-results.json.
-#   * Teardown emits teardown-results.json in addition to the log.
+# Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
+# Actions runner. No Lovable-managed Supabase project is contacted; no
+# production credentials are used. See docs/audits/phase-1/phase-1b-r1i-d2a-
+# ci4-startup-repair.md for the CI4 repair rationale.
 
 name: Phase 1B R1I-d.2A Isolated Verification
 
@@ -67,16 +56,18 @@ jobs:
       - name: Set up Supabase CLI (pinned)
         uses: supabase/setup-cli@v2
         with:
-          version: "2.20.12"
+          version: "2.101.0"
           github-token: ${{ github.token }}
 
       - name: Record tool versions
         run: |
+          set -o pipefail
           {
             echo "{"
             echo "  \"node\": \"$(node -v)\","
             echo "  \"npm\": \"$(npm -v)\","
             echo "  \"supabase\": \"$(supabase --version)\","
+            echo "  \"supabasePinned\": \"2.101.0\","
             echo "  \"psql\": \"$(psql --version)\""
             echo "}"
           } > tool-versions.json
@@ -92,15 +83,65 @@ jobs:
       - name: Verify PostgreSQL driver
         run: node -e "import('pg').then(() => console.log('pg import PASS'))"
 
+      - name: Docker and Supabase startup preflight
+        run: |
+          set -euo pipefail
+
+          docker version
+          docker info
+          docker system df
+          free -h
+          df -h
+          supabase --version
+
+          test -f supabase/config.toml
+
+          node -e "
+            const fs = require('fs');
+            const path = 'supabase/config.toml';
+            if (!fs.existsSync(path)) {
+              console.error('Missing supabase/config.toml');
+              process.exit(1);
+            }
+            console.log('supabase/config.toml present');
+          "
+
       - name: Start isolated local Supabase stack
         run: |
-          supabase start --exclude imgproxy,inbucket,studio,logflare,vector,pgadmin-schema-diff
-        env:
-          SUPABASE_ACCESS_TOKEN: ""
-          SUPABASE_DB_PASSWORD: ""
+          set -o pipefail
+
+          START_EXIT=0
+
+          supabase start \
+            --exclude realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,logflare,vector,supavisor \
+            2>&1 | tee supabase-start.log || START_EXIT=$?
+
+          if [ "$START_EXIT" -ne 0 ]; then
+            echo "Supabase startup failed with exit code $START_EXIT"
+
+            docker ps -a > docker-ps-after-start.txt 2>&1 || true
+            docker system df > docker-system-df-after-start.txt 2>&1 || true
+            supabase status > supabase-status-after-start.txt 2>&1 || true
+
+            mkdir -p supabase-container-logs
+
+            docker ps -a \
+              --format '{{.Names}}' \
+              | grep -E '^supabase_|supabase' \
+              | while read -r container; do
+                  docker logs "$container" \
+                    > "supabase-container-logs/${container}.log" \
+                    2>&1 || true
+                done
+
+            exit "$START_EXIT"
+          fi
+
+          supabase status
 
       - name: Populate isolated environment variables
         run: |
+          set -o pipefail
           supabase status -o env > .d2a.env
           . ./.d2a.env
           {
@@ -129,7 +170,9 @@ jobs:
         run: node scripts/phase1b-d2a/bootstrap.mjs
 
       - name: Canonical reset 1 (supabase db reset --local --no-seed)
-        run: supabase db reset --local --no-seed 2>&1 | tee canonical-reset-1.log
+        run: |
+          set -o pipefail
+          supabase db reset --local --no-seed 2>&1 | tee canonical-reset-1.log
 
       - name: Snapshot canonical schema hash (after reset 1)
         run: |
@@ -144,7 +187,9 @@ jobs:
           " > index-hash-1.txt
 
       - name: Canonical reset 2 (independent, from clean state)
-        run: supabase db reset --local --no-seed 2>&1 | tee canonical-reset-2.log
+        run: |
+          set -o pipefail
+          supabase db reset --local --no-seed 2>&1 | tee canonical-reset-2.log
 
       - name: Snapshot canonical schema hash (after reset 2) + parity
         run: |
@@ -181,13 +226,19 @@ jobs:
           done
 
       - name: Online concurrent-index harness (autocommit, comment-safe parser)
-        run: node scripts/slice-d2a-online-index-harness.mjs 2>&1 | tee online-index-results.log
+        run: |
+          set -o pipefail
+          node scripts/slice-d2a-online-index-harness.mjs 2>&1 | tee online-index-results.log
 
       - name: Structural index definition parity (canonical vs concurrent)
-        run: node scripts/phase1b-d2a/index-definition-parity.mjs 2>&1 | tee index-definition-parity.log
+        run: |
+          set -o pipefail
+          node scripts/phase1b-d2a/index-definition-parity.mjs 2>&1 | tee index-definition-parity.log
 
       - name: Representative fixture (parents-first, per-table builders, required-column preflight)
-        run: node scripts/phase1b-d2a/fixture.mjs 2>&1 | tee fixture-loader.log
+        run: |
+          set -o pipefail
+          node scripts/phase1b-d2a/fixture.mjs 2>&1 | tee fixture-loader.log
 
       - name: Query-plan capture — BEFORE index build
         run: |
@@ -200,7 +251,9 @@ jobs:
           node scripts/phase1b-d2a/query-plans.mjs before
 
       - name: Rebuild indexes via online harness
-        run: node scripts/slice-d2a-online-index-harness.mjs 2>&1 | tee -a online-index-results.log
+        run: |
+          set -o pipefail
+          node scripts/slice-d2a-online-index-harness.mjs 2>&1 | tee -a online-index-results.log
 
       - name: Query-plan capture — AFTER index build
         run: node scripts/phase1b-d2a/query-plans.mjs after
@@ -215,14 +268,16 @@ jobs:
           done
 
       - name: Runtime harness (unmasked; four canonical operations + security + CORS)
-        run: node scripts/phase1b-d2a/runtime-tests.mjs 2>&1 | tee runtime-results.log
+        run: |
+          set -o pipefail
+          node scripts/phase1b-d2a/runtime-tests.mjs 2>&1 | tee runtime-results.log
 
       - name: Stop Edge Function server
         if: always()
         run: |
           if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
 
-      - name: Static infrastructure suite (guard + workflow + parser + fixture + CI3)
+      - name: Static infrastructure suite (guard + workflow + parser + fixture + CI3 + CI4)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -234,19 +289,29 @@ jobs:
         run: npx vitest run src/test/pagination-gateway-d2a-contract.test.ts
 
       - name: OpenAPI gates (spec-side vitest)
-        run: npm run openapi:gates:test 2>&1 | tee -a gate-results.log
+        run: |
+          set -o pipefail
+          npm run openapi:gates:test 2>&1 | tee -a gate-results.log
 
       - name: OpenAPI gates (structural + performance)
-        run: npm run openapi:gates 2>&1 | tee -a gate-results.log
+        run: |
+          set -o pipefail
+          npm run openapi:gates 2>&1 | tee -a gate-results.log
 
       - name: OpenAPI version check
-        run: npm run openapi:check-version 2>&1 | tee -a gate-results.log
+        run: |
+          set -o pipefail
+          npm run openapi:check-version 2>&1 | tee -a gate-results.log
 
       - name: Version sync check
-        run: npm run version:check-sync 2>&1 | tee -a gate-results.log
+        run: |
+          set -o pipefail
+          npm run version:check-sync 2>&1 | tee -a gate-results.log
 
       - name: Print expected version
-        run: npm run version:print 2>&1 | tee -a gate-results.log
+        run: |
+          set -o pipefail
+          npm run version:print 2>&1 | tee -a gate-results.log
 
       - name: Full lint (strict, controlled ceiling ≤5586)
         run: |
@@ -276,20 +341,30 @@ jobs:
         run: node scripts/phase1b-d2a/full-suite-policy.mjs
 
       - name: Build
-        run: npm run build 2>&1 | tee build-results.log
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build-results.log
 
       - name: Teardown (always) — fail-closed local Supabase stack shutdown
         if: always()
-        run: node scripts/phase1b-d2a/teardown.mjs 2>&1 | tee teardown-results.log
+        run: |
+          set -o pipefail
+          node scripts/phase1b-d2a/teardown.mjs 2>&1 | tee teardown-results.log
 
       - name: Upload full evidence bundle
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: phase1b-r1i-d2a-evidence
+          if-no-files-found: ignore
           path: |
             tool-versions.json
             environment-preflight.json
+            supabase-start.log
+            docker-ps-after-start.txt
+            docker-system-df-after-start.txt
+            supabase-status-after-start.txt
+            supabase-container-logs/**
             canonical-reset-1.log
             canonical-reset-2.log
             schema-hashes.json
