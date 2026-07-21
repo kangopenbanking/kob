@@ -373,7 +373,6 @@ export function runCli({ cwd = process.cwd(), writeFile = fs.writeFileSync, exit
   writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`, { encoding: 'utf8' });
 
   if (result.verdict !== 'PASS') {
-    // eslint-disable-next-line no-console
     console.error(
       '[phase1b-d2a-ci14] OpenAPI gate-ceiling verdict FAIL:',
       JSON.stringify(result.reasons, null, 2),
@@ -381,7 +380,6 @@ export function runCli({ cwd = process.cwd(), writeFile = fs.writeFileSync, exit
     exit(1);
     return;
   }
-  // eslint-disable-next-line no-console
   console.log(
     '[phase1b-d2a-ci14] OpenAPI gate-ceiling verdict PASS — baseline within ratified ceiling.',
   );
