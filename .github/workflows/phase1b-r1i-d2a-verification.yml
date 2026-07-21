@@ -335,6 +335,8 @@ jobs:
             );
           "
           test -s edge-runtime-env-attestation.json
+          # CI12A — mark function env file as prepared only after successful creation + attestation
+          echo "D2A_FUNCTION_ENV_PREPARED=true" >> "$GITHUB_ENV"
 
       - name: Serve gateway-query Edge Function (background, single instance)
         run: |
