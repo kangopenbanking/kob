@@ -1,0 +1,69 @@
+{
+  "policy": {
+    "raw": "≤ 93",
+    "stable": "≤ 89",
+    "skipped": "≤ 7",
+    "unhandled": "= 0"
+  },
+  "runs": [
+    {
+      "path": "full-suite-run-1.json",
+      "present": false,
+      "numFailed": null,
+      "numSkipped": null,
+      "unhandled": null
+    },
+    {
+      "path": "full-suite-run-2.json",
+      "present": false,
+      "numFailed": null,
+      "numSkipped": null,
+      "unhandled": null
+    },
+    {
+      "path": "full-suite-run-3.json",
+      "present": false,
+      "numFailed": null,
+      "numSkipped": null,
+      "unhandled": null
+    }
+  ],
+  "rawFailures": [],
+  "stableFailures": null,
+  "skipped": null,
+  "unhandled": null,
+  "maxRaw": null,
+  "median": null,
+  "missingReports": [
+    "full-suite-run-1.json",
+    "full-suite-run-2.json",
+    "full-suite-run-3.json"
+  ],
+  "rotatingTests": [],
+  "unauthorisedRotatingTests": [],
+  "ratifiedRotationAllowlist": [
+    {
+      "file": "src/test/phase6-dashboard-routes.test.tsx",
+      "name": "Phase 6 · Merchant dashboard pages render → MerchantApiKeys module loads"
+    },
+    {
+      "file": "src/pages/__tests__/IdentityGuide.test.tsx",
+      "name": "IdentityGuide renders all 4 tabs"
+    },
+    {
+      "file": "src/pages/__tests__/IdentityGuide.test.tsx",
+      "name": "IdentityGuide renders page title"
+    },
+    {
+      "file": "src/pages/__tests__/SecuritySettings.test.tsx",
+      "name": "SecuritySettings renders security settings page for authenticated user"
+    }
+  ],
+  "unevaluatedFullSuiteRuns": 3,
+  "rawViolation": false,
+  "stableViolation": false,
+  "skippedViolation": false,
+  "unhandledViolation": false,
+  "rotationViolation": false,
+  "verdict": "FAIL"
+}
