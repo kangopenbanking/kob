@@ -363,6 +363,16 @@ const CURSOR_FAILURE_TO_PROBLEM: Record<string, D2bProblemCode> = {
 };
 
 /**
+ * Type guard for the failure branch of `DecodedCursorResult`. Narrows without
+ * a broadened cast, `any`, `unknown` property access, or lint disables.
+ */
+function isDecodedCursorFailure(
+  result: DecodedCursorResult,
+): result is Extract<DecodedCursorResult, { ok: false }> {
+  return result.ok === false;
+}
+
+/**
  * Decode a ratified d.2B cursor bound to (operation, scope, filters, ordering).
  *
  * Client-attributable failures (bad signature, expiry, scope drift, filter
@@ -392,15 +402,13 @@ export async function decodeD2bCursor(input: D2bDecodeInputs): Promise<D2bDecode
     input.secretOptions,
   );
 
-  if (result.ok !== true) {
-    const failure = result as { ok: false; code: string; detail: string };
+  if (isDecodedCursorFailure(result)) {
     // Foundation returns CONFIGURATION_ERROR when the secret is missing at
     // decode time. Re-raise to preserve the fail-closed server semantics.
-    if (failure.code === "CONFIGURATION_ERROR") {
-      throw new PaginationConfigurationError(failure.detail);
+    if (result.code === "CONFIGURATION_ERROR") {
+      throw new PaginationConfigurationError(result.detail);
     }
-    const code = CURSOR_FAILURE_TO_PROBLEM[failure.code as keyof typeof CURSOR_FAILURE_TO_PROBLEM]
-      ?? "PAGINATION_CURSOR_INVALID";
+    const code = CURSOR_FAILURE_TO_PROBLEM[result.code] ?? "PAGINATION_CURSOR_INVALID";
     const title = code === "PAGINATION_CURSOR_EXPIRED"
       ? "Pagination cursor expired"
       : "Invalid pagination cursor";
