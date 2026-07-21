@@ -83,6 +83,14 @@ function isPublicIPv4(host) {
   return true;
 }
 
+function normalizeHostname(value) {
+  const lower = String(value || "").toLowerCase();
+  if (lower.startsWith("[") && lower.endsWith("]")) {
+    return lower.slice(1, -1);
+  }
+  return lower;
+}
+
 export function runGuard(env = process.env) {
   const evidence = {
     marker: false,
@@ -127,9 +135,10 @@ export function runGuard(env = process.env) {
     );
   }
   const host = u.hostname;
+  const hostLower = normalizeHostname(host);
   const port = u.port || "5432";
   const database = (u.pathname || "").replace(/^\//, "");
-  evidence.host = redactHost(host);
+  evidence.host = redactHost(hostLower);
   evidence.port = port;
   evidence.database = database || "<absent>";
 
@@ -143,7 +152,6 @@ export function runGuard(env = process.env) {
   }
 
   // 4. Host must be local, private, or an approved CI service host.
-  const hostLower = host.toLowerCase();
   const isKnownLocal = LOCAL_HOSTS.has(hostLower);
   const isPrivate = /^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[0-1])\./.test(hostLower);
   const isCiServiceAlias = env.GITHUB_ACTIONS === "true" && /^[a-z0-9_-]+$/i.test(hostLower);
@@ -188,24 +196,24 @@ export function runGuard(env = process.env) {
       dbPostgres: dbLower === "postgres",
     };
     let apiOk = false;
-    let apiHost = "<absent>";
+    let normalizedApiHost = "<absent>";
     let apiPort = "<absent>";
     if (env.SUPABASE_URL) {
       try {
         const api = new URL(env.SUPABASE_URL);
-        apiHost = api.hostname;
+        normalizedApiHost = normalizeHostname(api.hostname);
         apiPort = api.port || (api.protocol === "https:" ? "443" : "80");
         apiOk =
           api.protocol === "http:" &&
-          LOOPBACK_HOSTS.has(api.hostname.toLowerCase()) &&
+          LOOPBACK_HOSTS.has(normalizedApiHost) &&
           (api.port === "54321");
       } catch {
         apiOk = false;
       }
     }
-    evidence.supabaseApiHost = LOOPBACK_HOSTS.has(apiHost.toLowerCase())
-      ? apiHost
-      : redactHost(apiHost);
+    evidence.supabaseApiHost = LOOPBACK_HOSTS.has(normalizedApiHost)
+      ? normalizedApiHost
+      : redactHost(normalizedApiHost);
     evidence.supabaseApiPort = apiPort;
     const allOk = apiOk && Object.values(conditions).every(Boolean);
     if (dbLower === "postgres") {
