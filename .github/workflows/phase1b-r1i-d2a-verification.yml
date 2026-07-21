@@ -6,6 +6,8 @@
 # CI8 translation child-data FK reproducibility sweep
 # CI9 pg_cron and pg_net extension reproducibility sweep
 # CI9A generated extension audit evidence provenance repair
+# CI10 local Supabase postgres database guard attestation
+
 
 
 #
@@ -50,8 +52,10 @@ jobs:
 
     env:
       KOB_D2A_DISPOSABLE_ENVIRONMENT: "true"
+      D2A_LOCAL_SUPABASE_STACK: "true"
       D2A_HARNESS_PGURL: ""
       D2A_RUNTIME_BASE_URL: "http://127.0.0.1:54321/functions/v1/gateway-query"
+
 
     steps:
       - name: Checkout
@@ -173,17 +177,26 @@ jobs:
           } >> "$GITHUB_ENV"
           node -e "
             const u = new URL(process.argv[1]);
+            const api = new URL(process.env.SUPABASE_URL || 'http://127.0.0.1:54321');
             const fs = require('fs');
             fs.writeFileSync('environment-preflight.json', JSON.stringify({
               host: u.hostname, port: u.port, database: u.pathname.slice(1),
+              apiHost: api.hostname, apiPort: api.port,
               disposableMarker: process.env.KOB_D2A_DISPOSABLE_ENVIRONMENT === 'true',
+              localSupabaseMarker: process.env.D2A_LOCAL_SUPABASE_STACK === 'true',
               secretPresent: !!process.env.KOB_CURSOR_HMAC_SECRET
             }, null, 2));
           " "${DB_URL}"
           cat environment-preflight.json
 
       - name: Environment guard (fail-closed)
-        run: node scripts/phase1b-d2a/guard.mjs
+        run: |
+          set -euo pipefail
+          rm -f environment-guard.log
+          node scripts/phase1b-d2a/guard.mjs \
+            2>&1 | tee environment-guard.log
+          test -s environment-guard.log
+
 
       - name: Bootstrap disposable environment (privilege probes)
         env:
@@ -316,7 +329,7 @@ jobs:
           test -s extension-reproducibility-audit.json
           test -s extension-reproducibility-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -327,7 +340,9 @@ jobs:
             src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts \
             src/test/phase1b-d2a-ci8-translation-fk-reproducibility.test.ts \
             src/test/phase1b-d2a-ci9-extension-sweep-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci10-local-supabase-guard-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
+
 
 
       - name: d.2A contract suite
@@ -410,6 +425,8 @@ jobs:
 
             tool-versions.json
             environment-preflight.json
+            environment-guard.log
+
             supabase-start.log
             docker-ps-after-start.txt
             docker-system-df-after-start.txt

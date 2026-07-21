@@ -92,6 +92,10 @@ export function runGuard(env = process.env) {
     ci: Boolean(env.CI),
     githubActions: Boolean(env.GITHUB_ACTIONS),
     secretPresent: false,
+    localSupabaseMarker: env.D2A_LOCAL_SUPABASE_STACK === "true",
+    localSupabaseAttested: false,
+    supabaseApiHost: "<absent>",
+    supabaseApiPort: "<absent>",
   };
 
   // 1. Disposable marker.
@@ -164,22 +168,73 @@ export function runGuard(env = process.env) {
   }
 
   // 5. Database name must be present, non-protected, and clearly disposable.
+  //    Narrow exception: fully-attested local Supabase CLI stack in CI.
   if (!database) {
     fail("GUARD_MISSING_DATABASE_NAME", "Database name is required.", evidence);
   }
-  if (PROTECTED_DB_NAMES.has(database.toLowerCase())) {
-    fail(
-      "GUARD_PROTECTED_DATABASE_NAME",
-      `Database "${database}" is protected.`,
-      evidence,
-    );
+  const dbLower = database.toLowerCase();
+  const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);
+  const isLoopbackHost = LOOPBACK_HOSTS.has(hostLower);
+
+  // Attempt local-Supabase attestation only when the caller declares it.
+  if (env.D2A_LOCAL_SUPABASE_STACK === "true") {
+    const conditions = {
+      disposableMarker: env[REQUIRED_MARKER] === "true",
+      localSupabaseMarker: env.D2A_LOCAL_SUPABASE_STACK === "true",
+      ci: env.CI === "true",
+      githubActions: env.GITHUB_ACTIONS === "true",
+      loopbackHost: isLoopbackHost,
+      pgPort54322: port === "54322",
+      dbPostgres: dbLower === "postgres",
+    };
+    let apiOk = false;
+    let apiHost = "<absent>";
+    let apiPort = "<absent>";
+    if (env.SUPABASE_URL) {
+      try {
+        const api = new URL(env.SUPABASE_URL);
+        apiHost = api.hostname;
+        apiPort = api.port || (api.protocol === "https:" ? "443" : "80");
+        apiOk =
+          api.protocol === "http:" &&
+          LOOPBACK_HOSTS.has(api.hostname.toLowerCase()) &&
+          (api.port === "54321");
+      } catch {
+        apiOk = false;
+      }
+    }
+    evidence.supabaseApiHost = LOOPBACK_HOSTS.has(apiHost.toLowerCase())
+      ? apiHost
+      : redactHost(apiHost);
+    evidence.supabaseApiPort = apiPort;
+    const allOk = apiOk && Object.values(conditions).every(Boolean);
+    if (dbLower === "postgres") {
+      if (!allOk) {
+        fail(
+          "GUARD_LOCAL_SUPABASE_ATTESTATION_FAILED",
+          "Local Supabase attestation did not satisfy every condition.",
+          evidence,
+        );
+      }
+      evidence.localSupabaseAttested = true;
+    }
   }
-  if (!/(test|scratch|ephemeral|disposable|ci|d2a)/i.test(database)) {
-    fail(
-      "GUARD_DATABASE_NAME_NOT_DISPOSABLE",
-      "Database name must contain test|scratch|ephemeral|disposable|ci|d2a.",
-      evidence,
-    );
+
+  if (!evidence.localSupabaseAttested) {
+    if (PROTECTED_DB_NAMES.has(dbLower)) {
+      fail(
+        "GUARD_PROTECTED_DATABASE_NAME",
+        `Database "${database}" is protected.`,
+        evidence,
+      );
+    }
+    if (!/(test|scratch|ephemeral|disposable|ci|d2a)/i.test(database)) {
+      fail(
+        "GUARD_DATABASE_NAME_NOT_DISPOSABLE",
+        "Database name must contain test|scratch|ephemeral|disposable|ci|d2a.",
+        evidence,
+      );
+    }
   }
 
   // 6. Test-only cursor secret must exist and must not carry production-like hints.
@@ -207,6 +262,7 @@ export function runGuard(env = process.env) {
 
   return { ok: true, evidence };
 }
+
 
 // CLI usage.
 const isCli = import.meta.url === `file://${process.argv[1]}` ||
