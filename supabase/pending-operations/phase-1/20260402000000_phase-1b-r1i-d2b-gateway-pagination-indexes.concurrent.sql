@@ -76,10 +76,15 @@ BEGIN
    WHERE n.nspname = 'public'
      AND c.relname = 'idx_gw_customers_merchant_created_id_desc';
 
-  IF NOT v_is_valid THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'd.2B preflight: idx_gw_customers_merchant_created_id_desc catalogue metadata missing';
+  END IF;
+
+  IF v_is_valid IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B preflight: idx_gw_customers_merchant_created_id_desc is not valid (indisvalid=false)';
   END IF;
-  IF NOT v_is_ready THEN
+  IF v_is_ready IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B preflight: idx_gw_customers_merchant_created_id_desc is not ready (indisready=false)';
   END IF;
 END
@@ -122,10 +127,15 @@ BEGIN
    WHERE n.nspname = 'public'
      AND c.relname = 'idx_gw_customers_merchant_created_id_desc';
 
-  IF NOT v_is_valid THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'd.2B postflight: idx_gw_customers_merchant_created_id_desc catalogue metadata missing';
+  END IF;
+
+  IF v_is_valid IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B postflight: idx_gw_customers_merchant_created_id_desc is not valid (indisvalid=false)';
   END IF;
-  IF NOT v_is_ready THEN
+  IF v_is_ready IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B postflight: idx_gw_customers_merchant_created_id_desc is not ready (indisready=false)';
   END IF;
 END
@@ -168,10 +178,15 @@ BEGIN
    WHERE n.nspname = 'public'
      AND c.relname = 'idx_gw_payment_plans_merchant_created_id_desc';
 
-  IF NOT v_is_valid THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'd.2B preflight: idx_gw_payment_plans_merchant_created_id_desc catalogue metadata missing';
+  END IF;
+
+  IF v_is_valid IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B preflight: idx_gw_payment_plans_merchant_created_id_desc is not valid (indisvalid=false)';
   END IF;
-  IF NOT v_is_ready THEN
+  IF v_is_ready IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B preflight: idx_gw_payment_plans_merchant_created_id_desc is not ready (indisready=false)';
   END IF;
 END
@@ -213,10 +228,15 @@ BEGIN
    WHERE n.nspname = 'public'
      AND c.relname = 'idx_gw_payment_plans_merchant_created_id_desc';
 
-  IF NOT v_is_valid THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'd.2B postflight: idx_gw_payment_plans_merchant_created_id_desc catalogue metadata missing';
+  END IF;
+
+  IF v_is_valid IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B postflight: idx_gw_payment_plans_merchant_created_id_desc is not valid (indisvalid=false)';
   END IF;
-  IF NOT v_is_ready THEN
+  IF v_is_ready IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B postflight: idx_gw_payment_plans_merchant_created_id_desc is not ready (indisready=false)';
   END IF;
 END
@@ -259,10 +279,15 @@ BEGIN
    WHERE n.nspname = 'public'
      AND c.relname = 'idx_gw_subscriptions_merchant_created_id_desc';
 
-  IF NOT v_is_valid THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'd.2B preflight: idx_gw_subscriptions_merchant_created_id_desc catalogue metadata missing';
+  END IF;
+
+  IF v_is_valid IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B preflight: idx_gw_subscriptions_merchant_created_id_desc is not valid (indisvalid=false)';
   END IF;
-  IF NOT v_is_ready THEN
+  IF v_is_ready IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B preflight: idx_gw_subscriptions_merchant_created_id_desc is not ready (indisready=false)';
   END IF;
 END
@@ -304,10 +329,15 @@ BEGIN
    WHERE n.nspname = 'public'
      AND c.relname = 'idx_gw_subscriptions_merchant_created_id_desc';
 
-  IF NOT v_is_valid THEN
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'd.2B postflight: idx_gw_subscriptions_merchant_created_id_desc catalogue metadata missing';
+  END IF;
+
+  IF v_is_valid IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B postflight: idx_gw_subscriptions_merchant_created_id_desc is not valid (indisvalid=false)';
   END IF;
-  IF NOT v_is_ready THEN
+  IF v_is_ready IS DISTINCT FROM TRUE THEN
     RAISE EXCEPTION 'd.2B postflight: idx_gw_subscriptions_merchant_created_id_desc is not ready (indisready=false)';
   END IF;
 END

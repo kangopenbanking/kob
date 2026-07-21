@@ -202,6 +202,65 @@ describe("R1I-d.2B — concurrent SQL structure", () => {
     }
   });
 
+  /**
+   * R2 null-safe catalogue verification. Every preflight and postflight block
+   * must:
+   *   * assert `IF NOT FOUND` after selecting indisvalid/indisready;
+   *   * raise an explicit "catalogue metadata missing" exception;
+   *   * evaluate validity/readiness with `IS DISTINCT FROM TRUE` so that both
+   *     NULL and FALSE fail closed;
+   *   * contain zero remaining `IF NOT v_is_valid` / `IF NOT v_is_ready`
+   *     expressions, which are the null-unsafe form.
+   */
+  it("every pre/postflight block uses null-safe catalogue verification (R2)", () => {
+    const allBlocks = sql.match(/\$(?:pre|post)flight_[a-z_]+\$[\s\S]*?\$(?:pre|post)flight_[a-z_]+\$/gi) ?? [];
+    expect(allBlocks.length).toBe(EXPECTED_INDEX_NAMES.length * 2);
+    for (const block of allBlocks) {
+      expect(/IF\s+NOT\s+FOUND\s+THEN/i.test(block)).toBe(true);
+      expect(/catalogue metadata missing/i.test(block)).toBe(true);
+      expect(/v_is_valid\s+IS\s+DISTINCT\s+FROM\s+TRUE/i.test(block)).toBe(true);
+      expect(/v_is_ready\s+IS\s+DISTINCT\s+FROM\s+TRUE/i.test(block)).toBe(true);
+      expect(/IF\s+NOT\s+v_is_valid\b/i.test(block)).toBe(false);
+      expect(/IF\s+NOT\s+v_is_ready\b/i.test(block)).toBe(false);
+    }
+  });
+
+  it("file contains zero remaining null-unsafe `IF NOT v_is_valid/ready` forms (R2)", () => {
+    expect(sql.match(/IF\s+NOT\s+v_is_valid\b/gi)).toBeNull();
+    expect(sql.match(/IF\s+NOT\s+v_is_ready\b/gi)).toBeNull();
+  });
+
+  /**
+   * Negative mutation guardrail. Simulate an author who reverts null-safe
+   * comparisons back to `IF NOT v_is_valid/ready` and prove that the
+   * null-safe assertions above would reject the mutated artifact — without
+   * touching the on-disk file.
+   */
+  it("rejects a mutated concurrent SQL that reverts IS DISTINCT FROM TRUE → IF NOT (R2)", () => {
+    const mutated = sql
+      .replace(/IF\s+v_is_valid\s+IS\s+DISTINCT\s+FROM\s+TRUE\s+THEN/gi, "IF NOT v_is_valid THEN")
+      .replace(/IF\s+v_is_ready\s+IS\s+DISTINCT\s+FROM\s+TRUE\s+THEN/gi, "IF NOT v_is_ready THEN");
+
+    // Sanity: mutation actually changed the text.
+    expect(mutated).not.toBe(sql);
+
+    // Structural validator must reject the mutated variant.
+    const mutatedBlocks = mutated.match(/\$(?:pre|post)flight_[a-z_]+\$[\s\S]*?\$(?:pre|post)flight_[a-z_]+\$/gi) ?? [];
+    expect(mutatedBlocks.length).toBe(EXPECTED_INDEX_NAMES.length * 2);
+    let nullSafePresent = 0;
+    let nullUnsafePresent = 0;
+    for (const block of mutatedBlocks) {
+      if (/v_is_valid\s+IS\s+DISTINCT\s+FROM\s+TRUE/i.test(block)) nullSafePresent++;
+      if (/v_is_ready\s+IS\s+DISTINCT\s+FROM\s+TRUE/i.test(block)) nullSafePresent++;
+      if (/IF\s+NOT\s+v_is_valid\b/i.test(block)) nullUnsafePresent++;
+      if (/IF\s+NOT\s+v_is_ready\b/i.test(block)) nullUnsafePresent++;
+    }
+    expect(nullSafePresent).toBe(0);
+    expect(nullUnsafePresent).toBe(mutatedBlocks.length * 2);
+    expect(mutated.match(/IF\s+NOT\s+v_is_valid\b/gi)?.length).toBe(EXPECTED_INDEX_NAMES.length * 2);
+    expect(mutated.match(/IF\s+NOT\s+v_is_ready\b/gi)?.length).toBe(EXPECTED_INDEX_NAMES.length * 2);
+  });
+
   it("rejects a hypothetical concurrent SQL that omits verification blocks", () => {
     // Guardrail: if a future author strips the DO blocks, this suite must fail.
     // We simulate the stripped variant and prove the assertions above would
