@@ -321,6 +321,12 @@ if (isMain) {
   if (summary.residualSupabaseContainers > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 10;
   if (summary.residualRuntimeProcess > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 11;
   if (
+    summary.temporaryEnvFilesRemoved !== summary.temporaryEnvFilesExpected &&
+    summary.teardownExitCode === 0
+  ) {
+    summary.teardownExitCode = 12;
+  }
+  if (
     !summary.temporaryEnvCleanupAccountingComplete &&
     summary.teardownExitCode === 0
   ) {
