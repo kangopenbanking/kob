@@ -97,3 +97,50 @@ None. The audit script never opens a DB connection and never reads
 with `# CI7 realtime publication idempotency sweep`. Existing restricted
 `push` trigger on that path preserved, so the correction commit will
 automatically dispatch the next verification run.
+
+## CI7A — strict audit correction (supersedes initial CI7)
+
+The initial CI7 sweep incorrectly classified an `EXCEPTION WHEN
+duplicate_object` block wrapping a later `ALTER PUBLICATION ... ADD TABLE`
+as acceptable protection. This produced a false-positive audit result:
+`guarded=false` and `exceptionSwallowed=true` counted as compliant while
+`laterUnguardedRemaining=0` was still reported. CI7A repairs this.
+
+### Corrections applied
+
+- **Migration 20260422011413** (`support_conversations`, `support_messages`)
+  had two exception-swallowing later duplicates. Both blocks were replaced
+  with explicit `pg_catalog.pg_publication_tables` membership guards. No
+  other SQL in the migration was touched.
+- **Audit policy** (`scripts/phase1b-d2a/audit-realtime-publications.mjs`)
+  now treats every later occurrence with `guarded !== true` as unguarded.
+  `exceptionSwallowed` is informational only. The script exits non-zero
+  when any later duplicate is unguarded OR when any later duplicate uses
+  exception swallowing instead of a membership guard. A `--self-check`
+  flag runs an in-memory synthetic exception-swallowing later duplicate
+  and asserts the audit rejects it.
+- **Generated evidence** `realtime-publication-audit.json` was removed from
+  the repository. Both `.json` and `.log` outputs remain listed in
+  `.gitignore` and are produced fresh during each GitHub Actions run.
+- **Workflow** step `Realtime publication audit (CI7A)` now deletes any
+  prior audit output before invocation, uses `set -euo pipefail`, and
+  verifies both output files are non-empty via `test -s`.
+- **Static tests** in
+  `src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts`
+  now assert every later duplicate is membership-guarded, no later block
+  uses exception swallowing, migration 20260422011413 uses
+  `pg_publication_tables` for both support tables, `realtime-publication-
+  audit.json` is not Git-tracked, the workflow deletes prior output and
+  verifies non-empty results, and CI5/CI6/CI7 suites remain explicitly
+  executed.
+
+### Final manifest after CI7A
+
+| Metric                                     | Value |
+| ------------------------------------------ | ----- |
+| Duplicate memberships                      | 4     |
+| Later duplicate occurrences                | 6     |
+| Later membership-guarded occurrences       | 6     |
+| Later exception-swallowed occurrences      | 0     |
+| Later unguarded occurrences remaining      | 0     |
+| Committed generated audit JSON             | 0     |
