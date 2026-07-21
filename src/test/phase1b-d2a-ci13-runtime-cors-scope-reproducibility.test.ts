@@ -242,9 +242,34 @@ describe("Phase 1B R1I-d.2A · CI13 runtime CORS + merchant-scope reproducibilit
       expect(WORKFLOW).toContain(suite);
     }
     expect(WORKFLOW).toMatch(/CI13 actual-response CORS exposure and merchant query-scope verification/);
-    expect(WORKFLOW).toMatch(
-      /Static infrastructure suite \(guard \+ CI2 \+ CI3\/CI4 \+ CI5 \+ CI6 \+ CI7 \+ CI8 \+ CI9 \+ CI10 \+ CI11 \+ CI12 \+ CI13\)/,
-    );
+    // CI14A: suffix-tolerant matcher — requires the complete ordered CI5–CI13
+    // prefix inside the static-suite display name while permitting later
+    // authorised suites (CI14, CI15, …) to appear before the closing paren.
+    const staticSuiteLine = WORKFLOW
+      .split(/\r?\n/)
+      .find((line) => line.includes("- name: Static infrastructure suite"));
+    expect(staticSuiteLine).toBeDefined();
+    const REQUIRED_PREFIX =
+      "Static infrastructure suite " +
+      "(guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + " +
+      "CI10 + CI11 + CI12 + CI13";
+    expect(staticSuiteLine).toContain(REQUIRED_PREFIX);
+    // Focused compatibility checks (kept inside assertion 29 by design).
+    const currentName =
+      "      - name: Static infrastructure suite " +
+      "(guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + " +
+      "CI10 + CI11 + CI12 + CI13 + CI14)";
+    const futureName =
+      "      - name: Static infrastructure suite " +
+      "(guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + " +
+      "CI10 + CI11 + CI12 + CI13 + CI14 + CI15)";
+    const missingCi13Name =
+      "      - name: Static infrastructure suite " +
+      "(guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + " +
+      "CI10 + CI11 + CI12 + CI14)";
+    expect(currentName).toContain(REQUIRED_PREFIX);
+    expect(futureName).toContain(REQUIRED_PREFIX);
+    expect(missingCi13Name.includes(REQUIRED_PREFIX)).toBe(false);
   });
 
   it("30. no managed Lovable Supabase access or command is introduced", () => {
