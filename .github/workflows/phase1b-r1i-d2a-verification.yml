@@ -6,6 +6,8 @@
 # CI8 translation child-data FK reproducibility sweep
 # CI9 pg_cron and pg_net extension reproducibility sweep
 # CI9A generated extension audit evidence provenance repair
+# CI10 local Supabase postgres database guard attestation
+
 
 
 #
