@@ -45,7 +45,7 @@ function gitShow(commit: string, path: string): string {
 
 interface OApiOp { operationId?: string; parameters?: any[]; responses?: Record<string, any>; description?: string; }
 interface OApi {
-  info: { version: string };
+  info: { version: string; title?: string; [k: string]: unknown };
   paths: Record<string, Record<string, OApiOp>>;
   components?: Record<string, Record<string, unknown>>;
 }
