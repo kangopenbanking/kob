@@ -377,26 +377,20 @@ export async function decodeD2bCursor(input: D2bDecodeInputs): Promise<D2bDecode
   if (!isSupportedD2bOperation(input.operation)) {
     throw new PaginationValidationError(`unsupported d.2B operation: ${input.operation}`);
   }
-  let result: DecodedCursorResult;
-  try {
-    result = await decodeCursor(
-      input.token,
-      {
-        operation: input.operation,
-        scopeHash: input.scopeHash,
-        filterHash: input.filterHash,
-        orderProfile: D2B_ORDER_PROFILE,
-      },
-      input.secretOptions,
-    );
-  } catch (e) {
-    if (e instanceof PaginationConfigurationError) {
-      // Missing / weak secret is a server configuration issue. Re-raise so
-      // the runtime returns a 5xx rather than incorrectly reporting a 400.
-      throw e;
-    }
-    throw e;
-  }
+  // `decodeCursor` may throw `PaginationConfigurationError` (missing / weak
+  // secret). That is a **server** configuration failure and must propagate so
+  // the runtime returns a 5xx, never a client 400. We therefore do NOT catch
+  // it — any thrown error bubbles to the caller unchanged.
+  const result: DecodedCursorResult = await decodeCursor(
+    input.token,
+    {
+      operation: input.operation,
+      scopeHash: input.scopeHash,
+      filterHash: input.filterHash,
+      orderProfile: D2B_ORDER_PROFILE,
+    },
+    input.secretOptions,
+  );
 
   if (!result.ok) {
     // Foundation returns CONFIGURATION_ERROR when the secret is missing at
