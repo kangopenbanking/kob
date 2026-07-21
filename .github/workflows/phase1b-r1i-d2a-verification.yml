@@ -52,8 +52,10 @@ jobs:
 
     env:
       KOB_D2A_DISPOSABLE_ENVIRONMENT: "true"
+      D2A_LOCAL_SUPABASE_STACK: "true"
       D2A_HARNESS_PGURL: ""
       D2A_RUNTIME_BASE_URL: "http://127.0.0.1:54321/functions/v1/gateway-query"
+
 
     steps:
       - name: Checkout
