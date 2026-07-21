@@ -1,13 +1,23 @@
 #!/usr/bin/env node
-// Phase 1B — R1I-d.2A-CI3 — Deterministic representative fixture loader.
+// Phase 1B — R1I-d.2A-CI3A — Deterministic representative fixture loader.
 //
-// CI3 corrections vs CI2:
-//   §CI3-A  Inserts PARENT `gateway_merchants` rows BEFORE any child rows so
-//           the NOT-NULL FK `merchant_id REFERENCES gateway_merchants(id)`
-//           constraint on the four child tables is satisfied.
-//   §CI3-B  Replaces the single generic row builder with FOUR table-specific
-//           builders, each populating only columns that exist on the target
-//           table. Required-column preflight is per-table.
+// Corrections vs CI3:
+//   §CI3A-1  Builders now match the ACTUAL canonical schema of each table
+//            (checked against `information_schema.columns`). No column names
+//            are assumed. Required non-null / no-default columns are all
+//            supplied by the builders:
+//
+//              gateway_merchants        → user_id, business_name, status,
+//                                         kyb_status, environment, fee_bearer,
+//                                         api_keys_count, plan_tier,
+//                                         settlement_frequency, live_mode_enabled
+//              gateway_subaccounts      → merchant_id, subaccount_name,
+//                                         split_type, split_value, currency,
+//                                         is_active
+//              gateway_beneficiaries    → merchant_id, name, channel, is_active
+//              gateway_payment_links    → merchant_id, title, amount, currency,
+//                                         status, slug, use_count
+//              gateway_virtual_accounts → merchant_id, status, currency
 //
 // Guarantees:
 //   * Deterministic UUIDv4 identifiers (crypto-safe format).
@@ -66,7 +76,9 @@ function isoAt(rowIdx) {
   return new Date(stamp).toISOString();
 }
 
-// ─── Per-table builders (§CI3-B) ─────────────────────────────────────────────
+// ─── Per-table builders (§CI3A-1) ────────────────────────────────────────────
+// Each builder populates only columns that exist on the canonical schema for
+// its target table. Required non-null / no-default columns are all present.
 
 export function buildParentMerchant(merchantIdx) {
   const iso = new Date(BASE_TS).toISOString();
@@ -78,6 +90,11 @@ export function buildParentMerchant(merchantIdx) {
     status: "active",
     kyb_status: "approved",
     environment: "sandbox",
+    fee_bearer: "merchant",
+    api_keys_count: 0,
+    plan_tier: "free",
+    settlement_frequency: "daily",
+    live_mode_enabled: false,
     created_at: iso,
     updated_at: iso,
   };
@@ -85,12 +102,16 @@ export function buildParentMerchant(merchantIdx) {
 
 export function buildSubaccount({ merchantIdx, rowIdx }) {
   const iso = isoAt(rowIdx);
+  // split_value is deterministic and stays within a reasonable percentage.
+  const splitValue = (rowIdx % 100) + 1;
   return {
     id: deterministicUuidV4(`d2a-gateway_subaccounts-${merchantIdx}-${rowIdx}`),
     merchant_id: merchantIdFor(merchantIdx),
-    name: `Subaccount ${merchantIdx}/${rowIdx}`,
-    status: "active",
+    subaccount_name: `Subaccount ${merchantIdx}/${rowIdx}`,
+    split_type: "percentage",
+    split_value: splitValue,
     currency: "XAF",
+    is_active: true,
     created_at: iso,
     updated_at: iso,
   };
@@ -102,10 +123,9 @@ export function buildBeneficiary({ merchantIdx, rowIdx }) {
     id: deterministicUuidV4(`d2a-gateway_beneficiaries-${merchantIdx}-${rowIdx}`),
     merchant_id: merchantIdFor(merchantIdx),
     name: `Beneficiary ${merchantIdx}/${rowIdx}`,
+    channel: "mobile_money",
     account_number: `ACC${String(merchantIdx).padStart(4, "0")}${String(rowIdx).padStart(8, "0")}`,
-    bank_code: "CM001",
-    currency: "XAF",
-    status: "active",
+    is_active: true,
     created_at: iso,
     updated_at: iso,
   };
@@ -116,11 +136,12 @@ export function buildPaymentLink({ merchantIdx, rowIdx }) {
   return {
     id: deterministicUuidV4(`d2a-gateway_payment_links-${merchantIdx}-${rowIdx}`),
     merchant_id: merchantIdFor(merchantIdx),
-    slug: deterministicSlug(`d2a-gateway_payment_links-${merchantIdx}-${rowIdx}`),
     title: `Payment Link ${merchantIdx}/${rowIdx}`,
     amount: 100 + (rowIdx % 900),
     currency: "XAF",
     status: "active",
+    slug: deterministicSlug(`d2a-gateway_payment_links-${merchantIdx}-${rowIdx}`),
+    use_count: 0,
     created_at: iso,
     updated_at: iso,
   };
@@ -132,9 +153,9 @@ export function buildVirtualAccount({ merchantIdx, rowIdx }) {
     id: deterministicUuidV4(`d2a-gateway_virtual_accounts-${merchantIdx}-${rowIdx}`),
     merchant_id: merchantIdFor(merchantIdx),
     account_number: `VA${String(merchantIdx).padStart(4, "0")}${String(rowIdx).padStart(10, "0")}`,
-    bank_code: "CM001",
-    currency: "XAF",
+    bank_name: "KOB Sandbox Bank",
     status: "active",
+    currency: "XAF",
     created_at: iso,
     updated_at: iso,
   };
@@ -274,7 +295,7 @@ async function main() {
     }
 
     // FK sanity: every child.merchant_id must map to a parent.
-    let orphanCount = 0;
+    let orphans = 0;
     for (const table of CHILD_TABLES) {
       const { rows } = await client.query(
         `SELECT count(*)::int AS c
@@ -282,32 +303,30 @@ async function main() {
            LEFT JOIN public.${PARENT_TABLE} p ON p.id = c.merchant_id
           WHERE p.id IS NULL`,
       );
-      if (rows[0].c > 0) orphanCount += rows[0].c;
+      orphans += rows[0].c;
     }
-    summary.parentForeignKeyFixtureCoverage = orphanCount === 0 ? "PASS" : "FAIL";
-    const coveredCount = CHILD_TABLES.filter((t) => coverage[t]?.covered).length;
-    summary.fixtureRequiredColumnCoverage = `${coveredCount}/${CHILD_TABLES.length}`;
-    summary.coverage = coverage;
-
+    summary.parentForeignKeyFixtureCoverage = orphans === 0 ? "PASS" : "FAIL";
+    summary.fixtureRequiredColumnCoverage =
+      Object.values(coverage).every((c) => c.covered) ? "PASS" : "FAIL";
+    if (orphans > 0) throw new Error(`FK orphans detected: ${orphans}`);
     await client.query("COMMIT");
-    writeFileSync("fixture-summary.json", JSON.stringify(summary, null, 2));
-    log("fixture_ok", {
-      fixtureRequiredColumnCoverage: summary.fixtureRequiredColumnCoverage,
-      parentForeignKeyFixtureCoverage: summary.parentForeignKeyFixtureCoverage,
-    });
   } catch (err) {
-    await client.query("ROLLBACK").catch(() => {});
-    writeFileSync("fixture-summary.json", JSON.stringify({ error: String(err.message || err), coverage }, null, 2));
-    log("fixture_error", { message: String(err.message || err) });
+    await client.query("ROLLBACK");
+    log("fixture_failed", { message: String(err.message || err) });
+    writeFileSync("fixture-summary.json", JSON.stringify({ ...summary, error: String(err.message || err) }, null, 2));
     process.exit(1);
   } finally {
     await client.end();
   }
+
+  writeFileSync("fixture-summary.json", JSON.stringify({ ...summary, coverage }, null, 2));
+  log("fixture_ok", {
+    fixtureRequiredColumnCoverage: summary.fixtureRequiredColumnCoverage,
+    parentForeignKeyFixtureCoverage: summary.parentForeignKeyFixtureCoverage,
+  });
 }
 
-const isCli = import.meta.url === `file://${process.argv[1]}` ||
-  (process.argv[1] && process.argv[1].endsWith("fixture.mjs"));
-if (isCli) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((err) => {
     log("fixture_fatal", { message: String(err.message || err) });
     process.exit(1);

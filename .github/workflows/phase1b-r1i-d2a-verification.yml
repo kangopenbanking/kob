@@ -272,15 +272,9 @@ jobs:
       - name: Build
         run: npm run build 2>&1 | tee build-results.log
 
-      - name: Teardown (always) — stop local Supabase stack
+      - name: Teardown (always) — fail-closed local Supabase stack shutdown
         if: always()
-        run: |
-          supabase stop --no-backup 2>&1 | tee teardown-results.log || true
-          node -e "
-            const fs=require('fs');
-            const log=fs.existsSync('teardown-results.log')?fs.readFileSync('teardown-results.log','utf8'):'';
-            fs.writeFileSync('teardown-results.json',JSON.stringify({ok:!/error/i.test(log),log:log.slice(0,4000)},null,2));
-          "
+        run: node scripts/phase1b-d2a/teardown.mjs 2>&1 | tee teardown-results.log
 
       - name: Upload full evidence bundle
         if: always()
