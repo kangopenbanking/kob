@@ -1,33 +1,26 @@
 #!/usr/bin/env node
-// Phase 1B — R1I-d.2A-CI3A — Deterministic representative fixture loader.
+// Phase 1B — R1I-d.2A-CI11 — Auth-parented representative fixture.
 //
-// Corrections vs CI3:
-//   §CI3A-1  Builders now match the ACTUAL canonical schema of each table
-//            (checked against `information_schema.columns`). No column names
-//            are assumed. Required non-null / no-default columns are all
-//            supplied by the builders:
-//
-//              gateway_merchants        → user_id, business_name, status,
-//                                         kyb_status, environment, fee_bearer,
-//                                         api_keys_count, plan_tier,
-//                                         settlement_frequency, live_mode_enabled
-//              gateway_subaccounts      → merchant_id, subaccount_name,
-//                                         split_type, split_value, currency,
-//                                         is_active
-//              gateway_beneficiaries    → merchant_id, name, channel, is_active
-//              gateway_payment_links    → merchant_id, title, amount, currency,
-//                                         status, slug, use_count
-//              gateway_virtual_accounts → merchant_id, status, currency
+// Corrections vs CI3A:
+//   §CI11-1  gateway_merchants inserts trigger public.trg_assign_merchant_role,
+//            which writes into public.user_roles whose user_id has a real
+//            foreign key to auth.users(id). The fixture must therefore create
+//            disposable local Auth users through the Supabase Auth Admin API
+//            BEFORE inserting merchants, and map the actual returned Auth IDs
+//            onto the fixture merchant rows.
 //
 // Guarantees:
-//   * Deterministic UUIDv4 identifiers (crypto-safe format).
-//   * `information_schema.columns` preflight — any required non-null column
-//     without a default that the corresponding builder does not populate
-//     causes a LOUD FIXTURE_MISSING_REQUIRED_COLUMN error (fixture aborts).
-//   * All work runs inside a single transaction. Any failure rolls back.
-//   * Never touches production; requires the disposable-environment guard.
+//   * Never touches auth.users via direct SQL.
+//   * Never disables triggers, constraints, or session_replication_role.
+//   * Requires the fully-attested local Supabase stack (via runGuard()).
+//   * Requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (local stack only).
+//   * Deterministic UUIDs, slugs, and merchant IDs are preserved.
+//   * Only the inserted merchant row's user_id is overridden with the real
+//     Auth Admin user ID for that merchant index.
+//   * No secrets, passwords, keys, tokens, or Auth user IDs are written to
+//     fixture-summary.json or logged.
 
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { runGuard } from "./guard.mjs";
 
@@ -43,6 +36,10 @@ const TENANTS = 2;
 const ROWS_PER_MERCHANT = Number(process.env.D2A_FIXTURE_ROWS || 500);
 const DUPLICATE_TS_EVERY = 25;
 const BASE_TS = new Date("2026-01-01T00:00:00Z").getTime();
+
+// Deterministic fixture email prefix. Never expose the returned Auth IDs.
+const FIXTURE_EMAIL_DOMAIN = "fixture.d2a.local";
+const FIXTURE_EMAIL_PREFIX = "d2a-fixture-merchant-";
 
 function log(step, payload) {
   process.stdout.write(JSON.stringify({ step, ...payload }) + "\n");
@@ -68,7 +65,13 @@ export function tenantIdFor(idx) {
   return deterministicUuidV4(`d2a-tenant-${idx % TENANTS}`);
 }
 export function userIdFor(idx) {
+  // Retained for CI3 static test parity. Real merchant user_id at insert time
+  // is overridden with the Auth Admin API user ID (see loadParents()).
   return deterministicUuidV4(`d2a-user-${idx}`);
+}
+
+export function fixtureEmailFor(idx) {
+  return `${FIXTURE_EMAIL_PREFIX}${idx}@${FIXTURE_EMAIL_DOMAIN}`;
 }
 
 function isoAt(rowIdx) {
@@ -76,9 +79,7 @@ function isoAt(rowIdx) {
   return new Date(stamp).toISOString();
 }
 
-// ─── Per-table builders (§CI3A-1) ────────────────────────────────────────────
-// Each builder populates only columns that exist on the canonical schema for
-// its target table. Required non-null / no-default columns are all present.
+// ─── Per-table builders (unchanged deterministic behaviour) ─────────────────
 
 export function buildParentMerchant(merchantIdx) {
   const iso = new Date(BASE_TS).toISOString();
@@ -102,7 +103,6 @@ export function buildParentMerchant(merchantIdx) {
 
 export function buildSubaccount({ merchantIdx, rowIdx }) {
   const iso = isoAt(rowIdx);
-  // split_value is deterministic and stays within a reasonable percentage.
   const splitValue = (rowIdx % 100) + 1;
   return {
     id: deterministicUuidV4(`d2a-gateway_subaccounts-${merchantIdx}-${rowIdx}`),
@@ -167,6 +167,97 @@ const BUILDERS = {
   gateway_payment_links: buildPaymentLink,
   gateway_virtual_accounts: buildVirtualAccount,
 };
+
+// ─── Auth Admin API helpers (local disposable Supabase stack only) ──────────
+
+function redactSummary(text) {
+  if (!text) return "";
+  const flat = String(text).replace(/\s+/g, " ").trim();
+  return flat.length > 200 ? flat.slice(0, 200) : flat;
+}
+
+async function authAdminFetch(path, init) {
+  const base = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!base) throw new Error("FIXTURE_MISSING_SUPABASE_URL");
+  if (!key) throw new Error("FIXTURE_MISSING_SUPABASE_SERVICE_ROLE_KEY");
+  const url = `${base.replace(/\/+$/, "")}/auth/v1/admin/users${path}`;
+  const headers = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    ...(init?.headers || {}),
+  };
+  return fetch(url, { ...init, headers });
+}
+
+async function locateExistingUserByEmail(email) {
+  // GoTrue admin list supports filter by email.
+  const params = new URLSearchParams({ email });
+  const res = await authAdminFetch(`?${params.toString()}`, { method: "GET" });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(
+      `AUTH_ADMIN_LIST_UNEXPECTED status=${res.status} summary=${redactSummary(body)}`,
+    );
+  }
+  const data = await res.json().catch(() => ({}));
+  const users = Array.isArray(data?.users) ? data.users : Array.isArray(data) ? data : [];
+  const match = users.find((u) => (u?.email || "").toLowerCase() === email.toLowerCase());
+  return match?.id || null;
+}
+
+async function ensureFixtureAuthUsers() {
+  const results = [];
+  let created = 0;
+  let reused = 0;
+  for (let m = 0; m < MERCHANTS; m += 1) {
+    const email = fixtureEmailFor(m);
+    // Strong deterministic-per-run but non-persisted password. Never logged.
+    const password = randomBytes(24).toString("hex");
+    const body = {
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { d2a_fixture: true, merchant_index: m },
+    };
+    const res = await authAdminFetch("", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    if (res.status === 200 || res.status === 201) {
+      const data = await res.json().catch(() => ({}));
+      const id = data?.id || data?.user?.id;
+      if (!id) {
+        throw new Error(
+          `AUTH_ADMIN_CREATE_NO_ID merchantIndex=${m} status=${res.status}`,
+        );
+      }
+      results.push({ index: m, id, reused: false });
+      created += 1;
+      continue;
+    }
+    // Narrow existing-user handling.
+    if (res.status === 400 || res.status === 409 || res.status === 422) {
+      const existing = await locateExistingUserByEmail(email);
+      if (!existing) {
+        const summary = redactSummary(await res.text().catch(() => ""));
+        throw new Error(
+          `AUTH_ADMIN_EXISTING_USER_NOT_FOUND merchantIndex=${m} status=${res.status} summary=${summary}`,
+        );
+      }
+      results.push({ index: m, id: existing, reused: true });
+      reused += 1;
+      continue;
+    }
+    const summary = redactSummary(await res.text().catch(() => ""));
+    // Fail closed for any other status. Never leak the request headers or URL.
+    throw new Error(
+      `AUTH_ADMIN_UNEXPECTED_STATUS merchantIndex=${m} status=${res.status} summary=${summary}`,
+    );
+  }
+  return { users: results, created, reused };
+}
 
 // ─── Schema helpers ──────────────────────────────────────────────────────────
 
@@ -235,7 +326,7 @@ async function loadTable(client, table, builder, coverage) {
   return { inserted, columns: insertCols };
 }
 
-async function loadParents(client, coverage) {
+async function loadParents(client, coverage, authUsers) {
   const required = await requiredColumns(client, PARENT_TABLE);
   const actual = await tableColumns(client, PARENT_TABLE);
   const sample = buildParentMerchant(0);
@@ -250,7 +341,16 @@ async function loadParents(client, coverage) {
   }
   const insertCols = [...provided].filter((c) => actual.has(c));
   const rows = [];
-  for (let m = 0; m < MERCHANTS; m += 1) rows.push(buildParentMerchant(m));
+  for (let m = 0; m < MERCHANTS; m += 1) {
+    const merchant = buildParentMerchant(m);
+    const authUser = authUsers.find((u) => u.index === m);
+    if (!authUser) {
+      throw new Error(`FIXTURE_MISSING_AUTH_USER merchantIndex=${m}`);
+    }
+    // §CI11-2 override only the merchant user_id with the real Auth Admin ID.
+    merchant.user_id = authUser.id;
+    rows.push(merchant);
+  }
   const inserted = await bulkInsert(client, PARENT_TABLE, insertCols, rows);
   return { inserted, columns: insertCols };
 }
@@ -271,20 +371,98 @@ async function main() {
     tables: {},
     fixtureRequiredColumnCoverage: null,
     parentForeignKeyFixtureCoverage: null,
+    authUsers: {
+      requested: MERCHANTS,
+      created: 0,
+      reused: 0,
+      resolved: 0,
+    },
+    authUserParentCoverage: null,
+    merchantRoleTriggerCoverage: null,
+    duplicateMerchantRoles: null,
   };
 
+  const merchantIds = [];
+  for (let m = 0; m < MERCHANTS; m += 1) merchantIds.push(merchantIdFor(m));
+
   try {
+    // §CI11-1 Create or resolve disposable local Auth users BEFORE any DB work.
+    const { users, created, reused } = await ensureFixtureAuthUsers();
+    summary.authUsers.created = created;
+    summary.authUsers.reused = reused;
+    summary.authUsers.resolved = users.length;
+    if (users.length !== MERCHANTS) {
+      throw new Error(
+        `AUTH_ADMIN_RESOLVE_COUNT_MISMATCH expected=${MERCHANTS} actual=${users.length}`,
+      );
+    }
+    log("auth_users_ready", {
+      requested: MERCHANTS,
+      created,
+      reused,
+      resolved: users.length,
+    });
+
     await client.query("BEGIN");
-    // §CI3-A — TRUNCATE children first (cascade removes children of the parent
-    // rows too), then TRUNCATE parents, then insert parents BEFORE children.
     for (const table of CHILD_TABLES) {
       await client.query(`TRUNCATE public.${table} CASCADE`);
     }
     await client.query(`TRUNCATE public.${PARENT_TABLE} CASCADE`);
 
-    const parent = await loadParents(client, coverage);
+    const parent = await loadParents(client, coverage, users);
     summary.parent = parent;
     log("parent_loaded", { table: PARENT_TABLE, ...parent });
+
+    // §CI11-3 Post-parent validation: Auth-parent coverage.
+    const { rows: apRows } = await client.query(
+      `SELECT count(*)::int AS c
+         FROM public.gateway_merchants gm
+         JOIN auth.users au ON au.id = gm.user_id
+        WHERE gm.id = ANY($1::uuid[])`,
+      [merchantIds],
+    );
+    const authParentCount = apRows[0].c;
+    summary.authUserParentCoverage = authParentCount === MERCHANTS ? "PASS" : "FAIL";
+    if (authParentCount !== MERCHANTS) {
+      throw new Error(
+        `AUTH_USER_PARENT_COVERAGE_FAIL expected=${MERCHANTS} actual=${authParentCount}`,
+      );
+    }
+
+    // §CI11-3 Merchant-role trigger coverage (canonical trigger created row).
+    const { rows: mrRows } = await client.query(
+      `SELECT count(*)::int AS c
+         FROM public.gateway_merchants gm
+         JOIN public.user_roles ur
+           ON ur.user_id = gm.user_id
+          AND ur.role = 'merchant'
+        WHERE gm.id = ANY($1::uuid[])`,
+      [merchantIds],
+    );
+    const merchantRoleCount = mrRows[0].c;
+    summary.merchantRoleTriggerCoverage =
+      merchantRoleCount === MERCHANTS ? "PASS" : "FAIL";
+    if (merchantRoleCount !== MERCHANTS) {
+      throw new Error(
+        `MERCHANT_ROLE_TRIGGER_COVERAGE_FAIL expected=${MERCHANTS} actual=${merchantRoleCount}`,
+      );
+    }
+
+    // Duplicate merchant-role rows for fixture users.
+    const { rows: dupRows } = await client.query(
+      `SELECT count(*)::int AS c FROM (
+         SELECT ur.user_id
+           FROM public.user_roles ur
+           JOIN public.gateway_merchants gm ON gm.user_id = ur.user_id
+          WHERE gm.id = ANY($1::uuid[]) AND ur.role = 'merchant'
+          GROUP BY ur.user_id HAVING count(*) > 1
+       ) dup`,
+      [merchantIds],
+    );
+    summary.duplicateMerchantRoles = dupRows[0].c;
+    if (dupRows[0].c !== 0) {
+      throw new Error(`DUPLICATE_MERCHANT_ROLES count=${dupRows[0].c}`);
+    }
 
     for (const table of CHILD_TABLES) {
       const builder = BUILDERS[table];
@@ -294,7 +472,6 @@ async function main() {
       log("fixture_loaded", { table, ...result, total: rows[0].c });
     }
 
-    // FK sanity: every child.merchant_id must map to a parent.
     let orphans = 0;
     for (const table of CHILD_TABLES) {
       const { rows } = await client.query(
@@ -311,9 +488,18 @@ async function main() {
     if (orphans > 0) throw new Error(`FK orphans detected: ${orphans}`);
     await client.query("COMMIT");
   } catch (err) {
-    await client.query("ROLLBACK");
-    log("fixture_failed", { message: String(err.message || err) });
-    writeFileSync("fixture-summary.json", JSON.stringify({ ...summary, error: String(err.message || err) }, null, 2));
+    try { await client.query("ROLLBACK"); } catch { /* ignore rollback errors */ }
+    const evidence = {
+      error: String(err?.message || err),
+      errorCode: err?.code || null,
+      errorConstraint: err?.constraint || null,
+      errorTable: err?.table || null,
+    };
+    log("fixture_failed", evidence);
+    writeFileSync(
+      "fixture-summary.json",
+      JSON.stringify({ ...summary, ...evidence }, null, 2),
+    );
     process.exit(1);
   } finally {
     await client.end();
@@ -323,6 +509,9 @@ async function main() {
   log("fixture_ok", {
     fixtureRequiredColumnCoverage: summary.fixtureRequiredColumnCoverage,
     parentForeignKeyFixtureCoverage: summary.parentForeignKeyFixtureCoverage,
+    authUserParentCoverage: summary.authUserParentCoverage,
+    merchantRoleTriggerCoverage: summary.merchantRoleTriggerCoverage,
+    duplicateMerchantRoles: summary.duplicateMerchantRoles,
   });
 }
 
