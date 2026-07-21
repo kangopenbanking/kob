@@ -31,3 +31,19 @@ sdks/generated/
 .vercel
 
 kob-signing/
+# Phase 1B R1I-d.2A generated CI evidence
+full-suite-policy-results.json
+full-suite-run-1.json
+full-suite-run-2.json
+full-suite-run-3.json
+runtime-results.json
+pagination-header-results.json
+cursor-security-results.json
+database-call-evidence.json
+targeted-suite-results.json
+fixture-summary.json
+query-plan-summary.json
+index-definition-parity.json
+teardown-results.json
+tool-versions.json
+environment-preflight.json

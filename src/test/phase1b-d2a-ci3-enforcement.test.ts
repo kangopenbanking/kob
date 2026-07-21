@@ -241,3 +241,136 @@ describe("R1I-d.2A-CI3A — parents-first fixture retained", () => {
     expect(FIXTURE).toContain("LEFT JOIN public.${PARENT_TABLE}");
   });
 });
+
+// ============================================================================
+// R1I-d.2A-CI4 — Local Supabase startup repair (fail-closed enforcement).
+// ============================================================================
+
+describe("R1I-d.2A-CI4 §CI4-1 — Supabase CLI pin", () => {
+  it("pins CLI to 2.101.0 and forbids `latest` / stale 2.20.12", () => {
+    expect(WORKFLOW).toMatch(/version:\s*"2\.101\.0"/);
+    expect(WORKFLOW).not.toMatch(/version:\s*"?latest"?/i);
+    expect(WORKFLOW).not.toMatch(/version:\s*"2\.20\.12"/);
+  });
+});
+
+describe("R1I-d.2A-CI4 §CI4-2 — corrected local service exclusion list", () => {
+  it("uses the CI4 exclusion list and excludes no required service", () => {
+    expect(WORKFLOW).toContain(
+      "--exclude realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,logflare,vector,supavisor",
+    );
+    // Invalid names from earlier CIs are no longer present in the exclude list.
+    const excludeLines = WORKFLOW.split("\n").filter((l) => l.includes("--exclude"));
+    for (const line of excludeLines) {
+      expect(line).not.toContain("inbucket");
+      expect(line).not.toContain("pgadmin-schema-diff");
+    }
+    // Required services must never appear in an --exclude flag.
+    for (const required of ["gotrue", "kong", "postgrest", "edge-runtime"]) {
+      for (const line of excludeLines) {
+        expect(line).not.toContain(required);
+      }
+    }
+  });
+});
+
+describe("R1I-d.2A-CI4 §CI4-3 — Docker & startup preflight", () => {
+  it("runs a Docker/Supabase preflight before `supabase start`", () => {
+    expect(WORKFLOW).toContain("Docker and Supabase startup preflight");
+    expect(WORKFLOW).toContain("docker version");
+    expect(WORKFLOW).toContain("docker info");
+    expect(WORKFLOW).toContain("supabase --version");
+    expect(WORKFLOW).toContain("supabase/config.toml");
+  });
+});
+
+describe("R1I-d.2A-CI4 §CI4-4 — startup failure diagnostics captured", () => {
+  it("captures supabase-start.log, docker ps/df, status, container logs on failure", () => {
+    expect(WORKFLOW).toContain("supabase-start.log");
+    expect(WORKFLOW).toContain("docker-ps-after-start.txt");
+    expect(WORKFLOW).toContain("docker-system-df-after-start.txt");
+    expect(WORKFLOW).toContain("supabase-status-after-start.txt");
+    expect(WORKFLOW).toContain("supabase-container-logs");
+  });
+  it("does NOT pass --ignore-health-check", () => {
+    expect(WORKFLOW).not.toContain("--ignore-health-check");
+  });
+});
+
+describe("R1I-d.2A-CI4 §CI4-6 — every tee pipeline is protected by pipefail", () => {
+  it("every workflow step containing `| tee` also declares `set -o pipefail`", () => {
+    const lines = WORKFLOW.split("\n");
+    const stepStarts: number[] = [];
+    lines.forEach((l, i) => {
+      if (/^\s{6}-\s+name:/.test(l)) stepStarts.push(i);
+    });
+    stepStarts.push(lines.length);
+    for (let s = 0; s < stepStarts.length - 1; s += 1) {
+      const block = lines.slice(stepStarts[s], stepStarts[s + 1]).join("\n");
+      if (/\|\s*tee\b/.test(block)) {
+        expect(block).toMatch(/set\s+-o\s+pipefail|set\s+-euo?\s+pipefail/);
+      }
+    }
+  });
+});
+
+describe("R1I-d.2A-CI4 §CI4-7 — teardown correctness", () => {
+  it("teardown step uses pipefail and calls teardown.mjs", () => {
+    const idx = WORKFLOW.indexOf("Teardown (always)");
+    expect(idx).toBeGreaterThan(-1);
+    const block = WORKFLOW.slice(idx, idx + 400);
+    expect(block).toMatch(/set\s+-o\s+pipefail/);
+    expect(block).toContain("scripts/phase1b-d2a/teardown.mjs");
+  });
+  it("teardown script uses self-excluding pgrep and drops the direct pattern", () => {
+    expect(TEARDOWN).toContain("[s]upabase functions serve gateway-query");
+    expect(TEARDOWN).not.toMatch(/pgrep -f 'supabase functions serve gateway-query'/);
+  });
+});
+
+describe("R1I-d.2A-CI4 §CI4-8 — stale evidence removal", () => {
+  it("does not commit full-suite-policy-results.json", () => {
+    const p = resolve(ROOT, "full-suite-policy-results.json");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("node:fs");
+    expect(fs.existsSync(p)).toBe(false);
+  });
+  it(".gitignore ignores all generated CI evidence files", () => {
+    const gi = readFileSync(resolve(ROOT, ".gitignore"), "utf8");
+    for (const f of [
+      "full-suite-policy-results.json",
+      "full-suite-run-1.json",
+      "full-suite-run-2.json",
+      "full-suite-run-3.json",
+      "runtime-results.json",
+      "pagination-header-results.json",
+      "cursor-security-results.json",
+      "database-call-evidence.json",
+      "targeted-suite-results.json",
+      "fixture-summary.json",
+      "query-plan-summary.json",
+      "index-definition-parity.json",
+      "teardown-results.json",
+      "tool-versions.json",
+      "environment-preflight.json",
+    ]) {
+      expect(gi).toContain(f);
+    }
+  });
+});
+
+describe("R1I-d.2A-CI4 — no managed Lovable Supabase access", () => {
+  it("workflow references no managed credentials nor forbidden CLI verbs", () => {
+    // Env references to managed secrets are only allowed as empty-string neutralisers.
+    // The CI4 startup step no longer sets these; assert the forbidden CLI verbs are absent.
+    for (const verb of [
+      "supabase login",
+      "supabase link",
+      "supabase db push",
+      "supabase functions deploy",
+      "migration repair --linked",
+    ]) {
+      expect(WORKFLOW).not.toContain(verb);
+    }
+  });
+});
