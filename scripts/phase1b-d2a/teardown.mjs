@@ -174,6 +174,34 @@ export function computeTemporaryEnvAccounting(input) {
  * @param {string} path
  * @param {{ remove?: typeof rmSync, exists?: typeof existsSync }} [deps]
  */
+export function sanitizeRemovalErrorCode(value) {
+  if (typeof value !== "string") return "REMOVE_FAILED";
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > 40) return "REMOVE_FAILED";
+  // Reject anything that is not strictly A-Z (after uppercasing) — this
+  // excludes whitespace, control chars, path separators, '=', digits, and
+  // any secret-like or path-like content.
+  const normalized = trimmed.toUpperCase();
+  if (!/^[A-Z]+$/.test(normalized)) return "REMOVE_FAILED";
+  const allowed = new Set([
+    "EACCES",
+    "EPERM",
+    "EBUSY",
+    "EROFS",
+    "ENOENT",
+    "EISDIR",
+    "ENOTDIR",
+    "ENOTEMPTY",
+    "ELOOP",
+    "ENAMETOOLONG",
+    "EMFILE",
+    "ENFILE",
+    "EIO",
+    "EINVAL",
+  ]);
+  return allowed.has(normalized) ? normalized : "REMOVE_FAILED";
+}
+
 export function removeKnownTemporaryPath(path, deps = {}) {
   const remove = deps.remove || rmSync;
   const exists = deps.exists || existsSync;
@@ -192,16 +220,12 @@ export function removeKnownTemporaryPath(path, deps = {}) {
   try {
     remove(path, { force: true });
   } catch (error) {
-    const rawCode =
-      error && typeof error.code === "string" && error.code.length > 0
-        ? error.code
-        : "REMOVE_FAILED";
     return {
       existedBefore: true,
       removalAttempted: true,
       removalSucceeded: false,
       verifiedAbsent: false,
-      errorCode: rawCode.slice(0, 40),
+      errorCode: sanitizeRemovalErrorCode(error?.code),
     };
   }
 
@@ -214,6 +238,7 @@ export function removeKnownTemporaryPath(path, deps = {}) {
     errorCode: verifiedAbsent ? null : "REMOVAL_NOT_VERIFIED",
   };
 }
+
 
 // Guard so this file can be imported by tests without executing teardown.
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);

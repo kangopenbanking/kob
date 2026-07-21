@@ -4,7 +4,9 @@ import { resolve } from "node:path";
 import {
   computeTemporaryEnvAccounting,
   removeKnownTemporaryPath,
+  sanitizeRemovalErrorCode,
 } from "../../scripts/phase1b-d2a/teardown.mjs";
+
 
 const ROOT = resolve(__dirname, "../..");
 const WORKFLOW = readFileSync(
@@ -726,5 +728,96 @@ describe("Phase 1B R1I-d.2A CI12C — removal-exception evidence preservation", 
     );
     expect(r.existedBefore).toBe(false);
     expect(r.verifiedAbsent).toBe(true);
+  });
+});
+
+describe("CI12D — filesystem removal error-code allowlist", () => {
+  it("D1. EACCES remains EACCES", () => {
+    expect(sanitizeRemovalErrorCode("EACCES")).toBe("EACCES");
+  });
+  it("D2. EPERM remains EPERM", () => {
+    expect(sanitizeRemovalErrorCode("EPERM")).toBe("EPERM");
+  });
+  it("D3. lowercase eacces normalises to EACCES", () => {
+    expect(sanitizeRemovalErrorCode("eacces")).toBe("EACCES");
+  });
+  it("D4. unknown code becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("EWEIRD")).toBe("REMOVE_FAILED");
+  });
+  it("D5. 200-character code becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("A".repeat(200))).toBe("REMOVE_FAILED");
+  });
+  it("D6. SECRET=deadbeef becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("SECRET=deadbeef")).toBe("REMOVE_FAILED");
+  });
+  it("D7. absolute path becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("/tmp/kob-d2a-edge-runtime.env")).toBe(
+      "REMOVE_FAILED",
+    );
+  });
+  it("D8. newline-injected code becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("EACCES\nSECRET=value")).toBe(
+      "REMOVE_FAILED",
+    );
+  });
+  it("D9. space-injected code becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("EACCES code=/tmp/file")).toBe(
+      "REMOVE_FAILED",
+    );
+  });
+  it("D10. empty string becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode("")).toBe("REMOVE_FAILED");
+  });
+  it("D11. non-string becomes REMOVE_FAILED", () => {
+    expect(sanitizeRemovalErrorCode(null)).toBe("REMOVE_FAILED");
+    expect(sanitizeRemovalErrorCode(undefined)).toBe("REMOVE_FAILED");
+    expect(sanitizeRemovalErrorCode(42)).toBe("REMOVE_FAILED");
+    expect(sanitizeRemovalErrorCode({})).toBe("REMOVE_FAILED");
+  });
+  it("D12. serialised removal evidence contains none of the malicious raw values", () => {
+    const malicious = "SECRET=deadbeef\n/tmp/kob-d2a-edge-runtime.env";
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-any", {
+      exists: () => true,
+      remove: () => {
+        const e = new Error("boom");
+        // @ts-expect-error attach code
+        e.code = malicious;
+        throw e;
+      },
+    });
+    const serialised = JSON.stringify(r);
+    expect(serialised).not.toContain("SECRET=deadbeef");
+    expect(serialised).not.toContain("/tmp/kob-d2a-edge-runtime.env");
+    expect(serialised).not.toContain("\n");
+    expect(r.errorCode).toBe("REMOVE_FAILED");
+  });
+  it("D13. persisted TEMP_ENV_REMOVAL_FAILED uses only the sanitised code", () => {
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-any", {
+      exists: () => true,
+      remove: () => {
+        const e = new Error("boom");
+        // @ts-expect-error attach code
+        e.code = "eacces";
+        throw e;
+      },
+    });
+    const persisted = `TEMP_ENV_REMOVAL_FAILED label=base code=${r.errorCode || "REMOVE_FAILED"}`;
+    expect(persisted).toBe("TEMP_ENV_REMOVAL_FAILED label=base code=EACCES");
+  });
+  it("D14. removeKnownTemporaryPath no longer contains rawCode.slice()", () => {
+    expect(TEARDOWN).not.toMatch(/rawCode\s*\.\s*slice/);
+    expect(TEARDOWN).not.toMatch(/\brawCode\b/);
+  });
+  it("D15. teardown.mjs writes teardown-results.json before process.exit()", () => {
+    const writeIdx = TEARDOWN.indexOf("teardown-results.json");
+    const exitIdx = TEARDOWN.indexOf("process.exit");
+    expect(writeIdx).toBeGreaterThan(-1);
+    expect(exitIdx).toBeGreaterThan(-1);
+    expect(writeIdx).toBeLessThan(exitIdx);
+  });
+  it("D16. sanitizeRemovalErrorCode is exported and referenced in removeKnownTemporaryPath", () => {
+    expect(typeof sanitizeRemovalErrorCode).toBe("function");
+    expect(TEARDOWN).toMatch(/export\s+function\s+sanitizeRemovalErrorCode/);
+    expect(TEARDOWN).toMatch(/sanitizeRemovalErrorCode\(\s*error\?\.code\s*\)/);
   });
 });

@@ -300,3 +300,52 @@ teardownExitCode: 0
 Edge Runtime cursor-secret propagation, `pagination.ts`, `gateway-query`,
 `runtime-tests.mjs`, `fixture.mjs`, `guard.mjs`, migrations, indexes,
 OpenAPI, and package files are unchanged.
+
+## CI12D — Filesystem removal error-code allowlist
+
+CI12C caught removal exceptions and preserved code-12 evidence, but the raw
+`error.code` was only length-truncated (`rawCode.slice(0, 40)`) before being
+written to `teardown-results.json` and to the `TEMP_ENV_REMOVAL_FAILED` log
+line. Truncation alone did not prevent injection of path fragments, secret
+material, whitespace, control characters, or JSON/log-injection text into the
+persisted evidence.
+
+CI12D introduces a strict filesystem error-code allowlist implemented as the
+pure exported helper `sanitizeRemovalErrorCode(value)` in
+`scripts/phase1b-d2a/teardown.mjs`. The helper:
+
+- accepts only strings that, after trim + uppercase, match `^[A-Z]+$`;
+- accepts only the fourteen POSIX filesystem codes explicitly enumerated
+  (EACCES, EPERM, EBUSY, EROFS, ENOENT, EISDIR, ENOTDIR, ENOTEMPTY, ELOOP,
+  ENAMETOOLONG, EMFILE, ENFILE, EIO, EINVAL);
+- maps every other input — unknown codes, empty strings, non-strings,
+  oversized values (>40 chars), path-like text, secret-like text,
+  whitespace-bearing text, and control-character content — to the constant
+  `REMOVE_FAILED`;
+- never returns a value exceeding 40 characters;
+- is invoked from `removeKnownTemporaryPath()` as
+  `sanitizeRemovalErrorCode(error?.code)`.
+
+`rawCode` and `rawCode.slice()` no longer appear in `teardown.mjs`. The
+persisted failure line is unchanged in shape:
+
+    TEMP_ENV_REMOVAL_FAILED label=<base|function> code=<sanitised-code>
+
+but `<sanitised-code>` is now guaranteed to be one of the fifteen allowed
+tokens. No raw exception code, exception message, stack, syscall, errno, or
+path is persisted.
+
+CI12C behaviour is preserved: removal exceptions are still caught, verification
+still runs, verification-failure counters still increment, expected/unexpected
+cleanup accounting is unchanged, marker-independent residual scanning is
+unchanged, `teardown-results.json` is still written before `process.exit()`,
+and the successful 2/2 lifecycle is untouched. A removal exception continues to
+produce `temporaryEnvRemovalVerificationFailures: 1`,
+`temporaryEnvCleanupAccountingComplete: false`, and `teardownExitCode: 12`.
+
+Executable evidence is provided by tests D1–D16 in
+`src/test/phase1b-d2a-ci12-edge-runtime-secret-propagation.test.ts`, which
+call `sanitizeRemovalErrorCode()` and `removeKnownTemporaryPath()` directly
+with malicious inputs (secret material, absolute paths, newline-injected
+values, oversized codes, non-strings) and assert that the serialised evidence
+contains none of the raw values and that only the sanitised code is persisted.
