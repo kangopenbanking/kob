@@ -12,6 +12,7 @@
 # CI12 ephemeral Edge Runtime cursor-secret propagation
 # CI12A cross-step temporary environment cleanup accounting
 # CI12B partial-preparation temporary secret-file cleanup
+# CI12C temporary environment removal-exception evidence preservation
 
 
 
