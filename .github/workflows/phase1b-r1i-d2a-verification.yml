@@ -1,5 +1,6 @@
 # Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI4 corrections)
 # CI5 canonical clean-reset reproducibility repair
+# CI6 pg_cron extension schema reproducibility repair
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
@@ -279,12 +280,14 @@ jobs:
         run: |
           if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
 
-      - name: Static infrastructure suite (guard + workflow + parser + fixture + CI3 + CI4)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
             src/test/phase1b-d2a-ci2-repair.test.ts \
             src/test/phase1b-d2a-ci3-enforcement.test.ts \
+            src/test/phase1b-d2a-ci5-migration-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci6-extension-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
       - name: d.2A contract suite
