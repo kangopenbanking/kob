@@ -425,6 +425,8 @@ jobs:
 
             tool-versions.json
             environment-preflight.json
+            environment-guard.log
+
             supabase-start.log
             docker-ps-after-start.txt
             docker-system-df-after-start.txt
