@@ -23,7 +23,7 @@
     "predeploy": "node scripts/predeploy.mjs",
     "predeploy:offline": "node scripts/predeploy.mjs --offline",
     "smoke:portal": "vitest run src/test/portal-smoke.test.ts",
-    "smoke:swagger": "playwright test src/test/portal-swagger.spec.ts --reporter=line",
+    "smoke:swagger": "playwright test --config=playwright.swagger.config.ts --reporter=line",
     "changelog:md": "node scripts/build-changelog-md.mjs",
     "postman:contract": "node scripts/postman-contract-check.mjs",
     "sdk:generate": "node scripts/generate-typed-sdks.mjs",

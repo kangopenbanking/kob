@@ -19,6 +19,7 @@
 # CI14A forward-compatible cumulative static-suite assertion
 # CI14B non-runtime lint-ceiling reconciliation
 # CI14C Vitest and Playwright test-runner isolation
+# CI14D dedicated Playwright Swagger discovery restoration
 
 
 
