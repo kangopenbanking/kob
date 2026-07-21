@@ -16,6 +16,7 @@
 # CI12D filesystem removal error-code allowlist
 # CI13 actual-response CORS exposure and merchant query-scope verification
 # CI14 ratified OpenAPI quality-gate ceiling evaluator
+# CI14A forward-compatible cumulative static-suite assertion
 
 
 
