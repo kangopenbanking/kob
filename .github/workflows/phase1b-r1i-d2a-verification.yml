@@ -9,6 +9,7 @@
 # CI10 local Supabase postgres database guard attestation
 # CI10A IPv6 loopback hostname normalisation
 # CI11 auth-parented representative fixture
+# CI12 ephemeral Edge Runtime cursor-secret propagation
 
 
 
@@ -70,7 +71,9 @@ jobs:
             extension-reproducibility-audit.json \
             extension-reproducibility-audit.log \
             realtime-publication-audit.json \
-            realtime-publication-audit.log
+            realtime-publication-audit.log \
+            edge-runtime-env-attestation.json
+          rm -f "${RUNNER_TEMP:-/tmp}/kob-d2a-edge-runtime.env"
 
 
 
@@ -294,9 +297,47 @@ jobs:
       - name: Query-plan capture — AFTER index build
         run: node scripts/phase1b-d2a/query-plans.mjs after
 
+      - name: Prepare ephemeral Edge Function environment
+        run: |
+          set -euo pipefail
+          test -n "${KOB_CURSOR_HMAC_SECRET:-}"
+          FUNCTION_ENV_FILE="$RUNNER_TEMP/kob-d2a-edge-runtime.env"
+          rm -f "$FUNCTION_ENV_FILE"
+          umask 077
+          printf 'KOB_CURSOR_HMAC_SECRET=%s\n' \
+            "$KOB_CURSOR_HMAC_SECRET" > "$FUNCTION_ENV_FILE"
+          chmod 600 "$FUNCTION_ENV_FILE"
+          test -s "$FUNCTION_ENV_FILE"
+          test "$(wc -l < "$FUNCTION_ENV_FILE" | tr -d ' ')" = "1"
+          test "$(grep -c '^KOB_CURSOR_HMAC_SECRET=' "$FUNCTION_ENV_FILE")" = "1"
+          test "$(stat -c '%a' "$FUNCTION_ENV_FILE")" = "600"
+          echo "D2A_FUNCTION_ENV_FILE=$FUNCTION_ENV_FILE" >> "$GITHUB_ENV"
+          node -e "
+            const fs = require('fs');
+            const p = process.env.RUNNER_TEMP + '/kob-d2a-edge-runtime.env';
+            const mode = (fs.statSync(p).mode & 0o777).toString(8);
+            const text = fs.readFileSync(p, 'utf8');
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            fs.writeFileSync(
+              'edge-runtime-env-attestation.json',
+              JSON.stringify({
+                currentRunFilePresent: true,
+                permissions: mode,
+                lineCount: lines.length,
+                cursorSecretKeyPresent:
+                  lines.some(line => line.startsWith('KOB_CURSOR_HMAC_SECRET=')),
+                cursorSecretValueRecorded: false
+              }, null, 2)
+            );
+          "
+          test -s edge-runtime-env-attestation.json
+
       - name: Serve gateway-query Edge Function (background, single instance)
         run: |
-          nohup supabase functions serve gateway-query --no-verify-jwt > runtime-serve.log 2>&1 &
+          nohup supabase functions serve gateway-query \
+            --no-verify-jwt \
+            --env-file "$D2A_FUNCTION_ENV_FILE" \
+            > runtime-serve.log 2>&1 &
           echo $! > runtime-serve.pid
           for i in {1..60}; do
             curl -fsS "$D2A_RUNTIME_BASE_URL?action=list-subaccounts&limit=1" >/dev/null 2>&1 && break
@@ -312,6 +353,9 @@ jobs:
         if: always()
         run: |
           if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
+          if [ -n "${D2A_FUNCTION_ENV_FILE:-}" ]; then
+            rm -f "$D2A_FUNCTION_ENV_FILE"
+          fi
 
       - name: Realtime publication audit (CI7A)
         run: |
@@ -331,7 +375,7 @@ jobs:
           test -s extension-reproducibility-audit.json
           test -s extension-reproducibility-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11 + CI12)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -344,6 +388,7 @@ jobs:
             src/test/phase1b-d2a-ci9-extension-sweep-reproducibility.test.ts \
             src/test/phase1b-d2a-ci10-local-supabase-guard-reproducibility.test.ts \
             src/test/phase1b-d2a-ci11-auth-parent-fixture-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci12-edge-runtime-secret-propagation.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
 
@@ -429,6 +474,7 @@ jobs:
             tool-versions.json
             environment-preflight.json
             environment-guard.log
+            edge-runtime-env-attestation.json
 
             supabase-start.log
             docker-ps-after-start.txt

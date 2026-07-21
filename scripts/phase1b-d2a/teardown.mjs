@@ -46,6 +46,9 @@ const summary = {
   residualSupabaseContainers: null,
   residualRuntimeProcess: null,
   residualTemporaryEnvFile: null,
+  temporaryEnvFilesExpected: 2,
+  temporaryEnvFilesRemoved: 0,
+  residualTemporaryEnvFiles: null,
   teardownExitCode: 0,
   errors: [],
 };
@@ -72,12 +75,25 @@ if (existsSync(tmpFixture)) {
   log("fixture_removed", { path: tmpFixture });
 }
 
-// 4. Remove ephemeral env file if present.
-const envFile = resolve(ROOT, ".d2a.env");
-if (existsSync(envFile)) {
-  rmSync(envFile, { force: true });
+// 4. Remove ephemeral env files (both .d2a.env and the Edge Function env file).
+const tempEnvFiles = [
+  resolve(ROOT, ".d2a.env"),
+  process.env.D2A_FUNCTION_ENV_FILE
+    ? resolve(process.env.D2A_FUNCTION_ENV_FILE)
+    : resolve(process.env.RUNNER_TEMP || ROOT, "kob-d2a-edge-runtime.env"),
+];
+for (const p of tempEnvFiles) {
+  const existedBefore = existsSync(p);
+  if (existedBefore) {
+    rmSync(p, { force: true });
+  }
+  if (existedBefore && !existsSync(p)) {
+    summary.temporaryEnvFilesRemoved += 1;
+  }
 }
-summary.residualTemporaryEnvFile = existsSync(envFile) ? 1 : 0;
+const residualCount = tempEnvFiles.filter((p) => existsSync(p)).length;
+summary.residualTemporaryEnvFiles = residualCount;
+summary.residualTemporaryEnvFile = residualCount;
 
 // 5. Clear the process-scoped cursor secret (never on disk).
 if (process.env.KOB_CURSOR_HMAC_SECRET) delete process.env.KOB_CURSOR_HMAC_SECRET;
@@ -93,7 +109,7 @@ summary.residualRuntimeProcess = safeCount("pgrep -f '[s]upabase functions serve
 if (summary.supabaseStopExitCode !== 0) summary.teardownExitCode = summary.supabaseStopExitCode;
 if (summary.residualSupabaseContainers > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 10;
 if (summary.residualRuntimeProcess > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 11;
-if (summary.residualTemporaryEnvFile > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 12;
+if (summary.residualTemporaryEnvFiles > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 12;
 
 writeFileSync("teardown-results.json", JSON.stringify(summary, null, 2));
 log("teardown_done", {
@@ -101,5 +117,8 @@ log("teardown_done", {
   residualSupabaseContainers: summary.residualSupabaseContainers,
   residualRuntimeProcess: summary.residualRuntimeProcess,
   residualTemporaryEnvFile: summary.residualTemporaryEnvFile,
+  residualTemporaryEnvFiles: summary.residualTemporaryEnvFiles,
+  temporaryEnvFilesExpected: summary.temporaryEnvFilesExpected,
+  temporaryEnvFilesRemoved: summary.temporaryEnvFilesRemoved,
 });
 if (summary.teardownExitCode !== 0) process.exit(summary.teardownExitCode);
