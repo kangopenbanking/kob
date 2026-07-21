@@ -51,11 +51,21 @@ function requestsPgCatalog(statementText) {
   return /SCHEMA\s+pg_catalog/i.test(statementText);
 }
 
-function hasExceptionSwallow(surrounding) {
-  return /EXCEPTION\s+WHEN\s+OTHERS|EXCEPTION\s+WHEN\s+duplicate_object/i.test(
-    surrounding,
-  );
+function hasExceptionSwallow(text, index) {
+  // Only flag exception swallowing that appears INSIDE the same DO $$ ... END
+  // block that contains this CREATE EXTENSION statement. Adjacent unrelated
+  // DO blocks (e.g. pgmq.create wrappers) must not trigger a false positive.
+  const before = text.slice(0, index);
+  const doStart = before.lastIndexOf("DO $$");
+  const priorEnd = before.lastIndexOf("END $$");
+  if (doStart === -1 || priorEnd > doStart) return false;
+  const after = text.slice(index);
+  const endRel = after.indexOf("END");
+  if (endRel === -1) return false;
+  const block = text.slice(doStart, index + endRel);
+  return /EXCEPTION\s+WHEN\s+(OTHERS|duplicate_object)/i.test(block);
 }
+
 
 const files = readdirSync(DIR)
   .filter((f) => f.endsWith(".sql"))
