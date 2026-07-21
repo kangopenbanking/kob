@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { computeTemporaryEnvAccounting } from "../../scripts/phase1b-d2a/teardown.mjs";
+import {
+  computeTemporaryEnvAccounting,
+  removeKnownTemporaryPath,
+} from "../../scripts/phase1b-d2a/teardown.mjs";
 
 const ROOT = resolve(__dirname, "../..");
 const WORKFLOW = readFileSync(
