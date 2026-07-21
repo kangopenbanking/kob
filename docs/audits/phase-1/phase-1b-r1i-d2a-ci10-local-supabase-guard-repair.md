@@ -1,4 +1,4 @@
-# Phase 1B — R1I-d.2A-CI10 — Local Supabase postgres guard attestation
+# Phase 1B — R1I-d.2A-CI10 / CI10A — Local Supabase postgres guard attestation
 
 ## Context
 
@@ -20,7 +20,7 @@ Phase 1B R1I-d.2A isolated workflow, where loopback ports 54321 (API) and
 54322 (PostgreSQL) belong to a throwaway container set that GitHub Actions
 tears down at job end.
 
-## Change — narrow, fail-closed exception
+## CI10 — narrow, fail-closed exception
 
 `scripts/phase1b-d2a/guard.mjs`:
 
@@ -45,27 +45,79 @@ tears down at job end.
   `supabaseApiHost`, `supabaseApiPort`. No credentials, keys, secrets, or
   complete URLs are printed.
 
+## CI10A — IPv6 loopback hostname normalisation
+
+Initial CI10 compared `URL.hostname` directly against the string `"::1"`.
+Node's WHATWG URL parser returns bracketed IPv6 hostnames:
+
+```
+new URL("postgres://u:p@[::1]:54322/postgres").hostname // "[::1]"
+new URL("http://[::1]:54321").hostname                  // "[::1]"
+```
+
+The claimed IPv6 loopback attestation therefore never matched, and CI10
+would have rejected a fully-attested IPv6 local Supabase stack.
+
+CI10A introduces a single `normalizeHostname(value)` helper that strips
+matched leading `[` / trailing `]` and lowercases the result. It is applied
+immediately after parsing the PostgreSQL URL (producing `hostLower`) and to
+the Supabase API URL (producing `normalizedApiHost`). Every downstream
+check now consumes the normalised value:
+
+- `LOCAL_HOSTS` membership
+- loopback set membership
+- private / public host regex
+- forbidden host substring scan
+- local-Supabase attestation
+- redaction and evidence output
+
+Behavioural notes:
+
+- IPv4 (`127.0.0.1`, `10.x`, …) and `localhost` behaviour is unchanged —
+  they were never bracketed, and lowercasing is idempotent.
+- Only IPv6 loopback (`::1`) is accepted. URLs must still use valid IPv6
+  bracket syntax when they appear in `D2A_HARNESS_PGURL` or `SUPABASE_URL`.
+- Private (`fd00::/8`), link-local (`fe80::/10`), public and managed IPv6
+  hosts remain rejected — they never appear in `LOCAL_HOSTS` and are not
+  matched by the IPv4 private regex.
+- Evidence records `::1` (normalised), never `[::1]`.
+- No workflow security control was weakened. `PROTECTED_DB_NAMES`,
+  `FORBIDDEN_HOST_SUBSTRINGS`, `FORBIDDEN_PORT`, transaction-pooler
+  rejection, secret hygiene and the disposable marker requirement are all
+  preserved verbatim.
+
 ## Workflow (`.github/workflows/phase1b-r1i-d2a-verification.yml`)
 
-- Header comment `# CI10 local Supabase postgres database guard attestation`.
+- Header comments: `# CI10 local Supabase postgres database guard attestation`
+  followed by `# CI10A IPv6 loopback hostname normalisation`.
 - Job-level env `D2A_LOCAL_SUPABASE_STACK: "true"` (present only in this
-  isolated workflow).
-- `Environment guard (fail-closed)` step now runs with `set -euo pipefail`,
+  isolated workflow — enforced by CI10 test 19).
+- `Environment guard (fail-closed)` step runs with `set -euo pipefail`,
   tees output to `environment-guard.log`, and asserts non-empty log.
 - `environment-preflight.json` records only non-secret attestation fields:
   host, port, database, apiHost, apiPort, disposableMarker,
   localSupabaseMarker, secretPresent.
-- `environment-guard.log` added to the evidence artifact upload.
-- Static suite renamed to `guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 +
-  CI9 + CI10` and now runs the new CI10 test file.
+- `environment-guard.log` is included in the evidence artifact upload.
+- Static suite `guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10`
+  runs the CI10 test file (now including CI10A IPv6 cases).
 - Restricted push trigger and `workflow_dispatch` preserved.
 
 ## Static tests
 
 `src/test/phase1b-d2a-ci10-local-supabase-guard-reproducibility.test.ts`
-covers all 22 required assertions plus a guard-file-exists check
-(23 tests). Combined with the existing infra guard suite (14 tests) the
-guard tier is 37/37 PASS.
+covers the 22 original CI10 assertions, a guard-file-exists check, plus
+CI10A additions:
+
+- positive IPv6 loopback acceptance (attested, evidence normalised, no
+  passwords / complete URLs leak)
+- rejection of PostgreSQL `[fd00::1]`
+- rejection of Supabase API `[fd00::1]`
+- rejection of mixed loopback / non-loopback pairings (PG `[::1]` + API
+  `10.0.0.1`, and API `[::1]` + PG `10.0.0.1`)
+- workflow-marker scan asserts `D2A_LOCAL_SUPABASE_STACK` appears in no
+  other `.github/workflows/*.yml` file
+
+Combined guard-tier: infra-guard 14 + CI10 28 = **42/42 PASS**.
 
 ## Invariants preserved
 
