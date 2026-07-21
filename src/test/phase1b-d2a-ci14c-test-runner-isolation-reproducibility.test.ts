@@ -75,18 +75,26 @@ describe("CI14C — test-runner isolation", () => {
     expect(packageJson.scripts.test).toBe("vitest run");
   });
 
-  it("12. package.json smoke:swagger command remains the Playwright command", () => {
+  it("12. package.json smoke:swagger uses the dedicated Playwright config", () => {
     expect(packageJson.scripts["smoke:swagger"]).toBe(
-      "playwright test src/test/portal-swagger.spec.ts --reporter=line",
+      "playwright test --config=playwright.swagger.config.ts --reporter=line",
     );
   });
 
-  it("13. package.json is not modified by CI14C (scripts intact)", () => {
-    // Sanity: still valid JSON and the two governed commands unchanged.
-    expect(packageJson.scripts.test).toBe("vitest run");
-    expect(packageJson.scripts["smoke:swagger"]).toContain(
-      "playwright test src/test/portal-swagger.spec.ts",
-    );
+  it("13. Dedicated Swagger Playwright config exists and is exact-match scoped", () => {
+    const cfgPath = resolve(ROOT, "playwright.swagger.config.ts");
+    expect(existsSync(cfgPath)).toBe(true);
+    const cfg = readFileSync(cfgPath, "utf8");
+    expect(cfg).toMatch(/testDir:\s*["']\.\/src\/test["']/);
+    expect(cfg).toMatch(/testMatch:\s*["']portal-swagger\.spec\.ts["']/);
+    expect(cfg).not.toMatch(/\*\*\/\*\.spec/);
+    expect(cfg).not.toMatch(/from\s+["']vitest["']/);
+    expect(cfg).not.toMatch(/webServer/);
+  });
+
+  it("13b. Main playwright.config.ts remains scoped to ./e2e", () => {
+    const main = readFileSync(resolve(ROOT, "playwright.config.ts"), "utf8");
+    expect(main).toMatch(/testDir:\s*['"]\.\/e2e['"]/);
   });
 
   it("14. full-suite-policy.mjs still sets UNHANDLED_CEILING to 0", () => {
