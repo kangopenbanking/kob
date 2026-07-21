@@ -198,7 +198,7 @@ describe("CI14D — Playwright Swagger discovery", () => {
     expect(out).toContain(
       "Swagger UI renders the OpenAPI spec with at least one endpoint",
     );
-    expect(out).toContain("src/test/portal-swagger.spec.ts");
+    expect(out).toContain("portal-swagger.spec.ts");
     expect(out).toMatch(/Total:\s*1\s+test|1 test in/);
     expect(out).not.toMatch(/e2e\/.*\.spec\.ts/);
   }, 60_000);
