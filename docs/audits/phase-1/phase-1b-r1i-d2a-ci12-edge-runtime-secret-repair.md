@@ -248,3 +248,55 @@ teardownExitCode: 12
 - Rollup: 4.44.2
 - Supabase CLI: 2.101.0
 - Lint ceiling: 5586
+
+## CI12C — Removal-exception evidence preservation
+
+CI12B correctly handled partial preparation and unexpected files, but the
+`rmSync()` call inside `removeKnownPath()` was unguarded. A filesystem
+exception (`EACCES`, `EBUSY`, `EPERM`) could terminate teardown before
+`temporaryEnvRemovalVerificationFailures` was incremented, before the
+residual scan ran, and before `teardown-results.json` was written. The
+process still exited non-zero — operationally fail-closed — but the
+evidence contract required for CI12 (structured code-12 output on disk)
+was violated.
+
+CI12C converts this class of failure into bounded structured evidence:
+
+- A new pure, testable, dependency-injectable function
+  `removeKnownTemporaryPath(path, { remove, exists })` is exported from
+  `scripts/phase1b-d2a/teardown.mjs`. It catches removal exceptions,
+  returns `{ existedBefore, removalAttempted, removalSucceeded,
+  verifiedAbsent, errorCode }`, and truncates `errorCode` to 40
+  characters. It never returns file contents, absolute paths, the cursor
+  secret, exception messages, or stack traces.
+- Both known temporary env paths (`.d2a.env` and the RUNNER_TEMP function
+  env file) are removed through this helper via a local `tryRemove()`
+  wrapper. Verification failures increment
+  `temporaryEnvRemovalVerificationFailures` and append a bounded error
+  string of the form `TEMP_ENV_REMOVAL_FAILED label=<base|function> code=<CODE>`.
+- Verification failures do not increment
+  `temporaryEnvFilesRemovedByTeardown` or
+  `unexpectedTemporaryEnvFilesRemoved`; the residual scan still runs
+  independently and records the surviving paths.
+- `temporaryEnvCleanupAccountingComplete` becomes `false`,
+  `teardownExitCode` is set to 12, `teardown-results.json` is written,
+  and only then does the process exit with 12.
+
+Normal successful cleanup remains unchanged:
+
+```
+temporaryEnvFilesExpected: 2
+temporaryEnvFilesRemovedByServerStop: 1
+temporaryEnvFilesRemovedByTeardown: 1
+temporaryEnvFilesRemoved: 2
+unexpectedTemporaryEnvFilesDiscovered: 0
+unexpectedTemporaryEnvFilesRemoved: 0
+residualKnownTemporaryEnvFiles: 0
+temporaryEnvRemovalVerificationFailures: 0
+temporaryEnvCleanupAccountingComplete: true
+teardownExitCode: 0
+```
+
+Edge Runtime cursor-secret propagation, `pagination.ts`, `gateway-query`,
+`runtime-tests.mjs`, `fixture.mjs`, `guard.mjs`, migrations, indexes,
+OpenAPI, and package files are unchanged.
