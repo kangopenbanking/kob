@@ -572,6 +572,39 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
   return d2bOk(finalised);
 }
 
+// d.2B server-error wrapper. The three d.2B routes are dispatched through
+// this wrapper so that database / configuration / runtime exceptions do not
+// escape to the repository-wide outer catch (which uses the shared corsHeaders
+// and would strip the d.2B `Access-Control-Expose-Headers` list). The wrapper
+// preserves the generic 500 body — `error=internal_error` + `error_id` — and
+// does not fabricate any successful `X-Pagination-*` header values.
+async function executeD2bList(
+  p: any,
+  operationId: GatewayD2bOperationId,
+): Promise<Response> {
+  try {
+    return await handleD2bList(p, operationId);
+  } catch (error) {
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] gateway-query error:`, error);
+    return new Response(
+      JSON.stringify({
+        error: "internal_error",
+        error_id: errorId,
+      }),
+      {
+        status: 500,
+        headers: {
+          ...d2bCorsHeaders,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  }
+}
+
+
+
 // ─── Phase 1B — R1I-d.2A: keyset pagination for four gateway list ops ───
 // CI13 — explicit CORS exposure of the four d.2A pagination response headers
 // on both success and error responses. This list is intentionally kept local
