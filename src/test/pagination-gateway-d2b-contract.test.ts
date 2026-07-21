@@ -4,7 +4,14 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const TARGETS = [
+interface TargetSpec {
+  id: string;
+  path: string;
+  method: string;
+  filterBinding: string[];
+  filterBoundSubscription?: boolean;
+}
+const TARGETS: TargetSpec[] = [
   {
     id: "gatewayListCustomers",
     path: "/v1/gateway/customers",
@@ -24,7 +31,7 @@ const TARGETS = [
     filterBinding: ["plan_id", "status", "sort_by", "sort_order"],
     filterBoundSubscription: true,
   },
-] as const;
+];
 
 type AnyRec = Record<string, unknown>;
 type Param = AnyRec & { name?: string; $ref?: string; schema?: AnyRec; deprecated?: boolean };
