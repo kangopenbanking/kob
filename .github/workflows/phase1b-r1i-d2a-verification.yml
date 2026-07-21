@@ -1,9 +1,11 @@
 # Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI4 corrections)
+# CI5 canonical clean-reset reproducibility repair
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
 # production credentials are used. See docs/audits/phase-1/phase-1b-r1i-d2a-
-# ci4-startup-repair.md for the CI4 repair rationale.
+# ci4-startup-repair.md for the CI4 repair rationale and
+# docs/audits/phase-1/phase-1b-r1i-d2a-ci5-canonical-reset-repair.md for CI5.
 
 name: Phase 1B R1I-d.2A Isolated Verification
 
