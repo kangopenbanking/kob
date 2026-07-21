@@ -399,7 +399,7 @@ jobs:
           test -s extension-reproducibility-audit.json
           test -s extension-reproducibility-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11 + CI12 + CI13)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11 + CI12 + CI13 + CI14)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -414,6 +414,7 @@ jobs:
             src/test/phase1b-d2a-ci11-auth-parent-fixture-reproducibility.test.ts \
             src/test/phase1b-d2a-ci12-edge-runtime-secret-propagation.test.ts \
             src/test/phase1b-d2a-ci13-runtime-cors-scope-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci14-openapi-gate-ceiling-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
 
@@ -427,10 +428,13 @@ jobs:
           set -o pipefail
           npm run openapi:gates:test 2>&1 | tee -a gate-results.log
 
-      - name: OpenAPI gates (structural + performance)
+      - name: OpenAPI gates (structural + performance — ratified per-gate ceiling)
         run: |
-          set -o pipefail
-          npm run openapi:gates 2>&1 | tee -a gate-results.log
+          set -euo pipefail
+          rm -f gate-results.log openapi-gate-ceiling-results.json
+          node scripts/phase1b-d2a/evaluate-openapi-gate-ceiling.mjs
+          test -s gate-results.log
+          test -s openapi-gate-ceiling-results.json
 
       - name: OpenAPI version check
         run: |
