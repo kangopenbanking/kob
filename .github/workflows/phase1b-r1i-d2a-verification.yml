@@ -3,6 +3,7 @@
 # CI6 pg_cron extension schema reproducibility repair
 # CI7 realtime publication idempotency sweep
 # CI7A strict realtime publication guard enforcement
+# CI8 translation child-data FK reproducibility sweep
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
@@ -291,7 +292,7 @@ jobs:
           test -s realtime-publication-audit.json
           test -s realtime-publication-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -300,6 +301,7 @@ jobs:
             src/test/phase1b-d2a-ci5-migration-reproducibility.test.ts \
             src/test/phase1b-d2a-ci6-extension-reproducibility.test.ts \
             src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci8-translation-fk-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
       - name: d.2A contract suite
