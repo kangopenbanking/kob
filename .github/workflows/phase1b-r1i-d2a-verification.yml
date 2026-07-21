@@ -18,8 +18,14 @@
 
 name: Phase 1B R1I-d.2A Isolated Verification
 
+# CI3A one-time execution trigger
 on:
   workflow_dispatch: {}
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/phase1b-r1i-d2a-verification.yml"
   pull_request:
     paths:
       - "scripts/phase1b-d2a/**"
