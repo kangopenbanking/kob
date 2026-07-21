@@ -50,12 +50,12 @@ serve(async (req) => {
       case 'list-settlements': return await listSimple(p, 'gateway_settlements', 'list-settlements');
       case 'list-disputes': return await listSimple(p, 'gateway_disputes', 'list-disputes');
       case 'list-beneficiaries': return await handleD2aList(p, { id: 'gatewayListBeneficiaries', table: 'gateway_beneficiaries' });
-      case 'list-customers': return await handleD2bList(p, D2B_ROUTES['list-customers']);
+      case 'list-customers': return await executeD2bList(p, D2B_ROUTES['list-customers']);
       case 'list-customer-tokens': return await listCustomerTokens(p);
       case 'list-payment-links': return await handleD2aList(p, { id: 'gatewayListPaymentLinks', table: 'gateway_payment_links' });
-      case 'list-payment-plans': return await handleD2bList(p, D2B_ROUTES['list-payment-plans']);
+      case 'list-payment-plans': return await executeD2bList(p, D2B_ROUTES['list-payment-plans']);
       case 'list-subaccounts': return await handleD2aList(p, { id: 'gatewayListSubaccounts', table: 'gateway_subaccounts' });
-      case 'list-subscriptions': return await handleD2bList(p, D2B_ROUTES['list-subscriptions']);
+      case 'list-subscriptions': return await executeD2bList(p, D2B_ROUTES['list-subscriptions']);
       case 'list-virtual-accounts': return await handleD2aList(p, { id: 'gatewayListVirtualAccounts', table: 'gateway_virtual_accounts' });
 
       case 'list-funding-intents': return await listFundingIntents(p);
@@ -392,14 +392,14 @@ function parseD2bOffset(raw: string | null | undefined):
     };
   }
   const n = Number.parseInt(s, 10);
-  if (!Number.isFinite(n) || n < 0) {
+  if (!Number.isSafeInteger(n) || n < 0 || n > Number.MAX_SAFE_INTEGER) {
     return {
       ok: false,
       error: {
         status: 400,
         type: "https://kob.dev/problems/pagination-offset-invalid",
         title: "Invalid pagination offset",
-        detail: "offset must be >= 0",
+        detail: "offset must be a safe non-negative integer",
         code: "PAGINATION_LIMIT_INVALID",
       },
     };
@@ -439,18 +439,22 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
 
   // Cursor precedence — cursor > kobp1-prefixed starting_after/ending_before.
   // Arbitrary DB ids in starting_after/ending_before are ignored, never
-  // interpreted as unsigned cursors. Multiple distinct cursor-bearing values
-  // fail closed with 400.
+  // interpreted as unsigned cursors. Duplicate cursor values (the same token
+  // repeated across parameter names) are deduplicated by value equality. Only
+  // when two or more DISTINCT tokens are supplied do we fail closed with 400.
   const startingAfter = getParam(p, 'starting_after');
   const endingBefore = getParam(p, 'ending_before');
-  const cursorSources: string[] = [];
-  if (typeof cursor === 'string' && cursor.length > 0) cursorSources.push(cursor);
+  const cursorCandidates: string[] = [];
+  if (typeof cursor === 'string' && cursor.length > 0) cursorCandidates.push(cursor);
   if (typeof startingAfter === 'string' && startingAfter.startsWith('kobp1.')) {
-    cursorSources.push(startingAfter);
+    cursorCandidates.push(startingAfter);
   }
   if (typeof endingBefore === 'string' && endingBefore.startsWith('kobp1.')) {
-    cursorSources.push(endingBefore);
+    cursorCandidates.push(endingBefore);
   }
+  // Deduplicate by value equality — equal tokens repeated across the
+  // canonical `cursor` and the KOB-prefixed aliases must be accepted as one.
+  const cursorSources = Array.from(new Set(cursorCandidates));
   if (cursorSources.length > 1) {
     return d2bProblemResponse({
       status: 400,
@@ -461,11 +465,6 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
     });
   }
   cursor = cursorSources[0] ?? null;
-
-  // Offset — only consulted when no cursor is accepted.
-  const offsetResult = parseD2bOffset(getParam(p, 'offset'));
-  if (!offsetResult.ok) return d2bProblemResponse(offsetResult.error);
-  const offset = offsetResult.offset;
 
   // Operation-specific filter binding.
   const rawPlanId = operationId === 'gatewayListSubscriptions'
@@ -505,6 +504,17 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
     });
     if (!decoded.ok) return d2bProblemResponse(decoded.error);
     cursorPosition = { createdAt: decoded.createdAt, id: decoded.id };
+  }
+
+  // Offset — cursor precedence: parsed and validated ONLY when no cursor was
+  // accepted. When a cursor is accepted, any `offset` value on the request
+  // (including invalid, negative, non-numeric, or unsafe integer values) is
+  // ignored entirely — never read, parsed, or applied.
+  let offset = 0;
+  if (cursorPosition === null) {
+    const offsetResult = parseD2bOffset(getParam(p, 'offset'));
+    if (!offsetResult.ok) return d2bProblemResponse(offsetResult.error);
+    offset = offsetResult.offset;
   }
 
   // Build keyset query. Every d.2B collection query applies the verified
@@ -561,6 +571,39 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
   });
   return d2bOk(finalised);
 }
+
+// d.2B server-error wrapper. The three d.2B routes are dispatched through
+// this wrapper so that database / configuration / runtime exceptions do not
+// escape to the repository-wide outer catch (which uses the shared corsHeaders
+// and would strip the d.2B `Access-Control-Expose-Headers` list). The wrapper
+// preserves the generic 500 body — `error=internal_error` + `error_id` — and
+// does not fabricate any successful `X-Pagination-*` header values.
+async function executeD2bList(
+  p: Parameters<typeof handleD2bList>[0],
+  operationId: GatewayD2bOperationId,
+): Promise<Response> {
+  try {
+    return await handleD2bList(p, operationId);
+  } catch (error) {
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] gateway-query error:`, error);
+    return new Response(
+      JSON.stringify({
+        error: "internal_error",
+        error_id: errorId,
+      }),
+      {
+        status: 500,
+        headers: {
+          ...d2bCorsHeaders,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  }
+}
+
+
 
 // ─── Phase 1B — R1I-d.2A: keyset pagination for four gateway list ops ───
 // CI13 — explicit CORS exposure of the four d.2A pagination response headers

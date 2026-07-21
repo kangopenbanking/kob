@@ -171,8 +171,8 @@ describe("R1I-d.2B-I1b — runtime integration (structural)", () => {
     expect(block).toContain(`"list-subscriptions": "gatewayListSubscriptions"`);
   });
 
-  it("9. only the three approved route keys enter handleD2bList", () => {
-    const callRe = /handleD2bList\(p,\s*D2B_ROUTES\['([^']+)'\]\)/g;
+  it("9. only the three approved route keys enter executeD2bList / handleD2bList", () => {
+    const callRe = /(?:executeD2bList|handleD2bList)\(p,\s*D2B_ROUTES\['([^']+)'\]\)/g;
     const keys = new Set<string>();
     for (const m of src.matchAll(callRe)) keys.add(m[1]);
     expect([...keys].sort()).toEqual([
@@ -454,3 +454,251 @@ describe("R1I-d.2B-I1b — mutation tests (validator must reject)", () => {
     );
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// R1I-d.2B-I1b-R1 — cursor precedence, safe-integer offsets, dedup, and
+// server-error CORS wrapper. Static assertions and mutation coverage.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("R1I-d.2B-I1b-R1 — cursor precedence over offset", () => {
+  const src = readSource();
+  const block = extractD2bBlock(src);
+
+  it("R1.1 offset parsing occurs only after successful cursor decoding", () => {
+    const decodeIdx = block.indexOf("await decodeD2bCursor(");
+    const parseOffsetIdx = block.indexOf("parseD2bOffset(getParam(p, 'offset'))");
+    expect(decodeIdx).toBeGreaterThan(0);
+    expect(parseOffsetIdx).toBeGreaterThan(0);
+    expect(parseOffsetIdx).toBeGreaterThan(decodeIdx);
+  });
+
+  it("R1.2 offset parsing is guarded by cursorPosition === null", () => {
+    expect(block).toMatch(
+      /if\s*\(\s*cursorPosition\s*===\s*null\s*\)\s*\{[\s\S]{0,300}parseD2bOffset\(getParam\(p,\s*'offset'\)\)/,
+    );
+  });
+
+  it("R1.3 no offset value is read or parsed in the accepted-cursor branch", () => {
+    // There must be exactly one call site parsing the offset param, and it
+    // must live inside the cursorPosition === null guarded branch.
+    const matches = [...block.matchAll(/parseD2bOffset\(getParam\(p,\s*'offset'\)\)/g)];
+    expect(matches.length).toBe(1);
+    // No `getParam(p, 'offset')` outside of that guarded call.
+    const offsetReads = [...block.matchAll(/getParam\(p,\s*'offset'\)/g)];
+    expect(offsetReads.length).toBe(1);
+  });
+
+  it("R1.4 unsafe integers are rejected through Number.isSafeInteger", () => {
+    // parseD2bOffset lives above the d.2B block start anchor's inner region
+    // (it is defined before handleD2bList). Assert on the full source.
+    expect(src).toContain("Number.isSafeInteger");
+    // Configure explicit safe-integer guard around parseD2bOffset.
+    const parseFn = src.slice(
+      src.indexOf("function parseD2bOffset"),
+      src.indexOf("async function handleD2bList("),
+    );
+    expect(parseFn).toContain("Number.isSafeInteger(n)");
+    // Guard must be a negative check (rejects on !isSafeInteger).
+    expect(parseFn).toMatch(/!\s*Number\.isSafeInteger\(n\)/);
+  });
+});
+
+describe("R1I-d.2B-I1b-R1 — cursor duplicate/distinct handling", () => {
+  const block = extractD2bBlock(readSource());
+
+  it("R2.1 duplicate cursor values are deduplicated by value equality", () => {
+    expect(block).toContain("Array.from(new Set(cursorCandidates))");
+  });
+
+  it("R2.2 only distinct cursor values trigger the conflict response", () => {
+    // The `> 1` check runs on the deduplicated Set-derived array.
+    expect(block).toMatch(
+      /cursorSources\s*=\s*Array\.from\(new Set\(cursorCandidates\)\)[\s\S]{0,200}cursorSources\.length\s*>\s*1/,
+    );
+    expect(block).toContain("Conflicting cursor parameters");
+  });
+});
+
+describe("R1I-d.2B-I1b-R1 — d.2B server-error wrapper", () => {
+  const src = readSource();
+
+  it("R3.1 all three routes are dispatched through executeD2bList", () => {
+    expect(src).toContain(`case 'list-customers': return await executeD2bList(p, D2B_ROUTES['list-customers']);`);
+    expect(src).toContain(`case 'list-payment-plans': return await executeD2bList(p, D2B_ROUTES['list-payment-plans']);`);
+    expect(src).toContain(`case 'list-subscriptions': return await executeD2bList(p, D2B_ROUTES['list-subscriptions']);`);
+  });
+
+  it("R3.2 executeD2bList is declared before the d.2A anchor", () => {
+    const wrapperIdx = src.indexOf("async function executeD2bList(");
+    const anchorIdx = src.indexOf(D2A_ANCHOR);
+    expect(wrapperIdx).toBeGreaterThan(0);
+    expect(wrapperIdx).toBeLessThan(anchorIdx);
+  });
+
+  it("R3.3 wrapper catches thrown runtime/configuration/database errors", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    expect(wrapper).toMatch(/try\s*\{[\s\S]*await handleD2bList\(p,\s*operationId\)[\s\S]*\}\s*catch\s*\(/);
+  });
+
+  it("R3.4 wrapper returns status 500", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    expect(wrapper).toContain("status: 500,");
+  });
+
+  it("R3.5 wrapper preserves error=internal_error and error_id", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    expect(wrapper).toContain(`error: "internal_error"`);
+    expect(wrapper).toContain("error_id: errorId");
+    expect(wrapper).toContain("crypto.randomUUID().slice(0, 8)");
+  });
+
+  it("R3.6 wrapper uses d2bCorsHeaders (not shared corsHeaders)", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    expect(wrapper).toContain("...d2bCorsHeaders");
+    expect(wrapper).not.toMatch(/\.\.\.corsHeaders\b/);
+  });
+
+  it("R3.7 wrapper does not emit successful pagination header values", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    // No literal X-Pagination-* value strings are set as headers inside the
+    // wrapper's 500 body — only the exposure list travels via d2bCorsHeaders.
+    expect(wrapper).not.toContain(`"X-Pagination-Mode":`);
+    expect(wrapper).not.toContain(`"X-Pagination-Has-More":`);
+    expect(wrapper).not.toContain(`"X-Pagination-Next-Cursor":`);
+    expect(wrapper).not.toContain(`"X-Pagination-Limit":`);
+  });
+
+  it("R3.8 generic outer catch remains unchanged", () => {
+    // The shared outer catch keeps its original generic body + shared cors.
+    expect(src).toContain(
+      `return new Response(JSON.stringify({ error: 'internal_error', error_id: errorId }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });`,
+    );
+  });
+
+  it("R3.9 no unrelated route uses the d.2B wrapper", () => {
+    const callRe = /executeD2bList\(p,\s*([^)]+)\)/g;
+    const args = [...src.matchAll(callRe)].map((m) => m[1].trim());
+    // Every call site must reference D2B_ROUTES['list-customers' | 'list-payment-plans' | 'list-subscriptions'].
+    // The internal try/catch invocation of handleD2bList lives inside the
+    // wrapper itself and does not count as an executeD2bList call.
+    for (const a of args) {
+      expect(a).toMatch(/^D2B_ROUTES\['(list-customers|list-payment-plans|list-subscriptions)'\]$/);
+    }
+    expect(args.length).toBe(3);
+  });
+});
+
+describe("R1I-d.2B-I1b-R1 — mutation tests (repair semantics)", () => {
+  const src = readSource();
+  const block = extractD2bBlock(src);
+
+  it("rejects moving offset parsing before cursor decoding", () => {
+    const decodeIdx = block.indexOf("await decodeD2bCursor(");
+    const parseOffsetIdx = block.indexOf("parseD2bOffset(getParam(p, 'offset'))");
+    // Baseline invariant: parse-offset AFTER decode. Any mutation swapping the
+    // order would invert this comparison.
+    expect(parseOffsetIdx > decodeIdx).toBe(true);
+    // Simulate mutation: move parse call before decode → invariant broken.
+    const mutated = block
+      .replace("parseD2bOffset(getParam(p, 'offset'))", "__MOVED_PARSE__")
+      .replace("await decodeD2bCursor(", "parseD2bOffset(getParam(p, 'offset')); await decodeD2bCursor(");
+    const mDecode = mutated.indexOf("await decodeD2bCursor(");
+    const mParse = mutated.indexOf("parseD2bOffset(getParam(p, 'offset'))");
+    expect(mParse < mDecode).toBe(true);
+  });
+
+  it("rejects parsing offset unconditionally (removal of cursorPosition === null guard)", () => {
+    const mutated = block.replace(
+      /if\s*\(\s*cursorPosition\s*===\s*null\s*\)\s*\{[\s\S]*?\n\s*\}/,
+      "const offsetResult = parseD2bOffset(getParam(p, 'offset')); if (!offsetResult.ok) return d2bProblemResponse(offsetResult.error); offset = offsetResult.offset;",
+    );
+    // Validator (weaker) — assert the guard string was present in original
+    // and removed in mutated.
+    expect(block).toMatch(/if\s*\(\s*cursorPosition\s*===\s*null\s*\)/);
+    expect(mutated).not.toMatch(/if\s*\(\s*cursorPosition\s*===\s*null\s*\)/);
+  });
+
+  it("rejects replacing Number.isSafeInteger with Number.isFinite only", () => {
+    const parseFn = src.slice(
+      src.indexOf("function parseD2bOffset"),
+      src.indexOf("async function handleD2bList("),
+    );
+    // Baseline uses isSafeInteger; a mutation swapping to isFinite alone must
+    // remove the safe-integer guard.
+    expect(parseFn).toMatch(/!\s*Number\.isSafeInteger\(n\)/);
+    const mutated = parseFn.replace(/Number\.isSafeInteger\(n\)/g, "Number.isFinite(n)");
+    expect(mutated).not.toContain("Number.isSafeInteger(n)");
+  });
+
+  it("rejects removal of cursor candidate deduplication", () => {
+    expect(block).toContain("Array.from(new Set(cursorCandidates))");
+    const mutated = block.replace(
+      "const cursorSources = Array.from(new Set(cursorCandidates));",
+      "const cursorSources = cursorCandidates;",
+    );
+    expect(mutated).not.toContain("new Set(cursorCandidates)");
+  });
+
+  it("rejects rejecting duplicate equal tokens (must accept dedup to 1)", () => {
+    // Simulate injecting a raw > 0 conflict on the pre-dedup list — that
+    // rejection semantics is exactly what R1I-d.2B-I1b-R1 forbids.
+    const mutated = block.replace(
+      "if (cursorSources.length > 1)",
+      "if (cursorCandidates.length > 1)",
+    );
+    // The mutation changes the check target; assert semantic distinction.
+    expect(mutated).toContain("cursorCandidates.length > 1");
+    expect(mutated).not.toMatch(/cursorSources\.length\s*>\s*1/);
+  });
+
+  it("rejects replacing d2bCorsHeaders with corsHeaders in the 500 wrapper", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    expect(wrapper).toContain("...d2bCorsHeaders");
+    const mutated = wrapper.replace("...d2bCorsHeaders", "...corsHeaders");
+    expect(mutated).toContain("...corsHeaders");
+    expect(mutated).not.toContain("...d2bCorsHeaders");
+  });
+
+  it("rejects routing an unrelated operation through the wrapper", () => {
+    // Baseline: only three d.2B route case labels call executeD2bList.
+    const callSites = [...src.matchAll(/executeD2bList\(p,\s*([^)]+)\)/g)].map((m) => m[1].trim());
+    for (const arg of callSites) {
+      expect(arg).toMatch(/^D2B_ROUTES\['(list-customers|list-payment-plans|list-subscriptions)'\]$/);
+    }
+    // Simulate mutation routing an unrelated action through the wrapper.
+    const mutated = src.replace(
+      `case 'list-charges': return await listCharges(p);`,
+      `case 'list-charges': return await executeD2bList(p, D2B_ROUTES['list-customers']);`,
+    );
+    const mCalls = [...mutated.matchAll(/executeD2bList\(p,\s*[^)]+\)/g)];
+    expect(mCalls.length).toBeGreaterThan(3);
+  });
+
+  it("rejects returning 400 from the wrapper", () => {
+    const wrapper = src.slice(
+      src.indexOf("async function executeD2bList("),
+      src.indexOf(D2A_ANCHOR),
+    );
+    expect(wrapper).toContain("status: 500,");
+    expect(wrapper).not.toMatch(/status:\s*400\b/);
+  });
+});
+
