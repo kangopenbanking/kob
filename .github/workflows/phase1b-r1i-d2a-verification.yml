@@ -4,6 +4,8 @@
 # CI7 realtime publication idempotency sweep
 # CI7A strict realtime publication guard enforcement
 # CI8 translation child-data FK reproducibility sweep
+# CI9 pg_cron and pg_net extension reproducibility sweep
+
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
