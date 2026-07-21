@@ -13,6 +13,8 @@
 # CI12A cross-step temporary environment cleanup accounting
 # CI12B partial-preparation temporary secret-file cleanup
 # CI12C temporary environment removal-exception evidence preservation
+# CI12D filesystem removal error-code allowlist
+
 
 
 
