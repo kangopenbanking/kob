@@ -1,10 +1,11 @@
-# Phase 1B — R1I-d.2A-CI12 / CI12A — Edge Runtime Cursor-Secret Propagation & Cleanup Accounting
+# Phase 1B — R1I-d.2A-CI12 / CI12A / CI12B — Edge Runtime Cursor-Secret Propagation & Cleanup Accounting
 
 ## Run under repair
 
 - Original CI12 run ID: 29850107687
 - CI12 base commit: 6b0ba4a9cd23d24532a0472116cc31cb7a1cad67
 - CI12A base commit: b8216e36fd5eeca45cd782e1520d0f41359845c9
+- CI12B base commit: 4719d16f7ad73d47592370f577f518f2f8d361c9
 
 ## Preserved evidence from CI11
 
@@ -144,7 +145,94 @@ residualTemporaryEnvFiles: 0
   on residual files OR on removed≠expected.
 - Teardown records zero residual resources on success.
 
-### Files changed (CI12A)
+## CI12B — partial-preparation temporary secret-file cleanup
+
+### Defect confirmed after CI12A
+
+CI12A correctly fixed the normal cross-step 2/2 cleanup accounting path:
+the function env file could be removed by the always-running server-stop
+step, while `.d2a.env` could be removed by final teardown, and both removals
+were attributed without double counting.
+
+A remaining partial-preparation window still existed before each preparation
+marker was written. A workflow command could physically create `.d2a.env` or
+`$RUNNER_TEMP/kob-d2a-edge-runtime.env`, then fail before appending
+`D2A_BASE_ENV_PREPARED=true` or `D2A_FUNCTION_ENV_PREPARED=true` to
+`GITHUB_ENV`. In CI12A, marker-false files were not physically scanned or
+removed by teardown, so a secret-bearing temporary file could remain while the
+summary reported zero residual temporary files.
+
+### CI12B repair
+
+1. **Always scan both known paths**. `teardown.mjs` now inspects both known
+   temporary secret-file paths regardless of preparation markers:
+   `.d2a.env` and `D2A_FUNCTION_ENV_FILE` when provided, otherwise
+   `$RUNNER_TEMP/kob-d2a-edge-runtime.env`.
+
+2. **Always remove discovered known files**. If either known path exists at
+   final teardown, teardown removes it and verifies absence. File contents are
+   never read, recorded, printed, or uploaded.
+
+3. **Separate expected and unexpected accounting**. Preparation markers still
+   determine `temporaryEnvFilesExpected`. Marker-true removals are reported in
+   `temporaryEnvFilesRemovedByServerStop`,
+   `temporaryEnvFilesRemovedByTeardown`, and `temporaryEnvFilesRemoved`.
+   Marker-false physical files are instead reported in
+   `unexpectedTemporaryEnvFilesDiscovered` and
+   `unexpectedTemporaryEnvFilesRemoved`, so unexpected cleanup cannot make
+   expected accounting appear complete.
+
+4. **Residual scan is marker-independent**. `residualKnownTemporaryEnvFiles`
+   counts either known path still present after cleanup regardless of marker
+   state. The legacy `residualTemporaryEnvFiles` and
+   `residualTemporaryEnvFile` fields are preserved and equal
+   `residualKnownTemporaryEnvFiles`.
+
+5. **Fail-closed on partial preparation**. An unprepared physical file is
+   removed, but teardown still exits with code 12. The same fail-closed verdict
+   applies when expected removals do not match expected prepared files, an
+   unexpected discovered count differs from unexpected removals, a known path
+   remains after cleanup, a removal verification fails, or the server-stop
+   removal marker appears without the function preparation marker.
+
+6. **Normal lifecycle unchanged**. The complete successful lifecycle remains:
+   `temporaryEnvFilesExpected: 2`,
+   `temporaryEnvFilesRemovedByServerStop: 1`,
+   `temporaryEnvFilesRemovedByTeardown: 1`,
+   `temporaryEnvFilesRemoved: 2`,
+   `unexpectedTemporaryEnvFilesDiscovered: 0`,
+   `unexpectedTemporaryEnvFilesRemoved: 0`,
+   `residualKnownTemporaryEnvFiles: 0`,
+   `residualTemporaryEnvFiles: 0`,
+   `residualTemporaryEnvFile: 0`,
+   `temporaryEnvCleanupAccountingComplete: true`,
+   `teardownExitCode: 0`.
+
+### Evidence — partial-preparation fail-closed lifecycle
+
+```
+temporaryEnvFilesExpected: 0
+temporaryEnvFilesRemoved: 0
+unexpectedTemporaryEnvFilesDiscovered: 1
+unexpectedTemporaryEnvFilesRemoved: 1
+residualKnownTemporaryEnvFiles: 0
+residualTemporaryEnvFiles: 0
+residualTemporaryEnvFile: 0
+temporaryEnvCleanupAccountingComplete: false
+teardownExitCode: 12
+```
+
+### CI12B invariants confirmed
+
+- Edge Runtime env-file propagation is unchanged.
+- RUNNER_TEMP location, mode 600, `--env-file`, server-stop removal
+  accounting, preparation markers, runtime harness, and artifact evidence are
+  preserved.
+- No cursor fallback or unsigned cursor mode is introduced.
+- No managed backend access is introduced.
+- No secret value is recorded or uploaded.
+
+### Files changed (CI12A / CI12B)
 
 - `.github/workflows/phase1b-r1i-d2a-verification.yml`
 - `scripts/phase1b-d2a/teardown.mjs`
