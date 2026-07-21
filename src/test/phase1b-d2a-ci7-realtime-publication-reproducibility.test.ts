@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 
 const EARLIEST_ACC =
@@ -111,7 +111,16 @@ describe("CI7A strict realtime publication idempotency sweep", () => {
     expect(out).toMatch(/Self-check OK/);
   });
 
+  it("audit script failure mode exits non-zero for exception-swallowing synthetic later duplicate", () => {
+    expect(() =>
+      execFileSync("node", [AUDIT_SCRIPT, "--self-check-exception-only-failure"], {
+        stdio: "pipe",
+      }),
+    ).toThrow();
+  });
+
   it("audit script exits successfully with expected counts", () => {
+    rmSync("realtime-publication-audit.json", { force: true });
     execFileSync("node", [AUDIT_SCRIPT], { stdio: "pipe" });
     expect(existsSync("realtime-publication-audit.json")).toBe(true);
     const report = JSON.parse(
@@ -122,6 +131,14 @@ describe("CI7A strict realtime publication idempotency sweep", () => {
     expect(report.laterGuardedOccurrences).toBe(6);
     expect(report.laterExceptionSwallowedOccurrences).toBe(0);
     expect(report.laterUnguardedRemaining).toBe(0);
+    for (const duplicate of report.duplicates) {
+      for (const later of duplicate.laterOccurrences) {
+        expect(later.guarded).toBe(true);
+        expect(later.exceptionSwallowed).toBe(false);
+      }
+    }
+    expect(report.laterUnguarded).toEqual([]);
+    rmSync("realtime-publication-audit.json", { force: true });
   });
 
   it("realtime-publication-audit.json is not tracked by Git", () => {
@@ -140,11 +157,20 @@ describe("CI7A strict realtime publication idempotency sweep", () => {
     expect(workflow).toMatch(
       /rm -f realtime-publication-audit\.json realtime-publication-audit\.log/,
     );
+    expect(workflow.indexOf("rm -f realtime-publication-audit.json realtime-publication-audit.log")).toBeLessThan(
+      workflow.indexOf("node scripts/phase1b-d2a/audit-realtime-publications.mjs"),
+    );
   });
 
   it("workflow verifies both audit output files are non-empty", () => {
     expect(workflow).toMatch(/test -s realtime-publication-audit\.json/);
     expect(workflow).toMatch(/test -s realtime-publication-audit\.log/);
+    expect(workflow.indexOf("test -s realtime-publication-audit.json")).toBeGreaterThan(
+      workflow.indexOf("tee realtime-publication-audit.log"),
+    );
+    expect(workflow.indexOf("test -s realtime-publication-audit.log")).toBeGreaterThan(
+      workflow.indexOf("tee realtime-publication-audit.log"),
+    );
   });
 
   it("workflow uses CI7A step name and header", () => {

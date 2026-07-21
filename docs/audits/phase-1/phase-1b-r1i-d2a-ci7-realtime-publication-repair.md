@@ -1,4 +1,4 @@
-# PHASE 1B-R1I-d.2A-CI7 — Realtime Publication Idempotency Sweep
+# PHASE 1B-R1I-d.2A-CI7A — Realtime Publication Idempotency Sweep
 
 ## Run
 
@@ -36,19 +36,19 @@ sweep for the same defect class across every migration file.
 ## Repository-wide duplicate-membership manifest
 
 Audit script: `scripts/phase1b-d2a/audit-realtime-publications.mjs`
-Output: `realtime-publication-audit.json`
+Output: `realtime-publication-audit.json` generated fresh during CI evidence capture only.
 
 - Total `ALTER PUBLICATION ... ADD TABLE` statements: **43**
 - Unique `publication|schema|table` memberships: **37**
 - Duplicate memberships: **4**
-- Later unguarded duplicates remaining after CI7: **0**
+- Later unguarded duplicates remaining after CI7A: **0**
 
 | # | pub \| schema \| table | Earliest authoritative | Later occurrences |
 |---|---|---|---|
 | 1 | supabase_realtime \| public \| account_balances | 20260301020025_...sql | 20260326161447_...sql (unguarded → **CI7 guarded**) |
 | 2 | supabase_realtime \| public \| transactions | 20260301020025_...sql | 20260326161447_...sql (unguarded → **CI7 guarded**) |
-| 3 | supabase_realtime \| public \| support_messages | 20260321040418_...sql | 20260422011413_...sql (already exception-safe, unchanged), 20260423233715_...sql (unguarded → **CI7 guarded**) |
-| 4 | supabase_realtime \| public \| support_conversations | 20260321040418_...sql | 20260422011413_...sql (already exception-safe, unchanged), 20260423233715_...sql (unguarded → **CI7 guarded**) |
+| 3 | supabase_realtime \| public \| support_messages | 20260321040418_...sql | 20260422011413_...sql (exception-swallowing false positive → **CI7A guarded**), 20260423233715_...sql (unguarded → **CI7 guarded**) |
+| 4 | supabase_realtime \| public \| support_conversations | 20260321040418_...sql | 20260422011413_...sql (exception-swallowing false positive → **CI7A guarded**), 20260423233715_...sql (unguarded → **CI7 guarded**) |
 
 ## Exact migrations changed
 
@@ -64,6 +64,11 @@ migrations were left byte-identical.
    - Trailing `ALTER PUBLICATION ... ADD TABLE public.support_messages;` and
      `public.support_conversations;` statements converted to the same
      guarded-membership pattern.
+3. `supabase/migrations/20260422011413_02e1c2e1-d7f2-4c68-9e44-6f690db8c4c0.sql`
+   - The two remaining exception-swallowing later duplicates for
+     `public.support_conversations` and `public.support_messages` were
+     replaced with explicit `pg_catalog.pg_publication_tables` membership
+     guards during CI7A.
 
 ## Membership integrity
 
@@ -85,18 +90,19 @@ None. The audit script never opens a DB connection and never reads
 
 ## Verification
 
-- `node scripts/phase1b-d2a/audit-realtime-publications.mjs` → exit 0, 0 later
-  unguarded duplicates.
+- `node scripts/phase1b-d2a/audit-realtime-publications.mjs` → exit 0, 6 later
+  membership-guarded duplicates, 0 later exception-swallowed duplicates, and
+  0 later unguarded duplicates.
 - `src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts`:
-  16/16 PASS.
-- Combined CI5 + CI6 + CI7 static suites: **42/42 PASS**.
+  20/20 PASS.
+- Combined CI5 + CI6 + CI7 static suites: **46/46 PASS**.
 
 ## Workflow triggering
 
 `.github/workflows/phase1b-r1i-d2a-verification.yml` header comment updated
-with `# CI7 realtime publication idempotency sweep`. Existing restricted
-`push` trigger on that path preserved, so the correction commit will
-automatically dispatch the next verification run.
+with `# CI7A strict realtime publication guard enforcement`. Existing
+restricted `push` trigger on that path preserved, so the correction commit
+will automatically dispatch the next verification run.
 
 ## CI7A — strict audit correction (supersedes initial CI7)
 
