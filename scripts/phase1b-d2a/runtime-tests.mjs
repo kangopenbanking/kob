@@ -223,15 +223,53 @@ async function callOp(op, { params = {}, headers = {}, method = "GET" } = {}) {
   };
 }
 
-async function readinessProbe(authHeaders) {
-  // Prove the expected router is responding by requesting a canonical
-  // authenticated route and expecting HTTP 200.
+// CI13 — the four d.2A pagination response headers required to be explicitly
+// exposed for cross-origin browser JavaScript. Parsed case-insensitively as a
+// comma-separated set on the actual authenticated GET response.
+const REQUIRED_EXPOSED_HEADERS = [
+  "x-pagination-mode",
+  "x-pagination-has-more",
+  "x-pagination-next-cursor",
+  "x-pagination-limit",
+];
+
+function parseExposedHeaders(raw) {
+  return new Set(
+    String(raw || "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
+function missingExposedHeaders(raw) {
+  const set = parseExposedHeaders(raw);
+  return REQUIRED_EXPOSED_HEADERS.filter((h) => !set.has(h));
+}
+
+// CI13 — actual public scope selector is the merchant_id query parameter.
+// x-merchant-id is not read by handleD2aList() and would silently be ignored.
+function merchantParams(merchantId, extra = {}) {
+  return { merchant_id: merchantId, ...extra };
+}
+
+// CI13 — cursor evidence must never persist the full continuation token.
+function cursorEvidence(token) {
+  if (token === undefined || token === null) return { nextCursorPresent: false };
+  const s = String(token);
+  return {
+    nextCursorPresent: true,
+    nextCursorLength: s.length,
+    nextCursorPrefix: s.slice(0, 5),
+  };
+}
+
+async function readinessProbe(authHeaders, merchantId) {
   for (let i = 0; i < 60; i += 1) {
     try {
-      const r = await callOp(OPS[0], { params: { limit: 1 }, headers: authHeaders });
+      const r = await callOp(OPS[0], { params: merchantParams(merchantId, { limit: 1 }), headers: authHeaders });
       if (r.status === 200) return true;
       if (r.status === 401 || r.status === 403) {
-        // Server is up but auth is wrong — surface immediately.
         log("readiness_auth_denied", { status: r.status });
         return false;
       }
@@ -240,6 +278,7 @@ async function readinessProbe(authHeaders) {
   }
   return false;
 }
+
 
 function record(results, name, ok, extra = {}) {
   results.push({ name, ok, ...extra });
