@@ -171,6 +171,71 @@ describe("CI10 — local Supabase guard attestation", () => {
   it("19. workflow sets D2A_LOCAL_SUPABASE_STACK only in this isolated workflow", () => {
     const yml = readFileSync(WORKFLOW, "utf8");
     expect(yml).toMatch(/D2A_LOCAL_SUPABASE_STACK:\s*"true"/);
+    const workflowsDir = resolve(ROOT, ".github/workflows");
+    const { readdirSync } = require("node:fs") as typeof import("node:fs");
+    const files = readdirSync(workflowsDir).filter((f: string) => /\.ya?ml$/.test(f));
+    const offenders: string[] = [];
+    for (const f of files) {
+      if (f === "phase1b-r1i-d2a-verification.yml") continue;
+      const body = readFileSync(resolve(workflowsDir, f), "utf8");
+      if (/D2A_LOCAL_SUPABASE_STACK\s*:\s*["']?true["']?/.test(body)) {
+        offenders.push(f);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("23. accepts fully attested IPv6 loopback combination", () => {
+    const r = run({
+      ...LOCAL_ATTESTED_BASE,
+      D2A_HARNESS_PGURL: "postgres://postgres:postgres@[::1]:54322/postgres",
+      SUPABASE_URL: "http://[::1]:54321",
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toMatch(/"localSupabaseAttested":\s*true/);
+    expect(r.stdout).toContain("::1");
+    expect(r.stdout).not.toContain("[::1]");
+    expect(r.stdout).not.toContain("postgres:postgres@");
+    expect(r.stdout).not.toContain("postgres://");
+    expect(r.stdout).not.toContain("http://[::1]");
+  });
+
+  it("24. rejects PostgreSQL IPv6 [fd00::1]", () => {
+    const r = run({
+      ...LOCAL_ATTESTED_BASE,
+      D2A_HARNESS_PGURL: "postgres://postgres:postgres@[fd00::1]:54322/postgres",
+      SUPABASE_URL: "http://[::1]:54321",
+    });
+    expect(r.status).not.toBe(0);
+  });
+
+  it("25. rejects Supabase API IPv6 [fd00::1]", () => {
+    const r = run({
+      ...LOCAL_ATTESTED_BASE,
+      D2A_HARNESS_PGURL: "postgres://postgres:postgres@[::1]:54322/postgres",
+      SUPABASE_URL: "http://[fd00::1]:54321",
+    });
+    expect(r.status).not.toBe(0);
+    expect(r.stdout).toContain("GUARD_LOCAL_SUPABASE_ATTESTATION_FAILED");
+  });
+
+  it("26. rejects when PG is [::1] but API is a non-loopback host", () => {
+    const r = run({
+      ...LOCAL_ATTESTED_BASE,
+      D2A_HARNESS_PGURL: "postgres://postgres:postgres@[::1]:54322/postgres",
+      SUPABASE_URL: "http://10.0.0.1:54321",
+    });
+    expect(r.status).not.toBe(0);
+    expect(r.stdout).toContain("GUARD_LOCAL_SUPABASE_ATTESTATION_FAILED");
+  });
+
+  it("27. rejects when API is [::1] but PG is a non-loopback host", () => {
+    const r = run({
+      ...LOCAL_ATTESTED_BASE,
+      D2A_HARNESS_PGURL: "postgres://postgres:postgres@10.0.0.1:54322/postgres",
+      SUPABASE_URL: "http://[::1]:54321",
+    });
+    expect(r.status).not.toBe(0);
   });
 
   it("20. guard step uses pipefail and creates environment-guard.log", () => {
