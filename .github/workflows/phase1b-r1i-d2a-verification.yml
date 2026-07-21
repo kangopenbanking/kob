@@ -1,6 +1,7 @@
 # Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI4 corrections)
 # CI5 canonical clean-reset reproducibility repair
 # CI6 pg_cron extension schema reproducibility repair
+# CI7 realtime publication idempotency sweep
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
