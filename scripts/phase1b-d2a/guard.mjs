@@ -83,6 +83,14 @@ function isPublicIPv4(host) {
   return true;
 }
 
+function normalizeHostname(value) {
+  const lower = String(value || "").toLowerCase();
+  if (lower.startsWith("[") && lower.endsWith("]")) {
+    return lower.slice(1, -1);
+  }
+  return lower;
+}
+
 export function runGuard(env = process.env) {
   const evidence = {
     marker: false,
