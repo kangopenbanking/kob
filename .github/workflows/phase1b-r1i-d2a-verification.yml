@@ -474,6 +474,7 @@ jobs:
             tool-versions.json
             environment-preflight.json
             environment-guard.log
+            edge-runtime-env-attestation.json
 
             supabase-start.log
             docker-ps-after-start.txt
