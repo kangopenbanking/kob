@@ -579,7 +579,7 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
 // preserves the generic 500 body — `error=internal_error` + `error_id` — and
 // does not fabricate any successful `X-Pagination-*` header values.
 async function executeD2bList(
-  p: any,
+  p: Parameters<typeof handleD2bList>[0],
   operationId: GatewayD2bOperationId,
 ): Promise<Response> {
   try {
