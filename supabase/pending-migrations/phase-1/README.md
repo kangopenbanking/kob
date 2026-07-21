@@ -42,16 +42,29 @@ Prior d.2A checksums and descriptions in this table are frozen.
 
 ### Promotion order
 
-The three pending migrations MUST be promoted in this order:
+The pending migrations MUST be promoted in this relative order:
 
 1. `20260101000000_phase-1b-budgeting-additive.sql` (c.1E)
 2. `20260201000000_phase-1b-r1i-c3d-roundup-eligibility-trigger.sql` (c.3D)
 3. `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.sql` (c.3H)
+4. `20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql` (d.2A)
+   — preceded on production databases by the sibling online concurrent
+   operation under `supabase/pending-operations/phase-1/`.
+5. `20260402000000_phase-1b-r1i-d2b-gateway-pagination-indexes.sql` (d.2B)
+   — preceded on production databases by the sibling online concurrent
+   operation under `supabase/pending-operations/phase-1/`, and only after
+   d.2A has been promoted.
 
 c.3H fails closed with a clear migration-order error if c.1E's `archived_at` /
 `archived_by` columns are absent, and refuses to run if any pre-existing
 `status='archived'` row lacks reconstructable prior-state evidence. Neither
 condition is silently fabricated.
+
+The d.2A and d.2B pending migrations are strictly additive (index creation
+with exact-definition verification); they do not depend on the c.* schema
+changes and could in principle be promoted independently, but the numeric
+order above is the ratified relative sequence and MUST NOT be reordered
+without Database Owner + Release Manager sign-off.
 
 
 The canonical SQL is byte-identical to
