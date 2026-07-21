@@ -302,13 +302,13 @@ async function main() {
   const authHeaders = {
     Authorization: `Bearer ${jwt}`,
     apikey: ANON_KEY,
-    "x-merchant-id": merchantId,
   };
 
   // Reset pg_stat_statements AFTER seeding so counters only cover pagination reads.
   if (pgStatAvailable) await client.query("SELECT pg_stat_statements_reset()");
 
-  const ready = await readinessProbe(authHeaders);
+  const ready = await readinessProbe(authHeaders, merchantId);
+
   if (!ready) {
     writeFileSync("runtime-results.json", JSON.stringify({ ok: false, reason: "authenticated readiness probe did not return 200", base: BASE }, null, 2));
     writeFileSync("pagination-header-results.json", JSON.stringify({ ok: false, reason: "readiness failed" }, null, 2));
