@@ -10,6 +10,7 @@
 # CI10A IPv6 loopback hostname normalisation
 # CI11 auth-parented representative fixture
 # CI12 ephemeral Edge Runtime cursor-secret propagation
+# CI12A cross-step temporary environment cleanup accounting
 
 
 
@@ -193,6 +194,9 @@ jobs:
             }, null, 2));
           " "${DB_URL}"
           cat environment-preflight.json
+          # CI12A — mark base env file as prepared only after successful creation
+          test -s .d2a.env
+          echo "D2A_BASE_ENV_PREPARED=true" >> "$GITHUB_ENV"
 
       - name: Environment guard (fail-closed)
         run: |
@@ -331,6 +335,8 @@ jobs:
             );
           "
           test -s edge-runtime-env-attestation.json
+          # CI12A — mark function env file as prepared only after successful creation + attestation
+          echo "D2A_FUNCTION_ENV_PREPARED=true" >> "$GITHUB_ENV"
 
       - name: Serve gateway-query Edge Function (background, single instance)
         run: |
@@ -352,10 +358,20 @@ jobs:
       - name: Stop Edge Function server
         if: always()
         run: |
+          set -euo pipefail
+          # Preserve owned runtime-process shutdown
           if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
-          if [ -n "${D2A_FUNCTION_ENV_FILE:-}" ]; then
+          # CI12A — fail-closed accounting for function-env removal in stop step
+          FUNCTION_ENV_REMOVED_BY_STOP=0
+          if [ -n "${D2A_FUNCTION_ENV_FILE:-}" ] && \
+             [ -e "$D2A_FUNCTION_ENV_FILE" ]; then
             rm -f "$D2A_FUNCTION_ENV_FILE"
+            test ! -e "$D2A_FUNCTION_ENV_FILE"
+            FUNCTION_ENV_REMOVED_BY_STOP=1
           fi
+          echo \
+            "D2A_FUNCTION_ENV_REMOVED_BY_STOP=$FUNCTION_ENV_REMOVED_BY_STOP" \
+            >> "$GITHUB_ENV"
 
       - name: Realtime publication audit (CI7A)
         run: |

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { computeTemporaryEnvAccounting } from "../../scripts/phase1b-d2a/teardown.mjs";
 
 const ROOT = resolve(__dirname, "../..");
 const WORKFLOW = readFileSync(
@@ -104,7 +105,6 @@ describe("Phase 1B R1I-d.2A CI12 — Edge Runtime cursor-secret propagation", ()
   it("17. edge-runtime-env-attestation.json records no secret value", () => {
     expect(WORKFLOW).toMatch(/cursorSecretValueRecorded:\s*false/);
     expect(WORKFLOW).not.toMatch(/cursorSecretValueRecorded:\s*true/);
-    // The attestation node script must not read the secret value into JSON.
     expect(WORKFLOW).not.toMatch(/cursorSecretValue:\s*process\.env\.KOB_CURSOR_HMAC_SECRET/);
   });
 
@@ -145,9 +145,9 @@ describe("Phase 1B R1I-d.2A CI12 — Edge Runtime cursor-secret propagation", ()
     expect(TEARDOWN).toContain("residualTemporaryEnvFile");
   });
 
-  it("25. residualTemporaryEnvFiles is zero on successful teardown (by construction)", () => {
+  it("25. residualTemporaryEnvFiles is initialised to null and later assigned", () => {
     expect(TEARDOWN).toMatch(/residualTemporaryEnvFiles:\s*null/);
-    expect(TEARDOWN).toMatch(/summary\.residualTemporaryEnvFiles\s*=\s*residualCount/);
+    expect(TEARDOWN).toMatch(/summary\.residualTemporaryEnvFiles\s*=\s*residualPaths\.length/);
   });
 
   it("26. workflow explicitly executes CI5 through CI12 static tests", () => {
@@ -184,5 +184,161 @@ describe("Phase 1B R1I-d.2A CI12 — Edge Runtime cursor-secret propagation", ()
     expect(WORKFLOW).not.toMatch(/wdzkzeahdtxlynetndqw/);
     expect(WORKFLOW).not.toMatch(/supabase\.co/);
     expect(WORKFLOW).not.toMatch(/SUPABASE_ACCESS_TOKEN/);
+  });
+});
+
+describe("Phase 1B R1I-d.2A CI12A — cross-step temporary environment cleanup accounting", () => {
+  it("A1. D2A_BASE_ENV_PREPARED is set only after .d2a.env creation and is verified", () => {
+    // The marker line must appear AFTER the `supabase status -o env > .d2a.env` line.
+    const idxCreate = WORKFLOW.indexOf("supabase status -o env > .d2a.env");
+    const idxMarker = WORKFLOW.indexOf('D2A_BASE_ENV_PREPARED=true');
+    expect(idxCreate).toBeGreaterThan(-1);
+    expect(idxMarker).toBeGreaterThan(idxCreate);
+    // Existence of the file is verified before the marker is written.
+    const between = WORKFLOW.slice(idxCreate, idxMarker);
+    expect(between).toMatch(/test -s \.d2a\.env/);
+  });
+
+  it("A2. D2A_FUNCTION_ENV_PREPARED is set only after function env creation and attestation", () => {
+    const idxAttest = WORKFLOW.indexOf("edge-runtime-env-attestation.json");
+    const idxMarker = WORKFLOW.indexOf('D2A_FUNCTION_ENV_PREPARED=true');
+    expect(idxAttest).toBeGreaterThan(-1);
+    expect(idxMarker).toBeGreaterThan(idxAttest);
+    // The attestation write is verified with `test -s` immediately prior.
+    expect(WORKFLOW).toMatch(/test -s edge-runtime-env-attestation\.json\s*\n\s*# CI12A/);
+  });
+
+  it("A3. stop step initializes FUNCTION_ENV_REMOVED_BY_STOP to zero", () => {
+    const stopBlock = WORKFLOW.match(/Stop Edge Function server[\s\S]*?(?=\n\s+- name:)/)![0];
+    expect(stopBlock).toMatch(/FUNCTION_ENV_REMOVED_BY_STOP=0/);
+  });
+
+  it("A4. stop step sets the marker to one only after verified removal", () => {
+    const stopBlock = WORKFLOW.match(/Stop Edge Function server[\s\S]*?(?=\n\s+- name:)/)![0];
+    // rm -> verify absent -> set marker to 1, in that order.
+    const idxRm = stopBlock.indexOf('rm -f "$D2A_FUNCTION_ENV_FILE"');
+    const idxVerify = stopBlock.indexOf('test ! -e "$D2A_FUNCTION_ENV_FILE"');
+    const idxSet = stopBlock.indexOf('FUNCTION_ENV_REMOVED_BY_STOP=1');
+    expect(idxRm).toBeGreaterThan(-1);
+    expect(idxVerify).toBeGreaterThan(idxRm);
+    expect(idxSet).toBeGreaterThan(idxVerify);
+  });
+
+  it("A5. FUNCTION_ENV_REMOVED_BY_STOP is written to GITHUB_ENV", () => {
+    const stopBlock = WORKFLOW.match(/Stop Edge Function server[\s\S]*?(?=\n\s+- name:)/)![0];
+    expect(stopBlock).toMatch(/D2A_FUNCTION_ENV_REMOVED_BY_STOP=\$FUNCTION_ENV_REMOVED_BY_STOP[\s\S]*>>\s*"\$GITHUB_ENV"/);
+  });
+
+  it("A6. teardown calculates expected files dynamically from preparation markers", () => {
+    expect(TEARDOWN).toMatch(/D2A_BASE_ENV_PREPARED/);
+    expect(TEARDOWN).toMatch(/D2A_FUNCTION_ENV_PREPARED/);
+    expect(TEARDOWN).toMatch(/temporaryEnvFilesExpected\s*=\s*[\s\S]*baseEnvPrepared[\s\S]*functionEnvPrepared/);
+    // No hard-coded expected: 2 for runs that might fail early.
+    expect(TEARDOWN).not.toMatch(/temporaryEnvFilesExpected:\s*2\b/);
+  });
+
+  it("A7. teardown records removal by server stop separately", () => {
+    expect(TEARDOWN).toMatch(/temporaryEnvFilesRemovedByServerStop/);
+    expect(TEARDOWN).toMatch(/D2A_FUNCTION_ENV_REMOVED_BY_STOP/);
+  });
+
+  it("A8. teardown records removal by final teardown separately", () => {
+    expect(TEARDOWN).toMatch(/temporaryEnvFilesRemovedByTeardown/);
+  });
+
+  it("A9. total temporaryEnvFilesRemoved is the sum of both stages", () => {
+    expect(TEARDOWN).toMatch(
+      /temporaryEnvFilesRemoved\s*=\s*[\s\S]*temporaryEnvFilesRemovedByServerStop[\s\S]*\+\s*[\s\S]*temporaryEnvFilesRemovedByTeardown/,
+    );
+  });
+
+  it("A10. teardown fails closed when removed count differs from expected count", () => {
+    expect(TEARDOWN).toMatch(
+      /temporaryEnvFilesRemoved\s*!==\s*summary\.temporaryEnvFilesExpected[\s\S]*teardownExitCode\s*=\s*12/,
+    );
+  });
+
+  it("A11. teardown still fails closed when residual files remain", () => {
+    expect(TEARDOWN).toMatch(/residualTemporaryEnvFiles\s*>\s*0[\s\S]*teardownExitCode\s*=\s*12/);
+  });
+
+  it("A12. helper: full successful lifecycle → expected=2 removed=2 residual=0", () => {
+    const r = computeTemporaryEnvAccounting({
+      baseEnvPrepared: true,
+      functionEnvPrepared: true,
+      functionEnvRemovedByStop: true,
+      baseEnvPresentAtTeardown: true,
+      functionEnvPresentAtTeardown: false,
+    });
+    expect(r.temporaryEnvFilesExpected).toBe(2);
+    expect(r.temporaryEnvFilesRemovedByServerStop).toBe(1);
+    expect(r.temporaryEnvFilesRemovedByTeardown).toBe(1);
+    expect(r.temporaryEnvFilesRemoved).toBe(2);
+    expect(r.residualTemporaryEnvFiles).toBe(0);
+    expect(r.accountingComplete).toBe(true);
+  });
+
+  it("A13. helper: neither file prepared → expected=0, complete", () => {
+    const r = computeTemporaryEnvAccounting({
+      baseEnvPrepared: false,
+      functionEnvPrepared: false,
+      functionEnvRemovedByStop: false,
+      baseEnvPresentAtTeardown: false,
+      functionEnvPresentAtTeardown: false,
+    });
+    expect(r.temporaryEnvFilesExpected).toBe(0);
+    expect(r.temporaryEnvFilesRemoved).toBe(0);
+    expect(r.accountingComplete).toBe(true);
+  });
+
+  it("A14. helper: only base env prepared → expected=1", () => {
+    const r = computeTemporaryEnvAccounting({
+      baseEnvPrepared: true,
+      functionEnvPrepared: false,
+      functionEnvRemovedByStop: false,
+      baseEnvPresentAtTeardown: true,
+      functionEnvPresentAtTeardown: false,
+    });
+    expect(r.temporaryEnvFilesExpected).toBe(1);
+    expect(r.temporaryEnvFilesRemovedByTeardown).toBe(1);
+    expect(r.temporaryEnvFilesRemoved).toBe(1);
+    expect(r.residualTemporaryEnvFiles).toBe(0);
+    expect(r.accountingComplete).toBe(true);
+  });
+
+  it("A15. helper: function file absent at teardown and no stop-removal record → fail closed", () => {
+    const r = computeTemporaryEnvAccounting({
+      baseEnvPrepared: true,
+      functionEnvPrepared: true,
+      functionEnvRemovedByStop: false,
+      baseEnvPresentAtTeardown: true,
+      functionEnvPresentAtTeardown: false,
+    });
+    expect(r.temporaryEnvFilesExpected).toBe(2);
+    expect(r.temporaryEnvFilesRemoved).toBeLessThan(r.temporaryEnvFilesExpected);
+    expect(r.accountingComplete).toBe(false);
+  });
+
+  it("A16. helper: expected file remains present → residual>0, fail closed", () => {
+    const r = computeTemporaryEnvAccounting({
+      baseEnvPrepared: true,
+      functionEnvPrepared: true,
+      functionEnvRemovedByStop: true,
+      baseEnvPresentAtTeardown: false, // helper assumes teardown removal already happened
+      functionEnvPresentAtTeardown: false,
+    });
+    // baseEnvPrepared but not present at teardown and not removed by stop → residual>0
+    expect(r.residualTemporaryEnvFiles).toBeGreaterThan(0);
+    expect(r.accountingComplete).toBe(false);
+  });
+
+  it("A17. no secret value or temporary env file is uploaded as an artifact", () => {
+    expect(WORKFLOW).not.toMatch(/D2A_FUNCTION_ENV_FILE[\s\S]{0,200}upload-artifact/);
+    expect(WORKFLOW).not.toMatch(/KOB_CURSOR_HMAC_SECRET[\s\S]{0,200}upload-artifact/);
+    expect(WORKFLOW).not.toMatch(/kob-d2a-edge-runtime\.env\s*$/m);
+  });
+
+  it("A18. workflow header records CI12A", () => {
+    expect(WORKFLOW).toMatch(/# CI12A cross-step temporary environment cleanup accounting/);
   });
 });
