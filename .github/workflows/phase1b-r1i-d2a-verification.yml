@@ -331,7 +331,7 @@ jobs:
           test -s extension-reproducibility-audit.json
           test -s extension-reproducibility-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -343,6 +343,7 @@ jobs:
             src/test/phase1b-d2a-ci8-translation-fk-reproducibility.test.ts \
             src/test/phase1b-d2a-ci9-extension-sweep-reproducibility.test.ts \
             src/test/phase1b-d2a-ci10-local-supabase-guard-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci11-auth-parent-fixture-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
 
