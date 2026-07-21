@@ -165,22 +165,100 @@ describe.runIf(resolution.ok)("R1I-d.2B — protected d.2A handler block in gate
   });
 });
 
-describe.runIf(resolution.ok)("R1I-d.2B — I1b scope constraint (OpenAPI + version + operation-count unchanged)", () => {
-  const untouched = [
-    "public/openapi.json",
-    "public/openapi.yaml",
-  ];
-  for (const f of untouched) {
-    it(`I1b must not modify: ${f}`, () => {
-      byteIdentical(f);
-    });
+// -----------------------------------------------------------------------------
+// I1c scope constraint. The expired I1b requirement that both complete OpenAPI
+// files remain byte-identical to the d.2A closure has been replaced. I1c is
+// authorised to modify only the three d.2B operation nodes in the OpenAPI
+// files; every other operation, every d.2A op node, every d.2B runtime/SQL
+// artifact, and every reusable component must remain equal to the applicable
+// closure baseline. Version 4.53.1 and operation count 483 are pinned.
+// -----------------------------------------------------------------------------
+
+const I1A_CLOSURE_COMMIT = "aa8124e5ee03c87acdc3615cf85d78c36855882b";
+const I1B_CLOSURE_COMMIT = "1485c5593d5b712043564ee68a7274eacb8f185d";
+const D2B_OPERATION_IDS = [
+  "gatewayListCustomers",
+  "gatewayListPaymentPlans",
+  "gatewayListSubscriptions",
+] as const;
+const D2B_TARGETS: Record<string, { path: string; method: string }> = {
+  gatewayListCustomers: { path: "/v1/gateway/customers", method: "get" },
+  gatewayListPaymentPlans: { path: "/v1/gateway/payment-plans", method: "get" },
+  gatewayListSubscriptions: { path: "/v1/gateway/subscriptions", method: "get" },
+};
+// Reusable-component allowlist for I1c. PREFER EMPTY. Any name added here must
+// carry an inline justification. An unrelated component change fails the test.
+const I1C_COMPONENT_ALLOWLIST: ReadonlyArray<{ section: string; name: string; reason: string }> =
+  [];
+
+function tryResolveNamed(commit: string): { ok: true } | { ok: false; reason: string } {
+  const rev = spawnSync("git", ["rev-parse", "--verify", `${commit}^{commit}`], {
+    cwd: REPO_ROOT, encoding: "utf8",
+  });
+  if (rev.status !== 0) {
+    return { ok: false, reason: `commit ${commit} could not be resolved (shallow clone?)` };
   }
+  return { ok: true };
+}
+
+function gitShowAt(commit: string, path: string): Buffer {
+  return execFileSync("git", ["show", `${commit}:${path}`], {
+    cwd: REPO_ROOT, maxBuffer: 256 * 1024 * 1024,
+  });
+}
+
+function byteIdenticalAt(commit: string, path: string): void {
+  const bytes = gitShowAt(commit, path);
+  const current = readFileSync(resolve(REPO_ROOT, path));
+  expect(
+    Buffer.compare(bytes, current),
+    `${path} must be byte-identical to commit ${commit}`,
+  ).toBe(0);
+}
+
+function parsePathsAndAllOps(spec: unknown): Map<string, { path: string; method: string; node: unknown }> {
+  const out = new Map<string, { path: string; method: string; node: unknown }>();
+  if (typeof spec !== "object" || spec === null) return out;
+  const paths = (spec as { paths?: Record<string, unknown> }).paths;
+  if (!paths || typeof paths !== "object") return out;
+  const HTTP = ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
+  for (const [p, item] of Object.entries(paths)) {
+    if (!item || typeof item !== "object") continue;
+    for (const [m, op] of Object.entries(item as Record<string, unknown>)) {
+      if (!HTTP.includes(m)) continue;
+      if (!op || typeof op !== "object") continue;
+      const opId = (op as { operationId?: unknown }).operationId;
+      if (typeof opId !== "string") continue;
+      out.set(opId, { path: p, method: m, node: op });
+    }
+  }
+  return out;
+}
+
+const i1aResolution = tryResolveNamed(I1A_CLOSURE_COMMIT);
+const i1bResolution = tryResolveNamed(I1B_CLOSURE_COMMIT);
+
+describe("R1I-d.2B-I1c — closure commits resolve (fails closed)", () => {
+  it("I1a closure commit resolves", () => {
+    const reason = i1aResolution.ok ? "" : (i1aResolution as { reason: string }).reason;
+    expect(i1aResolution.ok, reason).toBe(true);
+  });
+  it("I1b closure commit resolves", () => {
+    const reason = i1bResolution.ok ? "" : (i1bResolution as { reason: string }).reason;
+    expect(i1bResolution.ok, reason).toBe(true);
+  });
+});
+
+describe.runIf(i1bResolution.ok)("R1I-d.2B-I1c — protected I1b runtime byte identity", () => {
+  it("gateway-query/index.ts is byte-identical to I1b closure commit", () => {
+    byteIdenticalAt(I1B_CLOSURE_COMMIT, "supabase/functions/gateway-query/index.ts");
+  });
 
   it("d.2A anchor occurs exactly once in gateway-query/index.ts", () => {
     const rel = "supabase/functions/gateway-query/index.ts";
     const src = readFileSync(resolve(REPO_ROOT, rel), "utf8");
     const occurrences = src.split(D2A_ANCHOR).length - 1;
-    expect(occurrences, `expected exactly one occurrence of ${D2A_ANCHOR}`).toBe(1);
+    expect(occurrences).toBe(1);
   });
 
   it("no d.2B source appears after the d.2A anchor in gateway-query/index.ts", () => {
@@ -199,6 +277,121 @@ describe.runIf(resolution.ok)("R1I-d.2B — I1b scope constraint (OpenAPI + vers
         `d.2B token '${forbidden}' must not appear inside the protected d.2A suffix`,
       ).toBe(false);
     }
+  });
+
+  it("d.2B runtime integration test is byte-identical to I1b closure commit", () => {
+    byteIdenticalAt(
+      I1B_CLOSURE_COMMIT,
+      "src/test/pagination-gateway-d2b-runtime-integration.test.ts",
+    );
+  });
+});
+
+describe.runIf(i1aResolution.ok)("R1I-d.2B-I1c — protected I1a foundation byte identity", () => {
+  it("_pagination-d2b.ts is byte-identical to I1a closure commit", () => {
+    byteIdenticalAt(
+      I1A_CLOSURE_COMMIT,
+      "supabase/functions/gateway-query/_pagination-d2b.ts",
+    );
+  });
+
+  it("every d.2B SQL artifact is byte-identical to I1a closure commit", () => {
+    const filterD2b = (p: string) => p.includes("_phase-1b-r1i-d2b-");
+    const closurePending = execFileSync(
+      "git",
+      ["ls-tree", "-r", "--name-only", I1A_CLOSURE_COMMIT, "--", "supabase/pending-migrations/phase-1"],
+      { cwd: REPO_ROOT, encoding: "utf8" },
+    ).split("\n").filter((l) => l.length > 0).filter(filterD2b);
+    const closureOps = execFileSync(
+      "git",
+      ["ls-tree", "-r", "--name-only", I1A_CLOSURE_COMMIT, "--", "supabase/pending-operations/phase-1"],
+      { cwd: REPO_ROOT, encoding: "utf8" },
+    ).split("\n").filter((l) => l.length > 0).filter(filterD2b);
+    expect(closurePending.length).toBeGreaterThan(0);
+    expect(closureOps.length).toBeGreaterThan(0);
+    for (const p of [...closurePending, ...closureOps]) byteIdenticalAt(I1A_CLOSURE_COMMIT, p);
+  });
+});
+
+describe.runIf(i1bResolution.ok)("R1I-d.2B-I1c — OpenAPI operation scope (target ops only)", () => {
+  const currentJson = () =>
+    JSON.parse(readFileSync(resolve(REPO_ROOT, "public/openapi.json"), "utf8")) as unknown;
+  const i1bJson = () =>
+    JSON.parse(gitShowAt(I1B_CLOSURE_COMMIT, "public/openapi.json").toString("utf8")) as unknown;
+
+  it("target operations remain at their expected path + method", () => {
+    const current = parsePathsAndAllOps(currentJson());
+    for (const [id, expected] of Object.entries(D2B_TARGETS)) {
+      const c = current.get(id);
+      expect(c, `missing ${id}`).toBeDefined();
+      expect(c!.path).toBe(expected.path);
+      expect(c!.method).toBe(expected.method);
+    }
+  });
+
+  it("every non-d.2B operation node is deeply equal to I1b baseline", () => {
+    const currentOps = parsePathsAndAllOps(currentJson());
+    const baselineOps = parsePathsAndAllOps(i1bJson());
+    expect(currentOps.size).toBe(baselineOps.size);
+    for (const [id, base] of baselineOps.entries()) {
+      if (D2B_OPERATION_IDS.includes(id as (typeof D2B_OPERATION_IDS)[number])) continue;
+      const cur = currentOps.get(id);
+      expect(cur, `operation ${id} present in I1b but missing at HEAD`).toBeDefined();
+      expect(cur!.path).toBe(base.path);
+      expect(cur!.method).toBe(base.method);
+      expect(cur!.node, `operation ${id} changed vs I1b`).toEqual(base.node);
+    }
+  });
+
+  it("reusable components remain equal to I1b baseline (allowlist enforced)", () => {
+    const cur = currentJson() as { components?: Record<string, Record<string, unknown>> };
+    const base = i1bJson() as { components?: Record<string, Record<string, unknown>> };
+    const sections = new Set<string>([
+      ...Object.keys(cur.components ?? {}),
+      ...Object.keys(base.components ?? {}),
+    ]);
+    const allowed = new Set(
+      I1C_COMPONENT_ALLOWLIST.map((a) => `${a.section}::${a.name}`),
+    );
+    for (const section of sections) {
+      const c = (cur.components ?? {})[section] ?? {};
+      const b = (base.components ?? {})[section] ?? {};
+      const names = new Set<string>([...Object.keys(c), ...Object.keys(b)]);
+      for (const name of names) {
+        if (allowed.has(`${section}::${name}`)) continue;
+        expect(
+          c[name],
+          `component ${section}.${name} present in I1b but missing at HEAD`,
+        ).toBeDefined();
+        expect(
+          b[name],
+          `component ${section}.${name} added at HEAD without allowlist entry`,
+        ).toBeDefined();
+        expect(c[name], `component ${section}.${name} changed vs I1b`).toEqual(b[name]);
+      }
+    }
+  });
+
+  it("OpenAPI info.version remains 4.53.1", () => {
+    const spec = currentJson() as { info?: { version?: string } };
+    expect(spec.info?.version).toBe("4.53.1");
+  });
+
+  it("Total operation count remains 483", () => {
+    const spec = currentJson() as { paths?: Record<string, Record<string, unknown>> };
+    let count = 0;
+    for (const item of Object.values(spec.paths ?? {})) {
+      for (const [method, op] of Object.entries(item)) {
+        if (
+          ["get", "post", "put", "patch", "delete", "options", "head", "trace"].includes(method) &&
+          op && typeof op === "object" &&
+          typeof (op as { operationId?: unknown }).operationId === "string"
+        ) {
+          count += 1;
+        }
+      }
+    }
+    expect(count).toBe(483);
   });
 });
 
