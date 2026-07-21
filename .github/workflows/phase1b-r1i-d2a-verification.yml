@@ -8,6 +8,7 @@
 # CI9A generated extension audit evidence provenance repair
 # CI10 local Supabase postgres database guard attestation
 # CI10A IPv6 loopback hostname normalisation
+# CI11 auth-parented representative fixture
 
 
 
