@@ -94,7 +94,7 @@ for (const file of files) {
       const guarded = isGuarded(surrounding, ext, stmt);
       const schemaExtensions = targetsExtensions(stmt);
       const pgCatalog = requestsPgCatalog(stmt);
-      const exceptionSwallowed = hasExceptionSwallow(surrounding);
+      const exceptionSwallowed = hasExceptionSwallow(text, m.index);
       occurrences.push({
         extension: ext,
         file,

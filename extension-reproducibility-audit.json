@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T13:56:29.585Z",
+  "generatedAt": "2026-07-21T13:56:43.748Z",
   "migrationsScanned": 482,
   "pgCronOccurrences": 6,
   "pgNetOccurrences": 5,
@@ -8,7 +8,7 @@
   "pgCatalogRequests": 0,
   "alterSetSchema": 0,
   "dropExtension": 0,
-  "exceptionSwallowed": 1,
+  "exceptionSwallowed": 0,
   "occurrences": [
     {
       "extension": "pg_cron",
@@ -63,7 +63,7 @@
       "guarded": true,
       "schemaExtensions": true,
       "pgCatalog": false,
-      "exceptionSwallowed": true
+      "exceptionSwallowed": false
     },
     {
       "extension": "pg_net",
@@ -132,18 +132,5 @@
       "exceptionSwallowed": false
     }
   ],
-  "errors": [
-    {
-      "extension": "pg_cron",
-      "file": "20260322063028_email_infra.sql",
-      "line": 12,
-      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
-      "earliestAuthoritative": false,
-      "guarded": true,
-      "schemaExtensions": true,
-      "pgCatalog": false,
-      "exceptionSwallowed": true,
-      "kind": "EXCEPTION_SWALLOWED"
-    }
-  ]
+  "errors": []
 }
