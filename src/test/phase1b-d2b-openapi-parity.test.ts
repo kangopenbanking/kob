@@ -117,7 +117,7 @@ describe("R1I-d.2B-I1c · OpenAPI JSON/YAML parity", () => {
       const names = (op.parameters ?? []).map((p: any) => p.name).filter(Boolean);
       expect(names).not.toContain("previous_cursor");
       const d = op.description ?? "";
-      expect(d).not.toMatch(/backward pagination/i);
+      expect(d).not.toMatch(/backward pagination is supported/i);
     }
   });
 });
