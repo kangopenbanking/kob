@@ -75,7 +75,9 @@ const resolution = tryResolveCommit();
 describe("R1I-d.2B — protected d.2A closure-commit resolution", () => {
   it("resolves the closure commit (fails closed otherwise)", () => {
     // Explicitly fail — this test must NEVER silently skip.
-    const reason = resolution.ok ? "" : resolution.reason;
+    const reason = resolution.ok
+      ? ""
+      : (resolution as { ok: false; reason: string }).reason;
     expect(resolution.ok, reason).toBe(true);
   });
 });
