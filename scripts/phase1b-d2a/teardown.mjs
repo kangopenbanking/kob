@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Phase 1B — R1I-d.2A-CI3A §CI3A-7 — Fail-closed teardown.
 // CI12A — cross-step temporary environment cleanup accounting.
+// CI12B — partial-preparation temporary secret-file cleanup.
 //
 // Runs after success AND failure. Never touches production. Removes only the
 // disposable containers, volumes, temporary fixtures, and ephemeral secrets
@@ -15,6 +16,12 @@
 //     double-counted nor silently discarded.
 //   * Fails closed (exit 12) when temporaryEnvFilesRemoved !==
 //     temporaryEnvFilesExpected OR any residual expected file remains.
+// CI12B corrections vs CI12A:
+//   * Always inspect and clean both known temporary secret-file paths even when
+//     their preparation marker was never published.
+//   * Separate expected removals from unexpected partially prepared files.
+//   * Fails closed on unexpected discovery, marker inconsistency, residual known
+//     files, or removal verification failure.
 
 import { execSync, spawnSync } from "node:child_process";
 import { rmSync, existsSync, writeFileSync } from "node:fs";
@@ -43,7 +50,7 @@ function safeCount(cmd) {
 }
 
 /**
- * Pure helper: compute CI12A temporary-env cleanup accounting.
+ * Pure helper: compute CI12B temporary-env cleanup accounting.
  * Exported for unit testing without invoking Supabase or Docker.
  *
  * @param {{
@@ -51,15 +58,26 @@ function safeCount(cmd) {
  *   functionEnvPrepared: boolean,
  *   functionEnvRemovedByStop: boolean,
  *   baseEnvPresentAtTeardown: boolean,
- *   functionEnvPresentAtTeardown: boolean
+ *   functionEnvPresentAtTeardown: boolean,
+ *   baseEnvPresentAfterCleanup?: boolean,
+ *   functionEnvPresentAfterCleanup?: boolean
  * }} input
  * @returns {{
  *   temporaryEnvFilesExpected: number,
  *   temporaryEnvFilesRemovedByServerStop: number,
  *   temporaryEnvFilesRemovedByTeardown: number,
  *   temporaryEnvFilesRemoved: number,
+ *   unexpectedTemporaryEnvFilesDiscovered: number,
+ *   unexpectedTemporaryEnvFilesRemoved: number,
+ *   residualKnownTemporaryEnvFiles: number,
  *   residualTemporaryEnvFiles: number,
- *   accountingComplete: boolean
+ *   residualTemporaryEnvFile: number,
+ *   serverStopRemovalMarkerWithoutPreparation: boolean,
+ *   serverStopRemovalMarkerContradicted: boolean,
+ *   removalVerificationFailures: number,
+ *   temporaryEnvCleanupAccountingComplete: boolean,
+ *   accountingComplete: boolean,
+ *   teardownExitCode: number
  * }}
  */
 export function computeTemporaryEnvAccounting(input) {
@@ -67,53 +85,83 @@ export function computeTemporaryEnvAccounting(input) {
     (input.baseEnvPrepared ? 1 : 0) +
     (input.functionEnvPrepared ? 1 : 0);
 
+  const serverStopRemovalMarkerWithoutPreparation =
+    input.functionEnvRemovedByStop && !input.functionEnvPrepared;
+  const serverStopRemovalMarkerContradicted =
+    input.functionEnvPrepared &&
+    input.functionEnvRemovedByStop &&
+    input.functionEnvPresentAtTeardown;
+
   const removedByStop =
     input.functionEnvPrepared && input.functionEnvRemovedByStop ? 1 : 0;
 
-  // Teardown removes any expected file still present.
   let removedByTeardown = 0;
-  if (input.baseEnvPrepared && input.baseEnvPresentAtTeardown) removedByTeardown += 1;
-  if (
-    input.functionEnvPrepared &&
-    !input.functionEnvRemovedByStop &&
-    input.functionEnvPresentAtTeardown
-  ) {
-    removedByTeardown += 1;
-  }
+  let unexpectedDiscovered = 0;
+  let unexpectedRemoved = 0;
+  let removalVerificationFailures = 0;
 
-  const removed = removedByStop + removedByTeardown;
+  const basePresentAfterCleanup = Boolean(input.baseEnvPresentAfterCleanup);
+  const functionPresentAfterCleanup = Boolean(input.functionEnvPresentAfterCleanup);
 
-  // Residual = expected files that remain unaccounted for.
-  let residual = 0;
-  if (input.baseEnvPrepared && input.baseEnvPresentAtTeardown === false && removedByTeardown < 1 && expected > 0) {
-    // base was prepared but neither present at teardown nor removed → treat as
-    // residual only if we have no evidence it was cleaned. Missing-but-not-
-    // removed counts as residual accounting failure.
-    if (!(input.baseEnvPrepared && input.baseEnvPresentAtTeardown)) {
-      // If prepared and absent and not removed here → accounting incomplete.
-      // But absence at teardown without a removal record means we cannot
-      // attribute the removal → residual accounting failure signalled via
-      // removed !== expected.
+  if (input.baseEnvPresentAtTeardown) {
+    if (input.baseEnvPrepared) {
+      if (basePresentAfterCleanup) removalVerificationFailures += 1;
+      else removedByTeardown += 1;
+    } else {
+      unexpectedDiscovered += 1;
+      if (basePresentAfterCleanup) removalVerificationFailures += 1;
+      else unexpectedRemoved += 1;
     }
   }
 
-  // Actual residual: files that STILL exist after teardown attempts.
-  // Since this helper is called BEFORE any physical removal, residual is
-  // computed as "expected files that are still present and were not removed
-  // by stop and not removed by teardown".
-  // (In practice removedByTeardown already includes files present at teardown;
-  // so after removal, none remain. Residual therefore reflects expected files
-  // that we could not account for.)
-  const accounted = removedByStop + removedByTeardown;
-  residual = Math.max(0, expected - accounted);
+  if (
+    input.functionEnvPresentAtTeardown &&
+    input.functionEnvPrepared &&
+    !input.functionEnvRemovedByStop
+  ) {
+    if (functionPresentAfterCleanup) removalVerificationFailures += 1;
+    else removedByTeardown += 1;
+  } else if (input.functionEnvPresentAtTeardown && !input.functionEnvPrepared) {
+    unexpectedDiscovered += 1;
+    if (functionPresentAfterCleanup) removalVerificationFailures += 1;
+    else unexpectedRemoved += 1;
+  } else if (
+    input.functionEnvPresentAtTeardown &&
+    input.functionEnvPrepared &&
+    input.functionEnvRemovedByStop
+  ) {
+    if (functionPresentAfterCleanup) removalVerificationFailures += 1;
+  }
+
+  const removed = removedByStop + removedByTeardown;
+  const residual =
+    (basePresentAfterCleanup ? 1 : 0) +
+    (functionPresentAfterCleanup ? 1 : 0);
+  const cleanupComplete =
+    removed === expected &&
+    unexpectedDiscovered === 0 &&
+    unexpectedRemoved === unexpectedDiscovered &&
+    residual === 0 &&
+    !serverStopRemovalMarkerWithoutPreparation &&
+    !serverStopRemovalMarkerContradicted &&
+    removalVerificationFailures === 0;
 
   return {
     temporaryEnvFilesExpected: expected,
     temporaryEnvFilesRemovedByServerStop: removedByStop,
     temporaryEnvFilesRemovedByTeardown: removedByTeardown,
     temporaryEnvFilesRemoved: removed,
+    unexpectedTemporaryEnvFilesDiscovered: unexpectedDiscovered,
+    unexpectedTemporaryEnvFilesRemoved: unexpectedRemoved,
+    residualKnownTemporaryEnvFiles: residual,
     residualTemporaryEnvFiles: residual,
-    accountingComplete: removed === expected && residual === 0,
+    residualTemporaryEnvFile: residual,
+    serverStopRemovalMarkerWithoutPreparation,
+    serverStopRemovalMarkerContradicted,
+    removalVerificationFailures,
+    temporaryEnvCleanupAccountingComplete: cleanupComplete,
+    accountingComplete: cleanupComplete,
+    teardownExitCode: cleanupComplete ? 0 : 12,
   };
 }
 
@@ -131,6 +179,17 @@ if (isMain) {
     temporaryEnvFilesRemovedByServerStop: 0,
     temporaryEnvFilesRemovedByTeardown: 0,
     temporaryEnvFilesRemoved: 0,
+    unexpectedTemporaryEnvFilesDiscovered: 0,
+    unexpectedTemporaryEnvFilesRemoved: 0,
+    residualKnownTemporaryEnvFiles: null,
+    temporaryEnvCleanupAccountingComplete: null,
+    baseTemporaryEnvFilePresentAtTeardown: false,
+    functionTemporaryEnvFilePresentAtTeardown: false,
+    baseTemporaryEnvFileRemovalVerified: null,
+    functionTemporaryEnvFileRemovalVerified: null,
+    temporaryEnvRemovalVerificationFailures: 0,
+    serverStopRemovalMarkerWithoutPreparation: false,
+    serverStopRemovalMarkerContradicted: false,
     residualTemporaryEnvFiles: null,
     teardownExitCode: 0,
     errors: [],
@@ -158,7 +217,7 @@ if (isMain) {
     log("fixture_removed", { path: tmpFixture });
   }
 
-  // 4. CI12A dynamic ephemeral env accounting.
+  // 4. CI12B dynamic ephemeral env accounting and known-path cleanup.
   const baseEnvPrepared = process.env.D2A_BASE_ENV_PREPARED === "true";
   const functionEnvPrepared = process.env.D2A_FUNCTION_ENV_PREPARED === "true";
   const functionEnvRemovedByStop = process.env.D2A_FUNCTION_ENV_REMOVED_BY_STOP === "1";
@@ -170,41 +229,82 @@ if (isMain) {
 
   const baseEnvPresentAtTeardown = existsSync(baseEnvPath);
   const functionEnvPresentAtTeardown = existsSync(functionEnvPath);
+  summary.baseTemporaryEnvFilePresentAtTeardown = baseEnvPresentAtTeardown;
+  summary.functionTemporaryEnvFilePresentAtTeardown = functionEnvPresentAtTeardown;
 
   summary.temporaryEnvFilesExpected =
     (baseEnvPrepared ? 1 : 0) + (functionEnvPrepared ? 1 : 0);
+
+  if (functionEnvRemovedByStop && !functionEnvPrepared) {
+    summary.serverStopRemovalMarkerWithoutPreparation = true;
+    summary.errors.push("D2A_FUNCTION_ENV_REMOVED_BY_STOP=1 without D2A_FUNCTION_ENV_PREPARED=true");
+  }
 
   if (functionEnvPrepared && functionEnvRemovedByStop) {
     summary.temporaryEnvFilesRemovedByServerStop = 1;
   }
 
-  // Independent second-layer removal by teardown.
-  if (baseEnvPrepared && baseEnvPresentAtTeardown) {
-    rmSync(baseEnvPath, { force: true });
-    if (!existsSync(baseEnvPath)) summary.temporaryEnvFilesRemovedByTeardown += 1;
+  if (functionEnvPrepared && functionEnvRemovedByStop && functionEnvPresentAtTeardown) {
+    summary.serverStopRemovalMarkerContradicted = true;
+    summary.errors.push("function env path existed at teardown after verified server-stop removal marker");
   }
-  if (
-    functionEnvPrepared &&
-    !functionEnvRemovedByStop &&
-    functionEnvPresentAtTeardown
-  ) {
-    rmSync(functionEnvPath, { force: true });
-    if (!existsSync(functionEnvPath)) summary.temporaryEnvFilesRemovedByTeardown += 1;
-  } else if (functionEnvPrepared && !functionEnvRemovedByStop && functionEnvPresentAtTeardown === false) {
-    // Prepared, not removed by stop, absent at teardown → cannot attribute.
-    // Leave counts as-is; the removed!==expected check will fail closed below.
+
+  const removeKnownPath = (path, label) => {
+    rmSync(path, { force: true });
+    const verified = !existsSync(path);
+    if (!verified) {
+      summary.temporaryEnvRemovalVerificationFailures += 1;
+      summary.errors.push(`${label} temporary env file removal could not be verified`);
+    }
+    return verified;
+  };
+
+  if (baseEnvPresentAtTeardown) {
+    const verified = removeKnownPath(baseEnvPath, "base");
+    summary.baseTemporaryEnvFileRemovalVerified = verified;
+    if (baseEnvPrepared) {
+      if (verified) summary.temporaryEnvFilesRemovedByTeardown += 1;
+    } else {
+      summary.unexpectedTemporaryEnvFilesDiscovered += 1;
+      if (verified) summary.unexpectedTemporaryEnvFilesRemoved += 1;
+    }
+  } else {
+    summary.baseTemporaryEnvFileRemovalVerified = true;
+  }
+
+  if (functionEnvPresentAtTeardown) {
+    const verified = removeKnownPath(functionEnvPath, "function");
+    summary.functionTemporaryEnvFileRemovalVerified = verified;
+    if (!functionEnvPrepared) {
+      summary.unexpectedTemporaryEnvFilesDiscovered += 1;
+      if (verified) summary.unexpectedTemporaryEnvFilesRemoved += 1;
+    } else if (!functionEnvRemovedByStop && verified) {
+      summary.temporaryEnvFilesRemovedByTeardown += 1;
+    }
+  } else {
+    summary.functionTemporaryEnvFileRemovalVerified = true;
   }
 
   summary.temporaryEnvFilesRemoved =
     summary.temporaryEnvFilesRemovedByServerStop +
     summary.temporaryEnvFilesRemovedByTeardown;
 
-  // Residual = expected files still present after all cleanup attempts.
+  // Residual = known temporary paths still present after all cleanup attempts.
   const residualPaths = [];
-  if (baseEnvPrepared && existsSync(baseEnvPath)) residualPaths.push(baseEnvPath);
-  if (functionEnvPrepared && existsSync(functionEnvPath)) residualPaths.push(functionEnvPath);
-  summary.residualTemporaryEnvFiles = residualPaths.length;
-  summary.residualTemporaryEnvFile = residualPaths.length;
+  if (existsSync(baseEnvPath)) residualPaths.push(baseEnvPath);
+  if (existsSync(functionEnvPath)) residualPaths.push(functionEnvPath);
+  summary.residualKnownTemporaryEnvFiles = residualPaths.length;
+  summary.residualTemporaryEnvFiles = summary.residualKnownTemporaryEnvFiles;
+  summary.residualTemporaryEnvFile = summary.residualKnownTemporaryEnvFiles;
+
+  summary.temporaryEnvCleanupAccountingComplete =
+    summary.temporaryEnvFilesRemoved === summary.temporaryEnvFilesExpected &&
+    summary.unexpectedTemporaryEnvFilesDiscovered === 0 &&
+    summary.unexpectedTemporaryEnvFilesRemoved === summary.unexpectedTemporaryEnvFilesDiscovered &&
+    summary.residualKnownTemporaryEnvFiles === 0 &&
+    summary.temporaryEnvRemovalVerificationFailures === 0 &&
+    !summary.serverStopRemovalMarkerWithoutPreparation &&
+    !summary.serverStopRemovalMarkerContradicted;
 
   // 5. Clear the process-scoped cursor secret (never on disk).
   if (process.env.KOB_CURSOR_HMAC_SECRET) delete process.env.KOB_CURSOR_HMAC_SECRET;
@@ -220,9 +320,14 @@ if (isMain) {
   if (summary.supabaseStopExitCode !== 0) summary.teardownExitCode = summary.supabaseStopExitCode;
   if (summary.residualSupabaseContainers > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 10;
   if (summary.residualRuntimeProcess > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 11;
-  if (summary.residualTemporaryEnvFiles > 0 && summary.teardownExitCode === 0) summary.teardownExitCode = 12;
   if (
     summary.temporaryEnvFilesRemoved !== summary.temporaryEnvFilesExpected &&
+    summary.teardownExitCode === 0
+  ) {
+    summary.teardownExitCode = 12;
+  }
+  if (
+    !summary.temporaryEnvCleanupAccountingComplete &&
     summary.teardownExitCode === 0
   ) {
     summary.teardownExitCode = 12;
@@ -235,10 +340,14 @@ if (isMain) {
     residualRuntimeProcess: summary.residualRuntimeProcess,
     residualTemporaryEnvFile: summary.residualTemporaryEnvFile,
     residualTemporaryEnvFiles: summary.residualTemporaryEnvFiles,
+    residualKnownTemporaryEnvFiles: summary.residualKnownTemporaryEnvFiles,
     temporaryEnvFilesExpected: summary.temporaryEnvFilesExpected,
     temporaryEnvFilesRemoved: summary.temporaryEnvFilesRemoved,
     temporaryEnvFilesRemovedByServerStop: summary.temporaryEnvFilesRemovedByServerStop,
     temporaryEnvFilesRemovedByTeardown: summary.temporaryEnvFilesRemovedByTeardown,
+    unexpectedTemporaryEnvFilesDiscovered: summary.unexpectedTemporaryEnvFilesDiscovered,
+    unexpectedTemporaryEnvFilesRemoved: summary.unexpectedTemporaryEnvFilesRemoved,
+    temporaryEnvCleanupAccountingComplete: summary.temporaryEnvCleanupAccountingComplete,
   });
   if (summary.teardownExitCode !== 0) process.exit(summary.teardownExitCode);
 }
