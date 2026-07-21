@@ -27,6 +27,21 @@ verified closed-phase fix without explicit written permission from the repositor
 
 The absence of any of these five elements is a **DENIAL**.
 
+Implementation permission for a new slice does **not** imply protected-baseline permission.
+Implementation permission for a new slice does **not** imply deployment permission.
+Managed Supabase access and production access require **separate** written permission.
+
+Historical planning documents, chat history, backlog items, or roadmap notes do **not** override
+later verified closure evidence. A later verification run is the authoritative source of truth for
+the state of the codebase.
+
+If any ambiguity exists about whether a change would touch a protected baseline, the agent must
+stop and emit the following literal marker:
+
+```
+BLOCKED — EXPLICIT PROTECTED-BASELINE PERMISSION REQUIRED
+```
+
 ### 2. Protected closed baseline: R1I-d.2A
 
 The following slice is ratified as a protected closed baseline.
@@ -57,10 +72,6 @@ Protected behaviours include, but are not limited to:
 - `X-Pagination-*` response headers and CORS exposure for those headers;
 - merchant-scope enforcement via `merchant_id` query parameter for the d.2A operations;
 - the OpenAPI version, operation count, gate total, and lint ceiling listed above.
-
-Historical planning approvals, backlog items, or roadmap documents that predate this verified
-closure do **not** override the closure evidence above. A later verification run is the authoritative
-source of truth for the state of the codebase.
 
 ### 3. Rules for all remaining phases
 
@@ -96,7 +107,23 @@ agent MUST NOT:
 - regenerate OpenAPI artifacts, SDKs, or Postman collections for a protected baseline;
 - use "planning approvals" or "historical context" to justify bypassing verified closure evidence.
 
-### 5. How to request an exception
+### 5. Current active authority
+
+| Slice | Status |
+|-------|--------|
+| R1I-d.2A | CLOSED — PROTECTED |
+| R1I-d.2B-I1a | AUTHORISED FOR IMPLEMENTATION (this turn) |
+| R1I-d.2B-I1b | NOT AUTHORISED |
+| R1I-d.2B-I1c | NOT AUTHORISED |
+| R1I-d.2B-I1d | NOT AUTHORISED |
+| R1I-d.2C | NOT AUTHORISED |
+| R1I-d.2D | NOT AUTHORISED |
+| R1I-d.2E | NOT AUTHORISED |
+| R1I-d.2F | NOT AUTHORISED |
+
+Deployment: NOT AUTHORISED. Managed Supabase access: NOT AUTHORISED.
+
+### 6. How to request an exception
 
 Exceptions are not granted by AI agents. Any agent that believes an exception is warranted must:
 
@@ -109,7 +136,7 @@ No silent or implicit override is permitted.
 
 ---
 
-**Status:** Installed  
-**Protected baseline changed:** NO  
-**Managed Supabase access:** 0  
-**Deployment:** NONE  
+**Status:** Installed
+**Protected baseline changed:** NO
+**Managed Supabase access:** 0
+**Deployment:** NONE

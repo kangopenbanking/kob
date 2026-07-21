@@ -21,6 +21,24 @@ publish. Anything under `supabase/pending-migrations/` is inert to the platform.
 | `20260301000000_phase-1b-r1i-c3h-goal-archive-provenance.rollback.sql` | Local/test rollback — drops `archived_from_status` and c.3H constraints; warns on populated provenance; c.1E and c.3D objects untouched | `104e55dac4f6eb485cc104f4572d22fa294f86be929ddb9ded67bdf7205a41db` |
 | `20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.sql` | Phase 1B-R1I-d.2A-DB1: canonical transactional creation + exact-definition verification for the four ratified Gateway pagination composite indexes. `CONCURRENTLY` intentionally NOT used — the online concurrent operation lives at `supabase/pending-operations/phase-1/…concurrent.sql` and runs first in production, so this migration verifies and no-ops. Previous variant checksum: `SUPERSEDED_BEFORE_PROMOTION` | `c12e370aba360e45531f4332bc1cf4575ea00025665122c97a671527569cae87` |
 | `20260401000000_phase-1b-r1i-d2a-gateway-pagination-indexes.rollback.sql` | Local/test rollback — drops only the four d.2A indexes | `1fb06d0bc65e573f5a34971df0d94714198c6029dfdecbf1224dd61a1e79446d` |
+| `20260402000000_phase-1b-r1i-d2b-gateway-pagination-indexes.sql` | Phase 1B-R1I-d.2B-DB1: canonical transactional creation + exact-definition verification for the three ratified d.2B Gateway pagination composite indexes (`gateway_customers`, `gateway_payment_plans`, `gateway_subscriptions`). `CONCURRENTLY` intentionally NOT used — the online concurrent operation lives at `supabase/pending-operations/phase-1/…d2b…concurrent.sql` and runs first in production, so this migration verifies and no-ops. The deferred wider `(merchant_id, plan_id, status, created_at DESC, id DESC)` subscriptions index is intentionally NOT created. | `9cfeaba35cbdd0d5dcb95513b27a804abfa767b61d0d3bbec0b887e052fb2e82` |
+| `20260402000000_phase-1b-r1i-d2b-gateway-pagination-indexes.rollback.sql` | Local/test rollback — drops only the three d.2B indexes | `4b73baf6b3d8666d4126c0c317569f4fa50588e84527c762288bfec138a8193a` |
+
+### d.2B pending-migration status
+
+The two d.2B files listed above are **inert pending migrations**:
+
+- they are not auto-applied by Lovable Cloud;
+- they are not authorised for production promotion at this slice;
+- the sibling online concurrent operation at
+  `supabase/pending-operations/phase-1/20260402000000_phase-1b-r1i-d2b-gateway-pagination-indexes.concurrent.sql`
+  runs BEFORE canonical promotion so that this migration then verifies and
+  no-ops on the target database;
+- the checksums above must be recomputed from the final file contents on
+  every subsequent edit and any diff invalidates prior test evidence;
+- promotion requires the full owner-approval set enumerated below.
+
+Prior d.2A checksums and descriptions in this table are frozen.
 
 ### Promotion order
 
