@@ -1,6 +1,18 @@
 #!/usr/bin/env node
-// CI7 realtime publication idempotency sweep — read-only static audit.
+// CI7A realtime publication idempotency sweep — read-only static audit.
 // Never connects to any database. Never reads secrets.
+//
+// Policy (CI7A strict):
+//   - The earliest occurrence of each (publication, schema, table) is
+//     authoritative and always compliant.
+//   - Every LATER occurrence must be wrapped in an explicit
+//     pg_catalog.pg_publication_tables membership guard (IF NOT EXISTS).
+//   - EXCEPTION WHEN duplicate_object (or any exception swallowing) is
+//     NEVER accepted as protection; such occurrences are unguarded and
+//     the audit exits non-zero.
+//
+// Optional --self-check flag runs an in-memory synthetic later-duplicate
+// that uses exception swallowing only and asserts the audit rejects it.
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,118 +24,164 @@ const STMT_RE =
   /ALTER\s+PUBLICATION\s+(\w+)\s+ADD\s+TABLE\s+(?:(\w+)\.)?(\w+)\s*;/gi;
 const GUARD_RE =
   /pg_publication_tables[\s\S]*?pubname\s*=\s*'([^']+)'[\s\S]*?(?:schemaname\s*=\s*'([^']+)'[\s\S]*?)?tablename\s*=\s*'([^']+)'/gi;
-const EXCEPTION_RE = /EXCEPTION\s+WHEN\s+duplicate_object/i;
+const EXCEPTION_RE = /EXCEPTION\s+WHEN\s+(?:duplicate_object|OTHERS)/i;
 
-const files = readdirSync(MIGRATIONS_DIR)
-  .filter((f) => f.endsWith(".sql"))
-  .sort();
+function analyze(virtualFiles = null) {
+  const files = virtualFiles
+    ? Object.keys(virtualFiles).sort()
+    : readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort();
 
-const statements = [];
+  const statements = [];
 
-for (const file of files) {
-  const full = join(MIGRATIONS_DIR, file);
-  const text = readFileSync(full, "utf8");
-  const lines = text.split("\n");
+  for (const file of files) {
+    const text = virtualFiles
+      ? virtualFiles[file]
+      : readFileSync(join(MIGRATIONS_DIR, file), "utf8");
+    const lines = text.split("\n");
 
-  // Collect guard hits: {tablename -> [lineNumbers]}
-  const guardsByTable = new Map();
-  for (const m of text.matchAll(GUARD_RE)) {
-    const tbl = m[3];
-    const idx = m.index ?? 0;
-    const line = text.slice(0, idx).split("\n").length;
-    if (!guardsByTable.has(tbl)) guardsByTable.set(tbl, []);
-    guardsByTable.get(tbl).push(line);
+    const guardsByTable = new Map();
+    for (const m of text.matchAll(GUARD_RE)) {
+      const tbl = m[3];
+      const idx = m.index ?? 0;
+      const line = text.slice(0, idx).split("\n").length;
+      if (!guardsByTable.has(tbl)) guardsByTable.set(tbl, []);
+      guardsByTable.get(tbl).push(line);
+    }
+
+    for (const m of text.matchAll(STMT_RE)) {
+      const publication = m[1];
+      const schema = m[2] ?? "public";
+      const table = m[3];
+      const idx = m.index ?? 0;
+      const stmtLine = text.slice(0, idx).split("\n").length;
+
+      const guardLines = guardsByTable.get(table) ?? [];
+      const guarded = guardLines.some(
+        (gl) => gl <= stmtLine && stmtLine - gl <= 30,
+      );
+
+      const window = lines.slice(stmtLine - 1, stmtLine + 15).join("\n");
+      const exceptionSwallowed = EXCEPTION_RE.test(window);
+
+      statements.push({
+        file,
+        line: stmtLine,
+        publication,
+        schema,
+        table,
+        key: `${publication}|${schema}|${table}`,
+        guarded,
+        exceptionSwallowed,
+      });
+    }
   }
 
-  for (const m of text.matchAll(STMT_RE)) {
-    const publication = m[1];
-    const schema = m[2] ?? "public";
-    const table = m[3];
-    const idx = m.index ?? 0;
-    const stmtLine = text.slice(0, idx).split("\n").length;
+  const groups = new Map();
+  for (const s of statements) {
+    if (!groups.has(s.key)) groups.set(s.key, []);
+    groups.get(s.key).push(s);
+  }
 
-    // Guarded if a matching pg_publication_tables check for same table
-    // appears within 30 lines above.
-    const guardLines = guardsByTable.get(table) ?? [];
-    const guarded = guardLines.some(
-      (gl) => gl <= stmtLine && stmtLine - gl <= 30,
+  const duplicates = [];
+  const laterOccurrences = [];
+  for (const [key, occs] of groups) {
+    if (occs.length < 2) continue;
+    const sorted = [...occs].sort((a, b) =>
+      a.file === b.file ? a.line - b.line : a.file.localeCompare(b.file),
     );
-
-    // Exception-swallowed if 'EXCEPTION WHEN duplicate_object' appears
-    // within 15 lines after.
-    const window = lines.slice(stmtLine - 1, stmtLine + 15).join("\n");
-    const exceptionSwallowed = EXCEPTION_RE.test(window);
-
-    statements.push({
-      file,
-      line: stmtLine,
-      publication,
-      schema,
-      table,
-      key: `${publication}|${schema}|${table}`,
-      guarded,
-      exceptionSwallowed,
+    const [earliest, ...later] = sorted;
+    duplicates.push({
+      key,
+      publication: earliest.publication,
+      schema: earliest.schema,
+      table: earliest.table,
+      earliestFile: earliest.file,
+      earliestLine: earliest.line,
+      laterOccurrences: later.map((o) => ({
+        file: o.file,
+        line: o.line,
+        guarded: o.guarded,
+        exceptionSwallowed: o.exceptionSwallowed,
+      })),
     });
+    laterOccurrences.push(...later);
   }
-}
 
-// Group by key
-const groups = new Map();
-for (const s of statements) {
-  if (!groups.has(s.key)) groups.set(s.key, []);
-  groups.get(s.key).push(s);
-}
+  // STRICT: only guarded===true is compliant. Exception swallowing does
+  // NOT protect a later duplicate.
+  const laterGuarded = laterOccurrences.filter((o) => o.guarded === true);
+  const laterExceptionSwallowed = laterOccurrences.filter(
+    (o) => o.guarded !== true && o.exceptionSwallowed === true,
+  );
+  const laterUnguarded = laterOccurrences.filter((o) => o.guarded !== true);
 
-const duplicates = [];
-const laterUnguarded = [];
-for (const [key, occs] of groups) {
-  if (occs.length < 2) continue;
-  const sorted = [...occs].sort((a, b) =>
-    a.file === b.file ? a.line - b.line : a.file.localeCompare(b.file),
-  );
-  const [earliest, ...later] = sorted;
-  const laterUnguardedForKey = later.filter(
-    (o) => !o.guarded && !o.exceptionSwallowed,
-  );
-  duplicates.push({
-    key,
-    publication: earliest.publication,
-    schema: earliest.schema,
-    table: earliest.table,
-    earliestFile: earliest.file,
-    earliestLine: earliest.line,
-    laterOccurrences: later.map((o) => ({
+  return {
+    totalStatements: statements.length,
+    uniqueMemberships: groups.size,
+    duplicateMemberships: duplicates.length,
+    laterDuplicateOccurrences: laterOccurrences.length,
+    laterGuardedOccurrences: laterGuarded.length,
+    laterExceptionSwallowedOccurrences: laterExceptionSwallowed.length,
+    laterUnguardedRemaining: laterUnguarded.length,
+    duplicates,
+    laterUnguarded: laterUnguarded.map((o) => ({
       file: o.file,
       line: o.line,
+      key: o.key,
       guarded: o.guarded,
       exceptionSwallowed: o.exceptionSwallowed,
     })),
-    laterUnguardedCount: laterUnguardedForKey.length,
-  });
-  laterUnguarded.push(...laterUnguardedForKey);
+  };
 }
 
-const report = {
-  totalStatements: statements.length,
-  uniqueMemberships: groups.size,
-  duplicateMemberships: duplicates.length,
-  laterUnguardedRemaining: laterUnguarded.length,
-  duplicates,
-  laterUnguarded,
-};
+if (process.argv.includes("--self-check")) {
+  // Synthetic later duplicate using exception swallowing only must fail.
+  const virtual = {
+    "0001_earliest.sql":
+      "ALTER PUBLICATION supabase_realtime ADD TABLE public.t;\n",
+    "0002_later_swallow.sql":
+      "DO $$ BEGIN\n" +
+      "  BEGIN\n" +
+      "    ALTER PUBLICATION supabase_realtime ADD TABLE public.t;\n" +
+      "  EXCEPTION WHEN duplicate_object THEN NULL;\n" +
+      "  END;\n" +
+      "END $$;\n",
+  };
+  const r = analyze(virtual);
+  if (r.laterUnguardedRemaining !== 1 || r.laterExceptionSwallowedOccurrences !== 1) {
+    console.error("Self-check FAILED", r);
+    process.exit(2);
+  }
+  console.log("Self-check OK: exception swallowing rejected as unguarded.");
+  process.exit(0);
+}
 
+const report = analyze();
 writeFileSync(OUTPUT_PATH, JSON.stringify(report, null, 2));
 console.log(
   `Publication statements audited: ${report.totalStatements}\n` +
     `Unique memberships: ${report.uniqueMemberships}\n` +
     `Duplicate memberships: ${report.duplicateMemberships}\n` +
-    `Later unguarded duplicates remaining: ${report.laterUnguardedRemaining}`,
+    `Later duplicate occurrences: ${report.laterDuplicateOccurrences}\n` +
+    `Later membership-guarded occurrences: ${report.laterGuardedOccurrences}\n` +
+    `Later exception-swallowed occurrences: ${report.laterExceptionSwallowedOccurrences}\n` +
+    `Later unguarded occurrences: ${report.laterUnguardedRemaining}`,
 );
 
+let failed = false;
 if (report.laterUnguardedRemaining > 0) {
   console.error("\nLater unguarded duplicate occurrences:");
-  for (const o of laterUnguarded) {
-    console.error(`  ${o.file}:${o.line} → ${o.key}`);
+  for (const o of report.laterUnguarded) {
+    console.error(
+      `  ${o.file}:${o.line} → ${o.key} (guarded=${o.guarded}, exceptionSwallowed=${o.exceptionSwallowed})`,
+    );
   }
-  process.exit(1);
+  failed = true;
 }
+if (report.laterExceptionSwallowedOccurrences > 0) {
+  console.error(
+    "\nException swallowing is not accepted as protection; use pg_publication_tables guards.",
+  );
+  failed = true;
+}
+if (failed) process.exit(1);

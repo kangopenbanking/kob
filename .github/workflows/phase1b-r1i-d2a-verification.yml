@@ -2,6 +2,7 @@
 # CI5 canonical clean-reset reproducibility repair
 # CI6 pg_cron extension schema reproducibility repair
 # CI7 realtime publication idempotency sweep
+# CI7A strict realtime publication guard enforcement
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
@@ -281,10 +282,14 @@ jobs:
         run: |
           if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
 
-      - name: Realtime publication audit (CI7)
+      - name: Realtime publication audit (CI7A)
         run: |
-          set -o pipefail
-          node scripts/phase1b-d2a/audit-realtime-publications.mjs 2>&1 | tee realtime-publication-audit.log
+          set -euo pipefail
+          rm -f realtime-publication-audit.json realtime-publication-audit.log
+          node scripts/phase1b-d2a/audit-realtime-publications.mjs \
+            2>&1 | tee realtime-publication-audit.log
+          test -s realtime-publication-audit.json
+          test -s realtime-publication-audit.log
 
       - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7)
         run: |

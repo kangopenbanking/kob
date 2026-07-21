@@ -182,17 +182,37 @@ $$;
 GRANT EXECUTE ON FUNCTION public.support_mark_read(uuid, text) TO authenticated;
 
 -- 8. Enable Realtime on support tables (idempotent)
+-- CI7A: membership-guarded — earliest authoritative additions live in
+-- 20260321040418_5fad711d-abaf-4ab1-b8c8-f6f9e08b526a.sql.
 DO $$
 BEGIN
-  BEGIN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.support_conversations;
-  EXCEPTION WHEN duplicate_object THEN NULL;
-  END;
-  BEGIN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.support_messages;
-  EXCEPTION WHEN duplicate_object THEN NULL;
-  END;
-END $$;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'support_conversations'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime
+      ADD TABLE public.support_conversations;
+  END IF;
+END
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'support_messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime
+      ADD TABLE public.support_messages;
+  END IF;
+END
+$$;
 
 ALTER TABLE public.support_conversations REPLICA IDENTITY FULL;
 ALTER TABLE public.support_messages       REPLICA IDENTITY FULL;
