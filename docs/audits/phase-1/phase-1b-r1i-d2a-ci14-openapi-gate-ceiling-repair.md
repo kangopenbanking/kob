@@ -147,3 +147,26 @@ checker.
 - Missing / malformed / truncated summary → FAIL.
 - Exit-status inconsistent with failure count → FAIL.
 - Signal termination → FAIL.
+
+## CI14A — Forward-compatible static-suite assertion
+
+- Tested run: 29862637814 (job 88742955224).
+- Tested SHA: ef61e3ccee2d77cf346246ccc1e59559955fc3f3.
+- Runtime harness: 108/108 assertions PASS.
+- Approved indexes selected by query plans: 4/4.
+- Temporary environment cleanup: 2/2 with zero residual resources.
+- CI14 static suite: 40/40 PASS.
+- Explicit static suite: 385/386 (sole failure = CI13 assertion 29).
+- CI13 previously required the "Static infrastructure suite (…+ CI13)"
+  display name to terminate immediately after CI13.
+- CI14 correctly appended "+ CI14" to the display name, tripping the
+  terminal-parenthesis matcher without any regression in behaviour.
+- CI14A rewrites the CI13 matcher as a suffix-tolerant substring check
+  requiring the complete ordered "guard + CI2 + CI3/CI4 + CI5 … + CI13"
+  prefix while permitting later authorised suites (CI14, CI15, …).
+- Focused compatibility checks live inside assertion 29: they accept the
+  current CI14 name and a synthetic CI15 name, and reject a name that
+  omits CI13.
+- The OpenAPI ceiling evaluator was not reached in run 29862637814 and
+  is unchanged.
+- No managed Lovable Supabase access occurred.
