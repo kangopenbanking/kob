@@ -4,7 +4,9 @@ import { resolve } from "node:path";
 import {
   computeTemporaryEnvAccounting,
   removeKnownTemporaryPath,
+  sanitizeRemovalErrorCode,
 } from "../../scripts/phase1b-d2a/teardown.mjs";
+
 
 const ROOT = resolve(__dirname, "../..");
 const WORKFLOW = readFileSync(
