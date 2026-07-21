@@ -92,11 +92,16 @@ describe("CI7 realtime publication idempotency sweep", () => {
     }
   });
 
-  it("no RLS or replica-identity change introduced in later duplicates", () => {
+  it("no RLS or replica-identity change introduced by CI7 patched blocks", () => {
+    // Only the CI7-added DO blocks are in scope; unrelated pre-existing
+    // statements elsewhere in these migrations are not touched by CI7.
     for (const t of [laterAcc, laterSup]) {
-      expect(t).not.toMatch(/REPLICA\s+IDENTITY/i);
-      expect(t).not.toMatch(/ENABLE\s+ROW\s+LEVEL\s+SECURITY/i);
-      expect(t).not.toMatch(/DISABLE\s+ROW\s+LEVEL\s+SECURITY/i);
+      const patchedRegions = t.match(/-- CI7:[\s\S]*?\$\$;/g) ?? [];
+      expect(patchedRegions.length).toBeGreaterThan(0);
+      for (const region of patchedRegions) {
+        expect(region).not.toMatch(/REPLICA\s+IDENTITY/i);
+        expect(region).not.toMatch(/ROW\s+LEVEL\s+SECURITY/i);
+      }
     }
   });
 
