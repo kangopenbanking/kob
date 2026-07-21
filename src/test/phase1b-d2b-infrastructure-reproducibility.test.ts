@@ -151,6 +151,57 @@ describe("R1I-d.2B — concurrent SQL structure", () => {
   it("does NOT create the deferred wider subscriptions composite index", () => {
     expect(/plan_id,\s*status,\s*created_at/i.test(sql)).toBe(false);
   });
+
+  it("has a preflight AND postflight DO block for every approved index", () => {
+    for (const idx of EXPECTED_INDEX_NAMES) {
+      // Approved index names are literals, not user input; embedding directly.
+      const preRe = new RegExp(
+        `DO\\s+\\$preflight_[a-z_]+\\$[\\s\\S]*?${idx}[\\s\\S]*?\\$preflight_[a-z_]+\\$`,
+        "i",
+      );
+      const postRe = new RegExp(
+        `DO\\s+\\$postflight_[a-z_]+\\$[\\s\\S]*?${idx}[\\s\\S]*?\\$postflight_[a-z_]+\\$`,
+        "i",
+      );
+      expect(preRe.test(sql), `missing preflight DO block for ${idx}`).toBe(true);
+      expect(postRe.test(sql), `missing postflight DO block for ${idx}`).toBe(true);
+    }
+  });
+
+  it("preflight blocks reject definition mismatch, invalid, and not-ready states", () => {
+    // Preflight enforcement vocabulary must appear at least once per index.
+    const preflightBlocks = sql.match(/\$preflight_[a-z_]+\$[\s\S]*?\$preflight_[a-z_]+\$/gi) ?? [];
+    expect(preflightBlocks.length).toBe(EXPECTED_INDEX_NAMES.length);
+    for (const block of preflightBlocks) {
+      expect(/exists with a different definition/i.test(block)).toBe(true);
+      expect(/indisvalid\s*=\s*false/i.test(block)).toBe(true);
+      expect(/indisready\s*=\s*false/i.test(block)).toBe(true);
+    }
+  });
+
+  it("postflight blocks enforce presence, definition match, valid, and ready", () => {
+    const postBlocks = sql.match(/\$postflight_[a-z_]+\$[\s\S]*?\$postflight_[a-z_]+\$/gi) ?? [];
+    expect(postBlocks.length).toBe(EXPECTED_INDEX_NAMES.length);
+    for (const block of postBlocks) {
+      expect(/missing after CREATE/i.test(block)).toBe(true);
+      expect(/definition mismatch/i.test(block)).toBe(true);
+      expect(/indisvalid\s*=\s*false/i.test(block)).toBe(true);
+      expect(/indisready\s*=\s*false/i.test(block)).toBe(true);
+    }
+  });
+
+  it("rejects a hypothetical concurrent SQL that omits verification blocks", () => {
+    // Guardrail: if a future author strips the DO blocks, this suite must fail.
+    // We simulate the stripped variant and prove the assertions above would
+    // reject it, without mutating the real artifact on disk.
+    const stripped = sql.replace(/DO\s+\$(?:pre|post)flight_[a-z_]+\$[\s\S]*?\$(?:pre|post)flight_[a-z_]+\$;?/gi, "");
+    for (const idx of EXPECTED_INDEX_NAMES) {
+      const preRe = new RegExp(`\\$preflight_[a-z_]+\\$[\\s\\S]*?${idx}`, "i");
+      const postRe = new RegExp(`\\$postflight_[a-z_]+\\$[\\s\\S]*?${idx}`, "i");
+      expect(preRe.test(stripped)).toBe(false);
+      expect(postRe.test(stripped)).toBe(false);
+    }
+  });
 });
 
 describe("R1I-d.2B — canonical/concurrent structural parity", () => {
