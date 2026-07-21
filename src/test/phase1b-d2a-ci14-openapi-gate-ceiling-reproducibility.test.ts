@@ -310,7 +310,7 @@ describe('CI14 — OpenAPI gate-ceiling evaluator', () => {
     const wf = fs.readFileSync(WORKFLOW_PATH, 'utf8');
     // Locate the OpenAPI gates (structural + performance ...) step and its
     // run block. Ensure no || true / continue-on-error inside it.
-    const stepRegex = /- name: OpenAPI gates[\s\S]*?ratified per-gate ceiling[\s\S]*?run: \|([\s\S]*?)(?=\n      - name:|\Z)/;
+    const stepRegex = /- name: OpenAPI gates[\s\S]*?ratified per-gate ceiling[\s\S]*?run: \|([\s\S]*?)(?=\n {6}- name:|$)/;
     const m = wf.match(stepRegex);
     expect(m).not.toBeNull();
     const block = m[1];
