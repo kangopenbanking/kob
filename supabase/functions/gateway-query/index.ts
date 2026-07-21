@@ -50,12 +50,12 @@ serve(async (req) => {
       case 'list-settlements': return await listSimple(p, 'gateway_settlements', 'list-settlements');
       case 'list-disputes': return await listSimple(p, 'gateway_disputes', 'list-disputes');
       case 'list-beneficiaries': return await handleD2aList(p, { id: 'gatewayListBeneficiaries', table: 'gateway_beneficiaries' });
-      case 'list-customers': return await listCustomers(p);
+      case 'list-customers': return await handleD2bList(p, D2B_ROUTES['list-customers']);
       case 'list-customer-tokens': return await listCustomerTokens(p);
       case 'list-payment-links': return await handleD2aList(p, { id: 'gatewayListPaymentLinks', table: 'gateway_payment_links' });
-      case 'list-payment-plans': return await listMerchantResource(p, 'gateway_payment_plans', 'list-payment-plans');
+      case 'list-payment-plans': return await handleD2bList(p, D2B_ROUTES['list-payment-plans']);
       case 'list-subaccounts': return await handleD2aList(p, { id: 'gatewayListSubaccounts', table: 'gateway_subaccounts' });
-      case 'list-subscriptions': return await listSubscriptions(p);
+      case 'list-subscriptions': return await handleD2bList(p, D2B_ROUTES['list-subscriptions']);
       case 'list-virtual-accounts': return await handleD2aList(p, { id: 'gatewayListVirtualAccounts', table: 'gateway_virtual_accounts' });
 
       case 'list-funding-intents': return await listFundingIntents(p);
@@ -160,16 +160,6 @@ async function listBeneficiaries(p: any) {
   return ok({ data, total: count, limit, offset });
 }
 
-async function listCustomers(p: any) {
-  const merchant_id = getParam(p, 'merchant_id');
-  if (!merchant_id) return err('merchant_id required', 400);
-  if (!await verifyMerchant(p, merchant_id)) return err('merchant_not_found', 404);
-  const limit = getLimit(p, 20); const offset = getOffset(p);
-  const { data, error, count } = await p.supabase.from('gateway_customers').select('*', { count: 'exact' })
-    .eq('merchant_id', merchant_id).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
-  if (error) throw error;
-  return ok({ data, total: count, limit, offset });
-}
 
 async function listCustomerTokens(p: any) {
   const customer_id = getParam(p, 'customer_id');
@@ -181,16 +171,6 @@ async function listCustomerTokens(p: any) {
   return ok({ data: tokens });
 }
 
-async function listMerchantResource(p: any, table: string, _label: string) {
-  const merchant_id = getParam(p, 'merchant_id');
-  if (!merchant_id) return err('merchant_id required', 400);
-  if (!await verifyMerchant(p, merchant_id)) return err('merchant_not_found', 404);
-  const limit = getLimit(p, 20); const offset = getOffset(p);
-  const { data, error, count } = await p.supabase.from(table).select('*', { count: 'exact' })
-    .eq('merchant_id', merchant_id).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
-  if (error) throw error;
-  return ok({ data, total: count, limit, offset });
-}
 
 async function listMerchantResourceNoCount(p: any, table: string, _label: string) {
   const merchant_id = getParam(p, 'merchant_id');
@@ -201,19 +181,6 @@ async function listMerchantResourceNoCount(p: any, table: string, _label: string
   return ok({ data: data || [] });
 }
 
-async function listSubscriptions(p: any) {
-  const merchant_id = getParam(p, 'merchant_id');
-  if (!merchant_id) return err('merchant_id required', 400);
-  if (!await verifyMerchant(p, merchant_id)) return err('merchant_not_found', 404);
-  const limit = getLimit(p, 20); const offset = getOffset(p);
-  const status = getParam(p, 'status');
-  let query = p.supabase.from('gateway_subscriptions').select('*, gateway_payment_plans(*)', { count: 'exact' })
-    .eq('merchant_id', merchant_id).order('created_at', { ascending: false }).range(offset, offset + limit - 1);
-  if (status) query = query.eq('status', status);
-  const { data, error, count } = await query;
-  if (error) throw error;
-  return ok({ data, total: count, limit, offset });
-}
 
 async function listFundingIntents(p: any) {
   const accountId = getParam(p, 'account_id');
@@ -332,6 +299,267 @@ async function getPayoutBatch(p: any) {
   const { data: items } = await p.supabase.from('gateway_payouts').select('*').eq('batch_id', batchId).order('created_at', { ascending: true });
   const { gateway_merchants, ...batchData } = batch;
   return ok({ ...batchData, items: items || [] });
+}
+
+// ─── Phase 1B — R1I-d.2B: keyset pagination for three medium-volume gateway list ops ───
+// Isolated d.2B block. MUST NOT alter or reach into the protected d.2A block
+// that begins at the anchor comment below. Implements cursor pagination for
+// gatewayListCustomers, gatewayListPaymentPlans and gatewayListSubscriptions
+// via the accepted d.2B adapter. No d.2B code may appear after the d.2A anchor.
+import {
+  computeD2bFilterHash,
+  computeD2bScopeHash,
+  D2B_DEFAULT_LIMIT as _D2B_DEFAULT_LIMIT,
+  D2B_MAX_LIMIT as _D2B_MAX_LIMIT,
+  decodeD2bCursor,
+  finalizeD2bPage,
+  normalizeD2bSort,
+  parseD2bParams,
+  resolveD2bOperation,
+  type D2bEnv,
+  type D2bProblemDetails,
+  type GatewayD2bOperationId,
+} from "./_pagination-d2b.ts";
+// Referencing constants so tree-shakers keep the accepted adapter surface.
+void _D2B_DEFAULT_LIMIT;
+void _D2B_MAX_LIMIT;
+
+const D2B_PAGINATION_RESPONSE_HEADERS = [
+  "X-Pagination-Mode",
+  "X-Pagination-Has-More",
+  "X-Pagination-Next-Cursor",
+  "X-Pagination-Limit",
+] as const;
+
+const d2bCorsHeaders = {
+  ...corsHeaders,
+  "Access-Control-Expose-Headers": D2B_PAGINATION_RESPONSE_HEADERS.join(", "),
+};
+
+type D2bRouteKey = "list-customers" | "list-payment-plans" | "list-subscriptions";
+
+const D2B_ROUTES: Readonly<Record<D2bRouteKey, GatewayD2bOperationId>> = Object.freeze({
+  "list-customers": "gatewayListCustomers",
+  "list-payment-plans": "gatewayListPaymentPlans",
+  "list-subscriptions": "gatewayListSubscriptions",
+});
+
+function detectD2bEnv(url?: URL): D2bEnv {
+  const raw = (Deno.env.get('KOB_ENV') || Deno.env.get('SUPABASE_ENV') || '').toLowerCase();
+  if (raw === 'production' || raw === 'prod') return 'production';
+  if (raw === 'sandbox' || raw === 'sbx') return 'sandbox';
+  if (raw === 'test') return 'test';
+  const host = (url?.hostname || '').toLowerCase();
+  if (host.includes('sandbox')) return 'sandbox';
+  return 'unknown';
+}
+
+function d2bProblemResponse(problem: D2bProblemDetails): Response {
+  return new Response(JSON.stringify(problem), {
+    status: problem.status,
+    headers: { ...d2bCorsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+}
+
+function d2bErr(msg: string, status: number): Response {
+  return new Response(JSON.stringify({ error: msg }), {
+    status,
+    headers: { ...d2bCorsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+function d2bOk(payload: { body: unknown; headers: Record<string, string> }): Response {
+  return new Response(JSON.stringify(payload.body), {
+    status: 200,
+    headers: { ...d2bCorsHeaders, 'Content-Type': 'application/json', ...payload.headers },
+  });
+}
+
+function parseD2bOffset(raw: string | null | undefined):
+  { ok: true; offset: number } | { ok: false; error: D2bProblemDetails } {
+  if (raw === null || raw === undefined || raw === '') return { ok: true, offset: 0 };
+  const s = String(raw);
+  if (!/^-?\d+$/.test(s)) {
+    return {
+      ok: false,
+      error: {
+        status: 400,
+        type: "https://kob.dev/problems/pagination-offset-invalid",
+        title: "Invalid pagination offset",
+        detail: "offset must be a non-negative base-10 integer",
+        code: "PAGINATION_LIMIT_INVALID",
+      },
+    };
+  }
+  const n = Number.parseInt(s, 10);
+  if (!Number.isFinite(n) || n < 0) {
+    return {
+      ok: false,
+      error: {
+        status: 400,
+        type: "https://kob.dev/problems/pagination-offset-invalid",
+        title: "Invalid pagination offset",
+        detail: "offset must be >= 0",
+        code: "PAGINATION_LIMIT_INVALID",
+      },
+    };
+  }
+  return { ok: true, offset: n };
+}
+
+async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promise<Response> {
+  const op = resolveD2bOperation(operationId);
+  const url: URL | undefined = p.url;
+  const actorSub = String(p.user?.id || '');
+  if (!actorSub) return d2bErr('unauthorized', 401);
+
+  // Merchant boundary. Missing merchant_id → 400 (existing body semantics).
+  // Foreign / unowned merchant → masked 404 via existing verifyMerchant().
+  const rawMerchant = getParam(p, 'merchant_id');
+  if (!rawMerchant) return d2bErr('merchant_id required', 400);
+  if (!await verifyMerchant(p, rawMerchant)) return d2bErr('merchant_not_found', 404);
+  const verifiedMerchantId = String(rawMerchant);
+
+  // Limit + cursor parsing (canonical `cursor` parameter).
+  const parsed = parseD2bParams({
+    limit: getParam(p, 'limit'),
+    cursor: getParam(p, 'cursor'),
+  });
+  if (!parsed.ok) return d2bProblemResponse(parsed.error);
+  const { limit } = parsed.value;
+  let cursor: string | null = parsed.value.cursor;
+
+  // Sort normalisation — reject unsupported values with 400.
+  const sortResult = normalizeD2bSort({
+    sort_by: getParam(p, 'sort_by'),
+    sort_order: getParam(p, 'sort_order'),
+  });
+  if (!sortResult.ok) return d2bProblemResponse(sortResult.error);
+  const sort = sortResult.value;
+
+  // Cursor precedence — cursor > kobp1-prefixed starting_after/ending_before.
+  // Arbitrary DB ids in starting_after/ending_before are ignored, never
+  // interpreted as unsigned cursors. Multiple distinct cursor-bearing values
+  // fail closed with 400.
+  const startingAfter = getParam(p, 'starting_after');
+  const endingBefore = getParam(p, 'ending_before');
+  const cursorSources: string[] = [];
+  if (typeof cursor === 'string' && cursor.length > 0) cursorSources.push(cursor);
+  if (typeof startingAfter === 'string' && startingAfter.startsWith('kobp1.')) {
+    cursorSources.push(startingAfter);
+  }
+  if (typeof endingBefore === 'string' && endingBefore.startsWith('kobp1.')) {
+    cursorSources.push(endingBefore);
+  }
+  if (cursorSources.length > 1) {
+    return d2bProblemResponse({
+      status: 400,
+      type: "https://kob.dev/problems/pagination-cursor-conflict",
+      title: "Conflicting cursor parameters",
+      detail: "Only one of cursor, starting_after, ending_before may be supplied.",
+      code: "PAGINATION_CURSOR_INVALID",
+    });
+  }
+  cursor = cursorSources[0] ?? null;
+
+  // Offset — only consulted when no cursor is accepted.
+  const offsetResult = parseD2bOffset(getParam(p, 'offset'));
+  if (!offsetResult.ok) return d2bProblemResponse(offsetResult.error);
+  const offset = offsetResult.offset;
+
+  // Operation-specific filter binding.
+  const rawPlanId = operationId === 'gatewayListSubscriptions'
+    ? getParam(p, 'plan_id') : null;
+  const rawStatus = operationId === 'gatewayListSubscriptions'
+    ? getParam(p, 'status') : null;
+  const normPlanId = rawPlanId && String(rawPlanId).length > 0 ? String(rawPlanId) : null;
+  const normStatus = rawStatus && String(rawStatus).length > 0 ? String(rawStatus) : null;
+
+  // Cursor configuration errors from computeD2bScopeHash / decodeD2bCursor
+  // must remain server 5xx — no try/catch converts them into client 400.
+  const environment = detectD2bEnv(url);
+  const scopeHash = await computeD2bScopeHash({
+    environment,
+    operation: operationId,
+    actorSub,
+    merchantId: verifiedMerchantId,
+  });
+  const filterHash = operationId === 'gatewayListSubscriptions'
+    ? await computeD2bFilterHash({
+        operation: 'gatewayListSubscriptions',
+        planId: normPlanId,
+        status: normStatus,
+        sort,
+      })
+    : operationId === 'gatewayListPaymentPlans'
+      ? await computeD2bFilterHash({ operation: 'gatewayListPaymentPlans', sort })
+      : await computeD2bFilterHash({ operation: 'gatewayListCustomers', sort });
+
+  let cursorPosition: { createdAt: string; id: string } | null = null;
+  if (cursor) {
+    const decoded = await decodeD2bCursor({
+      token: cursor,
+      operation: operationId,
+      scopeHash,
+      filterHash,
+    });
+    if (!decoded.ok) return d2bProblemResponse(decoded.error);
+    cursorPosition = { createdAt: decoded.createdAt, id: decoded.id };
+  }
+
+  // Build keyset query. Every d.2B collection query applies the verified
+  // merchant id via .eq("merchant_id", verifiedMerchantId).
+  const select = operationId === 'gatewayListSubscriptions'
+    ? '*, gateway_payment_plans(*)'
+    : '*';
+  let query = p.supabase.from(op.table).select(select).eq('merchant_id', verifiedMerchantId);
+  if (operationId === 'gatewayListSubscriptions') {
+    if (normPlanId) query = query.eq('plan_id', normPlanId);
+    if (normStatus) query = query.eq('status', normStatus);
+  }
+
+  const mode: 'cursor' | 'hybrid' = cursorPosition
+    ? 'cursor'
+    : (offset > 0 ? 'hybrid' : 'cursor');
+
+  if (cursorPosition) {
+    // Safe PostgREST filter — strip characters that carry structural meaning
+    // in `.or(...)` before interpolation. Position values are signed server
+    // output but we still escape them defensively.
+    const cAt = cursorPosition.createdAt.replace(/[(),]/g, '');
+    const cId = cursorPosition.id.replace(/[(),]/g, '');
+    query = query.or(
+      `and(created_at.lt.${cAt}),and(created_at.eq.${cAt},id.lt.${cId})`,
+    );
+  }
+
+  query = query
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false });
+
+  if (cursorPosition || offset === 0) {
+    // Cursor accepted, or initial cursor-mode page: cursor precedence forbids
+    // offset/range use when a cursor is present.
+    query = query.limit(limit + 1);
+  } else {
+    // Hybrid initial page — `.range(from, to)` is inclusive, so `limit + 1`
+    // rows correspond to endpoint `offset + limit`.
+    query = query.range(offset, offset + limit);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  const rows = (data as Array<{ created_at: string; id: string }>) || [];
+
+  const finalised = await finalizeD2bPage({
+    operation: operationId,
+    scopeHash,
+    filterHash,
+    limit,
+    fetchedItems: rows,
+    mode,
+  });
+  return d2bOk(finalised);
 }
 
 // ─── Phase 1B — R1I-d.2A: keyset pagination for four gateway list ops ───

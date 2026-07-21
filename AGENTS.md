@@ -112,14 +112,33 @@ agent MUST NOT:
 | Slice | Status |
 |-------|--------|
 | R1I-d.2A | CLOSED — PROTECTED |
-| R1I-d.2B-I1a | AUTHORISED FOR IMPLEMENTATION (this turn) |
-| R1I-d.2B-I1b | NOT AUTHORISED |
+| R1I-d.2B-I1a | CLOSED — PROTECTED FOUNDATION (commit `aa8124e5ee03c87acdc3615cf85d78c36855882b`) |
+| R1I-d.2B-I1b | AUTHORISED FOR IMPLEMENTATION (this turn) |
 | R1I-d.2B-I1c | NOT AUTHORISED |
 | R1I-d.2B-I1d | NOT AUTHORISED |
 | R1I-d.2C | NOT AUTHORISED |
 | R1I-d.2D | NOT AUTHORISED |
 | R1I-d.2E | NOT AUTHORISED |
 | R1I-d.2F | NOT AUTHORISED |
+
+The R1I-d.2B-I1a closure is a **protected foundation**. Its protected artifacts include:
+
+- `supabase/functions/gateway-query/_pagination-d2b.ts`;
+- the canonical d.2B migration and its rollback under `supabase/pending-migrations/phase-1/`;
+- the concurrent d.2B operation and its rollback under `supabase/pending-operations/phase-1/`;
+- the exact three composite indexes ratified by the Database Owner
+  (`idx_gw_customers_merchant_created_id_desc`,
+  `idx_gw_payment_plans_merchant_created_id_desc`,
+  `idx_gw_subscriptions_merchant_created_id_desc`);
+- `src/test/pagination-gateway-d2b-adapter.test.ts`;
+- `src/test/phase1b-d2b-infrastructure-reproducibility.test.ts`;
+- the `supabase/pending-migrations/phase-1/README.md` d.2B inventory entries.
+
+The only I1a test permitted to change during I1b is
+`src/test/phase1b-d2b-protected-d2a-baseline.test.ts`, and only to replace the
+expired I1a whole-file `gateway-query/index.ts` runtime constraint with the
+protected-suffix rule (anchor-onward byte identity, plus OpenAPI unchanged).
+No other Phase Guardian rule is weakened.
 
 Deployment: NOT AUTHORISED. Managed Supabase access: NOT AUTHORISED.
 
