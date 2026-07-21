@@ -50,7 +50,15 @@ REVOKE ALL ON FUNCTION public.cleanup_security_capture_events() FROM PUBLIC, ano
 GRANT EXECUTE ON FUNCTION public.cleanup_security_capture_events() TO service_role;
 
 -- Schedule daily cleanup via pg_cron (03:15 UTC). Safe to re-run.
-CREATE EXTENSION IF NOT EXISTS pg_cron;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_extension WHERE extname = 'pg_cron'
+  ) THEN
+    CREATE EXTENSION pg_cron WITH SCHEMA extensions;
+  END IF;
+END
+$$;
 
 DO $$
 BEGIN

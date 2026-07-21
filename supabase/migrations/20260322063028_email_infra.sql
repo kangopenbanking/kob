@@ -4,11 +4,15 @@
 
 -- Extensions required for queue processing
 CREATE EXTENSION IF NOT EXISTS pg_net SCHEMA extensions;
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
-    CREATE EXTENSION pg_cron;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_extension WHERE extname = 'pg_cron'
+  ) THEN
+    CREATE EXTENSION pg_cron WITH SCHEMA extensions;
   END IF;
-END $$;
+END
+$$;
 CREATE EXTENSION IF NOT EXISTS supabase_vault;
 CREATE EXTENSION IF NOT EXISTS pgmq;
 
