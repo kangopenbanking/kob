@@ -392,6 +392,9 @@ jobs:
           path: |
             realtime-publication-audit.json
             realtime-publication-audit.log
+            extension-reproducibility-audit.json
+            extension-reproducibility-audit.log
+
             tool-versions.json
             environment-preflight.json
             supabase-start.log
