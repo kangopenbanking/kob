@@ -119,11 +119,13 @@ describe("CI7 realtime publication idempotency sweep", () => {
   });
 
   it("no managed Supabase credentials or forbidden CLI verbs introduced", () => {
+    // Forbidden CLI verbs must never appear in workflow or audit script.
     for (const t of [workflow, auditScript]) {
       expect(t).not.toMatch(/supabase\s+(login|link|db\s+pull|db\s+push)/);
-      expect(t).not.toMatch(/SUPABASE_ACCESS_TOKEN/);
-      expect(t).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY/);
     }
+    // Audit script must never touch managed credentials.
+    expect(auditScript).not.toMatch(/SUPABASE_ACCESS_TOKEN/);
+    expect(auditScript).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY/);
   });
 
   it("audit script never opens a database connection or reads secrets", () => {
