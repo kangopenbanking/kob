@@ -165,6 +165,55 @@ export function computeTemporaryEnvAccounting(input) {
   };
 }
 
+/**
+ * CI12C — bounded, exception-safe removal of a known temporary secret-file
+ * path. Returns structured evidence without ever revealing the path itself,
+ * the file contents, the cursor secret, or the raw exception message/stack.
+ *
+ * @param {string} path
+ * @param {{ remove?: typeof rmSync, exists?: typeof existsSync }} [deps]
+ */
+export function removeKnownTemporaryPath(path, deps = {}) {
+  const remove = deps.remove || rmSync;
+  const exists = deps.exists || existsSync;
+
+  const existedBefore = Boolean(exists(path));
+  if (!existedBefore) {
+    return {
+      existedBefore: false,
+      removalAttempted: false,
+      removalSucceeded: false,
+      verifiedAbsent: true,
+      errorCode: null,
+    };
+  }
+
+  try {
+    remove(path, { force: true });
+  } catch (error) {
+    const rawCode =
+      error && typeof error.code === "string" && error.code.length > 0
+        ? error.code
+        : "REMOVE_FAILED";
+    return {
+      existedBefore: true,
+      removalAttempted: true,
+      removalSucceeded: false,
+      verifiedAbsent: false,
+      errorCode: rawCode.slice(0, 40),
+    };
+  }
+
+  const verifiedAbsent = !exists(path);
+  return {
+    existedBefore: true,
+    removalAttempted: true,
+    removalSucceeded: verifiedAbsent,
+    verifiedAbsent,
+    errorCode: verifiedAbsent ? null : "REMOVAL_NOT_VERIFIED",
+  };
+}
+
 // Guard so this file can be imported by tests without executing teardown.
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
