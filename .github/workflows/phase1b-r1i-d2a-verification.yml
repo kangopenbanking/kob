@@ -71,7 +71,9 @@ jobs:
             extension-reproducibility-audit.json \
             extension-reproducibility-audit.log \
             realtime-publication-audit.json \
-            realtime-publication-audit.log
+            realtime-publication-audit.log \
+            edge-runtime-env-attestation.json
+          rm -f "${RUNNER_TEMP:-/tmp}/kob-d2a-edge-runtime.env"
 
 
 
