@@ -1,0 +1,149 @@
+{
+  "generatedAt": "2026-07-21T13:56:29.585Z",
+  "migrationsScanned": 482,
+  "pgCronOccurrences": 6,
+  "pgNetOccurrences": 5,
+  "laterUnguarded": 0,
+  "invalidSchemaTargets": 0,
+  "pgCatalogRequests": 0,
+  "alterSetSchema": 0,
+  "dropExtension": 0,
+  "exceptionSwallowed": 1,
+  "occurrences": [
+    {
+      "extension": "pg_cron",
+      "file": "20251031200554_bc793500-1386-41f4-95b1-08a7718b548c.sql",
+      "line": 3,
+      "statement": "CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": true,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_net",
+      "file": "20251031200554_bc793500-1386-41f4-95b1-08a7718b548c.sql",
+      "line": 4,
+      "statement": "CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;",
+      "earliestAuthoritative": true,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_cron",
+      "file": "20260320103051_80a328a6-faaa-4d41-9e10-6f48f9579881.sql",
+      "line": 9,
+      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_net",
+      "file": "20260320103051_80a328a6-faaa-4d41-9e10-6f48f9579881.sql",
+      "line": 13,
+      "statement": "CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_cron",
+      "file": "20260322063028_email_infra.sql",
+      "line": 12,
+      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": true
+    },
+    {
+      "extension": "pg_net",
+      "file": "20260322063028_email_infra.sql",
+      "line": 6,
+      "statement": "CREATE EXTENSION IF NOT EXISTS pg_net SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_cron",
+      "file": "20260530135120_582fc011-6a0b-436b-a8e2-186fa5820bf9.sql",
+      "line": 58,
+      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_cron",
+      "file": "20260531214048_1f09b1bc-708b-4f42-add8-cee59d6dbb4f.sql",
+      "line": 111,
+      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_net",
+      "file": "20260531214048_1f09b1bc-708b-4f42-add8-cee59d6dbb4f.sql",
+      "line": 120,
+      "statement": "CREATE EXTENSION pg_net WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_cron",
+      "file": "20260621085738_4ac30c8e-f6b7-4d58-a5ac-6bf4a87e2f8a.sql",
+      "line": 26,
+      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    },
+    {
+      "extension": "pg_net",
+      "file": "20260621085738_4ac30c8e-f6b7-4d58-a5ac-6bf4a87e2f8a.sql",
+      "line": 35,
+      "statement": "CREATE EXTENSION pg_net WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": false
+    }
+  ],
+  "errors": [
+    {
+      "extension": "pg_cron",
+      "file": "20260322063028_email_infra.sql",
+      "line": 12,
+      "statement": "CREATE EXTENSION pg_cron WITH SCHEMA extensions;",
+      "earliestAuthoritative": false,
+      "guarded": true,
+      "schemaExtensions": true,
+      "pgCatalog": false,
+      "exceptionSwallowed": true,
+      "kind": "EXCEPTION_SWALLOWED"
+    }
+  ]
+}
