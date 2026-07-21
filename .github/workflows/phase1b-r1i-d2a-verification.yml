@@ -370,6 +370,8 @@ jobs:
           name: phase1b-r1i-d2a-evidence
           if-no-files-found: ignore
           path: |
+            realtime-publication-audit.json
+            realtime-publication-audit.log
             tool-versions.json
             environment-preflight.json
             supabase-start.log
