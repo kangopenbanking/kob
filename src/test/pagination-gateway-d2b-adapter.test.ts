@@ -145,22 +145,22 @@ describe("R1I-d.2B — parseD2bParams: limit validation", () => {
   it("rejects limit=0", () => {
     const r = parseD2bParams({ limit: 0 });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
   });
   it("rejects negative limit", () => {
     const r = parseD2bParams({ limit: -1 });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
   });
   it("rejects non-integer limit", () => {
     const r = parseD2bParams({ limit: "3.5" });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
   });
   it("rejects limit > 100", () => {
     const r = parseD2bParams({ limit: 101 });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_LIMIT_INVALID");
   });
   it("returns cursor unchanged when supplied", () => {
     const r = parseD2bParams({ cursor: "kobp1.abc.def" });
@@ -188,12 +188,12 @@ describe("R1I-d.2B — normalizeD2bSort", () => {
   it("rejects unsupported sort_by", () => {
     const r = normalizeD2bSort({ sort_by: "updated_at" });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_SORT_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_SORT_INVALID");
   });
   it("rejects ascending order", () => {
     const r = normalizeD2bSort({ sort_order: "asc" });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_SORT_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_SORT_INVALID");
   });
 });
 
@@ -303,7 +303,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: ALT_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_INVALID");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_INVALID");
   });
 
   it("rejects an expired cursor", async () => {
@@ -323,7 +323,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_EXPIRED");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_EXPIRED");
   });
 
   it("rejects a cursor issued under a different operation", async () => {
@@ -341,7 +341,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_OPERATION_MISMATCH");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_OPERATION_MISMATCH");
   });
 
   it("rejects a cursor issued under a different merchant scope", async () => {
@@ -360,7 +360,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_SCOPE_MISMATCH");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_SCOPE_MISMATCH");
   });
 
   it("rejects a cursor issued under a different actor via scope hash", async () => {
@@ -379,7 +379,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_SCOPE_MISMATCH");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_SCOPE_MISMATCH");
   });
 
   it("rejects a cursor issued under a different environment via scope hash", async () => {
@@ -398,7 +398,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_SCOPE_MISMATCH");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_SCOPE_MISMATCH");
   });
 
   it("rejects a subscription cursor issued under a different plan_id", async () => {
@@ -421,7 +421,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_FILTER_MISMATCH");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_FILTER_MISMATCH");
   });
 
   it("rejects a subscription cursor issued under a different status", async () => {
@@ -444,7 +444,7 @@ describe("R1I-d.2B — cursor round trip", () => {
       secretOptions: { secret: TEST_SECRET },
     });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.code).toBe("PAGINATION_CURSOR_FILTER_MISMATCH");
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_FILTER_MISMATCH");
   });
 
   it("rejects a cursor issued under a different sort binding via filter hash", async () => {
