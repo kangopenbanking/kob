@@ -135,11 +135,16 @@ describe("CI14C — test-runner isolation", () => {
   });
 
   it("22. No continue-on-error is added to the policy evaluator step", () => {
-    // Locate the policy step block and ensure no continue-on-error is nearby.
-    const idx = workflow.indexOf("full-suite-policy.mjs");
-    expect(idx).toBeGreaterThan(-1);
-    const window = workflow.slice(Math.max(0, idx - 400), idx + 400);
-    expect(window).not.toMatch(/continue-on-error:\s*true/);
+    // Isolate the policy evaluator step block and assert it does not carry
+    // continue-on-error. Adjacent Vitest run steps legitimately do so to
+    // guarantee three JSON reports are always produced.
+    const stepRegex =
+      /-\s*name:\s*Full-suite policy evaluator[^\n]*\n(?:[^-][^\n]*\n?)*/;
+    const stepBlock = workflow.match(stepRegex);
+    expect(stepBlock, "policy evaluator step must exist").not.toBeNull();
+    expect((stepBlock as RegExpMatchArray)[0]).not.toMatch(
+      /continue-on-error:\s*true/,
+    );
   });
 
   it("23. No managed Lovable Supabase hostname, command or credential is introduced", () => {
