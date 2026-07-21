@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Phase 1B — R1I-d.2B-I1c — JSON/YAML parity and scope enforcement.
 // Fails if the two specs diverge, if unrelated operations or components change
 // vs the I1b closure baseline, or if forbidden pagination shapes appear.
