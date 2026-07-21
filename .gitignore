@@ -49,3 +49,6 @@ tool-versions.json
 environment-preflight.json
 realtime-publication-audit.json
 realtime-publication-audit.log
+
+extension-reproducibility-audit.json
+extension-reproducibility-audit.log
