@@ -4,9 +4,10 @@
 // pg_catalog, relocates, drops or swallows exceptions.
 
 import { describe, expect, it } from "vitest";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+
 
 const ROOT = resolve(__dirname, "../..");
 const MIG = resolve(ROOT, "supabase/migrations");
