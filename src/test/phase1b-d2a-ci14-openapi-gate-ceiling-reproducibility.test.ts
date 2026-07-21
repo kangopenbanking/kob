@@ -34,19 +34,26 @@ const GLOBAL_ALLOW_PATH = path.join(REPO, 'scripts', 'openapi-quality-gates.allo
 const OPENAPI_JSON = path.join(REPO, 'public', 'openapi.json');
 const OPENAPI_YAML = path.join(REPO, 'public', 'openapi.yaml');
 
-function summaryStdout(overrides = {}) {
+type SummaryOverrides = {
+  apiVersion?: string;
+  totalOperations?: number;
+  failures?: number;
+  byGate?: Partial<Record<string, number>>;
+};
+
+function summaryStdout(overrides: SummaryOverrides = {}): string {
+  const byGate: Record<string, number> = { ...GATE_CEILINGS, ...(overrides.byGate || {}) };
+  const failures =
+    overrides.failures !== undefined
+      ? overrides.failures
+      : GATE_KEYS.reduce((a, k) => a + byGate[k], 0);
   const summary = {
     spec: 'public/openapi.json',
-    apiVersion: EXPECTED_API_VERSION,
-    totalOperations: EXPECTED_OPERATION_COUNT,
-    failures: TOTAL_CEILING,
-    byGate: { ...GATE_CEILINGS },
-    ...overrides,
+    apiVersion: overrides.apiVersion ?? EXPECTED_API_VERSION,
+    totalOperations: overrides.totalOperations ?? EXPECTED_OPERATION_COUNT,
+    failures,
+    byGate,
   };
-  if (overrides.byGate) summary.byGate = { ...GATE_CEILINGS, ...overrides.byGate };
-  if (overrides.failures === undefined) {
-    summary.failures = GATE_KEYS.reduce((a, k) => a + summary.byGate[k], 0);
-  }
   return `${SUMMARY_MARKER}\n${JSON.stringify(summary, null, 2)}\n\nFailures:\n[G2] 3 failure(s):\n  - example\n`;
 }
 
