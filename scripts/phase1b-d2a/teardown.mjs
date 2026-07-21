@@ -2,6 +2,7 @@
 // Phase 1B — R1I-d.2A-CI3A §CI3A-7 — Fail-closed teardown.
 // CI12A — cross-step temporary environment cleanup accounting.
 // CI12B — partial-preparation temporary secret-file cleanup.
+// CI12C — removal-exception evidence preservation (bounded, secret-free).
 //
 // Runs after success AND failure. Never touches production. Removes only the
 // disposable containers, volumes, temporary fixtures, and ephemeral secrets
@@ -165,6 +166,55 @@ export function computeTemporaryEnvAccounting(input) {
   };
 }
 
+/**
+ * CI12C — bounded, exception-safe removal of a known temporary secret-file
+ * path. Returns structured evidence without ever revealing the path itself,
+ * the file contents, the cursor secret, or the raw exception message/stack.
+ *
+ * @param {string} path
+ * @param {{ remove?: typeof rmSync, exists?: typeof existsSync }} [deps]
+ */
+export function removeKnownTemporaryPath(path, deps = {}) {
+  const remove = deps.remove || rmSync;
+  const exists = deps.exists || existsSync;
+
+  const existedBefore = Boolean(exists(path));
+  if (!existedBefore) {
+    return {
+      existedBefore: false,
+      removalAttempted: false,
+      removalSucceeded: false,
+      verifiedAbsent: true,
+      errorCode: null,
+    };
+  }
+
+  try {
+    remove(path, { force: true });
+  } catch (error) {
+    const rawCode =
+      error && typeof error.code === "string" && error.code.length > 0
+        ? error.code
+        : "REMOVE_FAILED";
+    return {
+      existedBefore: true,
+      removalAttempted: true,
+      removalSucceeded: false,
+      verifiedAbsent: false,
+      errorCode: rawCode.slice(0, 40),
+    };
+  }
+
+  const verifiedAbsent = !exists(path);
+  return {
+    existedBefore: true,
+    removalAttempted: true,
+    removalSucceeded: verifiedAbsent,
+    verifiedAbsent,
+    errorCode: verifiedAbsent ? null : "REMOVAL_NOT_VERIFIED",
+  };
+}
+
 // Guard so this file can be imported by tests without executing teardown.
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
@@ -249,37 +299,46 @@ if (isMain) {
     summary.errors.push("function env path existed at teardown after verified server-stop removal marker");
   }
 
-  const removeKnownPath = (path, label) => {
-    rmSync(path, { force: true });
-    const verified = !existsSync(path);
-    if (!verified) {
+  const tryRemove = (path, label) => {
+    const evidence = removeKnownTemporaryPath(path);
+    if (!evidence.verifiedAbsent) {
       summary.temporaryEnvRemovalVerificationFailures += 1;
-      summary.errors.push(`${label} temporary env file removal could not be verified`);
+      summary.errors.push(
+        `TEMP_ENV_REMOVAL_FAILED label=${label} code=${evidence.errorCode || "REMOVE_FAILED"}`,
+      );
     }
-    return verified;
+    return evidence;
   };
 
   if (baseEnvPresentAtTeardown) {
-    const verified = removeKnownPath(baseEnvPath, "base");
-    summary.baseTemporaryEnvFileRemovalVerified = verified;
-    if (baseEnvPrepared) {
-      if (verified) summary.temporaryEnvFilesRemovedByTeardown += 1;
-    } else {
+    const evidence = tryRemove(baseEnvPath, "base");
+    summary.baseTemporaryEnvFileRemovalVerified = evidence.verifiedAbsent;
+    if (evidence.verifiedAbsent) {
+      if (baseEnvPrepared) {
+        summary.temporaryEnvFilesRemovedByTeardown += 1;
+      } else {
+        summary.unexpectedTemporaryEnvFilesDiscovered += 1;
+        summary.unexpectedTemporaryEnvFilesRemoved += 1;
+      }
+    } else if (!baseEnvPrepared) {
       summary.unexpectedTemporaryEnvFilesDiscovered += 1;
-      if (verified) summary.unexpectedTemporaryEnvFilesRemoved += 1;
     }
   } else {
     summary.baseTemporaryEnvFileRemovalVerified = true;
   }
 
   if (functionEnvPresentAtTeardown) {
-    const verified = removeKnownPath(functionEnvPath, "function");
-    summary.functionTemporaryEnvFileRemovalVerified = verified;
-    if (!functionEnvPrepared) {
+    const evidence = tryRemove(functionEnvPath, "function");
+    summary.functionTemporaryEnvFileRemovalVerified = evidence.verifiedAbsent;
+    if (evidence.verifiedAbsent) {
+      if (!functionEnvPrepared) {
+        summary.unexpectedTemporaryEnvFilesDiscovered += 1;
+        summary.unexpectedTemporaryEnvFilesRemoved += 1;
+      } else if (!functionEnvRemovedByStop) {
+        summary.temporaryEnvFilesRemovedByTeardown += 1;
+      }
+    } else if (!functionEnvPrepared) {
       summary.unexpectedTemporaryEnvFilesDiscovered += 1;
-      if (verified) summary.unexpectedTemporaryEnvFilesRemoved += 1;
-    } else if (!functionEnvRemovedByStop && verified) {
-      summary.temporaryEnvFilesRemovedByTeardown += 1;
     }
   } else {
     summary.functionTemporaryEnvFileRemovalVerified = true;
