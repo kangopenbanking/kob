@@ -341,8 +341,7 @@ jobs:
 
       - name: Serve gateway-query Edge Function (background, single instance)
         run: |
-          nohup supabase functions serve gateway-query \
-            --no-verify-jwt \
+          nohup supabase functions serve gateway-query --no-verify-jwt \
             --env-file "$D2A_FUNCTION_ENV_FILE" \
             > runtime-serve.log 2>&1 &
           echo $! > runtime-serve.pid
