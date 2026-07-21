@@ -6,7 +6,7 @@
 // created by the bootstrap script.
 //
 // Corrections vs CI3:
-//   * Removes `|| true` masking.
+//   * Removes shell success-masking on the teardown pipeline.
 //   * Captures the exit code of every teardown command explicitly.
 //   * Writes teardown-results.json (also uploaded by the workflow with
 //     if: always()).
