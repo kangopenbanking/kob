@@ -50,12 +50,12 @@ serve(async (req) => {
       case 'list-settlements': return await listSimple(p, 'gateway_settlements', 'list-settlements');
       case 'list-disputes': return await listSimple(p, 'gateway_disputes', 'list-disputes');
       case 'list-beneficiaries': return await handleD2aList(p, { id: 'gatewayListBeneficiaries', table: 'gateway_beneficiaries' });
-      case 'list-customers': return await handleD2bList(p, D2B_ROUTES['list-customers']);
+      case 'list-customers': return await executeD2bList(p, D2B_ROUTES['list-customers']);
       case 'list-customer-tokens': return await listCustomerTokens(p);
       case 'list-payment-links': return await handleD2aList(p, { id: 'gatewayListPaymentLinks', table: 'gateway_payment_links' });
-      case 'list-payment-plans': return await handleD2bList(p, D2B_ROUTES['list-payment-plans']);
+      case 'list-payment-plans': return await executeD2bList(p, D2B_ROUTES['list-payment-plans']);
       case 'list-subaccounts': return await handleD2aList(p, { id: 'gatewayListSubaccounts', table: 'gateway_subaccounts' });
-      case 'list-subscriptions': return await handleD2bList(p, D2B_ROUTES['list-subscriptions']);
+      case 'list-subscriptions': return await executeD2bList(p, D2B_ROUTES['list-subscriptions']);
       case 'list-virtual-accounts': return await handleD2aList(p, { id: 'gatewayListVirtualAccounts', table: 'gateway_virtual_accounts' });
 
       case 'list-funding-intents': return await listFundingIntents(p);
