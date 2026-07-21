@@ -10,6 +10,7 @@
 # CI10A IPv6 loopback hostname normalisation
 # CI11 auth-parented representative fixture
 # CI12 ephemeral Edge Runtime cursor-secret propagation
+# CI12A cross-step temporary environment cleanup accounting
 
 
 
