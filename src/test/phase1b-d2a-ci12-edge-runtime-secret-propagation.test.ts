@@ -554,3 +554,177 @@ describe("Phase 1B R1I-d.2A CI12B — partial-preparation temporary secret-file 
     }
   });
 });
+
+describe("Phase 1B R1I-d.2A CI12C — removal-exception evidence preservation", () => {
+  it("C1. workflow header records CI12C without changing env-file propagation", () => {
+    expect(WORKFLOW).toMatch(
+      /# CI12C temporary environment removal-exception evidence preservation/,
+    );
+    expect(WORKFLOW).toMatch(/--env-file "\$D2A_FUNCTION_ENV_FILE"/);
+    expect(WORKFLOW).toMatch(/chmod 600 "\$FUNCTION_ENV_FILE"/);
+  });
+
+  it("C2. removeKnownTemporaryPath: missing file reports no attempt and verifiedAbsent", () => {
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-c2-missing", {
+      remove: () => {
+        throw new Error("should not be called");
+      },
+      exists: () => false,
+    });
+    expect(r.existedBefore).toBe(false);
+    expect(r.removalAttempted).toBe(false);
+    expect(r.verifiedAbsent).toBe(true);
+    expect(r.errorCode).toBeNull();
+  });
+
+  it("C3. removeKnownTemporaryPath: successful removal is verified", () => {
+    let present = true;
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-c3", {
+      remove: () => {
+        present = false;
+      },
+      exists: () => present,
+    });
+    expect(r.removalAttempted).toBe(true);
+    expect(r.removalSucceeded).toBe(true);
+    expect(r.verifiedAbsent).toBe(true);
+    expect(r.errorCode).toBeNull();
+  });
+
+  it("C4. removeKnownTemporaryPath: EACCES exception is caught and reported", () => {
+    const err: NodeJS.ErrnoException = new Error("permission denied");
+    err.code = "EACCES";
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-c4", {
+      remove: () => {
+        throw err;
+      },
+      exists: () => true,
+    });
+    expect(r.removalSucceeded).toBe(false);
+    expect(r.verifiedAbsent).toBe(false);
+    expect(r.errorCode).toBe("EACCES");
+  });
+
+  it("C5. removeKnownTemporaryPath: remove returns but file still exists", () => {
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-c5", {
+      remove: () => {},
+      exists: () => true,
+    });
+    expect(r.verifiedAbsent).toBe(false);
+    expect(r.errorCode).toBe("REMOVAL_NOT_VERIFIED");
+  });
+
+  it("C6. removeKnownTemporaryPath: evidence never contains path, secret, stack or raw message", () => {
+    const err: NodeJS.ErrnoException = new Error(
+      "raw message with SECRET=deadbeef and /tmp/kob-d2a-c6",
+    );
+    err.code = "EPERM";
+    err.stack = "Error: raw stack line one\n    at frame";
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-c6-secret-path", {
+      remove: () => {
+        throw err;
+      },
+      exists: () => true,
+    });
+    const serialized = JSON.stringify(r);
+    expect(serialized).not.toContain("/tmp/kob-d2a-c6");
+    expect(serialized).not.toContain("SECRET=deadbeef");
+    expect(serialized).not.toContain("raw message");
+    expect(serialized).not.toContain("raw stack");
+    expect(r.errorCode).toBe("EPERM");
+  });
+
+  it("C7. removeKnownTemporaryPath: bogus error code is bounded to 40 chars", () => {
+    const err: NodeJS.ErrnoException = new Error("boom");
+    err.code = "X".repeat(200);
+    const r = removeKnownTemporaryPath("/tmp/kob-d2a-c7", {
+      remove: () => {
+        throw err;
+      },
+      exists: () => true,
+    });
+    expect(r.errorCode!.length).toBeLessThanOrEqual(40);
+  });
+
+  it("C8. teardown source uses removeKnownTemporaryPath for both known paths", () => {
+    expect(TEARDOWN).toMatch(/export function removeKnownTemporaryPath/);
+    const uses = TEARDOWN.match(/removeKnownTemporaryPath\(/g) || [];
+    // one declaration + at least one call inside tryRemove
+    expect(uses.length).toBeGreaterThanOrEqual(2);
+    expect(TEARDOWN).toMatch(/tryRemove\(baseEnvPath, "base"\)/);
+    expect(TEARDOWN).toMatch(/tryRemove\(functionEnvPath, "function"\)/);
+  });
+
+  it("C9. teardown source no longer contains an unguarded rmSync of a temp env path", () => {
+    // rmSync is still used for the tmp fixture directory only; env-path removal
+    // goes through removeKnownTemporaryPath.
+    expect(TEARDOWN).not.toMatch(/rmSync\(baseEnvPath/);
+    expect(TEARDOWN).not.toMatch(/rmSync\(functionEnvPath/);
+  });
+
+  it("C10. teardown increments temporaryEnvRemovalVerificationFailures on failure", () => {
+    expect(TEARDOWN).toMatch(
+      /!evidence\.verifiedAbsent[\s\S]{0,200}temporaryEnvRemovalVerificationFailures\s*\+=\s*1/,
+    );
+  });
+
+  it("C11. teardown emits bounded TEMP_ENV_REMOVAL_FAILED evidence with label and code only", () => {
+    expect(TEARDOWN).toMatch(
+      /TEMP_ENV_REMOVAL_FAILED label=\$\{label\} code=\$\{evidence\.errorCode/,
+    );
+    // Absolute paths, secrets and stacks are never appended to errors.
+    expect(TEARDOWN).not.toMatch(/errors\.push\([^)]*error\.stack/);
+    expect(TEARDOWN).not.toMatch(/errors\.push\([^)]*error\.message/);
+    expect(TEARDOWN).not.toMatch(/errors\.push\([^)]*KOB_CURSOR_HMAC_SECRET/);
+  });
+
+  it("C12. teardown does NOT increment removed counters when verification fails", () => {
+    // Removed counters are guarded by `if (evidence.verifiedAbsent)`.
+    expect(TEARDOWN).toMatch(
+      /if \(evidence\.verifiedAbsent\)[\s\S]{0,400}temporaryEnvFilesRemovedByTeardown\s*\+=\s*1/,
+    );
+    expect(TEARDOWN).toMatch(
+      /if \(evidence\.verifiedAbsent\)[\s\S]{0,400}unexpectedTemporaryEnvFilesRemoved\s*\+=\s*1/,
+    );
+  });
+
+  it("C13. teardown writes teardown-results.json before process.exit", () => {
+    const writeIdx = TEARDOWN.indexOf('writeFileSync("teardown-results.json"');
+    const exitIdx = TEARDOWN.lastIndexOf("process.exit(summary.teardownExitCode)");
+    expect(writeIdx).toBeGreaterThan(-1);
+    expect(exitIdx).toBeGreaterThan(writeIdx);
+  });
+
+  it("C14. teardown sets teardownExitCode=12 when removal verification fails", () => {
+    // removalVerificationFailures feeds into temporaryEnvCleanupAccountingComplete,
+    // which drives teardownExitCode = 12.
+    expect(TEARDOWN).toMatch(/temporaryEnvRemovalVerificationFailures\s*===\s*0/);
+    expect(TEARDOWN).toMatch(
+      /!summary\.temporaryEnvCleanupAccountingComplete[\s\S]*teardownExitCode\s*=\s*12/,
+    );
+  });
+
+  it("C15. successful lifecycle helper output is unchanged by CI12C", () => {
+    const r = computeTemporaryEnvAccounting({
+      baseEnvPrepared: true,
+      functionEnvPrepared: true,
+      functionEnvRemovedByStop: true,
+      baseEnvPresentAtTeardown: true,
+      functionEnvPresentAtTeardown: false,
+    });
+    expect(r.temporaryEnvFilesExpected).toBe(2);
+    expect(r.temporaryEnvFilesRemoved).toBe(2);
+    expect(r.residualKnownTemporaryEnvFiles).toBe(0);
+    expect(r.removalVerificationFailures).toBe(0);
+    expect(r.temporaryEnvCleanupAccountingComplete).toBe(true);
+    expect(r.teardownExitCode).toBe(0);
+  });
+
+  it("C16. removeKnownTemporaryPath: default deps do not throw for a non-existent path", () => {
+    const r = removeKnownTemporaryPath(
+      "/tmp/kob-d2a-nonexistent-" + Math.random().toString(36).slice(2),
+    );
+    expect(r.existedBefore).toBe(false);
+    expect(r.verifiedAbsent).toBe(true);
+  });
+});
