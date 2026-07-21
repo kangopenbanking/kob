@@ -298,37 +298,46 @@ if (isMain) {
     summary.errors.push("function env path existed at teardown after verified server-stop removal marker");
   }
 
-  const removeKnownPath = (path, label) => {
-    rmSync(path, { force: true });
-    const verified = !existsSync(path);
-    if (!verified) {
+  const tryRemove = (path, label) => {
+    const evidence = removeKnownTemporaryPath(path);
+    if (!evidence.verifiedAbsent) {
       summary.temporaryEnvRemovalVerificationFailures += 1;
-      summary.errors.push(`${label} temporary env file removal could not be verified`);
+      summary.errors.push(
+        `TEMP_ENV_REMOVAL_FAILED label=${label} code=${evidence.errorCode || "REMOVE_FAILED"}`,
+      );
     }
-    return verified;
+    return evidence;
   };
 
   if (baseEnvPresentAtTeardown) {
-    const verified = removeKnownPath(baseEnvPath, "base");
-    summary.baseTemporaryEnvFileRemovalVerified = verified;
-    if (baseEnvPrepared) {
-      if (verified) summary.temporaryEnvFilesRemovedByTeardown += 1;
-    } else {
+    const evidence = tryRemove(baseEnvPath, "base");
+    summary.baseTemporaryEnvFileRemovalVerified = evidence.verifiedAbsent;
+    if (evidence.verifiedAbsent) {
+      if (baseEnvPrepared) {
+        summary.temporaryEnvFilesRemovedByTeardown += 1;
+      } else {
+        summary.unexpectedTemporaryEnvFilesDiscovered += 1;
+        summary.unexpectedTemporaryEnvFilesRemoved += 1;
+      }
+    } else if (!baseEnvPrepared) {
       summary.unexpectedTemporaryEnvFilesDiscovered += 1;
-      if (verified) summary.unexpectedTemporaryEnvFilesRemoved += 1;
     }
   } else {
     summary.baseTemporaryEnvFileRemovalVerified = true;
   }
 
   if (functionEnvPresentAtTeardown) {
-    const verified = removeKnownPath(functionEnvPath, "function");
-    summary.functionTemporaryEnvFileRemovalVerified = verified;
-    if (!functionEnvPrepared) {
+    const evidence = tryRemove(functionEnvPath, "function");
+    summary.functionTemporaryEnvFileRemovalVerified = evidence.verifiedAbsent;
+    if (evidence.verifiedAbsent) {
+      if (!functionEnvPrepared) {
+        summary.unexpectedTemporaryEnvFilesDiscovered += 1;
+        summary.unexpectedTemporaryEnvFilesRemoved += 1;
+      } else if (!functionEnvRemovedByStop) {
+        summary.temporaryEnvFilesRemovedByTeardown += 1;
+      }
+    } else if (!functionEnvPrepared) {
       summary.unexpectedTemporaryEnvFilesDiscovered += 1;
-      if (verified) summary.unexpectedTemporaryEnvFilesRemoved += 1;
-    } else if (!functionEnvRemovedByStop && verified) {
-      summary.temporaryEnvFilesRemovedByTeardown += 1;
     }
   } else {
     summary.functionTemporaryEnvFileRemovalVerified = true;
