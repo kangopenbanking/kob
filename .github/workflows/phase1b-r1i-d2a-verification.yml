@@ -194,6 +194,9 @@ jobs:
             }, null, 2));
           " "${DB_URL}"
           cat environment-preflight.json
+          # CI12A — mark base env file as prepared only after successful creation
+          test -s .d2a.env
+          echo "D2A_BASE_ENV_PREPARED=true" >> "$GITHUB_ENV"
 
       - name: Environment guard (fail-closed)
         run: |
