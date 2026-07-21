@@ -392,13 +392,15 @@ export async function decodeD2bCursor(input: D2bDecodeInputs): Promise<D2bDecode
     input.secretOptions,
   );
 
-  if (!result.ok) {
+  if (result.ok !== true) {
+    const failure = result as { ok: false; code: string; detail: string };
     // Foundation returns CONFIGURATION_ERROR when the secret is missing at
     // decode time. Re-raise to preserve the fail-closed server semantics.
-    if (result.code === "CONFIGURATION_ERROR") {
-      throw new PaginationConfigurationError(result.detail);
+    if (failure.code === "CONFIGURATION_ERROR") {
+      throw new PaginationConfigurationError(failure.detail);
     }
-    const code = CURSOR_FAILURE_TO_PROBLEM[result.code] ?? "PAGINATION_CURSOR_INVALID";
+    const code = CURSOR_FAILURE_TO_PROBLEM[failure.code as keyof typeof CURSOR_FAILURE_TO_PROBLEM]
+      ?? "PAGINATION_CURSOR_INVALID";
     const title = code === "PAGINATION_CURSOR_EXPIRED"
       ? "Pagination cursor expired"
       : "Invalid pagination cursor";
