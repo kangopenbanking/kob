@@ -5,6 +5,8 @@
 # CI7A strict realtime publication guard enforcement
 # CI8 translation child-data FK reproducibility sweep
 # CI9 pg_cron and pg_net extension reproducibility sweep
+# CI9A generated extension audit evidence provenance repair
+
 
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
@@ -54,6 +56,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Clean generated CI evidence
+        run: |
+          set -euo pipefail
+          rm -f \
+            extension-reproducibility-audit.json \
+            extension-reproducibility-audit.log \
+            realtime-publication-audit.json \
+            realtime-publication-audit.log
+
+
 
       - name: Node (pinned via .nvmrc)
         uses: actions/setup-node@v4

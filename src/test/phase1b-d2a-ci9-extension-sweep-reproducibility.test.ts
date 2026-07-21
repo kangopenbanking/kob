@@ -4,9 +4,10 @@
 // pg_catalog, relocates, drops or swallows exceptions.
 
 import { describe, expect, it } from "vitest";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+
 
 const ROOT = resolve(__dirname, "../..");
 const MIG = resolve(ROOT, "supabase/migrations");
@@ -140,19 +141,55 @@ describe("R1I-d.2A-CI9 — extension reproducibility sweep", () => {
   });
 
   it("audit script exits successfully with clean metrics", () => {
-    const r = spawnSync(process.execPath, [AUDIT], { encoding: "utf8" });
-    expect(r.status).toBe(0);
-    const auditPath = resolve(ROOT, "extension-reproducibility-audit.json");
-    expect(existsSync(auditPath)).toBe(true);
-    const audit = JSON.parse(readFileSync(auditPath, "utf8"));
-    expect(audit.laterUnguarded).toBe(0);
-    expect(audit.invalidSchemaTargets).toBe(0);
-    expect(audit.pgCatalogRequests).toBe(0);
-    expect(audit.alterSetSchema).toBe(0);
-    expect(audit.dropExtension).toBe(0);
-    expect(audit.exceptionSwallowed).toBe(0);
-    expect(audit.pgCronOccurrences).toBeGreaterThan(0);
-    expect(audit.pgNetOccurrences).toBeGreaterThan(0);
+    const auditJsonPath = resolve(ROOT, "extension-reproducibility-audit.json");
+    const auditLogPath = resolve(ROOT, "extension-reproducibility-audit.log");
+    // Remove any previous generated output so we never assert on stale evidence.
+    rmSync(auditJsonPath, { force: true });
+    rmSync(auditLogPath, { force: true });
+    try {
+      const r = spawnSync(process.execPath, [AUDIT], { encoding: "utf8" });
+      expect(r.status).toBe(0);
+      expect(existsSync(auditJsonPath)).toBe(true);
+      const audit = JSON.parse(readFileSync(auditJsonPath, "utf8"));
+      expect(audit.laterUnguarded).toBe(0);
+      expect(audit.invalidSchemaTargets).toBe(0);
+      expect(audit.pgCatalogRequests).toBe(0);
+      expect(audit.alterSetSchema).toBe(0);
+      expect(audit.dropExtension).toBe(0);
+      expect(audit.exceptionSwallowed).toBe(0);
+      expect(audit.pgCronOccurrences).toBeGreaterThan(0);
+      expect(audit.pgNetOccurrences).toBeGreaterThan(0);
+    } finally {
+      // Fail-closed cleanup: never leave generated evidence in the workspace.
+      rmSync(auditJsonPath, { force: true });
+      rmSync(auditLogPath, { force: true });
+    }
+    // Post-condition: workspace is clean regardless of assertion result.
+    expect(existsSync(auditJsonPath)).toBe(false);
+    expect(existsSync(auditLogPath)).toBe(false);
+  });
+
+  it("neither generated audit file is tracked by Git", () => {
+    for (const name of [
+      "extension-reproducibility-audit.json",
+      "extension-reproducibility-audit.log",
+    ]) {
+      const tracked = spawnSync(
+        "git",
+        ["ls-files", "--error-unmatch", name],
+        { cwd: ROOT, encoding: "utf8" },
+      );
+      expect(
+        tracked.status,
+        `${name} must not be tracked by Git`,
+      ).not.toBe(0);
+    }
+  });
+
+  it(".gitignore ignores both generated audit files", () => {
+    const gi = readFileSync(resolve(ROOT, ".gitignore"), "utf8");
+    expect(gi).toMatch(/^extension-reproducibility-audit\.json$/m);
+    expect(gi).toMatch(/^extension-reproducibility-audit\.log$/m);
   });
 
   it("introduces no managed Supabase command or credential", () => {
@@ -171,7 +208,7 @@ describe("R1I-d.2A-CI9 — extension reproducibility sweep", () => {
     }
   });
 
-  it("workflow runs CI5 through CI9 and audits extensions", () => {
+  it("workflow runs CI5 through CI9, audits extensions, and cleans evidence early", () => {
     const yml = readFileSync(WORKFLOW, "utf8");
     for (const t of [
       "phase1b-d2a-ci5-migration-reproducibility.test.ts",
@@ -187,5 +224,18 @@ describe("R1I-d.2A-CI9 — extension reproducibility sweep", () => {
     expect(yml).toContain(
       "# CI9 pg_cron and pg_net extension reproducibility sweep",
     );
+    expect(yml).toContain(
+      "# CI9A generated extension audit evidence provenance repair",
+    );
+    // Early cleanup step must exist and precede the Supabase startup step.
+    expect(yml).toMatch(/Clean generated CI evidence/);
+    const cleanIdx = yml.indexOf("Clean generated CI evidence");
+    const startupIdx = yml.indexOf("Start isolated local Supabase stack");
+    expect(cleanIdx).toBeGreaterThan(-1);
+    expect(startupIdx).toBeGreaterThan(-1);
+    expect(cleanIdx).toBeLessThan(startupIdx);
+    // Evidence artifact still uploads both audit files.
+    expect(yml).toContain("extension-reproducibility-audit.log");
   });
 });
+
