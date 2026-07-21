@@ -439,18 +439,22 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
 
   // Cursor precedence — cursor > kobp1-prefixed starting_after/ending_before.
   // Arbitrary DB ids in starting_after/ending_before are ignored, never
-  // interpreted as unsigned cursors. Multiple distinct cursor-bearing values
-  // fail closed with 400.
+  // interpreted as unsigned cursors. Duplicate cursor values (the same token
+  // repeated across parameter names) are deduplicated by value equality. Only
+  // when two or more DISTINCT tokens are supplied do we fail closed with 400.
   const startingAfter = getParam(p, 'starting_after');
   const endingBefore = getParam(p, 'ending_before');
-  const cursorSources: string[] = [];
-  if (typeof cursor === 'string' && cursor.length > 0) cursorSources.push(cursor);
+  const cursorCandidates: string[] = [];
+  if (typeof cursor === 'string' && cursor.length > 0) cursorCandidates.push(cursor);
   if (typeof startingAfter === 'string' && startingAfter.startsWith('kobp1.')) {
-    cursorSources.push(startingAfter);
+    cursorCandidates.push(startingAfter);
   }
   if (typeof endingBefore === 'string' && endingBefore.startsWith('kobp1.')) {
-    cursorSources.push(endingBefore);
+    cursorCandidates.push(endingBefore);
   }
+  // Deduplicate by value equality — equal tokens repeated across the
+  // canonical `cursor` and the KOB-prefixed aliases must be accepted as one.
+  const cursorSources = Array.from(new Set(cursorCandidates));
   if (cursorSources.length > 1) {
     return d2bProblemResponse({
       status: 400,
@@ -461,11 +465,6 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
     });
   }
   cursor = cursorSources[0] ?? null;
-
-  // Offset — only consulted when no cursor is accepted.
-  const offsetResult = parseD2bOffset(getParam(p, 'offset'));
-  if (!offsetResult.ok) return d2bProblemResponse(offsetResult.error);
-  const offset = offsetResult.offset;
 
   // Operation-specific filter binding.
   const rawPlanId = operationId === 'gatewayListSubscriptions'
