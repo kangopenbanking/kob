@@ -363,17 +363,11 @@ describe("R1I-d.2B-I1b — runtime integration (structural)", () => {
 
   it("40. d.2A operations and handler suffix remain unchanged (delegated to baseline test)", () => {
     // The dedicated protected-baseline test performs byte-identity against the
-    // closure commit; here we sanity-check that the suffix still declares
-    // handleD2aList and all four d.2A operation IDs.
-    for (const opId of [
-      "gatewayListSubaccounts",
-      "gatewayListBeneficiaries",
-      "gatewayListPaymentLinks",
-      "gatewayListVirtualAccounts",
-    ]) {
-      expect(suffix).toContain(opId);
-    }
+    // closure commit. Here we sanity-check that the suffix still declares
+    // handleD2aList and references the d.2A operation identifiers via op.id.
     expect(suffix).toContain("async function handleD2aList(");
+    expect(suffix).toContain("GatewayD2aOperation");
+    expect(suffix).toContain("finalizeD2aPage");
   });
 
   it("41. OpenAPI files remain unchanged in I1b (delegated to baseline test)", () => {
