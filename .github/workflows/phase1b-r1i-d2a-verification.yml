@@ -272,7 +272,7 @@ jobs:
       - name: Build
         run: npm run build 2>&1 | tee build-results.log
 
-      - name: Teardown (stop local Supabase stack)
+      - name: Teardown (always) — stop local Supabase stack
         if: always()
         run: |
           supabase stop --no-backup 2>&1 | tee teardown-results.log || true

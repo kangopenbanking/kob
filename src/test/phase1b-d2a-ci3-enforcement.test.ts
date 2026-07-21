@@ -44,11 +44,11 @@ describe("R1I-d.2A-CI3 §CI3-A — parents-first fixture", () => {
     expect(parent.business_name).toMatch(/D2A Fixture Merchant 0/);
   });
   it("fixture loader truncates and inserts parents BEFORE children", () => {
-    const truncateIdx = FIXTURE.indexOf("TRUNCATE public.${PARENT_TABLE}");
+    const truncateParentIdx = FIXTURE.indexOf("TRUNCATE public.${PARENT_TABLE}");
     const loadParentsIdx = FIXTURE.indexOf("await loadParents(client");
-    const loadChildIdx = FIXTURE.indexOf("for (const table of CHILD_TABLES)");
-    expect(truncateIdx).toBeGreaterThan(0);
-    expect(loadParentsIdx).toBeGreaterThan(truncateIdx);
+    const loadChildIdx = FIXTURE.indexOf("await loadTable(client, table, builder");
+    expect(truncateParentIdx).toBeGreaterThan(0);
+    expect(loadParentsIdx).toBeGreaterThan(truncateParentIdx);
     expect(loadChildIdx).toBeGreaterThan(loadParentsIdx);
   });
   it("verifies orphan-free FK linkage in the summary", () => {
