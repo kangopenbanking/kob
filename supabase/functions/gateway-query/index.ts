@@ -50,7 +50,7 @@ serve(async (req) => {
       case 'list-settlements': return await listSimple(p, 'gateway_settlements', 'list-settlements');
       case 'list-disputes': return await listSimple(p, 'gateway_disputes', 'list-disputes');
       case 'list-beneficiaries': return await handleD2aList(p, { id: 'gatewayListBeneficiaries', table: 'gateway_beneficiaries' });
-      case 'list-customers': return await listCustomers(p);
+      case 'list-customers': return await handleD2bList(p, D2B_ROUTES['list-customers']);
       case 'list-customer-tokens': return await listCustomerTokens(p);
       case 'list-payment-links': return await handleD2aList(p, { id: 'gatewayListPaymentLinks', table: 'gateway_payment_links' });
       case 'list-payment-plans': return await listMerchantResource(p, 'gateway_payment_plans', 'list-payment-plans');
