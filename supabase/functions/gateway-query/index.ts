@@ -392,14 +392,14 @@ function parseD2bOffset(raw: string | null | undefined):
     };
   }
   const n = Number.parseInt(s, 10);
-  if (!Number.isFinite(n) || n < 0) {
+  if (!Number.isSafeInteger(n) || n < 0 || n > Number.MAX_SAFE_INTEGER) {
     return {
       ok: false,
       error: {
         status: 400,
         type: "https://kob.dev/problems/pagination-offset-invalid",
         title: "Invalid pagination offset",
-        detail: "offset must be >= 0",
+        detail: "offset must be a safe non-negative integer",
         code: "PAGINATION_LIMIT_INVALID",
       },
     };
