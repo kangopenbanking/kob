@@ -86,7 +86,8 @@ if (process.env.KOB_CURSOR_HMAC_SECRET) delete process.env.KOB_CURSOR_HMAC_SECRE
 summary.residualSupabaseContainers = safeCount(
   "docker ps -q --filter name=supabase_ --filter name=supabase-db",
 );
-summary.residualRuntimeProcess = safeCount("pgrep -f 'supabase functions serve gateway-query'");
+// Self-excluding pattern (§CI4-7): the bracket class prevents pgrep from matching its own argv.
+summary.residualRuntimeProcess = safeCount("pgrep -f '[s]upabase functions serve gateway-query'");
 
 // 7. Verdict.
 if (summary.supabaseStopExitCode !== 0) summary.teardownExitCode = summary.supabaseStopExitCode;
