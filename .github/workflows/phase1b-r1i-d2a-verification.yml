@@ -1,6 +1,7 @@
 # Phase 1B R1I-d.2A Isolated Verification (R1I-d.2A-CI4 corrections)
 # CI5 canonical clean-reset reproducibility repair
 # CI6 pg_cron extension schema reproducibility repair
+# CI7 realtime publication idempotency sweep
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
@@ -280,7 +281,12 @@ jobs:
         run: |
           if [ -f runtime-serve.pid ]; then kill "$(cat runtime-serve.pid)" || true; fi
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6)
+      - name: Realtime publication audit (CI7)
+        run: |
+          set -o pipefail
+          node scripts/phase1b-d2a/audit-realtime-publications.mjs 2>&1 | tee realtime-publication-audit.log
+
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -288,6 +294,7 @@ jobs:
             src/test/phase1b-d2a-ci3-enforcement.test.ts \
             src/test/phase1b-d2a-ci5-migration-reproducibility.test.ts \
             src/test/phase1b-d2a-ci6-extension-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
       - name: d.2A contract suite
@@ -363,6 +370,8 @@ jobs:
           name: phase1b-r1i-d2a-evidence
           if-no-files-found: ignore
           path: |
+            realtime-publication-audit.json
+            realtime-publication-audit.log
             tool-versions.json
             environment-preflight.json
             supabase-start.log

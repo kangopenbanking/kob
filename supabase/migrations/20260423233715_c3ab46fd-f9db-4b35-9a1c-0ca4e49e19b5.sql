@@ -98,5 +98,32 @@ INSERT INTO public.support_agents (user_id)
 SELECT user_id FROM public.user_roles WHERE role = 'admin'
 ON CONFLICT (user_id) DO NOTHING;
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.support_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.support_conversations;
+-- CI7: guarded — earliest authoritative membership added in
+-- 20260321040418_5fad711d-abaf-4ab1-b8c8-f6f9e08b526a.sql.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'support_messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.support_messages;
+  END IF;
+END
+$$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'support_conversations'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.support_conversations;
+  END IF;
+END
+$$;

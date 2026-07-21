@@ -1,0 +1,89 @@
+{
+  "totalStatements": 43,
+  "uniqueMemberships": 37,
+  "duplicateMemberships": 4,
+  "laterUnguardedRemaining": 0,
+  "duplicates": [
+    {
+      "key": "supabase_realtime|public|account_balances",
+      "publication": "supabase_realtime",
+      "schema": "public",
+      "table": "account_balances",
+      "earliestFile": "20260301020025_76701b98-c45c-476d-a944-2918355c1ccc.sql",
+      "earliestLine": 2,
+      "laterOccurrences": [
+        {
+          "file": "20260326161447_328c5e0b-d0cd-4ad3-a13d-f6f4c79a4733.sql",
+          "line": 12,
+          "guarded": true,
+          "exceptionSwallowed": false
+        }
+      ],
+      "laterUnguardedCount": 0
+    },
+    {
+      "key": "supabase_realtime|public|transactions",
+      "publication": "supabase_realtime",
+      "schema": "public",
+      "table": "transactions",
+      "earliestFile": "20260301020025_76701b98-c45c-476d-a944-2918355c1ccc.sql",
+      "earliestLine": 3,
+      "laterOccurrences": [
+        {
+          "file": "20260326161447_328c5e0b-d0cd-4ad3-a13d-f6f4c79a4733.sql",
+          "line": 26,
+          "guarded": true,
+          "exceptionSwallowed": false
+        }
+      ],
+      "laterUnguardedCount": 0
+    },
+    {
+      "key": "supabase_realtime|public|support_messages",
+      "publication": "supabase_realtime",
+      "schema": "public",
+      "table": "support_messages",
+      "earliestFile": "20260321040418_5fad711d-abaf-4ab1-b8c8-f6f9e08b526a.sql",
+      "earliestLine": 138,
+      "laterOccurrences": [
+        {
+          "file": "20260422011413_02e1c2e1-d7f2-4c68-9e44-6f690db8c4c0.sql",
+          "line": 192,
+          "guarded": false,
+          "exceptionSwallowed": true
+        },
+        {
+          "file": "20260423233715_c3ab46fd-f9db-4b35-9a1c-0ca4e49e19b5.sql",
+          "line": 112,
+          "guarded": true,
+          "exceptionSwallowed": false
+        }
+      ],
+      "laterUnguardedCount": 0
+    },
+    {
+      "key": "supabase_realtime|public|support_conversations",
+      "publication": "supabase_realtime",
+      "schema": "public",
+      "table": "support_conversations",
+      "earliestFile": "20260321040418_5fad711d-abaf-4ab1-b8c8-f6f9e08b526a.sql",
+      "earliestLine": 139,
+      "laterOccurrences": [
+        {
+          "file": "20260422011413_02e1c2e1-d7f2-4c68-9e44-6f690db8c4c0.sql",
+          "line": 188,
+          "guarded": false,
+          "exceptionSwallowed": true
+        },
+        {
+          "file": "20260423233715_c3ab46fd-f9db-4b35-9a1c-0ca4e49e19b5.sql",
+          "line": 126,
+          "guarded": true,
+          "exceptionSwallowed": false
+        }
+      ],
+      "laterUnguardedCount": 0
+    }
+  ],
+  "laterUnguarded": []
+}

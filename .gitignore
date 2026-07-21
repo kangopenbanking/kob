@@ -47,3 +47,5 @@ index-definition-parity.json
 teardown-results.json
 tool-versions.json
 environment-preflight.json
+realtime-publication-audit.json
+realtime-publication-audit.log
