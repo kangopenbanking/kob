@@ -294,7 +294,16 @@ jobs:
           test -s realtime-publication-audit.json
           test -s realtime-publication-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8)
+      - name: Extension reproducibility audit (CI9)
+        run: |
+          set -euo pipefail
+          rm -f extension-reproducibility-audit.json extension-reproducibility-audit.log
+          node scripts/phase1b-d2a/audit-extension-reproducibility.mjs \
+            2>&1 | tee extension-reproducibility-audit.log
+          test -s extension-reproducibility-audit.json
+          test -s extension-reproducibility-audit.log
+
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -304,7 +313,9 @@ jobs:
             src/test/phase1b-d2a-ci6-extension-reproducibility.test.ts \
             src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts \
             src/test/phase1b-d2a-ci8-translation-fk-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci9-extension-sweep-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
+
 
       - name: d.2A contract suite
         run: npx vitest run src/test/pagination-gateway-d2a-contract.test.ts
