@@ -1,6 +1,6 @@
 # Kang Open Banking — API Changelog
 
-Current API version: **4.53.1** · Last updated: **2026-07-16**
+Current API version: **4.53.1** · Last updated: **2026-07-21**
 
 > Source of truth is [`public/changelog.json`](./changelog.json). This Markdown file is regenerated from it (`npm run changelog:md`). See ORDER P7 (Changelog Rule) — every API change must be documented within 48 hours of deployment.
 
