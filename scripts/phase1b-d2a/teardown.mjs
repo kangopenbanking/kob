@@ -2,6 +2,7 @@
 // Phase 1B — R1I-d.2A-CI3A §CI3A-7 — Fail-closed teardown.
 // CI12A — cross-step temporary environment cleanup accounting.
 // CI12B — partial-preparation temporary secret-file cleanup.
+// CI12C — removal-exception evidence preservation (bounded, secret-free).
 //
 // Runs after success AND failure. Never touches production. Removes only the
 // disposable containers, volumes, temporary fixtures, and ephemeral secrets
