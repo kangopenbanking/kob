@@ -55,6 +55,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Clean generated CI evidence
+        run: |
+          set -euo pipefail
+          rm -f \
+            extension-reproducibility-audit.json \
+            extension-reproducibility-audit.log \
+            realtime-publication-audit.json \
+            realtime-publication-audit.log
+
+
+
       - name: Node (pinned via .nvmrc)
         uses: actions/setup-node@v4
         with:
