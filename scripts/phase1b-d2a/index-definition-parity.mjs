@@ -31,28 +31,32 @@ export function extractIndexes(sql) {
   return results;
 }
 
-function stringify(entry) {
+export function stringify(entry) {
   return `${entry.name}|${entry.table}|${entry.columns.join(",")}`;
 }
 
-const canonical = extractIndexes(readFileSync(CANONICAL, "utf8"));
-const concurrent = extractIndexes(readFileSync(CONCURRENT, "utf8"));
+export function compareParity() {
+  const canonical = extractIndexes(readFileSync(CANONICAL, "utf8"));
+  const concurrent = extractIndexes(readFileSync(CONCURRENT, "utf8"));
+  const canonKeys = canonical.map(stringify).sort();
+  const concKeys = concurrent.map(stringify).sort();
+  const identical = canonKeys.length === concKeys.length &&
+    canonKeys.every((k, i) => k === concKeys[i]);
+  return {
+    canonicalCount: canonical.length,
+    concurrentCount: concurrent.length,
+    canonical,
+    concurrent,
+    structurallyIdentical: identical,
+    verdict: identical && canonical.length === 4 ? "PASS" : "FAIL",
+  };
+}
 
-const canonKeys = canonical.map(stringify).sort();
-const concKeys = concurrent.map(stringify).sort();
-
-const identical = canonKeys.length === concKeys.length &&
-  canonKeys.every((k, i) => k === concKeys[i]);
-
-const summary = {
-  canonicalCount: canonical.length,
-  concurrentCount: concurrent.length,
-  canonical,
-  concurrent,
-  structurallyIdentical: identical,
-  verdict: identical && canonical.length === 4 ? "PASS" : "FAIL",
-};
-
-writeFileSync("index-definition-parity.json", JSON.stringify(summary, null, 2));
-process.stdout.write(JSON.stringify({ step: "index_definition_parity", verdict: summary.verdict }) + "\n");
-if (summary.verdict !== "PASS") process.exit(1);
+const isCli = import.meta.url === `file://${process.argv[1]}` ||
+  (process.argv[1] && process.argv[1].endsWith("index-definition-parity.mjs"));
+if (isCli) {
+  const summary = compareParity();
+  writeFileSync("index-definition-parity.json", JSON.stringify(summary, null, 2));
+  process.stdout.write(JSON.stringify({ step: "index_definition_parity", verdict: summary.verdict }) + "\n");
+  if (summary.verdict !== "PASS") process.exit(1);
+}
