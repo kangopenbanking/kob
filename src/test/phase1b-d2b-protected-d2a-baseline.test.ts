@@ -51,6 +51,35 @@ function gitLsTree(path: string): string[] {
   return out.split("\n").filter((l) => l.length > 0);
 }
 
+function gitLsTreeHead(path: string): string[] {
+  const out = execFileSync(
+    "git",
+    ["ls-tree", "-r", "--name-only", "HEAD", "--", path],
+    { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 },
+  );
+  return out.split("\n").filter((l) => l.length > 0);
+}
+
+function assertSetEquality(
+  namespace: string,
+  closurePaths: string[],
+  headPaths: string[],
+  filter: (p: string) => boolean = () => true,
+): void {
+  const closureSet = new Set(closurePaths.filter(filter));
+  const headSet = new Set(headPaths.filter(filter));
+  const added = [...headSet].filter((p) => !closureSet.has(p));
+  const removed = [...closureSet].filter((p) => !headSet.has(p));
+  expect(
+    added,
+    `${namespace}: files added or renamed-in vs closure: ${added.join(", ")}`,
+  ).toEqual([]);
+  expect(
+    removed,
+    `${namespace}: files deleted or renamed-out vs closure: ${removed.join(", ")}`,
+  ).toEqual([]);
+}
+
 function byteIdentical(path: string): void {
   const closureBytes = gitShow(path);
   const currentBytes = readFileSync(resolve(REPO_ROOT, path));
@@ -94,26 +123,33 @@ describe.runIf(resolution.ok)("R1I-d.2B — protected d.2A byte identity", () =>
   }
 
   it("byte-identical: every file in scripts/phase1b-d2a/", () => {
-    const paths = gitLsTree("scripts/phase1b-d2a");
-    expect(paths.length).toBeGreaterThan(0);
-    for (const p of paths) byteIdentical(p);
+    const closurePaths = gitLsTree("scripts/phase1b-d2a");
+    const headPaths = gitLsTreeHead("scripts/phase1b-d2a");
+    expect(closurePaths.length).toBeGreaterThan(0);
+    assertSetEquality("scripts/phase1b-d2a", closurePaths, headPaths);
+    for (const p of closurePaths) byteIdentical(p);
   });
 
   it("byte-identical: every d.2A migration + rollback (canonical + concurrent)", () => {
-    const pending = gitLsTree("supabase/pending-migrations/phase-1")
-      .filter((p) => p.includes("_phase-1b-r1i-d2a-"));
-    const ops = gitLsTree("supabase/pending-operations/phase-1")
-      .filter((p) => p.includes("_phase-1b-r1i-d2a-"));
-    expect(pending.length).toBeGreaterThan(0);
-    expect(ops.length).toBeGreaterThan(0);
-    for (const p of [...pending, ...ops]) byteIdentical(p);
+    const filterD2a = (p: string) => p.includes("_phase-1b-r1i-d2a-");
+    const closurePending = gitLsTree("supabase/pending-migrations/phase-1").filter(filterD2a);
+    const closureOps = gitLsTree("supabase/pending-operations/phase-1").filter(filterD2a);
+    const headPending = gitLsTreeHead("supabase/pending-migrations/phase-1").filter(filterD2a);
+    const headOps = gitLsTreeHead("supabase/pending-operations/phase-1").filter(filterD2a);
+    expect(closurePending.length).toBeGreaterThan(0);
+    expect(closureOps.length).toBeGreaterThan(0);
+    assertSetEquality("d.2A pending-migrations", closurePending, headPending);
+    assertSetEquality("d.2A pending-operations", closureOps, headOps);
+    for (const p of [...closurePending, ...closureOps]) byteIdentical(p);
   });
 
   it("byte-identical: every d.2A test under src/test/", () => {
-    const all = gitLsTree("src/test");
-    const d2aTests = all.filter((p) => /phase1b-d2a-|pagination-gateway-d2a-/.test(p));
-    expect(d2aTests.length).toBeGreaterThan(0);
-    for (const p of d2aTests) byteIdentical(p);
+    const filterD2a = (p: string) => /phase1b-d2a-|pagination-gateway-d2a-/.test(p);
+    const closureTests = gitLsTree("src/test").filter(filterD2a);
+    const headTests = gitLsTreeHead("src/test").filter(filterD2a);
+    expect(closureTests.length).toBeGreaterThan(0);
+    assertSetEquality("d.2A tests", closureTests, headTests);
+    for (const p of closureTests) byteIdentical(p);
   });
 });
 

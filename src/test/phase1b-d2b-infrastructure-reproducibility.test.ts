@@ -53,6 +53,17 @@ function read(path: string): string {
   return readFileSync(path, "utf8");
 }
 
+/**
+ * Strip SQL `--` line comments so assertions target actual DDL rather than
+ * prose in headers. Preserves newlines so line-anchored regexes still work.
+ */
+function stripComments(sql: string): string {
+  return sql
+    .split("\n")
+    .map((line) => line.replace(/--.*$/, ""))
+    .join("\n");
+}
+
 describe("R1I-d.2B — SQL artifact presence", () => {
   it("canonical migration exists at the ratified timestamp", () => {
     expect(existsSync(CANONICAL)).toBe(true);
@@ -77,9 +88,10 @@ describe("R1I-d.2B — canonical SQL structure", () => {
     expect(sql.trimEnd().endsWith("COMMIT;")).toBe(true);
   });
   it("contains exactly three CREATE INDEX statements and no CONCURRENTLY", () => {
-    const createIndex = sql.match(/CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS/gi) ?? [];
+    const body = stripComments(sql);
+    const createIndex = body.match(/CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS/gi) ?? [];
     expect(createIndex.length).toBe(3);
-    expect(/CREATE\s+INDEX\s+CONCURRENTLY/i.test(sql)).toBe(false);
+    expect(/CREATE\s+INDEX\s+CONCURRENTLY/i.test(body)).toBe(false);
   });
   it("each approved index name appears with the ratified column order", () => {
     for (const idx of EXPECTED_INDEX_NAMES) {
@@ -101,7 +113,7 @@ describe("R1I-d.2B — canonical SQL structure", () => {
     expect(sql).not.toContain("gateway_virtual_accounts");
   });
   it("does NOT create the deferred wider subscriptions composite index", () => {
-    expect(/plan_id,\s*status,\s*created_at/i.test(sql)).toBe(false);
+    expect(/plan_id,\s*status,\s*created_at/i.test(stripComments(sql))).toBe(false);
   });
   it("performs exact-definition verification via pg_temp.d2b_ensure_index", () => {
     expect(sql).toContain("pg_temp.d2b_ensure_index");
@@ -149,7 +161,58 @@ describe("R1I-d.2B — concurrent SQL structure", () => {
     }
   });
   it("does NOT create the deferred wider subscriptions composite index", () => {
-    expect(/plan_id,\s*status,\s*created_at/i.test(sql)).toBe(false);
+    expect(/plan_id,\s*status,\s*created_at/i.test(stripComments(sql))).toBe(false);
+  });
+
+  it("has a preflight AND postflight DO block for every approved index", () => {
+    for (const idx of EXPECTED_INDEX_NAMES) {
+      // Approved index names are literals, not user input; embedding directly.
+      const preRe = new RegExp(
+        `DO\\s+\\$preflight_[a-z_]+\\$[\\s\\S]*?${idx}[\\s\\S]*?\\$preflight_[a-z_]+\\$`,
+        "i",
+      );
+      const postRe = new RegExp(
+        `DO\\s+\\$postflight_[a-z_]+\\$[\\s\\S]*?${idx}[\\s\\S]*?\\$postflight_[a-z_]+\\$`,
+        "i",
+      );
+      expect(preRe.test(sql), `missing preflight DO block for ${idx}`).toBe(true);
+      expect(postRe.test(sql), `missing postflight DO block for ${idx}`).toBe(true);
+    }
+  });
+
+  it("preflight blocks reject definition mismatch, invalid, and not-ready states", () => {
+    // Preflight enforcement vocabulary must appear at least once per index.
+    const preflightBlocks = sql.match(/\$preflight_[a-z_]+\$[\s\S]*?\$preflight_[a-z_]+\$/gi) ?? [];
+    expect(preflightBlocks.length).toBe(EXPECTED_INDEX_NAMES.length);
+    for (const block of preflightBlocks) {
+      expect(/exists with a different definition/i.test(block)).toBe(true);
+      expect(/indisvalid\s*=\s*false/i.test(block)).toBe(true);
+      expect(/indisready\s*=\s*false/i.test(block)).toBe(true);
+    }
+  });
+
+  it("postflight blocks enforce presence, definition match, valid, and ready", () => {
+    const postBlocks = sql.match(/\$postflight_[a-z_]+\$[\s\S]*?\$postflight_[a-z_]+\$/gi) ?? [];
+    expect(postBlocks.length).toBe(EXPECTED_INDEX_NAMES.length);
+    for (const block of postBlocks) {
+      expect(/missing after CREATE/i.test(block)).toBe(true);
+      expect(/definition mismatch/i.test(block)).toBe(true);
+      expect(/indisvalid\s*=\s*false/i.test(block)).toBe(true);
+      expect(/indisready\s*=\s*false/i.test(block)).toBe(true);
+    }
+  });
+
+  it("rejects a hypothetical concurrent SQL that omits verification blocks", () => {
+    // Guardrail: if a future author strips the DO blocks, this suite must fail.
+    // We simulate the stripped variant and prove the assertions above would
+    // reject it, without mutating the real artifact on disk.
+    const stripped = sql.replace(/DO\s+\$(?:pre|post)flight_[a-z_]+\$[\s\S]*?\$(?:pre|post)flight_[a-z_]+\$;?/gi, "");
+    for (const idx of EXPECTED_INDEX_NAMES) {
+      const preRe = new RegExp(`\\$preflight_[a-z_]+\\$[\\s\\S]*?${idx}`, "i");
+      const postRe = new RegExp(`\\$postflight_[a-z_]+\\$[\\s\\S]*?${idx}`, "i");
+      expect(preRe.test(stripped)).toBe(false);
+      expect(postRe.test(stripped)).toBe(false);
+    }
   });
 });
 

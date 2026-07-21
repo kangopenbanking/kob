@@ -36,6 +36,7 @@ import {
   type D2bSort,
 } from "../../supabase/functions/gateway-query/_pagination-d2b";
 import {
+  hashFilters,
   PaginationConfigurationError,
   PaginationValidationError,
 } from "../../supabase/functions/_shared/pagination";
@@ -447,19 +448,44 @@ describe("R1I-d.2B — cursor round trip", () => {
     if (r.ok === false) expect(r.error.code).toBe("PAGINATION_CURSOR_FILTER_MISMATCH");
   });
 
-  it("rejects a cursor issued under a different sort binding via filter hash", async () => {
+  it("rejects a cursor whose filter hash reflects a drifted sort context", async () => {
+    // Real sort-context mismatch: bind the cursor to the canonical filter hash
+    // (created_at desc), then decode against a different filter hash produced
+    // via the shared hashFilters helper representing sort_order=asc drift.
+    // The adapter must reject before any runtime query construction, and the
+    // failure must map to PAGINATION_CURSOR_FILTER_MISMATCH.
     const sh = await scope();
-    const fhCanonical = await filterCustomers();
-    // A tampered filter hash simulating a drift in sort binding.
-    const fhOther = await computeD2bFilterHash({
+    const fhCanonical = await computeD2bFilterHash({
       operation: "gatewayListCustomers",
-      sort: { sort_by: "created_at", sort_order: "desc" },
+      sort: CANONICAL_SORT,
     });
-    // For customers, the canonical sort is the only supported combination, so
-    // to prove sort binding is fh-scoped we assert equal fh for equal inputs
-    // and rely on subscriptions cases above for drift coverage.
-    expect(fhCanonical).toBe(fhOther);
-    expect(sh).toMatch(/^[0-9a-f]{64}$/);
+    const fhDrifted = await hashFilters({
+      sort_by: "created_at",
+      sort_order: "asc",
+    });
+    expect(fhCanonical).not.toBe(fhDrifted);
+
+    const token = await encodeD2bCursor({
+      operation: "gatewayListCustomers",
+      scopeHash: sh, filterHash: fhCanonical,
+      row: { createdAt: "2026-04-01T00:00:00Z", id: "cus_1" },
+      secretOptions: { secret: TEST_SECRET },
+    });
+    const r = await decodeD2bCursor({
+      token, operation: "gatewayListCustomers",
+      scopeHash: sh, filterHash: fhDrifted,
+      secretOptions: { secret: TEST_SECRET },
+    });
+    expect(r.ok).toBe(false);
+    if (r.ok === false) {
+      expect(r.error.code).toBe("PAGINATION_CURSOR_FILTER_MISMATCH");
+    }
+  });
+
+  it("normalizeD2bSort rejects sort_order=asc before any runtime query construction", () => {
+    const r = normalizeD2bSort({ sort_order: "asc" });
+    expect(r.ok).toBe(false);
+    if (r.ok === false) expect(r.error.code).toBe("PAGINATION_SORT_INVALID");
   });
 
   it("supports duplicate-timestamp positions via unique id tie-breaker", async () => {
