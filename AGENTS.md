@@ -113,8 +113,8 @@ agent MUST NOT:
 |-------|--------|
 | R1I-d.2A | CLOSED — PROTECTED |
 | R1I-d.2B-I1a | CLOSED — PROTECTED FOUNDATION (commit `aa8124e5ee03c87acdc3615cf85d78c36855882b`) |
-| R1I-d.2B-I1b | AUTHORISED FOR IMPLEMENTATION (this turn) |
-| R1I-d.2B-I1c | NOT AUTHORISED |
+| R1I-d.2B-I1b | CLOSED — PROTECTED RUNTIME (commit `1485c5593d5b712043564ee68a7274eacb8f185d`) |
+| R1I-d.2B-I1c | AUTHORISED FOR IMPLEMENTATION (this turn) |
 | R1I-d.2B-I1d | NOT AUTHORISED |
 | R1I-d.2C | NOT AUTHORISED |
 | R1I-d.2D | NOT AUTHORISED |
@@ -134,11 +134,29 @@ The R1I-d.2B-I1a closure is a **protected foundation**. Its protected artifacts 
 - `src/test/phase1b-d2b-infrastructure-reproducibility.test.ts`;
 - the `supabase/pending-migrations/phase-1/README.md` d.2B inventory entries.
 
-The only I1a test permitted to change during I1b is
-`src/test/phase1b-d2b-protected-d2a-baseline.test.ts`, and only to replace the
-expired I1a whole-file `gateway-query/index.ts` runtime constraint with the
-protected-suffix rule (anchor-onward byte identity, plus OpenAPI unchanged).
-No other Phase Guardian rule is weakened.
+The R1I-d.2B-I1b closure is a **protected runtime**. Its protected artifacts include:
+
+- the d.2B block inside `supabase/functions/gateway-query/index.ts`, positioned
+  strictly before the `// ─── Phase 1B — R1I-d.2A` anchor;
+- `src/test/pagination-gateway-d2b-runtime-integration.test.ts`;
+- the exact three-route dispatch for `list-customers`, `list-payment-plans`,
+  and `list-subscriptions`;
+- the cursor / offset precedence rule (cursor resolved first; offset parsed
+  only when no cursor is supplied);
+- the cursor-candidate deduplication across `cursor`, `starting_after`, and
+  `ending_before` (repeated identical tokens accepted, distinct tokens rejected);
+- the d.2B-local 5xx wrapper (`executeD2bList`) that preserves the four
+  `X-Pagination-*` CORS exposure headers on server failures;
+- the protected d.2A suffix (anchor-onward byte identity).
+
+The only I1b test permitted to change during I1c is
+`src/test/phase1b-d2b-protected-d2a-baseline.test.ts`, and only to retire the
+expired I1b constraint that both complete OpenAPI files remain byte-identical.
+It is replaced by (a) deep-equality of d.2A op nodes vs the d.2A closure, (b)
+deep-equality of every non-d.2B op node vs the I1b closure, (c) byte-identity
+of `gateway-query/index.ts` vs the I1b closure, (d) byte-identity of
+`_pagination-d2b.ts` and every d.2B SQL artifact vs the I1a closure, and
+(e) an empty component allowlist. No other Phase Guardian rule is weakened.
 
 Deployment: NOT AUTHORISED. Managed Supabase access: NOT AUTHORISED.
 
