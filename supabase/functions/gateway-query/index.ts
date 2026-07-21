@@ -506,6 +506,17 @@ async function handleD2bList(p: any, operationId: GatewayD2bOperationId): Promis
     cursorPosition = { createdAt: decoded.createdAt, id: decoded.id };
   }
 
+  // Offset — cursor precedence: parsed and validated ONLY when no cursor was
+  // accepted. When a cursor is accepted, any `offset` value on the request
+  // (including invalid, negative, non-numeric, or unsafe integer values) is
+  // ignored entirely — never read, parsed, or applied.
+  let offset = 0;
+  if (cursorPosition === null) {
+    const offsetResult = parseD2bOffset(getParam(p, 'offset'));
+    if (!offsetResult.ok) return d2bProblemResponse(offsetResult.error);
+    offset = offsetResult.offset;
+  }
+
   // Build keyset query. Every d.2B collection query applies the verified
   // merchant id via .eq("merchant_id", verifiedMerchantId).
   const select = operationId === 'gatewayListSubscriptions'
