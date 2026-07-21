@@ -26,6 +26,10 @@ const GUARD_RE =
   /pg_publication_tables[\s\S]*?pubname\s*=\s*'([^']+)'[\s\S]*?(?:schemaname\s*=\s*'([^']+)'[\s\S]*?)?tablename\s*=\s*'([^']+)'/gi;
 const EXCEPTION_RE = /EXCEPTION\s+WHEN\s+(?:duplicate_object|OTHERS)/i;
 
+function guardKey(publication, schema, table) {
+  return `${publication}|${schema ?? "public"}|${table}`;
+}
+
 function analyze(virtualFiles = null) {
   const files = virtualFiles
     ? Object.keys(virtualFiles).sort()
@@ -39,13 +43,16 @@ function analyze(virtualFiles = null) {
       : readFileSync(join(MIGRATIONS_DIR, file), "utf8");
     const lines = text.split("\n");
 
-    const guardsByTable = new Map();
+    const guardsByMembership = new Map();
     for (const m of text.matchAll(GUARD_RE)) {
-      const tbl = m[3];
+      const publication = m[1];
+      const schema = m[2] ?? "public";
+      const table = m[3];
       const idx = m.index ?? 0;
       const line = text.slice(0, idx).split("\n").length;
-      if (!guardsByTable.has(tbl)) guardsByTable.set(tbl, []);
-      guardsByTable.get(tbl).push(line);
+      const key = guardKey(publication, schema, table);
+      if (!guardsByMembership.has(key)) guardsByMembership.set(key, []);
+      guardsByMembership.get(key).push(line);
     }
 
     for (const m of text.matchAll(STMT_RE)) {
@@ -55,12 +62,15 @@ function analyze(virtualFiles = null) {
       const idx = m.index ?? 0;
       const stmtLine = text.slice(0, idx).split("\n").length;
 
-      const guardLines = guardsByTable.get(table) ?? [];
+      const key = guardKey(publication, schema, table);
+      const guardLines = guardsByMembership.get(key) ?? [];
       const guarded = guardLines.some(
         (gl) => gl <= stmtLine && stmtLine - gl <= 30,
       );
 
-      const window = lines.slice(stmtLine - 1, stmtLine + 15).join("\n");
+      const window = lines
+        .slice(Math.max(0, stmtLine - 15), stmtLine + 15)
+        .join("\n");
       const exceptionSwallowed = EXCEPTION_RE.test(window);
 
       statements.push({
@@ -69,7 +79,7 @@ function analyze(virtualFiles = null) {
         publication,
         schema,
         table,
-        key: `${publication}|${schema}|${table}`,
+        key,
         guarded,
         exceptionSwallowed,
       });
@@ -111,7 +121,7 @@ function analyze(virtualFiles = null) {
   // NOT protect a later duplicate.
   const laterGuarded = laterOccurrences.filter((o) => o.guarded === true);
   const laterExceptionSwallowed = laterOccurrences.filter(
-    (o) => o.guarded !== true && o.exceptionSwallowed === true,
+    (o) => o.exceptionSwallowed === true,
   );
   const laterUnguarded = laterOccurrences.filter((o) => o.guarded !== true);
 
@@ -154,6 +164,30 @@ if (process.argv.includes("--self-check")) {
   }
   console.log("Self-check OK: exception swallowing rejected as unguarded.");
   process.exit(0);
+}
+
+if (process.argv.includes("--self-check-exception-only-failure")) {
+  // This mode is intentionally expected to exit non-zero. It proves the
+  // production failure path rejects exception swallowing instead of treating
+  // it as an acceptable guard.
+  const virtual = {
+    "0001_earliest.sql":
+      "ALTER PUBLICATION supabase_realtime ADD TABLE public.t;\n",
+    "0002_later_swallow.sql":
+      "DO $$ BEGIN\n" +
+      "  BEGIN\n" +
+      "    ALTER PUBLICATION supabase_realtime ADD TABLE public.t;\n" +
+      "  EXCEPTION WHEN duplicate_object THEN NULL;\n" +
+      "  END;\n" +
+      "END $$;\n",
+  };
+  const r = analyze(virtual);
+  if (r.laterUnguardedRemaining > 0 || r.laterExceptionSwallowedOccurrences > 0) {
+    console.error("Synthetic exception-swallowing later duplicate rejected.");
+    process.exit(1);
+  }
+  console.error("Synthetic exception-swallowing later duplicate was not rejected.");
+  process.exit(2);
 }
 
 const report = analyze();
