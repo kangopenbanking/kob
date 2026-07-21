@@ -11,6 +11,7 @@
 # CI11 auth-parented representative fixture
 # CI12 ephemeral Edge Runtime cursor-secret propagation
 # CI12A cross-step temporary environment cleanup accounting
+# CI12B partial-preparation temporary secret-file cleanup
 
 
 
