@@ -103,8 +103,24 @@ FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 -- ============================================================
 -- Cron jobs: weekly digest Mon 08:00 UTC, monthly statement 1st 08:00 UTC
 -- ============================================================
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS pg_net;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_extension WHERE extname = 'pg_cron'
+  ) THEN
+    CREATE EXTENSION pg_cron WITH SCHEMA extensions;
+  END IF;
+END
+$$;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_extension WHERE extname = 'pg_net'
+  ) THEN
+    CREATE EXTENSION pg_net WITH SCHEMA extensions;
+  END IF;
+END
+$$;
 
 DO $$
 DECLARE

@@ -4,6 +4,8 @@
 # CI7 realtime publication idempotency sweep
 # CI7A strict realtime publication guard enforcement
 # CI8 translation child-data FK reproducibility sweep
+# CI9 pg_cron and pg_net extension reproducibility sweep
+
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
@@ -292,7 +294,16 @@ jobs:
           test -s realtime-publication-audit.json
           test -s realtime-publication-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8)
+      - name: Extension reproducibility audit (CI9)
+        run: |
+          set -euo pipefail
+          rm -f extension-reproducibility-audit.json extension-reproducibility-audit.log
+          node scripts/phase1b-d2a/audit-extension-reproducibility.mjs \
+            2>&1 | tee extension-reproducibility-audit.log
+          test -s extension-reproducibility-audit.json
+          test -s extension-reproducibility-audit.log
+
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -302,7 +313,9 @@ jobs:
             src/test/phase1b-d2a-ci6-extension-reproducibility.test.ts \
             src/test/phase1b-d2a-ci7-realtime-publication-reproducibility.test.ts \
             src/test/phase1b-d2a-ci8-translation-fk-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci9-extension-sweep-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
+
 
       - name: d.2A contract suite
         run: npx vitest run src/test/pagination-gateway-d2a-contract.test.ts
@@ -379,6 +392,9 @@ jobs:
           path: |
             realtime-publication-audit.json
             realtime-publication-audit.log
+            extension-reproducibility-audit.json
+            extension-reproducibility-audit.log
+
             tool-versions.json
             environment-preflight.json
             supabase-start.log
