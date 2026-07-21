@@ -171,8 +171,8 @@ describe("R1I-d.2B-I1b — runtime integration (structural)", () => {
     expect(block).toContain(`"list-subscriptions": "gatewayListSubscriptions"`);
   });
 
-  it("9. only the three approved route keys enter handleD2bList", () => {
-    const callRe = /handleD2bList\(p,\s*D2B_ROUTES\['([^']+)'\]\)/g;
+  it("9. only the three approved route keys enter executeD2bList / handleD2bList", () => {
+    const callRe = /(?:executeD2bList|handleD2bList)\(p,\s*D2B_ROUTES\['([^']+)'\]\)/g;
     const keys = new Set<string>();
     for (const m of src.matchAll(callRe)) keys.add(m[1]);
     expect([...keys].sort()).toEqual([
