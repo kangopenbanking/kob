@@ -335,6 +335,21 @@ async function getPayoutBatch(p: any) {
 }
 
 // ─── Phase 1B — R1I-d.2A: keyset pagination for four gateway list ops ───
+// CI13 — explicit CORS exposure of the four d.2A pagination response headers
+// on both success and error responses. This list is intentionally kept local
+// to gateway-query so the repository-wide shared CORS helper is not modified.
+const D2A_PAGINATION_RESPONSE_HEADERS = [
+  "X-Pagination-Mode",
+  "X-Pagination-Has-More",
+  "X-Pagination-Next-Cursor",
+  "X-Pagination-Limit",
+] as const;
+
+const d2aCorsHeaders = {
+  ...corsHeaders,
+  "Access-Control-Expose-Headers": D2A_PAGINATION_RESPONSE_HEADERS.join(", "),
+};
+
 function detectEnv(url?: URL): Env {
   const raw = (Deno.env.get('KOB_ENV') || Deno.env.get('SUPABASE_ENV') || '').toLowerCase();
   if (raw === 'production' || raw === 'prod') return 'production';
@@ -349,21 +364,45 @@ function detectEnv(url?: URL): Env {
 function d2aErrorResponse(err: PaginationErrorProblem): Response {
   return new Response(JSON.stringify(err), {
     status: err.status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+    headers: { ...d2aCorsHeaders, 'Content-Type': 'application/problem+json' },
   });
 }
 
 function d2aOk<T>(payload: { body: unknown; headers: Record<string, string> }): Response {
   return new Response(JSON.stringify(payload.body), {
     status: 200,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json', ...payload.headers },
+    headers: { ...d2aCorsHeaders, 'Content-Type': 'application/json', ...payload.headers },
   });
+}
+
+function d2aEmptyPayload(limit: number) {
+  return {
+    body: {
+      data: [],
+      pagination: { mode: 'cursor' as const, has_more: false, next_cursor: null, limit },
+    },
+    headers: {
+      'X-Pagination-Mode': 'cursor',
+      'X-Pagination-Has-More': 'false',
+      'X-Pagination-Limit': String(limit),
+    } as Record<string, string>,
+  };
 }
 
 async function handleD2aList(p: any, op: GatewayD2aOperation): Promise<Response> {
   const environment = detectEnv(p.url as URL | undefined);
   const actorSub = String(p.user?.id || '');
   if (!actorSub) return err('unauthorized', 401);
+
+  // Parse ratified pagination parameters first so that limit validation
+  // (invalid → 400 Problem Details) applies uniformly, and empty-scope
+  // responses can echo the client-validated limit rather than defaulting.
+  const parsed = parseD2aParams({
+    limit: getParam(p, 'limit'),
+    cursor: getParam(p, 'cursor'),
+  });
+  if (!parsed.ok) return d2aErrorResponse(parsed.error);
+  const { limit, cursor } = parsed.value;
 
   // Resolve authoritative merchant scope for this actor. Client-supplied
   // merchant_id is only honoured if it belongs to the authenticated actor.
@@ -372,30 +411,17 @@ async function handleD2aList(p: any, op: GatewayD2aOperation): Promise<Response>
   let merchantScope: string[];
   if (requestedMerchantId) {
     if (!merchantIds.includes(requestedMerchantId)) {
-      // Never disclose whether an unrelated merchant exists.
-      return ok({ data: [], pagination: { mode: 'cursor', has_more: false, next_cursor: null, limit: D2A_DEFAULT_LIMIT } });
+      // Never disclose whether an unrelated merchant exists. Emit the full
+      // ratified d.2A response contract (headers + body) with empty data.
+      return d2aOk(d2aEmptyPayload(limit));
     }
     merchantScope = [requestedMerchantId];
   } else {
     merchantScope = merchantIds;
   }
   if (merchantScope.length === 0) {
-    return d2aOk({
-      body: { data: [], pagination: { mode: 'cursor', has_more: false, next_cursor: null, limit: D2A_DEFAULT_LIMIT } },
-      headers: {
-        'X-Pagination-Mode': 'cursor',
-        'X-Pagination-Has-More': 'false',
-        'X-Pagination-Limit': String(D2A_DEFAULT_LIMIT),
-      },
-    });
+    return d2aOk(d2aEmptyPayload(limit));
   }
-
-  const parsed = parseD2aParams({
-    limit: getParam(p, 'limit'),
-    cursor: getParam(p, 'cursor'),
-  });
-  if (!parsed.ok) return d2aErrorResponse(parsed.error);
-  const { limit, cursor } = parsed.value;
 
   // Operation-specific filter binding — must remain in sync with per-operation
   // ratified filter surface (d.2S contract-decisions §1).
@@ -409,8 +435,6 @@ async function handleD2aList(p: any, op: GatewayD2aOperation): Promise<Response>
     if (accountKind) filters.account_kind = String(accountKind);
   }
   if (op.id === 'gatewayListBeneficiaries') {
-    // is_active is a hard-coded server-side predicate; it is part of the
-    // filter surface for hash binding so cursor reuse across changes is safe.
     filters.is_active = true;
   }
 
@@ -445,11 +469,6 @@ async function handleD2aList(p: any, op: GatewayD2aOperation): Promise<Response>
   if (op.id === 'gatewayListVirtualAccounts' && filters.account_kind) query = query.eq('account_kind', filters.account_kind);
 
   if (cursorPosition) {
-    // Descending lexicographic continuation:
-    //   created_at < :cursorCreatedAt
-    //   OR (created_at = :cursorCreatedAt AND id < :cursorId)
-    // Uses PostgREST `or()` with a bound-limit query. No client-controlled
-    // column name enters the query.
     const c = cursorPosition;
     query = query.or(
       `and(created_at.lt.${c.createdAt}),and(created_at.eq.${c.createdAt},id.lt.${c.id})`,
@@ -473,3 +492,4 @@ async function handleD2aList(p: any, op: GatewayD2aOperation): Promise<Response>
   });
   return d2aOk(finalised);
 }
+
