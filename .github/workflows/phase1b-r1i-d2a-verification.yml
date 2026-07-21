@@ -18,6 +18,7 @@
 # CI14 ratified OpenAPI quality-gate ceiling evaluator
 # CI14A forward-compatible cumulative static-suite assertion
 # CI14B non-runtime lint-ceiling reconciliation
+# CI14C Vitest and Playwright test-runner isolation
 
 
 
@@ -401,7 +402,7 @@ jobs:
           test -s extension-reproducibility-audit.json
           test -s extension-reproducibility-audit.log
 
-      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11 + CI12 + CI13 + CI14)
+      - name: Static infrastructure suite (guard + CI2 + CI3/CI4 + CI5 + CI6 + CI7 + CI8 + CI9 + CI10 + CI11 + CI12 + CI13 + CI14 + CI14C)
         run: |
           npx vitest run \
             src/test/phase1b-d2a-infra-guard.test.ts \
@@ -417,6 +418,7 @@ jobs:
             src/test/phase1b-d2a-ci12-edge-runtime-secret-propagation.test.ts \
             src/test/phase1b-d2a-ci13-runtime-cors-scope-reproducibility.test.ts \
             src/test/phase1b-d2a-ci14-openapi-gate-ceiling-reproducibility.test.ts \
+            src/test/phase1b-d2a-ci14c-test-runner-isolation-reproducibility.test.ts \
             --reporter=json --outputFile=targeted-suite-results.json
 
 
