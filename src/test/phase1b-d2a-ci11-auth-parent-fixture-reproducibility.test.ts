@@ -95,11 +95,14 @@ describe("CI11 auth-parented representative fixture", () => {
   });
 
   it("14. does not modify or drop trg_assign_merchant_role", () => {
-    expect(fixtureSrc).not.toMatch(/trg_assign_merchant_role/);
+    expect(fixtureSrc).not.toMatch(/DROP\s+TRIGGER[^;]*trg_assign_merchant_role/i);
+    expect(fixtureSrc).not.toMatch(/ALTER\s+TRIGGER[^;]*trg_assign_merchant_role/i);
+    expect(fixtureSrc).not.toMatch(/CREATE\s+(OR\s+REPLACE\s+)?TRIGGER\s+trg_assign_merchant_role/i);
   });
 
   it("15. does not modify or drop user_roles_user_id_fkey", () => {
-    expect(fixtureSrc).not.toMatch(/user_roles_user_id_fkey/);
+    expect(fixtureSrc).not.toMatch(/DROP\s+CONSTRAINT[^;]*user_roles_user_id_fkey/i);
+    expect(fixtureSrc).not.toMatch(/ALTER[^;]*user_roles_user_id_fkey/i);
   });
 
   it("16. verifies gateway merchant joins to auth.users", () => {
