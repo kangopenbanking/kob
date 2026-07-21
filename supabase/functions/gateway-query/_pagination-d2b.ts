@@ -377,7 +377,7 @@ export async function decodeD2bCursor(input: D2bDecodeInputs): Promise<D2bDecode
   if (!isSupportedD2bOperation(input.operation)) {
     throw new PaginationValidationError(`unsupported d.2B operation: ${input.operation}`);
   }
-  let result: Awaited<ReturnType<typeof decodeCursor>>;
+  let result: DecodedCursorResult;
   try {
     result = await decodeCursor(
       input.token,
