@@ -15,6 +15,7 @@
 # CI12C temporary environment removal-exception evidence preservation
 # CI12D filesystem removal error-code allowlist
 # CI13 actual-response CORS exposure and merchant query-scope verification
+# CI14 ratified OpenAPI quality-gate ceiling evaluator
 
 
 
