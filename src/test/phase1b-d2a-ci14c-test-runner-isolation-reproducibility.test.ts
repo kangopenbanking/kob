@@ -7,6 +7,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import { describe, it, expect } from "vitest";
 
 const ROOT = resolve(__dirname, "..", "..");
