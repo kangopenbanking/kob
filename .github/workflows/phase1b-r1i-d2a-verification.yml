@@ -537,6 +537,7 @@ jobs:
             full-suite-policy-results.json
             lint-results.json
             gate-results.log
+            openapi-gate-ceiling-results.json
             build-results.log
             teardown-results.log
             teardown-results.json
