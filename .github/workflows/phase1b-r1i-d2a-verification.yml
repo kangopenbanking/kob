@@ -2,6 +2,7 @@
 # CI5 canonical clean-reset reproducibility repair
 # CI6 pg_cron extension schema reproducibility repair
 # CI7 realtime publication idempotency sweep
+# CI7A strict realtime publication guard enforcement
 #
 # Boots a fully DISPOSABLE local Supabase stack via Docker inside the GitHub
 # Actions runner. No Lovable-managed Supabase project is contacted; no
