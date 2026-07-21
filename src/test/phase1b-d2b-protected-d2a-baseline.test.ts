@@ -165,17 +165,41 @@ describe.runIf(resolution.ok)("R1I-d.2B — protected d.2A handler block in gate
   });
 });
 
-describe.runIf(resolution.ok)("R1I-d.2B — I1a scope constraint (runtime + OpenAPI unchanged)", () => {
+describe.runIf(resolution.ok)("R1I-d.2B — I1b scope constraint (OpenAPI + version + operation-count unchanged)", () => {
   const untouched = [
-    "supabase/functions/gateway-query/index.ts",
     "public/openapi.json",
     "public/openapi.yaml",
   ];
   for (const f of untouched) {
-    it(`I1a must not modify: ${f}`, () => {
+    it(`I1b must not modify: ${f}`, () => {
       byteIdentical(f);
     });
   }
+
+  it("d.2A anchor occurs exactly once in gateway-query/index.ts", () => {
+    const rel = "supabase/functions/gateway-query/index.ts";
+    const src = readFileSync(resolve(REPO_ROOT, rel), "utf8");
+    const occurrences = src.split(D2A_ANCHOR).length - 1;
+    expect(occurrences, `expected exactly one occurrence of ${D2A_ANCHOR}`).toBe(1);
+  });
+
+  it("no d.2B source appears after the d.2A anchor in gateway-query/index.ts", () => {
+    const rel = "supabase/functions/gateway-query/index.ts";
+    const src = readFileSync(resolve(REPO_ROOT, rel), "utf8");
+    const suffix = extractD2aBlock(src);
+    for (const forbidden of [
+      "_pagination-d2b",
+      "handleD2bList",
+      "D2B_ROUTES",
+      "d2bCorsHeaders",
+      "R1I-d.2B",
+    ]) {
+      expect(
+        suffix.includes(forbidden),
+        `d.2B token '${forbidden}' must not appear inside the protected d.2A suffix`,
+      ).toBe(false);
+    }
+  });
 });
 
 describe.runIf(resolution.ok)("R1I-d.2B — protected d.2A OpenAPI operation nodes", () => {
