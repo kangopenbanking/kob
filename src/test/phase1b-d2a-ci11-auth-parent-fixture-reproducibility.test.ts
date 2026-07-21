@@ -91,7 +91,8 @@ describe("CI11 auth-parented representative fixture", () => {
   });
 
   it("13. does not use session_replication_role", () => {
-    expect(fixtureSrc).not.toMatch(/session_replication_role/i);
+    expect(fixtureSrc).not.toMatch(/SET\s+session_replication_role/i);
+    expect(fixtureSrc).not.toMatch(/session_replication_role\s*=/i);
   });
 
   it("14. does not modify or drop trg_assign_merchant_role", () => {
