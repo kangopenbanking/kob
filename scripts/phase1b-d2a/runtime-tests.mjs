@@ -323,21 +323,19 @@ async function main() {
 
   for (const op of OPS) {
     // §CI3A-3 baseline: without a cursor MUST return HTTP 200 for the
-    // authenticated merchant. This proves cursor-security tests below reach
-    // cursor validation rather than being rejected at the auth gate.
-    const first = await callOp(op, { params: { limit: 10 }, headers: authHeaders });
+    // authenticated merchant. CI13 — explicit merchant_id query parameter
+    // (the actual public scope selector).
+    const first = await callOp(op, { params: merchantParams(merchantId, { limit: 10 }), headers: authHeaders });
     record(authenticatedBaselines, `${op.op} authenticated baseline is 200`,
       first.status === 200, { suite: "baseline", status: first.status });
 
     if (first.status === 200) {
       for (const h of ["x-pagination-mode", "x-pagination-has-more", "x-pagination-next-cursor", "x-pagination-limit"]) {
-        // next-cursor may legitimately be absent on the final page; presence
-        // only asserted when has_more is truthy.
         if (h === "x-pagination-next-cursor") {
           const hasMore = String(first.headers["x-pagination-has-more"] || "").toLowerCase() === "true";
           record(paginationHeaders, `${op.op} next-cursor presence matches has_more`,
             hasMore ? first.headers[h] !== undefined : true, {
-              suite: "pagination", hasMore, header: first.headers[h] ?? null,
+              suite: "pagination", hasMore, ...cursorEvidence(first.headers[h]),
           });
         } else {
           record(paginationHeaders, `${op.op} header ${h} present`, first.headers[h] !== undefined, {
@@ -349,27 +347,35 @@ async function main() {
       record(paginationHeaders, `${op.op} X-Pagination-Limit numeric ≤ 100`,
         limitHdr > 0 && limitHdr <= 100, { suite: "pagination", value: limitHdr });
 
-      // §CI3A-4 actual pagination behaviour
+      // CI13 — actual-response CORS exposure of all four pagination headers.
+      const actualResponseExposeHeaders = first.headers["access-control-expose-headers"] ?? null;
+      const missing = missingExposedHeaders(actualResponseExposeHeaders);
+      const notWildcard = !parseExposedHeaders(actualResponseExposeHeaders).has("*");
+      record(paginationHeaders, `${op.op} authenticated GET exposes all four pagination headers explicitly`,
+        missing.length === 0 && notWildcard, {
+          suite: "cors", actualResponseExposeHeaders, missingExposedHeaders: missing,
+      });
+
       // Default limit (no limit param) → 25.
-      const def = await callOp(op, { headers: authHeaders });
+      const def = await callOp(op, { params: merchantParams(merchantId), headers: authHeaders });
       record(paginationHeaders, `${op.op} default limit is 25`,
         Number(def.headers["x-pagination-limit"] || 0) === 25, {
           suite: "pagination", value: def.headers["x-pagination-limit"] ?? null,
       });
 
       // Max limit accepted → 100.
-      const max = await callOp(op, { params: { limit: 100 }, headers: authHeaders });
+      const max = await callOp(op, { params: merchantParams(merchantId, { limit: 100 }), headers: authHeaders });
       record(paginationHeaders, `${op.op} accepts limit=100`,
         max.status === 200 && Number(max.headers["x-pagination-limit"] || 0) === 100, {
           suite: "pagination", status: max.status, value: max.headers["x-pagination-limit"] ?? null,
       });
 
       // Invalid limit rejected (400).
-      const overCap = await callOp(op, { params: { limit: 101 }, headers: authHeaders });
+      const overCap = await callOp(op, { params: merchantParams(merchantId, { limit: 101 }), headers: authHeaders });
       record(paginationHeaders, `${op.op} rejects limit=101 with 400`,
         overCap.status === 400, { suite: "pagination", status: overCap.status });
 
-      const bad = await callOp(op, { params: { limit: "abc" }, headers: authHeaders });
+      const bad = await callOp(op, { params: merchantParams(merchantId, { limit: "abc" }), headers: authHeaders });
       record(paginationHeaders, `${op.op} rejects non-numeric limit with 400`,
         bad.status === 400, { suite: "pagination", status: bad.status });
 
@@ -381,7 +387,7 @@ async function main() {
       const pageLimit = 20;
       let bodyHeaderMismatch = false;
       for (let i = 0; i < 10; i += 1) {
-        const params = { limit: pageLimit };
+        const params = merchantParams(merchantId, { limit: pageLimit });
         if (cursor) params.cursor = cursor;
         const page = await callOp(op, { params, headers: authHeaders });
         if (page.status !== 200) break;
@@ -411,43 +417,71 @@ async function main() {
       record(paginationHeaders, `${op.op} pagination body/header parity holds across pages`,
         !bodyHeaderMismatch, { suite: "pagination", pages });
       record(paginationHeaders, `${op.op} final page has no continuation cursor`,
-        !lastPageHadCursor, { suite: "pagination", lastPageHadCursor });
+        !lastPageHadCursor, { suite: "pagination", ...cursorEvidence(lastPageHadCursor) });
       record(paginationHeaders, `${op.op} walked ≥ 2 pages (proves continuation works)`,
         pages >= 2, { suite: "pagination", pages });
 
       // Empty page: an impossible cursor value on the last page yields empty data.
-      const finalEmpty = await callOp(op, { params: { limit: 10, offset: 100000 }, headers: authHeaders });
-      // Even if offset is not honoured, an empty query with no data is acceptable.
+      const finalEmpty = await callOp(op, { params: merchantParams(merchantId, { limit: 10, offset: 100000 }), headers: authHeaders });
       record(paginationHeaders, `${op.op} empty-page request returns 2xx`,
         finalEmpty.status >= 200 && finalEmpty.status < 300, {
           suite: "pagination", status: finalEmpty.status,
       });
 
       // §CI3A-3 cursor validation (gated on baseline == 200)
-      const tampered = await callOp(op, { params: { limit: 10, cursor: "AAAAAAAAAAAAAA.tampered" }, headers: authHeaders });
+      const tampered = await callOp(op, { params: merchantParams(merchantId, { limit: 10, cursor: "AAAAAAAAAAAAAA.tampered" }), headers: authHeaders });
       record(cursorSecurity, `${op.op} rejects tampered cursor with 400 (cursor decoder reached)`,
         tampered.status === 400, { suite: "cursor-security", status: tampered.status });
 
       const foreignOp = await callOp(op, {
-        params: {
+        params: merchantParams(merchantId, {
           limit: 10,
           cursor: "eyJvcCI6Im90aGVyIiwidCI6IjIwMjYtMDEtMDFUMDA6MDA6MDBaIiwiaSI6IjAwMDAwMDAwLTAwMDAtNDAwMC04MDAwLTAwMDAwMDAwMDAwMCJ9.deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-        },
+        }),
         headers: authHeaders,
       });
       record(cursorSecurity, `${op.op} rejects foreign op/scope binding with 400 (scope validation reached)`,
         foreignOp.status === 400, { suite: "cursor-security", status: foreignOp.status });
 
+      // CI13 — foreign merchant scope sent through the actual contract
+      // parameter (merchant_id). handleD2aList must return 200 with an empty
+      // data array and the complete ratified pagination response contract.
+      const foreignMerchantId = merchantIdFor(0);
       const foreignMerchant = await callOp(op, {
-        params: { limit: 10 },
-        headers: { ...authHeaders, "x-merchant-id": merchantIdFor(0) /* fixture merchant, not owned */ },
+        params: { merchant_id: foreignMerchantId, limit: 10 },
+        headers: authHeaders,
       });
-      record(cursorSecurity, `${op.op} rejects foreign merchant scope (401/403/404 or empty)`,
-        foreignMerchant.status === 401 || foreignMerchant.status === 403
-        || foreignMerchant.status === 404
-        || (Array.isArray(foreignMerchant.body?.data) && foreignMerchant.body.data.length === 0), {
-          suite: "isolation", status: foreignMerchant.status,
+      const fmBody = foreignMerchant.body ?? {};
+      const fmPag = fmBody?.pagination ?? {};
+      const fmData = Array.isArray(fmBody?.data) ? fmBody.data : null;
+      const fmExpose = foreignMerchant.headers["access-control-expose-headers"] ?? null;
+      const fmMissing = missingExposedHeaders(fmExpose);
+      const fmContainsForeign = fmData
+        ? fmData.some((r) => r && (r.merchant_id === foreignMerchantId || r.id === foreignMerchantId))
+        : false;
+      record(cursorSecurity, `${op.op} foreign merchant returns HTTP 200`,
+        foreignMerchant.status === 200, { suite: "isolation", status: foreignMerchant.status });
+      record(cursorSecurity, `${op.op} foreign merchant body.data is empty array`,
+        fmData !== null && fmData.length === 0, { suite: "isolation", dataLen: fmData ? fmData.length : null });
+      record(cursorSecurity, `${op.op} foreign merchant pagination contract complete`,
+        fmPag.mode === "cursor" && fmPag.has_more === false && fmPag.next_cursor === null && fmPag.limit === 10, {
+          suite: "isolation", pagination: fmPag });
+      record(cursorSecurity, `${op.op} foreign merchant emits complete pagination headers`,
+        foreignMerchant.headers["x-pagination-mode"] === "cursor"
+          && String(foreignMerchant.headers["x-pagination-has-more"] || "").toLowerCase() === "false"
+          && Number(foreignMerchant.headers["x-pagination-limit"]) === 10
+          && foreignMerchant.headers["x-pagination-next-cursor"] === undefined, {
+          suite: "isolation",
+          mode: foreignMerchant.headers["x-pagination-mode"] ?? null,
+          hasMore: foreignMerchant.headers["x-pagination-has-more"] ?? null,
+          limit: foreignMerchant.headers["x-pagination-limit"] ?? null,
+          nextCursorAbsent: foreignMerchant.headers["x-pagination-next-cursor"] === undefined,
       });
+      record(cursorSecurity, `${op.op} foreign merchant response does not leak foreign rows`,
+        !fmContainsForeign, { suite: "isolation", leaked: fmContainsForeign });
+      record(cursorSecurity, `${op.op} foreign merchant exposes all four pagination headers explicitly`,
+        fmMissing.length === 0 && !parseExposedHeaders(fmExpose).has("*"), {
+          suite: "cors", actualResponseExposeHeaders: fmExpose, missingExposedHeaders: fmMissing });
     }
 
     // Count-drop policy — universal, evaluated regardless of auth.
@@ -456,7 +490,9 @@ async function main() {
         suite: "count-drop", header: "x-total-count", value: first.headers["x-total-count"] ?? null,
     });
 
-    // CORS preflight
+    // CI13 — CORS preflight: retain preflight status + allow-origin +
+    // requested-header permission assertions. Exposure of pagination headers
+    // is verified on the actual authenticated GET response above.
     const preflight = await fetch(BASE + `?action=${op.action}`, {
       method: "OPTIONS",
       headers: {
@@ -465,16 +501,24 @@ async function main() {
         "access-control-request-headers": "authorization,content-type",
       },
     });
-    const cors = Object.fromEntries(preflight.headers.entries());
+    const cors = Object.fromEntries([...preflight.headers.entries()].map(([k, v]) => [k.toLowerCase(), v]));
+    const preflightStatus = preflight.status;
+    const preflightAllowOrigin = cors["access-control-allow-origin"] ?? null;
+    const preflightAllowHeaders = (cors["access-control-allow-headers"] || "").toLowerCase();
     record(paginationHeaders, `${op.op} CORS preflight returns 2xx/204`,
-      preflight.status >= 200 && preflight.status < 300, {
-        suite: "cors", status: preflight.status,
+      preflightStatus >= 200 && preflightStatus < 300, {
+        suite: "cors", preflightStatus,
     });
-    record(paginationHeaders, `${op.op} CORS exposes pagination headers`,
-      /x-pagination-/i.test(cors["access-control-expose-headers"] || ""), {
-        suite: "cors", exposeHeaders: cors["access-control-expose-headers"] ?? null,
+    record(paginationHeaders, `${op.op} CORS preflight declares Access-Control-Allow-Origin`,
+      preflightAllowOrigin !== null && preflightAllowOrigin.length > 0, {
+        suite: "cors", preflightAllowOrigin,
+    });
+    record(paginationHeaders, `${op.op} CORS preflight permits Authorization + Content-Type request headers`,
+      preflightAllowHeaders.includes("authorization") && preflightAllowHeaders.includes("content-type"), {
+        suite: "cors", preflightAllowHeaders,
     });
   }
+
 
   // §CI3A-5 — capture actual database calls from pg_stat_statements
   const dbEvidence = await captureDbCalls(client);
