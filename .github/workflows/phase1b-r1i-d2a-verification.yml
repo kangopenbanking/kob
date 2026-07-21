@@ -177,17 +177,26 @@ jobs:
           } >> "$GITHUB_ENV"
           node -e "
             const u = new URL(process.argv[1]);
+            const api = new URL(process.env.SUPABASE_URL || 'http://127.0.0.1:54321');
             const fs = require('fs');
             fs.writeFileSync('environment-preflight.json', JSON.stringify({
               host: u.hostname, port: u.port, database: u.pathname.slice(1),
+              apiHost: api.hostname, apiPort: api.port,
               disposableMarker: process.env.KOB_D2A_DISPOSABLE_ENVIRONMENT === 'true',
+              localSupabaseMarker: process.env.D2A_LOCAL_SUPABASE_STACK === 'true',
               secretPresent: !!process.env.KOB_CURSOR_HMAC_SECRET
             }, null, 2));
           " "${DB_URL}"
           cat environment-preflight.json
 
       - name: Environment guard (fail-closed)
-        run: node scripts/phase1b-d2a/guard.mjs
+        run: |
+          set -euo pipefail
+          rm -f environment-guard.log
+          node scripts/phase1b-d2a/guard.mjs \
+            2>&1 | tee environment-guard.log
+          test -s environment-guard.log
+
 
       - name: Bootstrap disposable environment (privilege probes)
         env:
