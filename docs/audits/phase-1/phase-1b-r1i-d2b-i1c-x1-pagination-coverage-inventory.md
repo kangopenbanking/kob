@@ -341,19 +341,44 @@ document. In particular this audit does not authorise `X2-D0`, `X2`, `X3`,
 Only the files listed here would be in scope for that slice. All other paths
 would be prohibited. This section is a *proposal* only.
 
-### 9.1 R1I-d.2B-I1c-X2 (QR directory contract alignment)
+### 9.1 R1I-d.2B-I1c-X2 — QR directory runtime and contract canonicalisation
+
+X2 is a **runtime + contract** slice, not contract-only. Runtime edits to the
+QR directory function are explicitly required to migrate the wire envelope
+onto the canonical `{ data, pagination, meta }` shape, adopt signed cursors
+per d.1F, and emit the four `X-Pagination-*` headers.
 
 Permitted:
+- `supabase/functions/merchants-qr-directory/index.ts`
+- new isolated adapter
+  `supabase/functions/merchants-qr-directory/_pagination-qr-directory.ts`
 - `public/openapi.json`
 - `public/openapi.yaml`
-- `src/test/openapi-pagination-coverage.test.ts` (only if a targeted assertion
-  is added; the ratchet itself is unchanged)
+- new QR pagination runtime tests
+  (e.g. `src/test/pagination-qr-directory-runtime-*.test.ts`)
+- new QR pagination contract tests
+  (e.g. `src/test/pagination-qr-directory-contract-*.test.ts`)
+- protected-scope regression test asserting no d.2A / I1a / I1b / I1c
+  artifact drift
+- `src/test/openapi-pagination-coverage.test.ts` (only if a targeted
+  assertion is added; the ratchet itself is unchanged)
 - `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x2-*.md`
-- `CHANGELOG.md`, `public/CHANGELOG.md`, `public/changelog.json`
+- `AGENTS.md` — authority update recording the X2 closure only
+- `CHANGELOG.md`, `public/CHANGELOG.md`, `public/changelog.json` (only when
+  separately authorised)
+
+No SQL migration is proposed for the selected `merchant_id ASC` profile
+unless X2 verification proves the existing `gateway_merchants` PK cannot
+support the view query.
 
 Prohibited:
-- `supabase/functions/merchants-qr-directory/*` (runtime unchanged in X2)
-- every protected d.2A / d.2B / I1c artifact.
+- `supabase/functions/gateway-query/_pagination-d2b.ts`
+- `supabase/functions/_shared/pagination.ts` (d.1F foundation — import only)
+- d.2A runtime or d.2A tests
+- `supabase/functions/gateway-query/*`
+- `package.json`, `package-lock.json`, `bun.lockb`, or any dependency file
+- every protected d.2A / I1a / I1b / I1c artifact listed in AGENTS.md §5
+
 
 ### 9.2 R1I-d.2B-I1c-X3 (Agents runtime + contract)
 
