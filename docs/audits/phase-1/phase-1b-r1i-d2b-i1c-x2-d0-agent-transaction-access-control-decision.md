@@ -1,7 +1,7 @@
 # Phase 1B — R1I-d.2B-I1c-X2-D0 — Agent Transaction Access-Control Decision
 
-**Revision:** R1 (service-role identity and slice-consistency repair)
-**Base commit under review:** `22d96ee055882d604095a98ad03b8d9d87854c02`
+**Revision:** R2 (admin existence and audit-RPC privilege decision repair)
+**Base commit under review:** `a9232e4e7cf7f9a042d2d07167602b99b36ab853`
 
 **Scope:** Binding, read-only access-control ratification for exactly one
 operation:
