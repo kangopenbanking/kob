@@ -272,21 +272,25 @@ Response headers required by d.0 §7 on every non-bounded endpoint:
 
 ## 6. Required indexes and migrations
 
-Independent per endpoint; each must be delivered as an isolated concurrent
+A migration is required only where a new index or database constraint is
+actually needed to support the ratified ordering. Where an existing index
+already satisfies the deterministic ordering, no migration is proposed.
+Every migration proposed below must be delivered as an isolated concurrent
 migration under `supabase/pending-operations/phase-1/` following the d.2A /
 d.2B pattern (composite index, `indisvalid`/`indisready` guard, rollback
 file, README inventory entry).
 
-| Endpoint | Table | Required index | Rationale |
-|----------|-------|----------------|-----------|
-| qr-directory | `merchant_qr_directory` (view) — underlying table `merchants` | If retaining `merchant_id ASC`: existing PK is sufficient. If moving to `(created_at DESC, merchant_id DESC)`: `CREATE INDEX CONCURRENTLY idx_merchants_verified_created_id_desc ON public.merchants (verified, created_at DESC, id DESC) WHERE verified = true;` | Keyset scan |
-| webhooks/dlq | `webhook_inbox_dlq` | `CREATE INDEX CONCURRENTLY idx_webhook_inbox_dlq_inserted_id_desc ON public.webhook_inbox_dlq (inserted_at DESC, id DESC);` plus optional `(source, provider, event_type, inserted_at DESC, id DESC)` if filters land in the runtime | Keyset scan; admin listing |
-| agents | `agents` | `CREATE INDEX CONCURRENTLY idx_agents_status_created_id_desc ON public.agents (status, created_at DESC, id DESC);` (+ optional `(country_code, region, status, created_at DESC, id DESC)` if that filter combination dominates) | Filtered keyset scan |
-| agents/{id}/transactions | `agent_cash_transactions` | `CREATE INDEX CONCURRENTLY idx_agent_cash_tx_agent_created_id_desc ON public.agent_cash_transactions (agent_id, created_at DESC, id DESC);` | Per-agent keyset scan |
-| cemac/corridors | `remittance_corridors` | none required (bounded); optional `(origin_country, destination_country)` unique constraint to *enforce* the bound | Ratifies §9 (1)–(2) |
+| Endpoint | View / Table | Required index | Rationale |
+|----------|--------------|----------------|-----------|
+| qr-directory | View `public.merchant_qr_directory` over underlying table `public.gateway_merchants`; selected order `merchant_id ASC`. The existing PK index on `public.gateway_merchants(id)` is sufficient for this ordering. | **No migration currently proposed.** A migration would only be required if X2 verification proves the existing PK cannot support the view query, or if a different order is later ratified. | Existing PK supports keyset scan on `merchant_id ASC`. |
+| webhooks/dlq | Table `public.webhook_inbox_dlq` | `CREATE INDEX CONCURRENTLY idx_webhook_inbox_dlq_inserted_id_desc ON public.webhook_inbox_dlq (inserted_at DESC, id DESC);` plus optional `(source, provider, event_type, inserted_at DESC, id DESC)` if filters land in the runtime | Keyset scan; admin listing |
+| agents | Table `public.agents` | `CREATE INDEX CONCURRENTLY idx_agents_status_created_id_desc ON public.agents (status, created_at DESC, id DESC);` (+ optional `(country_code, region, status, created_at DESC, id DESC)` if that filter combination dominates) | Filtered keyset scan |
+| agents/{id}/transactions | Table `public.agent_cash_transactions` | `CREATE INDEX CONCURRENTLY idx_agent_cash_tx_agent_created_id_desc ON public.agent_cash_transactions (agent_id, created_at DESC, id DESC);` | Per-agent keyset scan |
+| cemac/corridors | Table `public.remittance_corridors` | **UNRESOLVED — X5-D0 determines requirements.** Three branches: (A) **Bounded GET** — requires enforceable database constraints (e.g. `CHECK` on origin/destination country codes, composite `UNIQUE(origin_country, destination_country)`, or an equivalent enum-backed constraint) AND documented proof of a hard maximum. A uniqueness constraint alone is not sufficient to ratify boundedness. (B) **Paginated GET** — requires a deterministic index matching the ratified order (e.g. `CREATE INDEX CONCURRENTLY idx_remittance_corridors_origin_dest_id ON public.remittance_corridors (origin_country ASC, destination_country ASC, id ASC);` plus any filter-appropriate composite). (C) **Deprecation / retraction** — no pagination index required. | Disposition-dependent |
 
-None of these indexes are created by this document. They are proposed for
-their respective future slices.
+None of these indexes or constraints are created by this document. They are
+proposed for their respective future slices.
+
 
 ---
 
