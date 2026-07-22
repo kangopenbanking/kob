@@ -114,12 +114,26 @@ agent MUST NOT:
 | R1I-d.2A | CLOSED — PROTECTED |
 | R1I-d.2B-I1a | CLOSED — PROTECTED FOUNDATION (commit `aa8124e5ee03c87acdc3615cf85d78c36855882b`) |
 | R1I-d.2B-I1b | CLOSED — PROTECTED RUNTIME (commit `1485c5593d5b712043564ee68a7274eacb8f185d`) |
-| R1I-d.2B-I1c | AUTHORISED FOR IMPLEMENTATION (this turn) |
+| R1I-d.2B-I1c | CLOSED — PROTECTED CONTRACT |
+| R1I-d.2B-I1c-X2-D0 | CLOSED — PROTECTED SECURITY DECISION (D0 closure commit `9407e2292590f83ed85770cf93dc43f5eb46c2e8`) |
+| R1I-d.2B-I1c-X2-A | AUTHORISED FOR FOUNDATION IMPLEMENTATION (this turn) |
+| R1I-d.2B-I1c-X2-B | NOT AUTHORISED |
+| R1I-d.2B-I1c-X2-C | NOT AUTHORISED |
+| R1I-d.2B-I1c-X2-D | NOT AUTHORISED |
+| R1I-d.2B-I1c-X3 | NOT AUTHORISED |
 | R1I-d.2B-I1d | NOT AUTHORISED |
 | R1I-d.2C | NOT AUTHORISED |
 | R1I-d.2D | NOT AUTHORISED |
 | R1I-d.2E | NOT AUTHORISED |
 | R1I-d.2F | NOT AUTHORISED |
+
+QR-directory compatibility decision (X2 programme, ratified in
+`docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x2-compatibility-decision.md`):
+**DIRECT CANONICAL REPLACEMENT UNDER 4.53.1 UNRELEASED.** No new
+versioned endpoint, no dual legacy/canonical response, no raw-UUID
+cursor compatibility after X2 closes, no SDK publication, no deployment.
+X2-A establishes the isolated adapter only; it does not modify the QR
+directory runtime, OpenAPI, SDKs, or consumers.
 
 The R1I-d.2B-I1a closure is a **protected foundation**. Its protected artifacts include:
 
