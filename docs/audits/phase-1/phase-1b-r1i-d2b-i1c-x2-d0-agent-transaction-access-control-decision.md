@@ -637,6 +637,39 @@ are outside the agent test scope. X3 must add tests covering at least:
 22. Test scope isolation: the X3 test suite does not import, exercise,
     or assert on any X2 QR-directory files.
 
+### 14.1 Required X3 audit-RPC privilege tests (specification only)
+
+The following ten tests are prescribed for X3 to prove that §7.4.1 was
+applied correctly. They are not created in D0.
+
+1. `has_function_privilege('anon',
+   'public.log_security_event(uuid,text,text,inet,text,jsonb)',
+   'EXECUTE') = false`.
+2. `has_function_privilege('authenticated',
+   'public.log_security_event(uuid,text,text,inet,text,jsonb)',
+   'EXECUTE') = false`.
+3. `has_function_privilege('service_role',
+   'public.log_security_event(uuid,text,text,inet,text,jsonb)',
+   'EXECUTE') = true`.
+4. `PUBLIC` has no `EXECUTE` privilege on the function (verified via
+   `pg_proc.proacl` inspection; no `=X/…` ACL entry for `PUBLIC`).
+5. Direct anonymous RPC invocation of `log_security_event` through the
+   Data API is denied.
+6. Direct authenticated RPC invocation of `log_security_event` through
+   the Data API is denied.
+7. The Edge Function server path can emit exactly one audit event
+   through the `service_role` server client end-to-end against the
+   local stack.
+8. Denied endpoint requests cannot supply or overwrite `event_type`,
+   `event_category`, `user_id`, `target_agent_id`, `outcome`, or
+   `effective_role`; every field is populated by the server.
+9. The paired rollback migration does not grant `EXECUTE` to `PUBLIC`,
+   `anon`, or `authenticated` (verified by static SQL inspection and by
+   applying the rollback in the local stack, then re-running tests 1,
+   2, and 4).
+10. No existing `public.security_audit_logs` RLS policy is weakened by
+    the migration (verified against the pre-migration policy snapshot).
+
 This is a plan. No tests are created in D0.
 
 ---
@@ -645,6 +678,8 @@ This is a plan. No tests are created in D0.
 
 - **Authentication:** Bearer JWT verified by `supabase.auth.getUser` only.
 - **Authorised callers:** active agent-self and platform admin only.
+- **Admin existing-agent rule:** **ALLOW**.
+- **Admin non-existent-agent rule:** **MASKED 404**.
 - **Runtime subject variable:** `verifiedSubjectId`
   (= `authResult.user.id` from `supabase.auth.getUser`).
 - **Admin resolution:** `has_role(verifiedSubjectId, 'admin')`.
@@ -656,8 +691,8 @@ This is a plan. No tests are created in D0.
   unchanged.
 - **Existence masking:** 401 unauthenticated · 400 malformed UUID ·
   400 cursor scope mismatch · 404 masked (non-existent / foreign /
-  unowned / status-ineligible) · 403 platform-policy only · 429
-  rate-limit.
+  unowned / status-ineligible, applied to every caller including
+  platform admin) · 403 platform-policy only · 429 rate-limit.
 - **Cursor scope tuple:** `(environment, operationId,
   authenticatedSubjectId, authenticatedRole, targetAgentId)`.
 - **Filter hash tuple:** `EMPTY`.
@@ -667,17 +702,20 @@ This is a plan. No tests are created in D0.
   `429` with `Retry-After` on exhaustion.
 - **Audit storage:** `public.security_audit_logs` via
   `public.log_security_event` with the mapping in §10.
+- **Audit RPC current privilege status:** **NOT PROVEN SERVER-ONLY**
+  (see §10.1).
+- **Audit RPC required X3 privilege:** `service_role` `EXECUTE` only;
+  `PUBLIC`, `anon`, and `authenticated` denied (see §7.4.1).
+- **Ownership / RLS migration required:** **NO**.
+- **Audit privilege migration required:** **YES** (§7.4.1).
+- **Pagination index migration required:** **YES** (§7.4.2).
 - **Compatibility treatment:** correct under `4.53.1` Unreleased; no
   version change; no SDK republish required until next scheduled release.
 - **Programme sequence:** X2 QR first; X3 agents only after X2 closure.
 - **X3 security prerequisite satisfied:** **YES**.
 - **X2 authorised by this decision:** **NO**.
 - **X3 authorised by this decision:** **NO**.
-- **Unresolved security prerequisites:** NONE. Institutional /
-  API-client authorisation for this endpoint is explicitly denied and
-  is not a prerequisite for either X2 or the later X3 slice; it would require a separately
-  authorised future slice that first adds an agent-institution linkage
-  to `public.agents`.
+- **Unresolved decision fields:** **NONE**.
 
 ---
 
@@ -698,4 +736,5 @@ This is a plan. No tests are created in D0.
 
 ---
 
-**Status:** PHASE 1B-R1I-d.2B-I1c-X2-D0-R1 SECURITY DECISION READY FOR FINAL REVIEW
+**Status:** PHASE 1B-R1I-d.2B-I1c-X2-D0-R2 SECURITY DECISION READY FOR FINAL REVIEW
+
