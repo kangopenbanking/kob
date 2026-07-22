@@ -245,7 +245,7 @@ paginated GET, or deprecation) is deferred to slice X5-D0.
 | webhooks/dlq | `bearerAuth` in spec, admin role required (per `admin-webhook-dlq-replay` precedent) | admin-only (workspace-wide) | `env` + `caller_id` + `role=admin` | `source`, `provider`, `event_type`, `dlq_reason`, `inserted_at` window |
 | agents | Anon today (should be at minimum bearer-scoped; admin/institution scope for non-active agents) | none today; MUST become tenant-scoped for merchant/institution callers | `env` + `caller_id` + `institution_id?` | `country_code`, `region`, `status` |
 | agents/{id}/transactions | Anon today (security defect) | must become `(caller ∈ agent owners OR admin)` | `env` + `caller_id` + `agent_id` | none currently exposed; add `type`, `from`, `to` if surfaced |
-| cemac/corridors | Anon (developer-facing reference data) | none — public reference | n/a (bounded) | n/a (bounded) |
+| cemac/corridors | Anon (developer-facing reference data) | UNRESOLVED — determined by X5-D0. Bounded GET: no cursor scope-hash required. Paginated GET: `env` + `caller_id?` scope-hash required. Deprecated/retracted GET: not applicable. | UNRESOLVED — determined by X5-D0. Bounded GET: no filter hash. Paginated GET: filter hash over any exposed filters (e.g. `origin_country`, `destination_country`, `active`). Deprecated/retracted GET: not applicable. |
 
 The **`agents/{id}/transactions` anon exposure** is a security finding
 independent of the pagination ratchet and should be raised through the
