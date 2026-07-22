@@ -261,7 +261,7 @@ security workflow, not folded into a coverage patch.
 | 2 | webhooks/dlq | **cursor** | 25 | 100 | `(inserted_at DESC, id DESC)` | 1800 s | prohibited (per d.0 §6) |
 | 3 | agents | **cursor** | 25 | 100 | `(created_at DESC, id DESC)` (canonical d.2S profile) | 1800 s | prohibited; drop `count` |
 | 4 | agents/{id}/transactions | **cursor** | 25 | 100 | `(created_at DESC, id DESC)` | 1800 s | prohibited (financial listing per d.0 §6 forbidden-total list); drop `count` |
-| 5 | cemac/corridors | **cursor** (default until X5-D0 ratifies boundedness) | 25 | 100 | `(origin_country ASC, destination_country ASC, id ASC)` where `id` is the unique tie-breaker on `public.remittance_corridors` | 1800 s | prohibited until bounded-exemption evidence is present |
+| 5 | cemac/corridors | **cursor** — conservative default only, NOT ratified. Final model is UNRESOLVED and may be replaced by a bounded disposition or by deprecation/retraction through X5-D0. | 25 | 100 | `(origin_country ASC, destination_country ASC, id ASC)` where `id` is the unique tie-breaker on `public.remittance_corridors` — applies only if X5-D0 selects a paginated GET | 1800 s | prohibited unless X5-D0 selects a bounded GET |
 
 
 Response headers required by d.0 §7 on every non-bounded endpoint:
