@@ -156,47 +156,68 @@ emission), and no cursor query param is honoured. `count` MUST be removed or
 recast — under d.0 §6, exact totals are prohibited on unbounded operational
 listings.
 
-### 3.4 `/v1/agents/{agentId}/transactions` — B
+### 3.4 `/v1/agents/{agentId}/transactions` — B — BLOCKED ON SECURITY-SCOPE RATIFICATION
 
-Same shape as §3.3 but scoped to one `agentId`. Ordering is `created_at DESC`
-without an `id` tie-breaker, so keyset pagination is unsafe: two transactions
-with identical `created_at` values would either be skipped or duplicated
-across pages. OpenAPI does not even declare a cursor-style parameter today
-(`hasCursor=false` in the ratchet report), unlike `agentList`.
+Same runtime shape as §3.3 but scoped to one `agentId`. Ordering is
+`created_at DESC` without an `id` tie-breaker, so keyset pagination is unsafe:
+two transactions with identical `created_at` values would either be skipped or
+duplicated across pages. OpenAPI does not declare a cursor-style parameter
+today (`hasCursor=false` in the ratchet report), unlike `agentList`.
 
-Security boundary is materially different from `agentList`: this returns
-**agent financial movements**. It currently authenticates on the anon key and
-performs no verification that the caller is entitled to see a given agent's
-transactions. Any cursor design MUST bind `scope_hash` to `(caller_id,
-agent_id)` and require an authenticated caller, not just an anon fetch of a
-UUID path parameter. This is a security-tenancy concern independent of the
-ratchet.
+**Implementation status: BLOCKED ON SECURITY-SCOPE RATIFICATION.** This
+endpoint returns agent financial movements under anonymous access today. It
+is not optional follow-up debt: the future implementation slice MUST NOT
+proceed to runtime pagination or OpenAPI implementation until a binding
+security decision closes covering all of:
 
-### 3.5 `/v1/remittance/cemac/corridors` — C
+- authenticated subject requirements (bearer/OIDC/API-key contract);
+- agent-self access (may an agent read their own transactions?);
+- institution administrator access (scope resolution rules);
+- platform administrator access (admin role assertion);
+- ownership resolution (`agent_id → institution_id`, `caller_id →
+  institution_id`);
+- masked 404 vs 403 for unowned `agent_id` (per d.2A precedent);
+- RLS expectations on `public.agent_cash_transactions`;
+- service-role restrictions (which callers, if any, may bypass RLS);
+- audit-event emission requirements on read;
+- cursor scope-hash inputs — MUST bind at minimum
+  `(env, caller_id, agent_id, role)`.
 
-Response is a plain JSON array of `CemacCorridor` objects. Schema constrains
-`origin_country` and `destination_country` to the six CEMAC ISO codes
-(`CM, GA, CG, TD, CF, GQ`), giving an **enforced upper bound of 6×6 = 36
-distinct corridors** (fewer once same-country pairs and inactive corridors
-are excluded). This qualifies under d.0 §9 items (1)–(3) if — and only if —
-the seed / database enforces the enumeration.
+Neither runtime pagination nor OpenAPI contract implementation may proceed
+before this decision is ratified and recorded.
 
-Note: **no dedicated `GET /v1/remittance/cemac/corridors` runtime exists.**
-The closest producer is `remittance-outbound`'s POST action `get_corridors`,
-which returns `{ corridors: [...] }` from `remittance_corridors` filtered on
-`remittance_partners.status='active'`. Either:
+### 3.5 `/v1/remittance/cemac/corridors` — B (corrected; bounded-exemption UNPROVEN)
 
-1. a dedicated public `GET` route is added and marked
-   `x-bounded-collection: { max_items: 36, justification: "CEMAC =
-   6 member states; enumeration enforced by enum on origin/destination" }`;
-   OR
-2. the endpoint is retracted (`deprecated: true`) in favour of a
-   `POST /v1/remittance/quote`-style action.
+Response is declared as a plain JSON array of `CemacCorridor` objects.
+**No dedicated `GET /v1/remittance/cemac/corridors` runtime exists** —
+`remittance-outbound`'s POST action `get_corridors` is recorded here only as
+the nearest existing producer and is **not** the endpoint runtime.
 
-The coverage ratchet **cannot** be satisfied for this endpoint by wrapping
-the array in `PaginatedResponse` without contradicting d.0 §9's stated intent
-that bounded collections stay as plain arrays. The correct fix requires
-architectural ratification, not a contract-only patch.
+The prior draft's Class C classification is withdrawn. `6 × 6 = 36` is a
+theoretical domain cardinality drawn from CEMAC membership; it is **not** an
+enforceable database maximum. Bounded-exemption eligibility is UNPROVEN.
+
+Evidence required before Class C may be ratified under d.0 §9 (all items
+must be present and verified in writing):
+
+1. exact column types on `public.remittance_corridors`
+   (`origin_country`, `destination_country`, active flag, partner join key);
+2. any `CHECK` constraints or database enum types restricting country codes;
+3. an origin/destination uniqueness constraint (composite `UNIQUE` or PK);
+4. partner/provider cardinality — whether one corridor row exists per partner
+   or per (origin, destination) tuple;
+5. duplicate-row possibility across active partners;
+6. active/inactive record multiplicity;
+7. the exact query projection the dedicated GET runtime would use;
+8. the exact dedicated GET runtime implementation (does not exist today);
+9. explicit maximum enforcement in schema/seed (not derived from ISO 3166);
+10. a test proving the response can never exceed the proposed `max_items`.
+
+Until every item above is present and verified, `max_items=36` MUST NOT be
+claimed and `x-bounded-collection` MUST NOT be applied. Endpoint remains
+classified **B — RUNTIME_AND_CONTRACT_DEFECT**; disposition (bounded GET,
+paginated GET, or deprecation) is deferred to slice X5-D0.
+
 
 ---
 
