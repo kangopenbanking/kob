@@ -241,11 +241,12 @@ security workflow, not folded into a coverage patch.
 
 | # | Endpoint | Model | Default limit | Max limit | Ordering tuple | Cursor lifetime | Exact total? |
 |---|----------|-------|---------------|-----------|----------------|-----------------|--------------|
-| 1 | qr-directory | **cursor** (harden existing raw-UUID cursor to HMAC-signed per d.1F) | 25 | 100 | `(created_at DESC, merchant_id DESC)` or retain `(merchant_id ASC)` as a stable primary+tie-breaker if directory ordering must remain lexical | 1800 s | prohibited |
+| 1 | qr-directory | **cursor** (HMAC-signed per d.1F; raw-UUID cursor retired) | 25 | 100 | `(merchant_id ASC)` — single-column deterministic profile; `merchant_id` is the unique PK of the underlying `gateway_merchants` row surfaced by `public.merchant_qr_directory` and is its own final tie-breaker. `created_at` on the view is inherited via `security_invoker` and is not guaranteed non-null across historic rows, so it is unsuitable as a primary sort. Required index: existing PK on `gateway_merchants(id)` is sufficient; no new migration required for this ordering. | 1800 s | prohibited |
 | 2 | webhooks/dlq | **cursor** | 25 | 100 | `(inserted_at DESC, id DESC)` | 1800 s | prohibited (per d.0 §6) |
 | 3 | agents | **cursor** | 25 | 100 | `(created_at DESC, id DESC)` (canonical d.2S profile) | 1800 s | prohibited; drop `count` |
 | 4 | agents/{id}/transactions | **cursor** | 25 | 100 | `(created_at DESC, id DESC)` | 1800 s | prohibited (financial listing per d.0 §6 forbidden-total list); drop `count` |
-| 5 | cemac/corridors | **bounded-exemption** (subject to §11 ratification) | n/a | max_items = 36 | `(origin_country ASC, destination_country ASC)` | n/a | plain array with `Cache-Control: public, max-age=3600` |
+| 5 | cemac/corridors | **cursor** (default until X5-D0 ratifies boundedness) | 25 | 100 | `(origin_country ASC, destination_country ASC, id ASC)` where `id` is the unique tie-breaker on `public.remittance_corridors` | 1800 s | prohibited until bounded-exemption evidence is present |
+
 
 Response headers required by d.0 §7 on every non-bounded endpoint:
 `X-Pagination-Mode`, `X-Pagination-Has-More`, `X-Pagination-Next-Cursor`,
