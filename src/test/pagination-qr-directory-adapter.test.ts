@@ -9,7 +9,7 @@
  * exercised.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
