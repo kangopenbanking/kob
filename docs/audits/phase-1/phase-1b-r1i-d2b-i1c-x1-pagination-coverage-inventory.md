@@ -298,15 +298,18 @@ proposed for their respective future slices.
 
 | Endpoint | Breaking? | Deprecation surface | SDK impact |
 |----------|-----------|---------------------|------------|
-| qr-directory | Non-breaking. Envelope shape is unchanged; only the OpenAPI `$ref` changes. If cursor moves from raw UUID to HMAC-signed opaque string, that IS breaking for any client that decoded the cursor — but no published SDK does (Node/Python/PHP SDKs treat it opaquely per `packages/sdk-php/src/Resources/QRDirectoryResource.php` line 65–71). Requires a 4.54.0 minor. | Node/Python/PHP: opaque cursor consumers only — no source change required |
+| qr-directory | **Response-envelope compatibility-sensitive.** Current wire shape is `{ object, data, has_more, next_cursor }`; the canonical wire shape is `{ data, pagination, meta }`. This is a response-envelope compatibility change, not a schema-only `$ref` swap. In addition, existing raw-UUID cursor tokens will not be valid signed KOB cursors under d.1F, so any client re-submitting a persisted legacy cursor will observe a `PAGINATION_CURSOR_INVALID` failure. A compatibility strategy MUST be ratified before X2 implementation. Candidate strategies (inventory only; none selected here): (1) breaking replacement under an explicitly authorised version decision; (2) temporary dual-response / compatibility mode; (3) new versioned endpoint retained alongside the legacy endpoint; (4) controlled deprecation window. Node/Python/PHP SDKs treat the cursor opaquely (per `packages/sdk-php/src/Resources/QRDirectoryResource.php` line 65–71) and would still require envelope-shape adaptation regardless of the cursor change. | SDK envelope adaptation required regardless of strategy |
 | webhooks/dlq | Non-breaking (endpoint is currently non-functional). Introducing a working runtime is additive. New OpenAPI must retain the declared 400/401/409/422/429 error surface. | No SDK exposure today |
 | agents | **Breaking on `count` field removal.** `count` is currently declared and returned. Removal is a MAJOR ratchet under Guardian Standing Order 6 unless retained as `count: page length` with an added `pagination` block, and clients are steered to `has_more`. Recommend the additive path: keep `count` marked `deprecated: true` for one minor. | SDK `AgentsResource.list` returns object with `data`/`count`; needs `pagination`/`has_more`/`next_cursor` fields added; `count` kept and marked deprecated |
 | agents/{id}/transactions | Same as agents. Plus a **security boundary change** (anon → bearer required) that is by itself a breaking change and must be gated on a separate authorisation. | SDK `AgentsResource.transactions` same treatment |
-| cemac/corridors | Non-breaking if the endpoint stays a plain array and adds only `x-bounded-collection` metadata and `Cache-Control`. Breaking if wrapped in an envelope. Ratchet exemption resolves without breaking clients. | None (endpoint is developer reference, low SDK usage) |
+| cemac/corridors | **Disposition-dependent — UNRESOLVED until X5-D0.** Three branches: (A) **Bounded GET** — the endpoint may preserve a plain-array response only after formal ratification of the bounded-exemption evidence in §3.5. (B) **Paginated GET** — moving from a plain array to a `PaginatedResponse` envelope is a breaking wire change. (C) **Deprecation / retraction** — the currently advertised operation is marked deprecated or removed only under explicit contract and version authority. No branch is selected by this document. | Disposition-dependent |
 
-Any breaking change requires a **minor or major `info.version` bump** and a
-CHANGELOG entry per Guardian Standing Orders 1, 6, and P10. This document
-does not authorise a version bump.
+The active API version remains **`4.53.1`**, release status **Unreleased**.
+**No `info.version` bump is authorised by this audit.** Any future
+compatibility or version decision (including any hypothetical minor or major
+bump) requires separate Chief Architect authority and a CHANGELOG entry per
+Guardian Standing Orders 1, 6, and P10.
+
 
 ---
 
