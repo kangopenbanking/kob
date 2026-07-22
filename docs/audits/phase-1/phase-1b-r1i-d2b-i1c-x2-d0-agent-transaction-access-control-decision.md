@@ -1,7 +1,7 @@
 # Phase 1B — R1I-d.2B-I1c-X2-D0 — Agent Transaction Access-Control Decision
 
-**Revision:** R1 (service-role identity and slice-consistency repair)
-**Base commit under review:** `22d96ee055882d604095a98ad03b8d9d87854c02`
+**Revision:** R2 (admin existence and audit-RPC privilege decision repair)
+**Base commit under review:** `a9232e4e7cf7f9a042d2d07167602b99b36ab853`
 
 **Scope:** Binding, read-only access-control ratification for exactly one
 operation:
@@ -238,8 +238,13 @@ Rationale:
 - Model C (SECURITY DEFINER RPC) would require a new database function
   and migration. Out of scope for D0.
 - Model B preserves the existing service-role runtime pattern for
-  agent-banking, requires **no migration**, and closes the anonymous
-  exposure with a bounded X3 change confined to `agentTransactionList`.
+  agent-banking and closes the anonymous exposure with a bounded X3
+  change confined to `agentTransactionList`. Model B **requires no new
+  agent-ownership relationship** and **no new `agent_cash_transactions`
+  RLS policy**; existing RLS remains unchanged. Model B does, however,
+  require two X3-scoped migrations that are inventoried in §7.4 below
+  (an audit-RPC privilege-hardening migration and a pagination index on
+  `public.agent_cash_transactions`). Neither is implemented in D0.
 
 ### 7.1 Ownership-resolution procedure (binding; to be implemented by X3)
 
@@ -300,13 +305,82 @@ evidence and are unaffected by this decision.
 - The runtime must never accept `X-User-Id`, `X-Agent-Id`, or any
   caller-supplied identity header.
 
-### 7.3 Role grants (no change required for Model B)
+### 7.3 Role grants on `agent_cash_transactions` (no change required for Model B)
 
 | Role | Current | Required |
 |------|---------|----------|
 | `anon` | no grant | no grant |
 | `authenticated` | `SELECT` on `agent_cash_transactions` | unchanged |
 | `service_role` | `ALL` | unchanged |
+
+Model B does not add, weaken, or remove any RLS policy on
+`public.agent_cash_transactions`. The `authenticated` `SELECT` grant is
+mediated exclusively by the existing RLS quoted in §1.5.
+
+### 7.4 Required X3 migrations (inventoried here; not implemented in D0)
+
+Model B requires the following two X3-scoped migrations. Neither is
+authored, staged, applied, or executed by D0. Exact filenames and
+timestamps are assigned only when X3 is authorised.
+
+**7.4.1 Audit-RPC privilege-hardening migration (X3, forward + rollback).**
+
+Target function (complete signature):
+
+```
+public.log_security_event(
+  UUID,
+  TEXT,
+  TEXT,
+  INET,
+  TEXT,
+  JSONB
+)
+```
+
+The forward migration MUST execute the equivalent of:
+
+```sql
+REVOKE EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+FROM anon;
+REVOKE EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+FROM authenticated;
+GRANT EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+TO service_role;
+```
+
+Binding requirements:
+
+- Use the complete function signature above in every `REVOKE`/`GRANT`.
+- Fail loudly if the expected function does not exist.
+- Preserve `SECURITY DEFINER`; preserve the existing
+  `SET search_path = public`; do not alter the function body.
+- Do not grant execution to `PUBLIC`, `anon`, or `authenticated`.
+- Do not weaken `public.security_audit_logs` RLS.
+- Do not add a permissive client-facing audit RPC.
+
+The paired rollback MUST never restore execution to `PUBLIC`, `anon`, or
+`authenticated`. A rollback may remove the `service_role` grant only when
+paired with an explicitly documented operational recovery procedure; it
+must not restore the insecure public-execution state that existed prior
+to hardening.
+
+**7.4.2 Pagination index migration (X3, forward + rollback).**
+
+Composite index on:
+
+```
+public.agent_cash_transactions (agent_id, created_at DESC, id DESC)
+```
+
+Consistent with the d.2B canonical ordering
+`(created_at DESC, id DESC)`. Not implemented in D0.
 
 ---
 
@@ -411,6 +485,43 @@ JSON blob, not physical table columns):**
 - `customer_user_id`;
 - `idempotency_key`.
 
+### 10.1 Current audit-RPC privilege state (inventoried)
+
+Function: `public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)`.
+
+Properties inventoried in the repository:
+
+- Declared `SECURITY DEFINER`.
+- Declared `SET search_path = public`.
+- Writes to `public.security_audit_logs`.
+- **No repository-level `REVOKE EXECUTE` on this function was found.**
+- **No repository-level `service_role`-only `GRANT EXECUTE` on this
+  function was found.**
+
+Consequence: **the present repository does not prove that
+`log_security_event` is restricted to trusted server callers.** Under the
+default PostgreSQL grant, `EXECUTE` on a newly created function is
+granted to `PUBLIC`. Combined with `SECURITY DEFINER`, that means an
+anonymous or ordinary authenticated caller with network access to the
+Data API today could invoke the audit RPC directly and insert forged
+rows into `public.security_audit_logs`.
+
+**Current server-only EXECUTE restriction: NOT PROVEN.** The audit path
+must not be described as tamper-resistant until the §7.4.1 privilege
+hardening is implemented and locally verified in X3.
+
+### 10.2 Audit invocation model — ratified
+
+- `agentTransactionList` invokes `log_security_event` **only through the
+  service-role server client** inside the Edge Function; no browser,
+  SDK, anonymous caller, or ordinary authenticated caller may invoke
+  the audit RPC directly.
+- The request's `verifiedSubjectId` is passed as `_user_id`. The
+  `service_role` credential is transport authority only and is never
+  recorded as the human actor.
+- Every audit event remains mapped according to the §10 physical column
+  mapping and `_metadata` allow-list above.
+
 ---
 
 ## 11. Rate limiting and abuse controls — required for X3
@@ -491,8 +602,16 @@ are outside the agent test scope. X3 must add tests covering at least:
     → masked `404`; no collection query.
 12. Institution staff / admin / API client callers → masked `404`
     (denied by §4); no collection query.
-13. Platform administrator → `200` for any agent (existing or not
-    existing per §7.1 step 7).
+13. Platform administrator + **existing** agent (any status) → `200`
+    with the canonical paginated response; the collection query is
+    executed exactly once, constrained by `agent_id = targetAgentId`;
+    exactly one `agent_transaction_list.read` audit event is emitted.
+13a. Platform administrator + **non-existent** valid `agentId` → masked
+    `404 AGENT_NOT_FOUND` with the identical body used in tests 8 and 9;
+    **no** `agent_cash_transactions` query is executed; exactly one
+    `agent_transaction_list.denied` audit event is emitted. Under no
+    circumstance may an administrator receive `200` for a non-existent
+    agent — administrators do not bypass resource existence validation.
 14. Failed admin resolution AND failed agent-self resolution → masked
     `404`; **no** `agent_cash_transactions` SELECT executed.
 15. Page-size contract: omitted `limit` → 25; `limit=100` accepted;
@@ -518,6 +637,39 @@ are outside the agent test scope. X3 must add tests covering at least:
 22. Test scope isolation: the X3 test suite does not import, exercise,
     or assert on any X2 QR-directory files.
 
+### 14.1 Required X3 audit-RPC privilege tests (specification only)
+
+The following ten tests are prescribed for X3 to prove that §7.4.1 was
+applied correctly. They are not created in D0.
+
+1. `has_function_privilege('anon',
+   'public.log_security_event(uuid,text,text,inet,text,jsonb)',
+   'EXECUTE') = false`.
+2. `has_function_privilege('authenticated',
+   'public.log_security_event(uuid,text,text,inet,text,jsonb)',
+   'EXECUTE') = false`.
+3. `has_function_privilege('service_role',
+   'public.log_security_event(uuid,text,text,inet,text,jsonb)',
+   'EXECUTE') = true`.
+4. `PUBLIC` has no `EXECUTE` privilege on the function (verified via
+   `pg_proc.proacl` inspection; no `=X/…` ACL entry for `PUBLIC`).
+5. Direct anonymous RPC invocation of `log_security_event` through the
+   Data API is denied.
+6. Direct authenticated RPC invocation of `log_security_event` through
+   the Data API is denied.
+7. The Edge Function server path can emit exactly one audit event
+   through the `service_role` server client end-to-end against the
+   local stack.
+8. Denied endpoint requests cannot supply or overwrite `event_type`,
+   `event_category`, `user_id`, `target_agent_id`, `outcome`, or
+   `effective_role`; every field is populated by the server.
+9. The paired rollback migration does not grant `EXECUTE` to `PUBLIC`,
+   `anon`, or `authenticated` (verified by static SQL inspection and by
+   applying the rollback in the local stack, then re-running tests 1,
+   2, and 4).
+10. No existing `public.security_audit_logs` RLS policy is weakened by
+    the migration (verified against the pre-migration policy snapshot).
+
 This is a plan. No tests are created in D0.
 
 ---
@@ -526,6 +678,8 @@ This is a plan. No tests are created in D0.
 
 - **Authentication:** Bearer JWT verified by `supabase.auth.getUser` only.
 - **Authorised callers:** active agent-self and platform admin only.
+- **Admin existing-agent rule:** **ALLOW**.
+- **Admin non-existent-agent rule:** **MASKED 404**.
 - **Runtime subject variable:** `verifiedSubjectId`
   (= `authResult.user.id` from `supabase.auth.getUser`).
 - **Admin resolution:** `has_role(verifiedSubjectId, 'admin')`.
@@ -537,8 +691,8 @@ This is a plan. No tests are created in D0.
   unchanged.
 - **Existence masking:** 401 unauthenticated · 400 malformed UUID ·
   400 cursor scope mismatch · 404 masked (non-existent / foreign /
-  unowned / status-ineligible) · 403 platform-policy only · 429
-  rate-limit.
+  unowned / status-ineligible, applied to every caller including
+  platform admin) · 403 platform-policy only · 429 rate-limit.
 - **Cursor scope tuple:** `(environment, operationId,
   authenticatedSubjectId, authenticatedRole, targetAgentId)`.
 - **Filter hash tuple:** `EMPTY`.
@@ -548,17 +702,20 @@ This is a plan. No tests are created in D0.
   `429` with `Retry-After` on exhaustion.
 - **Audit storage:** `public.security_audit_logs` via
   `public.log_security_event` with the mapping in §10.
+- **Audit RPC current privilege status:** **NOT PROVEN SERVER-ONLY**
+  (see §10.1).
+- **Audit RPC required X3 privilege:** `service_role` `EXECUTE` only;
+  `PUBLIC`, `anon`, and `authenticated` denied (see §7.4.1).
+- **Ownership / RLS migration required:** **NO**.
+- **Audit privilege migration required:** **YES** (§7.4.1).
+- **Pagination index migration required:** **YES** (§7.4.2).
 - **Compatibility treatment:** correct under `4.53.1` Unreleased; no
   version change; no SDK republish required until next scheduled release.
 - **Programme sequence:** X2 QR first; X3 agents only after X2 closure.
 - **X3 security prerequisite satisfied:** **YES**.
 - **X2 authorised by this decision:** **NO**.
 - **X3 authorised by this decision:** **NO**.
-- **Unresolved security prerequisites:** NONE. Institutional /
-  API-client authorisation for this endpoint is explicitly denied and
-  is not a prerequisite for either X2 or the later X3 slice; it would require a separately
-  authorised future slice that first adds an agent-institution linkage
-  to `public.agents`.
+- **Unresolved decision fields:** **NONE**.
 
 ---
 
@@ -579,4 +736,5 @@ This is a plan. No tests are created in D0.
 
 ---
 
-**Status:** PHASE 1B-R1I-d.2B-I1c-X2-D0-R1 SECURITY DECISION READY FOR FINAL REVIEW
+**Status:** PHASE 1B-R1I-d.2B-I1c-X2-D0-R2 SECURITY DECISION READY FOR FINAL REVIEW
+
