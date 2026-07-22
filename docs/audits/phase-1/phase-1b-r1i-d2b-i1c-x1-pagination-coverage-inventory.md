@@ -423,7 +423,9 @@ No OpenAPI, runtime, test, migration, workflow, SDK, changelog, package, or
 
 ## 12. Verdict
 
-**PHASE 1B-R1I-d.2B-I1c-X1 FORENSIC INVENTORY READY FOR REVIEW.**
+**PHASE 1B-R1I-d.2B-I1c-X1-R1 INVENTORY CORRECTION READY FOR REVIEW.**
 
 The coverage ratchet is NOT fixed by this document. No implementation slice
-is begun. R1I-d.2B-I1d remains NOT AUTHORISED.
+is begun. `X2-D0`, `X2`, `X3`, `X4`, `X5-D0`, `X5`, and `I1d` all remain
+NOT AUTHORISED.
+
