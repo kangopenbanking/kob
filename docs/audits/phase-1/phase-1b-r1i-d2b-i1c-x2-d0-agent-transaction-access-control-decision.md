@@ -1,5 +1,8 @@
 # Phase 1B — R1I-d.2B-I1c-X2-D0 — Agent Transaction Access-Control Decision
 
+**Revision:** R1 (service-role identity and slice-consistency repair)
+**Base commit under review:** `22d96ee055882d604095a98ad03b8d9d87854c02`
+
 **Scope:** Binding, read-only access-control ratification for exactly one
 operation:
 
@@ -11,10 +14,22 @@ operation:
 | Primary data source | `public.agent_cash_transactions` |
 | Ownership source | `public.agents.user_id` (nullable UUID, no institution linkage present) |
 | Active API version | `4.53.1` (Unreleased) |
-| Base commit | `e5d7440e4bfc46d6bec393a74c433c3497113e51` |
 
 No runtime, OpenAPI, migration, RLS, test, workflow, or dependency file is
 modified by this document. This is a read-only decision record.
+
+**Programme sequence (binding).** The accepted ordering after this D0 is:
+
+1. **X2 — QR directory runtime and contract canonicalisation (QR only).**
+   X2 does not touch `agentTransactionList` in any way.
+2. **X3 — `agentList` and `agentTransactionList` implementation.** All
+   agent runtime, OpenAPI, pagination, audit, rate-limit and test
+   obligations described in this document belong to X3.
+3. Later checkpoints X4, X5-D0, X5, I1d remain NOT AUTHORISED.
+
+**This decision (X2-D0) closes the security prerequisite for X3.** It does
+not authorise X2, X3, or any implementation. X3 remains **NOT AUTHORISED**
+until X2 is closed.
 
 ---
 
@@ -22,57 +37,52 @@ modified by this document. This is a read-only decision record.
 
 ### 1.1 Runtime evidence — `supabase/functions/agent-banking/index.ts`
 
-- **Router match (lines 335–348).** The transactions route is matched by
+- **Router match.** The transactions route is matched by
   `req.method === "GET" && tail.length === 3 && tail[2] === "transactions"`.
-  It validates `agentId` as UUID with `UUID_RE`, parses `limit` capped at 200,
-  runs the collection query, and returns `{ data, count }`.
-- **Supabase client construction (lines 61–64).** A single client is created
-  with `SUPABASE_SERVICE_ROLE_KEY`. There is no caller-scoped client. The
-  runtime never falls back to the anon key.
-- **Anonymous access is currently allowed on this route.** The block at
-  lines 66–73 only sets `userId` if a bearer token is present; it is never
-  consulted before the transactions query. The route reaches the collection
-  query with `userId === null` when the caller sends no `Authorization`
-  header.
-- **Agent filtering.** `.eq("agent_id", agentId)` is the only scope predicate.
-  There is no ownership check against `public.agents`, no institution check,
-  no admin check, no customer-of-record check.
+  It validates `agentId` as UUID with `UUID_RE`, parses `limit` capped at
+  200 (default 50), runs the collection query, and returns `{ data, count }`.
+- **Supabase client construction.** A single client is created with
+  `SUPABASE_SERVICE_ROLE_KEY`. There is no caller-scoped client. The
+  runtime never falls back to the anon key. The service-role client does
+  **not** carry any caller identity; it holds no `auth.uid()` of its own.
+- **Anonymous access is currently allowed on this route.** The bearer
+  handling block only sets a local `userId` variable if a bearer token is
+  present; it is never consulted before the transactions query. The route
+  reaches the collection query with no caller identity when the request
+  omits `Authorization`.
+- **Agent filtering.** `.eq("agent_id", agentId)` is the only scope
+  predicate. There is no ownership check against `public.agents`, no
+  institution check, no admin check.
 - **Response shape.** `{ data: AgentCashTransaction[], count: integer }`.
-  No pagination envelope (`pagination`, `meta`, `X-Pagination-*`), no cursor,
-  no `has_more`. This matches the X1 inventory reclassification (Class B —
-  RUNTIME_AND_CONTRACT_DEFECT).
-- **Error handling.** Only `500 TX_LIST_FAILED` (query error) and the outer
-  `500 INTERNAL` catch. No `401`, no `403`, no `404` on this route.
+  No pagination envelope, no cursor, no `has_more`, no `X-Pagination-*`
+  headers. Matches X1's Class B (RUNTIME_AND_CONTRACT_DEFECT) finding.
+- **Error handling.** Only `500 TX_LIST_FAILED` and the outer `500 INTERNAL`
+  catch. No `401`, `403`, `404`, `429` on this route.
 - **Logging.** No structured audit or security log for the read.
-- **CORS.** `corsHeaders` with `Access-Control-Allow-Origin: *` and permissive
-  `Authorization, apikey, content-type` allow-list. `OPTIONS` returns 200.
+- **CORS.** `corsHeaders` with `Access-Control-Allow-Origin: *` and a
+  permissive `Authorization, apikey, content-type` allow-list.
 
-### 1.2 OpenAPI evidence — `public/openapi.json` lines 166052–166123
+### 1.2 OpenAPI evidence — `public/openapi.json`
 
 - Path key `/v1/agents/{agentId}/transactions`.
 - `operationId: agentTransactionList`.
 - Parameters: `agentId` (path, uuid), `limit` (query, 1..200 default 50),
-  `Accept-Language` (header, optional). No pagination parameters, no
-  filter parameters.
-- **`security` block is absent on the operation and there is no
-  document-global `security`.** In this specification's convention (see
-  `src/test/openapi-security-declared.test.ts`) the absence of both is a
-  security ratchet violation, but the operation currently ships that way.
+  `Accept-Language` (header, optional). No pagination parameters.
+- No `security` block on the operation and no document-global `security`.
   The effective declared posture is *no authentication required*.
-- Only response defined: `200`. No `400`, no `401`, no `403`, no `404`,
-  no `500`. No `X-Pagination-*` headers.
+- Only response defined: `200`. No `400`, `401`, `403`, `404`, `429`, `500`.
 
 ### 1.3 Identity and role sources present in the repository
 
 | Source | Evidence | Usable for this endpoint |
 |--------|----------|--------------------------|
-| Supabase JWT via `supabase.auth.getUser(bearer)` | agent-banking `index.ts` lines 69–73 | Yes — establishes `auth.uid()` |
-| `public.user_roles` + `public.has_role(_user_id, _role)` (SECURITY DEFINER) | Referenced by `agents` RLS "Admins manage all agents" | Yes — platform admin |
-| `public.agents.user_id` (nullable UUID) | `supabase/migrations/20260529025727_...sql` line 12 and `idx_agents_user_id` | Yes — agent self |
-| `public.agent_cash_transactions.customer_user_id` | Same migration, line 87; policy "Customers view their own agent transactions" | Yes — customer of record |
+| Supabase user Bearer JWT via `supabase.auth.getUser(bearer)` | agent-banking `index.ts` | Yes — establishes `verifiedSubjectId` |
+| `public.user_roles` + `public.has_role(_user_id, _role)` (SECURITY DEFINER) | Referenced by `agents` RLS "Admins manage all agents" | Yes — platform admin resolution |
+| `public.agents.user_id` (nullable UUID) | `supabase/migrations/…agents…sql`; `idx_agents_user_id` | Yes — agent self |
+| `public.agent_cash_transactions.customer_user_id` | Same migration; policy "Customers view their own agent transactions" | Yes — customer-of-record (RLS only; not exposed on this endpoint) |
 | `identity_memberships` | Cited in `docs/identity/security-posture.md`; unused by `agents` schema | **No linkage to `public.agents`** |
 | `institutions`, `staff_assignments` | Referenced by other domains | **No linkage to `public.agents`** |
-| API clients / OAuth scopes | `oauth-token`, `api_clients`, `credit_api_clients` | **Not wired to this route** |
+| API clients / OAuth scopes | `oauth-token`, `api_clients`, `credit_api_clients` | **Not wired to this route and no user-Bearer coupling exists for this operation** |
 
 **Conclusion.** The repository binds an agent to exactly one authenticated
 subject through `agents.user_id`. There is no institution, branch, merchant,
@@ -86,13 +96,19 @@ endpoint requires a schema linkage that does not exist today.
   (`pending|active|suspended|terminated`), `agents.approved_at`,
   `agents.approved_by`.
 - Absent: `institution_id`, `branch_id`, `merchant_id`, `operator_id`,
-  `owner_user_id` (distinct from `user_id`).
-- Mapping `agentId → authorised caller`: only through
-  `agents.user_id = auth.uid()` or `has_role(auth.uid(), 'admin')`.
+  `owner_user_id` distinct from `user_id`.
+- Mapping `agentId → authorised caller`: only through agent-self
+  (`agents.user_id = verifiedSubjectId`) or platform admin
+  (`has_role(verifiedSubjectId, 'admin')`).
 
-### 1.5 Database policies on `public.agent_cash_transactions`
+### 1.5 Database policies on `public.agent_cash_transactions` (existing database-policy evidence)
 
-- RLS **enabled** (migration line 108).
+The following policy expressions are quoted verbatim from the migration and
+represent **database-side RLS**, evaluated only when the request is executed
+under a caller-scoped Supabase JWT client. They are **not** invoked by the
+Model B runtime pseudocode in §7, which runs under a service-role client.
+
+- RLS enabled.
 - SELECT policies (authenticated only):
   1. `"Admins view all agent transactions"` — `has_role(auth.uid(), 'admin')`.
   2. `"Agents view their own transactions"` — `EXISTS (SELECT 1 FROM
@@ -100,25 +116,26 @@ endpoint requires a schema linkage that does not exist today.
      a.user_id = auth.uid())`.
   3. `"Customers view their own agent transactions"` —
      `auth.uid() = customer_user_id`.
-- Grants: `SELECT` to `authenticated`; `ALL` to `service_role`. No grant
+- Grants: `SELECT` to `authenticated`; `ALL` to `service_role`; no grant
   to `anon`.
 - Indexes: `idx_agent_cash_tx_agent_id`, `idx_agent_cash_tx_customer`,
   `idx_agent_cash_tx_created_at (DESC)`, `idx_agent_cash_tx_status`.
 - Foreign key: `agent_id → public.agents(id) ON DELETE RESTRICT`.
-- No views, no RPCs, no SECURITY DEFINER functions expose this table.
 
 RLS is well-formed. It is bypassed today only because the edge function
-holds a `service_role` client.
+holds a `service_role` client and does not perform an equivalent
+runtime-side ownership check.
 
 ---
 
 ## 2. Current anonymous financial-data exposure
 
 **Verified: YES.** An unauthenticated caller who guesses or enumerates a
-valid `agentId` UUID currently receives the full transaction list including
-`customer_msisdn`, `customer_user_id`, `amount`, `currency`,
-`commission_amount`, `tx_type`, `status`, `idempotency_key`, and `reference`.
-No credential is required. This exposure must be closed before X3.
+valid `agentId` UUID currently receives the full transaction list
+including `customer_msisdn`, `customer_user_id`, `amount`, `currency`,
+`commission_amount`, `tx_type`, `status`, `idempotency_key`, and
+`reference`. No credential is required. This exposure must be closed by
+X3.
 
 ---
 
@@ -127,63 +144,57 @@ No credential is required. This exposure must be closed before X3.
 | # | Threat | Rating | Required control |
 |---|--------|--------|------------------|
 | T1 | Anonymous enumeration of agent transactions | **CRITICAL** | Bearer authentication required; 401 for missing/invalid credentials |
-| T2 | Horizontal read across agents by an authenticated user | **HIGH** | Ownership check on `agents.user_id = auth.uid()` before collection query |
-| T3 | Cross-institution read | HIGH → **UNRESOLVED** | Institution model is absent; institutional access is not authorised in this decision |
-| T4 | Read from a suspended / terminated agent | MEDIUM | Deny reads when `agents.status ∈ {suspended, terminated}` for non-admin callers |
-| T5 | Platform-admin misuse | MEDIUM | Restrict to `has_role(auth.uid(), 'admin')`; audit every admin read |
-| T6 | Service-role bypass via unauthenticated public route | **CRITICAL** | Runtime must not perform the collection query on behalf of an unauthenticated caller (Model B in §7) |
-| T7 | Cursor replay / leak | MEDIUM | Signed cursor with scope binding (§9) |
-| T8 | Timing-oracle for agent existence | MEDIUM | Uniform 404 masking for non-existent, foreign, and unauthorised-known agents (§6) |
-| T9 | Excessive metadata exposure | MEDIUM | Response schema tightening deferred to X3; do not add fields in D0 |
-| T10 | Bulk-read abuse | MEDIUM | `limit` cap 200 (unchanged) plus rate limiting per §11 |
+| T2 | Horizontal read across agents by an authenticated user | **HIGH** | Runtime ownership check on `agents.user_id = verifiedSubjectId` before the collection query |
+| T3 | Cross-institution read | **HIGH — controlled by categorical denial** because no repository-backed institution-to-agent relationship exists | Institution categories denied per §4; may be revisited only in a separately authorised future slice |
+| T4 | Read from a suspended / terminated agent | MEDIUM | Deny agent-self reads when `agents.status ≠ 'active'`; admin retains access |
+| T5 | Platform-admin misuse | MEDIUM | Restrict to `has_role(verifiedSubjectId, 'admin')`; audit every admin read |
+| T6 | Service-role bypass via unauthenticated public route | **CRITICAL** | Runtime must not perform the collection query on behalf of an unauthenticated caller |
+| T7 | Cursor replay / leak | MEDIUM | Signed cursor with scope binding (§8) |
+| T8 | Timing-oracle for agent existence | MEDIUM | Uniform 404 masking for non-existent, foreign, unowned, and status-ineligible agents |
+| T9 | Excessive metadata exposure | MEDIUM | Response schema tightening deferred to X3 |
+| T10 | Bulk-read abuse | MEDIUM | Contract page-size cap 100 (X3) plus rate limiting per §11 |
 | T11 | Log leakage of cursor / bearer / service key | HIGH | Log allow-list in §10 |
 | T12 | Stale role or membership after revocation | MEDIUM | Cursor invalidation on role change (§8) |
 | T13 | Deleted or transferred agent | LOW | `ON DELETE RESTRICT` on FK; 404-mask when `agents` row missing |
-| T14 | Cursor issued for agent A replayed on agent B | HIGH | `agentId` in cursor scope tuple (§8) |
+| T14 | Cursor issued for agent A replayed on agent B | HIGH | `targetAgentId` in cursor scope tuple (§8) |
 | T15 | Cursor issued in sandbox replayed against production | HIGH | `environment` in cursor scope tuple (§8) |
 
 ---
 
 ## 4. Binding access matrix
 
-Every caller category is resolved. No category is left conditional on
-future work except where the repository lacks the linkage to bind a rule
-safely; those cases are documented as **DENY (repository does not support
-authorisation)** rather than "conditional".
-
 | # | Caller category | Decision | Relationship required |
 |---|-----------------|----------|-----------------------|
 | 1 | Anonymous | **DENY** | 401 with `WWW-Authenticate: Bearer` |
 | 2 | Authenticated ordinary user (no relationship to `agentId`) | **DENY** | Masked 404 |
-| 3 | Agent reading their own transactions | **CONDITIONAL — ALLOW** | `EXISTS (SELECT 1 FROM public.agents a WHERE a.id = :agentId AND a.user_id = auth.uid() AND a.status = 'active')` |
+| 3 | Agent reading their own transactions | **ALLOW** | `agents.id = targetAgentId AND agents.user_id = verifiedSubjectId AND agents.status = 'active'` |
 | 4 | Another agent (authenticated but not linked to `agentId`) | **DENY** | Masked 404 |
-| 5 | Institution staff member | **DENY (repository does not support authorisation)** | No `institution_id` column on `public.agents`; no `staff_assignments` linkage to agents. Authorising this category requires a new schema linkage which is out of scope for D0 and X2. |
-| 6 | Institution administrator | **DENY (repository does not support authorisation)** | Same as row 5 |
-| 7 | Platform administrator | **CONDITIONAL — ALLOW** | `has_role(auth.uid(), 'admin')` verified through the existing SECURITY DEFINER `public.has_role` |
-| 8 | Internal worker / service account | **DENY on the public endpoint** | Service-role must not be reachable via the public HTTP route. Internal workloads that need this data must use a dedicated internal function, not `agentTransactionList` |
-| 9 | API client acting for an institution | **DENY (repository does not support authorisation)** | Same as row 5; no OAuth scope currently maps to agent transactions and no institution linkage exists |
-| 10 | Suspended / disabled caller | **DENY** | If the authenticated subject has `status = 'suspended'` on the underlying agent row, deny with masked 404 |
+| 5 | Institution staff member | **DENY** | Repository does not support authorisation; no `institution_id` on `public.agents`; no `staff_assignments` linkage to agents |
+| 6 | Institution administrator | **DENY** | Same as row 5 |
+| 7 | Platform administrator | **ALLOW** | `has_role(verifiedSubjectId, 'admin')` |
+| 8 | Internal worker / service account | **DENY on the public endpoint** | Service-role must not be reachable via the public HTTP route |
+| 9 | Institution API client | **DENY** | Same as row 5; no OAuth scope maps to agent transactions and no institution linkage exists |
+| 10 | Suspended / disabled caller | **DENY** | Masked 404 when the underlying agent row is not `active` (agent-self path) |
 
-Categories 5, 6, and 9 are **not** deferred to X3; they are denied by this
-decision. They may be revisited in a separately authorised slice that first
-introduces the required schema linkage.
+Categories 5, 6, and 9 are denied by this decision. They may be revisited
+only in a separately authorised future slice that first introduces the
+required schema linkage.
 
 ---
 
 ## 5. Recommended minimum security posture — ratified
 
-- **Authentication (RATIFIED).** Bearer authentication required. Anonymous
-  access denied. Caller identity is taken only from a JWT verified by
-  `supabase.auth.getUser(bearer)` or from a first-party API credential
-  bound to a Supabase user. `agentId` in the path is never treated as
+- **Authentication (RATIFIED).** Supabase user Bearer JWT verified through
+  `supabase.auth.getUser` **only**. API clients without a valid user
+  Bearer JWT are denied. `agentId` in the path is never treated as
   authority.
 - **Agent-self access (RATIFIED).** Allowed only when
-  `agents.user_id = auth.uid()` and `agents.status = 'active'`.
+  `agents.user_id = verifiedSubjectId` and `agents.status = 'active'`.
 - **Institution access (REJECTED for this slice).** Repository lacks the
   linkage. Do not infer institution authority from JWT claims.
-- **Platform administrator (RATIFIED).** Allowed via `has_role(auth.uid(),
-  'admin')` only. A `service_role` key alone must not establish human
-  admin authority.
+- **Platform administrator (RATIFIED).** Allowed via
+  `has_role(verifiedSubjectId, 'admin')` only. A `service_role` key alone
+  must not establish human admin authority.
 - **Internal workers (REJECTED on the public endpoint).** No generic
   service-role access through `agentTransactionList`.
 
@@ -191,68 +202,101 @@ introduces the required schema linkage.
 
 ## 6. Existence masking — ratified matrix
 
-Exactly one matrix is bound.
-
 | Condition | Status |
 |-----------|--------|
 | No bearer / invalid bearer / expired bearer | **401** with `application/problem+json` and `WWW-Authenticate: Bearer` |
-| Syntactically invalid `agentId` (non-UUID) | **400 `INVALID_AGENT_ID`** (preserves current behaviour) |
+| Syntactically invalid `agentId` (non-UUID) | **400 `INVALID_AGENT_ID`** |
 | Well-formed `agentId`, agent does not exist | **404 `AGENT_NOT_FOUND`** (masked) |
 | Well-formed `agentId`, agent exists but caller has no relationship | **404 `AGENT_NOT_FOUND`** (masked; identical body to previous row) |
-| Caller is a linked agent but agent status ∈ {`pending`,`suspended`,`terminated`} | **404 `AGENT_NOT_FOUND`** (masked) |
+| Caller is the linked agent but agent status ∈ {`pending`,`suspended`,`terminated`} | **404 `AGENT_NOT_FOUND`** (masked) |
+| Cursor scope mismatch | **400 `PAGINATION_CURSOR_SCOPE_MISMATCH`** |
+| Rate-limit exhaustion | **429** with `Retry-After` |
 | Caller is authenticated, denied by explicit platform policy unrelated to resource ownership (e.g. globally revoked role) | **403 `FORBIDDEN`** |
-| Caller succeeds all checks | **200** with paginated envelope (defined in X2) |
+| Caller succeeds all checks | **200** with paginated envelope (to be defined in X3) |
 
-"404 or 403 unresolved" is closed. The default denial is **404 masked**;
-`403` is reserved for platform-policy denial that is not tied to resource
-ownership.
+The default denial is **404 masked**; `403` is reserved for platform-policy
+denial that is not tied to resource ownership.
 
 ---
 
 ## 7. Selected enforcement model
 
-**Model B — Runtime performs an explicit ownership check; the collection
-query runs under a tightly controlled server credential.**
+**Model B — Runtime performs an explicit ownership check using an
+explicitly-carried `verifiedSubjectId`; the collection query then runs
+under the existing service-role client, redundantly constrained by
+`agent_id = targetAgentId`.**
+
+The service-role client does not acquire the caller's `auth.uid()`
+merely because `supabase.auth.getUser` validated a token. The runtime
+MUST propagate the verified user ID as an explicit variable to every
+authorisation check.
 
 Rationale:
-- Model A (RLS-authoritative under a caller-scoped client) is architecturally
-  clean but requires refactoring `agent-banking` to construct a
-  per-request client from the caller JWT, which touches five other routes
-  in the same file (float top-up/withdraw, cash-in, cash-out, single-agent
-  read). D0 must not force that scope onto X2.
-- Model C (SECURITY DEFINER RPC) requires a new database function and a
-  migration. D0 must not create migrations.
+- Model A (RLS-authoritative under a caller-scoped client) would require
+  refactoring five sibling routes in `agent-banking/index.ts`. Out of
+  scope for D0.
+- Model C (SECURITY DEFINER RPC) would require a new database function
+  and migration. Out of scope for D0.
 - Model B preserves the existing service-role runtime pattern for
   agent-banking, requires **no migration**, and closes the anonymous
-  exposure with a bounded runtime change confined to
-  `agentTransactionList`.
+  exposure with a bounded X3 change confined to `agentTransactionList`.
 
-### 7.1 Ownership check (specified for X2, not implemented in D0)
-
-Before any query against `agent_cash_transactions`, X2 must execute
-exactly one authorised-ownership resolution:
+### 7.1 Ownership-resolution procedure (binding; to be implemented by X3)
 
 ```
-authorised :=
-  has_role(auth.uid(), 'admin')
-  OR EXISTS (
-    SELECT 1 FROM public.agents a
-    WHERE a.id = :agentId
-      AND a.user_id = auth.uid()
-      AND a.status = 'active'
-  )
+1.  Require exactly one Authorization: Bearer <token> header.
+    Missing/duplicate → 401 (denied audit).
+
+2.  authResult := supabase.auth.getUser(bearerToken)
+    If authResult.error OR authResult.user is null → 401 (denied audit).
+
+3.  verifiedSubjectId := authResult.user.id
+    (verifiedSubjectId is the only caller identity used from here on.)
+
+4.  If not UUID_RE.test(targetAgentId) → 400 INVALID_AGENT_ID (denied audit).
+
+5.  isAdmin := public.has_role(
+        _user_id := verifiedSubjectId,
+        _role    := 'admin'
+    )  -- invoked through the existing RPC interface
+
+6.  If not isAdmin:
+        selfRow := SELECT 1 FROM public.agents
+                    WHERE id = targetAgentId
+                      AND user_id = verifiedSubjectId
+                      AND status = 'active'
+                    LIMIT 1
+        If selfRow is empty → 404 AGENT_NOT_FOUND (masked; denied audit).
+
+7.  If isAdmin:
+        agentRow := SELECT 1 FROM public.agents
+                    WHERE id = targetAgentId
+                    LIMIT 1
+        If agentRow is empty → 404 AGENT_NOT_FOUND (masked; denied audit).
+
+8.  Only after ownership resolution succeeds:
+        collection := SELECT … FROM public.agent_cash_transactions
+                      WHERE agent_id = targetAgentId
+                        AND <pagination predicates from X3 adapter>
+                      ORDER BY created_at DESC, id DESC
+                      LIMIT :effectiveLimit
+
+9.  Emit exactly one read audit event on 200 (§10).
 ```
 
-If `authorised` is false, return the masked 404 defined in §6 **without
-issuing any query against `agent_cash_transactions`**.
+`verifiedSubjectId` is the sole caller-identity variable. The pseudocode
+contains no `auth.uid()` reference (the service-role client has none);
+no `agents.user_id = auth.uid()` predicate; and no `has_role(auth.uid(), …)`
+call. Existing RLS policies quoted in §1.5 remain valid as database-side
+evidence and are unaffected by this decision.
 
 ### 7.2 Defence in depth
 
 - Preserve RLS as-is. Do not add a `service_role` USING/WITH CHECK policy.
   Do not weaken existing policies.
-- The service-role collection query in X2 must include a redundant
-  `.eq("agent_id", agentId)` predicate (already present) and must never
-  omit the ownership pre-check.
+- The service-role collection query in X3 must include a redundant
+  `.eq("agent_id", targetAgentId)` predicate and must never omit the
+  ownership pre-check.
 - The runtime must never accept `X-User-Id`, `X-Agent-Id`, or any
   caller-supplied identity header.
 
@@ -263,13 +307,6 @@ issuing any query against `agent_cash_transactions`**.
 | `anon` | no grant | no grant |
 | `authenticated` | `SELECT` on `agent_cash_transactions` | unchanged |
 | `service_role` | `ALL` | unchanged |
-
-### 7.4 Test obligations (test plan in §14)
-
-Model B requires that X2 tests explicitly assert:
-- no `agent_cash_transactions` SELECT is executed when ownership fails;
-- the runtime does not read `service_role` collection data through the
-  public route for anonymous or unauthorised callers.
 
 ---
 
@@ -283,30 +320,21 @@ Model B requires that X2 tests explicitly assert:
 
 - `environment` — `sandbox` | `production` (existing d.2B convention).
 - `operationId` — literal string `agentTransactionList`.
-- `authenticatedSubjectId` — `auth.uid()` of the caller who issued the
-  cursor.
+- `authenticatedSubjectId` — the `verifiedSubjectId` at cursor issuance.
 - `authenticatedRole` — the caller's effective role at issuance:
-  `admin` | `agent_self`. Institutional roles are not included because
-  they are denied by §4.
+  `admin` | `agent_self`. Institutional roles are excluded because they
+  are denied by §4.
 - `targetAgentId` — the `agentId` path parameter as issued.
 
-`institutionId` and `apiClientId` are **excluded** because institution and
-API-client authorisation are denied by §4. Adding them now would encode
-authority the runtime does not honour.
+`institutionId` and `apiClientId` are **excluded** because those callers
+are denied by §4.
 
-**Filter hash tuple:** `EMPTY`. The endpoint currently has no filter
-parameters. Adding hypothetical filters is out of scope for D0 (per §9 of
-the prompt).
+**Filter hash tuple:** `EMPTY`. The endpoint has no filter parameters.
 
 **Invalidation.** Any mismatch between a cursor's canonical scope tuple
 and the current request context returns
-`400 PAGINATION_CURSOR_SCOPE_MISMATCH`, per the shared d.2B pattern.
-Specifically:
-- role change (admin ↔ agent_self) invalidates;
-- subject change invalidates;
-- target agent change invalidates;
-- environment change invalidates.
-Institution change is not a factor because institution is not in the tuple.
+`400 PAGINATION_CURSOR_SCOPE_MISMATCH`, per the shared d.2B pattern:
+role change, subject change, target agent change, environment change.
 
 ---
 
@@ -318,64 +346,89 @@ Institution change is not a factor because institution is not in the tuple.
 | Agent `active` | Allowed per §4. |
 | Agent `suspended` | Denied for agent-self (masked 404). Allowed for admin. |
 | Agent `terminated` | Denied for agent-self (masked 404). Allowed for admin. |
-| Agent row deleted | 404 `AGENT_NOT_FOUND`. `ON DELETE RESTRICT` on the FK means the row cannot be deleted while transactions exist, so this case is protected today. |
-| Institution suspended | Not applicable — institutional access is denied by §4. |
-| Institution-agent membership expired | Not applicable — no institutional access. |
-| Caller's admin role revoked | Effective immediately at the next `has_role` call. Cursors issued under `authenticatedRole = admin` become invalid because the current caller no longer resolves to that role. |
+| Agent row deleted | 404 `AGENT_NOT_FOUND`. `ON DELETE RESTRICT` on the FK protects this today. |
+| Institution suspended | Not applicable — institutional access denied by §4. |
+| Caller's admin role revoked | Effective immediately at the next `has_role(verifiedSubjectId, 'admin')` call. Cursors issued under `authenticatedRole = admin` become invalid. |
 
 ---
 
 ## 10. Audit logging — ratified
 
-Every successful and denied read of this endpoint must emit exactly one
-security audit event to `security_audit_logs`.
+All audit events are stored in `public.security_audit_logs` via the
+existing SECURITY DEFINER function `public.log_security_event(_user_id,
+_event_type, _event_category, _ip_address, _user_agent, _metadata)`.
 
-| Event name | Emitted when |
-|------------|--------------|
-| `agent_transaction_list.read` | 200 response |
-| `agent_transaction_list.denied` | 401, 403, or 404 (masked) responses |
+**Physical column mapping:**
 
-Fields (allow-list):
-- `event_name`
-- `actor_user_id` (nullable when the request is anonymous)
+| `log_security_event` argument | Value |
+|-------------------------------|-------|
+| `_user_id` | `verifiedSubjectId`, or `NULL` when authentication did not resolve a user (anonymous, invalid/expired bearer) |
+| `_event_type` | `agent_transaction_list.read` on success; `agent_transaction_list.denied` on any denial |
+| `_event_category` | `data_access` |
+| `_ip_address` | normalised caller IP obtained through the existing trusted-proxy model |
+| `_user_agent` | bounded and sanitised `User-Agent` value |
+| `_metadata` | JSON object with the logical fields below |
+
+**`_metadata` JSON allow-list (logical fields — these are properties of the
+JSON blob, not physical table columns):**
+
 - `target_agent_id`
-- `institution_id` — always `NULL` for this operation
 - `outcome` — `allowed` | `denied`
 - `denial_reason_category` — one of `unauthenticated`,
-  `agent_not_found_or_unowned`, `agent_status_ineligible`,
-  `platform_policy`, `cursor_scope_mismatch`
-- `request_id` / `x-fapi-interaction-id`
-- `timestamp`
+  `invalid_agent_id`, `agent_not_found_or_unowned`,
+  `agent_status_ineligible`, `platform_policy`, `cursor_scope_mismatch`,
+  `rate_limit_exhausted`
+- `request_id`
+- `x_fapi_interaction_id`
 - `pagination_mode` — `cursor` | `offset_deprecated`
 - `cursor_present` — boolean
-- Cursor values are **excluded** from logs.
-- Retention: standard security audit retention (existing policy on
-  `security_audit_logs`); no PII beyond the target `agentId`.
+- `effective_role` — `admin` | `agent_self` | `none`
 
-Explicit prohibitions:
-- Never log full cursor tokens.
-- Never log cursor HMAC signatures.
-- Never log transaction payloads (`amount`, `customer_msisdn`,
-  `customer_user_id`, `idempotency_key`).
-- Never log bearer tokens or service-role keys.
+**Emission rules:**
+
+- Exactly one `agent_transaction_list.read` event per successful `200`
+  response, emitted **only after** the collection query and response
+  finalisation have succeeded. A failed collection read is never logged
+  as a successful read.
+- Exactly one `agent_transaction_list.denied` event for each of:
+  400 malformed `agentId`, 400 cursor scope mismatch,
+  401 missing/invalid/expired bearer, 403 platform-policy denial,
+  404 masked ownership/existence/status denial,
+  429 rate-limit exhaustion.
+- `500` responses are recorded through the existing operational error log
+  path (not `security_audit_logs`); a failed database read is never
+  silently classified as a successful read.
+
+**Explicit exclusions (must never be logged):**
+
+- cursor values;
+- cursor HMAC signatures;
+- bearer tokens;
+- service-role keys;
+- transaction data (`amount`, `currency`, `commission_amount`, `tx_type`,
+  `status`, `reference`);
+- `customer_msisdn`;
+- `customer_user_id`;
+- `idempotency_key`.
 
 ---
 
 ## 11. Rate limiting and abuse controls — required for X3
 
-Not implemented in D0. X3 must ship the following:
-
-- Per-subject limit: `120 requests / minute` on `agentTransactionList`.
-- Per-institution limit: **not applicable** for this operation because
-  institutional callers are denied.
-- `limit` parameter maximum: **200** (unchanged from OpenAPI).
-- Enumeration protection: masked 404 (§6) combined with per-subject rate
-  limit; consider a lower **denial-rate** threshold (e.g. 30 denials/min
-  per subject) to trip an alert.
-- Monitoring thresholds: alert when a single subject exceeds 300
-  distinct `agentId` denials in any 5-minute window.
+- Per-verified-subject limit: **120 requests / minute** on
+  `agentTransactionList`. Independent of page size.
+- Per-institution limit: **not applicable** — institutional callers are
+  denied.
+- Contract page size (X3): **default 25 / maximum 100**. The current
+  legacy runtime and OpenAPI use `default 50 / maximum 200`; X3 corrects
+  this to `default 25 / maximum 100`. D0 does not authorise
+  implementation.
+- Enumeration protection: masked 404 combined with the per-subject rate
+  limit; a lower denial-rate alert threshold (e.g. 30 denials/min per
+  subject) is recommended.
 - Rate-limit exhaustion response: `429 Too Many Requests` with
-  `Retry-After`, following the existing gateway convention.
+  `Retry-After`, following the existing gateway convention, and one
+  denied audit event per §10.
 
 ---
 
@@ -383,88 +436,87 @@ Not implemented in D0. X3 must ship the following:
 
 **Selected: Model B (see §7).**
 
-- Fit: preserves the current service-role runtime pattern of
-  `agent-banking/index.ts` and confines the change to
-  `agentTransactionList`. Model A would require refactoring five sibling
-  routes; Model C would require a new SECURITY DEFINER function and
-  migration; both are out of scope for D0.
-- Future migration or policy changes required: **none.** RLS on
-  `agent_cash_transactions` remains as-is.
-- Role grants: unchanged (§7.3).
-- Service-role restrictions: the service-role collection query is guarded
-  by an explicit ownership pre-check in the runtime and is not reachable
-  by an unauthenticated caller.
-- Defence in depth: preserve RLS unchanged; redundant `.eq("agent_id", …)`
-  in the collection query; reject caller-supplied identity headers.
-- Test obligations: §14.
+- RLS on `agent_cash_transactions` remains unchanged.
+- Role grants unchanged (§7.3).
+- The service-role collection query is guarded by the explicit
+  runtime ownership pre-check under `verifiedSubjectId` and is not
+  reachable by an unauthenticated caller.
 
 ---
 
 ## 13. API compatibility
 
-- Current declared posture: **anonymous** (no `security` on the operation,
-  no global `security`).
-- Published SDKs: Node/Python/PHP clients follow whatever the OpenAPI
-  declares. Since the operation currently declares no security, some
-  clients may not attach credentials.
-- Requiring bearer authentication **is a contract-tightening change** for
+- Current declared posture: **anonymous** (no `security` on the
+  operation, no global `security`).
+- Requiring bearer authentication is a contract-tightening change for
   callers who currently call the endpoint without credentials. Under the
   active `4.53.1` **Unreleased** status, correcting this is permitted
-  without a version increment because no released contract has yet been
+  without a version increment because no released contract has been
   published with the anonymous declaration.
 - No version change is prescribed. `info.version` remains `4.53.1`.
-  A deprecation window is not required because the current posture is a
-  security defect, not a supported contract.
-
-Compatibility treatment: **CORRECT UNDER UNRELEASED STATUS**. X2 declares
-bearer authentication, adds 400/401/403/404/500 responses, and the
-paginated envelope. No SDK republish required until the next scheduled
-release.
+- Compatibility treatment: **CORRECT UNDER UNRELEASED STATUS.** X3
+  declares bearer authentication, adds 400/401/403/404/429/500
+  responses, corrects the page-size contract to 25/100, and adds the
+  paginated envelope.
 
 ---
 
 ## 14. Required future X3 test matrix (specification only)
 
-X2 or X3 (per the eventual slice split) must add tests covering:
+All implementation tests belong to **X3**. QR test files belong to X2 and
+are outside the agent test scope. X3 must add tests covering at least:
 
-1. Missing bearer token → `401`, no DB query executed.
-2. Invalid / expired bearer token → `401`.
-3. Malformed `agentId` (non-UUID) → `400 INVALID_AGENT_ID`, no DB query
-   against `agent_cash_transactions`.
-4. Non-existent `agentId` (UUID valid, no agent row) → masked `404`.
-5. Foreign agent (caller authenticated, no linkage) → masked `404`
-   with **identical body** to the non-existent case (parity test).
-6. Agent self-access (caller = `agents.user_id`, status `active`) →
-   `200` with paginated envelope; ownership check invoked exactly once.
-7. Agent self-access when `agents.status ∈ {pending,suspended,terminated}`
-   → masked `404`.
-8. Same-institution "authorised" staff → masked `404` (institutional
-   access is denied by §4; this test asserts the denial).
-9. Same-institution "unauthorised" staff → masked `404` (same).
-10. Cross-institution administrator → masked `404` (institutional
-    access denied).
-11. Platform administrator (`has_role admin`) reading any agent → `200`.
-12. Suspended platform administrator (role revoked) → masked `404`.
-13. Revoked institutional membership → masked `404` (denial by §4).
-14. Ownership-query failure (simulated DB error) → `500`, no collection
-    query executed.
-15. Collection-query failure (simulated after successful ownership) →
-    `500`, no data leakage in the error body.
-16. Assertion: no `agent_cash_transactions` SELECT is executed for any
-    401/403/404 path (spy on the client).
-17. Cursor scope mismatch after role change (admin → agent_self) →
-    `400 PAGINATION_CURSOR_SCOPE_MISMATCH`.
-18. Cursor scope mismatch after subject change → same.
-19. Cursor scope mismatch across environments → same.
-20. Cursor for `agentId=A` replayed with `agentId=B` → same.
-21. Service-role misuse: the public route must reject any request that
-    lacks a valid caller JWT even if the caller possesses the
-    service-role key.
-22. Audit event emission: exactly one `security_audit_logs` row per
-    request, with the allow-list fields from §10 and no cursor tokens
-    or signatures logged.
-23. Rate-limit exhaustion → `429` with `Retry-After`.
-24. No cursor value in any log line (grep assertion in test output).
+1. Missing bearer → `401`; no `has_role` call, no `agents` query, no
+   `agent_cash_transactions` query.
+2. Invalid / expired bearer → `401`; `getUser` returns error; identical
+   downstream assertions to test 1.
+3. `verifiedSubjectId` provenance: assert the value used in every
+   downstream authorisation call is the `user.id` returned by
+   `supabase.auth.getUser`, not any header, JWT-claim shortcut, or
+   database-derived `auth.uid()`.
+4. Admin resolution: `has_role` is invoked with the explicit
+   `verifiedSubjectId` (spy assertion on the RPC arguments).
+5. Agent-self resolution: the `public.agents` lookup compares
+   `agents.user_id` to `verifiedSubjectId` (not to `auth.uid()`).
+6. Runtime does not rely on `auth.uid()` under the service-role client
+   (source-level grep and RPC-argument assertions).
+7. Malformed `agentId` (non-UUID) → `400 INVALID_AGENT_ID`; no
+   `agents` or `agent_cash_transactions` query.
+8. Non-existent `agentId` → masked `404`.
+9. Foreign agent (authenticated, no linkage) → masked `404` with
+   identical body to test 8 (parity).
+10. Agent self-access, status `active` → `200`; ownership check
+    invoked exactly once; collection query invoked exactly once.
+11. Agent self-access, status ∈ {`pending`,`suspended`,`terminated`}
+    → masked `404`; no collection query.
+12. Institution staff / admin / API client callers → masked `404`
+    (denied by §4); no collection query.
+13. Platform administrator → `200` for any agent (existing or not
+    existing per §7.1 step 7).
+14. Failed admin resolution AND failed agent-self resolution → masked
+    `404`; **no** `agent_cash_transactions` SELECT executed.
+15. Page-size contract: omitted `limit` → 25; `limit=100` accepted;
+    `limit=101` rejected with `400`; no silent clamping.
+16. Cursor scope mismatch (role, subject, target, environment; and
+    agent-A cursor replayed on agent-B) → `400
+    PAGINATION_CURSOR_SCOPE_MISMATCH` and one denied audit event.
+17. Rate-limit exhaustion → `429` with `Retry-After` and one denied
+    audit event.
+18. API credential without a valid user Bearer JWT → `401` (API clients
+    are denied).
+19. Audit-event schema conformance: `event_type` ∈
+    {`agent_transaction_list.read`,`agent_transaction_list.denied`};
+    `event_category = 'data_access'`; `user_id = verifiedSubjectId` or
+    `NULL`; `metadata` matches the §10 allow-list; no cursor values,
+    signatures, bearer tokens, service-role keys, or transaction
+    payload fields appear anywhere in log lines.
+20. Denied audit events emitted for each of 400 malformed, 400 cursor
+    mismatch, 401, 403, 404 (masked), 429.
+21. Read audit event emitted only after the collection query and
+    response finalisation succeed; simulated collection failure emits
+    no read event.
+22. Test scope isolation: the X3 test suite does not import, exercise,
+    or assert on any X2 QR-directory files.
 
 This is a plan. No tests are created in D0.
 
@@ -472,48 +524,41 @@ This is a plan. No tests are created in D0.
 
 ## 15. Binding decision record
 
-- **Authentication:** Bearer required; anonymous denied.
-- **Authorised caller categories:** (a) agent-self linked via
-  `agents.user_id = auth.uid()` with `agents.status = 'active'`;
-  (b) platform administrator via `has_role(auth.uid(), 'admin')`. All
-  others denied.
-- **Agent-self rule:** ALLOW when `agents.user_id = auth.uid()` and
-  `agents.status = 'active'`.
-- **Institution rule:** DENY. Repository does not link agents to
-  institutions.
-- **Platform-admin rule:** ALLOW when `has_role(auth.uid(), 'admin')`.
-- **Internal-service rule:** DENY on the public endpoint. Internal
-  workloads must not use `agentTransactionList`.
-- **Ownership source:** `public.agents.user_id` (plus `agents.status`
-  gate); admin path uses `public.user_roles` via `public.has_role`.
+- **Authentication:** Bearer JWT verified by `supabase.auth.getUser` only.
+- **Authorised callers:** active agent-self and platform admin only.
+- **Runtime subject variable:** `verifiedSubjectId`
+  (= `authResult.user.id` from `supabase.auth.getUser`).
+- **Admin resolution:** `has_role(verifiedSubjectId, 'admin')`.
+- **Agent-self resolution:**
+  `agents.id = targetAgentId AND agents.user_id = verifiedSubjectId AND agents.status = 'active'`.
+- **Institution / API-client access:** DENY.
+- **Selected enforcement model:** **B** — runtime ownership pre-check
+  under `verifiedSubjectId` + service-role collection query; RLS
+  unchanged.
 - **Existence masking:** 401 unauthenticated · 400 malformed UUID ·
-  404 masked for non-existent, foreign, unowned, and status-ineligible ·
-  403 only for platform-policy denial unrelated to resource ownership.
-- **Selected RLS/runtime model:** **B** — runtime ownership pre-check +
-  service-role collection query; RLS unchanged.
+  400 cursor scope mismatch · 404 masked (non-existent / foreign /
+  unowned / status-ineligible) · 403 platform-policy only · 429
+  rate-limit.
 - **Cursor scope tuple:** `(environment, operationId,
   authenticatedSubjectId, authenticatedRole, targetAgentId)`.
 - **Filter hash tuple:** `EMPTY`.
-- **Agent lifecycle rule:** Historical reads denied for agent-self when
-  status ∈ {pending, suspended, terminated}. Admin retains access at all
-  statuses.
-- **Institution lifecycle rule:** Not applicable — institutional access
-  denied.
-- **Audit events:** `agent_transaction_list.read` (200);
-  `agent_transaction_list.denied` (401/403/404). Fields per §10.
-- **Rate-limit requirement:** 120 req/min per subject; 429 with
-  `Retry-After` on exhaustion. Implemented in X3.
-- **Compatibility treatment:** Correct under `4.53.1` Unreleased status;
-  no version change; no SDK republish required until next scheduled
-  release.
-- **X3 implementation permitted after this decision:** **YES** — the
-  runtime scope is bindable with the current repository; X2 remains the
-  next authorised step under the sequence in the accepted X1 inventory.
-- **Unresolved prerequisites:** NONE for the ratified access matrix.
-  Institutional / API-client authorisation for this endpoint is
-  explicitly denied by this decision and is not a prerequisite for X2 or
-  X3; it would require a separately authorised slice that first adds an
-  agent-institution linkage to `public.agents`.
+- **Pagination:** default `25` / maximum `100` (to be enforced by X3;
+  legacy 50/200 remains until X3 lands).
+- **Rate limit:** `120 requests / minute` per verified subject;
+  `429` with `Retry-After` on exhaustion.
+- **Audit storage:** `public.security_audit_logs` via
+  `public.log_security_event` with the mapping in §10.
+- **Compatibility treatment:** correct under `4.53.1` Unreleased; no
+  version change; no SDK republish required until next scheduled release.
+- **Programme sequence:** X2 QR first; X3 agents only after X2 closure.
+- **X3 security prerequisite satisfied:** **YES**.
+- **X2 authorised by this decision:** **NO**.
+- **X3 authorised by this decision:** **NO**.
+- **Unresolved security prerequisites:** NONE. Institutional /
+  API-client authorisation for this endpoint is explicitly denied and
+  is not a prerequisite for X2 or X3; it would require a separately
+  authorised future slice that first adds an agent-institution linkage
+  to `public.agents`.
 
 ---
 
@@ -534,4 +579,4 @@ This is a plan. No tests are created in D0.
 
 ---
 
-**Status:** PHASE 1B-R1I-d.2B-I1c-X2-D0 SECURITY DECISION READY FOR REVIEW
+**Status:** PHASE 1B-R1I-d.2B-I1c-X2-D0-R1 SECURITY DECISION READY FOR FINAL REVIEW
