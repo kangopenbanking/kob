@@ -485,6 +485,43 @@ JSON blob, not physical table columns):**
 - `customer_user_id`;
 - `idempotency_key`.
 
+### 10.1 Current audit-RPC privilege state (inventoried)
+
+Function: `public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)`.
+
+Properties inventoried in the repository:
+
+- Declared `SECURITY DEFINER`.
+- Declared `SET search_path = public`.
+- Writes to `public.security_audit_logs`.
+- **No repository-level `REVOKE EXECUTE` on this function was found.**
+- **No repository-level `service_role`-only `GRANT EXECUTE` on this
+  function was found.**
+
+Consequence: **the present repository does not prove that
+`log_security_event` is restricted to trusted server callers.** Under the
+default PostgreSQL grant, `EXECUTE` on a newly created function is
+granted to `PUBLIC`. Combined with `SECURITY DEFINER`, that means an
+anonymous or ordinary authenticated caller with network access to the
+Data API today could invoke the audit RPC directly and insert forged
+rows into `public.security_audit_logs`.
+
+**Current server-only EXECUTE restriction: NOT PROVEN.** The audit path
+must not be described as tamper-resistant until the §7.4.1 privilege
+hardening is implemented and locally verified in X3.
+
+### 10.2 Audit invocation model — ratified
+
+- `agentTransactionList` invokes `log_security_event` **only through the
+  service-role server client** inside the Edge Function; no browser,
+  SDK, anonymous caller, or ordinary authenticated caller may invoke
+  the audit RPC directly.
+- The request's `verifiedSubjectId` is passed as `_user_id`. The
+  `service_role` credential is transport authority only and is never
+  recorded as the human actor.
+- Every audit event remains mapped according to the §10 physical column
+  mapping and `_metadata` allow-list above.
+
 ---
 
 ## 11. Rate limiting and abuse controls — required for X3
