@@ -238,8 +238,13 @@ Rationale:
 - Model C (SECURITY DEFINER RPC) would require a new database function
   and migration. Out of scope for D0.
 - Model B preserves the existing service-role runtime pattern for
-  agent-banking, requires **no migration**, and closes the anonymous
-  exposure with a bounded X3 change confined to `agentTransactionList`.
+  agent-banking and closes the anonymous exposure with a bounded X3
+  change confined to `agentTransactionList`. Model B **requires no new
+  agent-ownership relationship** and **no new `agent_cash_transactions`
+  RLS policy**; existing RLS remains unchanged. Model B does, however,
+  require two X3-scoped migrations that are inventoried in §7.4 below
+  (an audit-RPC privilege-hardening migration and a pagination index on
+  `public.agent_cash_transactions`). Neither is implemented in D0.
 
 ### 7.1 Ownership-resolution procedure (binding; to be implemented by X3)
 
