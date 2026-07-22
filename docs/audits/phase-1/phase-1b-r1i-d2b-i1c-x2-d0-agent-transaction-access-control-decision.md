@@ -556,7 +556,7 @@ This is a plan. No tests are created in D0.
 - **X3 authorised by this decision:** **NO**.
 - **Unresolved security prerequisites:** NONE. Institutional /
   API-client authorisation for this endpoint is explicitly denied and
-  is not a prerequisite for X2 or X3; it would require a separately
+  is not a prerequisite for either X2 or the later X3 slice; it would require a separately
   authorised future slice that first adds an agent-institution linkage
   to `public.agents`.
 
