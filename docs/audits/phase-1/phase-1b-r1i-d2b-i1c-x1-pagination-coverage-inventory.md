@@ -1,10 +1,12 @@
 # Phase 1B — R1I-d.2B-I1c-X1 — Pagination-Coverage Forensic Inventory
 
-**Status:** READ-ONLY forensic inventory. No implementation is authorised by
-this document. No OpenAPI, runtime, migration, SDK, workflow, or test file
-was modified.
+**Status:** READ-ONLY forensic inventory (corrected under R1I-d.2B-I1c-X1-R1).
+No implementation is authorised by this document. No OpenAPI, runtime,
+migration, SDK, workflow, or test file was modified.
 
-**Reviewed base commit:** `d68c8b48ec17ce063280bc0520feef33374f16b8`
+**Reviewed base commit (X1):** `d68c8b48ec17ce063280bc0520feef33374f16b8`
+**Correction base commit (X1-R1):** `215e9e7b1fa53e74b5c7bb981e54f8ca5f421ef7`
+
 
 **Scope (fixed):** the five endpoints currently failing
 `src/test/openapi-pagination-coverage.test.ts`:
