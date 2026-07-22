@@ -409,19 +409,63 @@ Permitted:
 Prohibited: `admin-webhook-dlq-replay/*`, `webhook-inbox-retry-worker/*`,
 every protected baseline.
 
-### 9.4 R1I-d.2B-I1c-X5 (CEMAC bounded exemption)
+### 9.4 R1I-d.2B-I1c-X5 — CEMAC implementation determined by X5-D0
 
-Permitted (contingent on separate d.0 §9 ratification):
-- `public/openapi.json`, `public/openapi.yaml` — add
-  `x-bounded-collection: { max_items: 36, justification: "..." }` and
-  `Cache-Control` guidance.
-- `src/test/openapi-pagination-coverage.test.ts` — teach the ratchet to
-  respect `x-bounded-collection`.
+X5-D0 chooses **exactly one** of the three branches below. This section
+documents the conditional file scope for each. No `x-bounded-collection`
+metadata and no `max_items` value is prescribed by this audit.
+
+**Branch A — Bounded GET (only if X5-D0 ratifies the boundedness evidence
+in §3.5).** Permitted:
+- new dedicated GET runtime for `/v1/remittance/cemac/corridors`
+  under `supabase/functions/` (path chosen by X5-D0)
+- database constraint migration under
+  `supabase/pending-migrations/phase-1/` and the matching concurrent
+  operation under `supabase/pending-operations/phase-1/` enforcing the
+  bound (constraints and rollback)
+- `public/openapi.json`, `public/openapi.yaml` — bounded metadata as
+  ratified by X5-D0 (max value determined by X5-D0, not by this audit)
+- `src/test/openapi-pagination-coverage.test.ts` — ratchet support for
+  the bounded-exemption predicate ratified by X5-D0
+- boundedness tests
+  (e.g. `src/test/cemac-corridors-bounded-*.test.ts`)
 - `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x5-*.md`
-- CHANGELOG trio
+- `AGENTS.md` authority update; CHANGELOG artifacts only when separately
+  authorised.
 
-Prohibited: `remittance-outbound/*`, `remittance-engine/*`, every protected
-baseline.
+**Branch B — Paginated GET.** Permitted:
+- new dedicated GET runtime for `/v1/remittance/cemac/corridors`
+- new isolated pagination adapter alongside that runtime
+  (e.g. `_pagination-cemac-corridors.ts`)
+- index migration under `supabase/pending-migrations/phase-1/` and the
+  matching concurrent operation under `supabase/pending-operations/phase-1/`
+  (both with rollback)
+- `public/openapi.json`, `public/openapi.yaml` — pagination contract on the
+  operation (cursor param, `X-Pagination-*` headers, `PaginatedResponse`
+  envelope)
+- runtime tests
+  (e.g. `src/test/pagination-cemac-corridors-runtime-*.test.ts`)
+- contract tests
+  (e.g. `src/test/pagination-cemac-corridors-contract-*.test.ts`)
+- `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x5-*.md`
+- `AGENTS.md` authority update; CHANGELOG artifacts only when separately
+  authorised.
+
+**Branch C — Deprecation / retraction.** Permitted:
+- `public/openapi.json`, `public/openapi.yaml` — mark the operation
+  deprecated or remove it under explicit contract/version authority
+- CHANGELOG artifacts only when separately authorised
+- compatibility and regression tests documenting the deprecation surface
+- `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x5-*.md`
+- `AGENTS.md` authority update.
+
+No fabricated runtime may be added under Branch C.
+
+Prohibited (all three branches): `remittance-outbound/*`,
+`remittance-engine/*`, `_pagination-d2b.ts`, `_pagination.ts` foundation
+(import only), package/dependency files, and every protected d.2A / I1a /
+I1b / I1c artifact listed in AGENTS.md §5.
+
 
 ---
 
