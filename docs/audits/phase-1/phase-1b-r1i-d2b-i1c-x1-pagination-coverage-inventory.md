@@ -292,19 +292,24 @@ does not authorise a version bump.
 
 ## 8. Recommended implementation slices
 
-Prefer **four independent slices** over one cross-cutting sweep. The
-runtimes belong to different domains (Payments, Webhooks/Admin, Agents,
-CEMAC Remittance) and have different security boundaries, blast radii, and
-review chains.
+The coverage ratchet must be resolved as seven ordered slices. Two are
+read-only decision slices (`X2-D0`, `X5-D0`); the remainder are
+implementation slices. **None is authorised by this document.**
 
-| Order | Proposed slice | Endpoints | Class | Depends on |
-|-------|----------------|-----------|-------|------------|
-| 1 | **R1I-d.2B-I1c-X2** — QR directory contract alignment | 1 | A (contract-only) | none |
-| 2 | **R1I-d.2B-I1c-X3** — Agents contract + runtime (agents + agent transactions) | 3, 4 | B | d.1F foundation; requires separate security-scope ratification for endpoint 4 |
-| 3 | **R1I-d.2B-I1c-X4** — Webhooks DLQ list runtime + contract | 2 | B (missing runtime) | admin auth review; new admin route in `admin-webhooks` or dedicated function |
-| 4 | **R1I-d.2B-I1c-X5** — CEMAC corridors bounded-exemption ratification | 5 | C | requires d.0 §9 ratification vote before any file edit |
+| Order | Slice | Type | Endpoints | Class | Blocks / Depends on |
+|-------|-------|------|-----------|-------|---------------------|
+| 1 | **R1I-d.2B-I1c-X2-D0** — Agent transaction access-control ratification | Read-only security decision | 4 | B | Blocks X3; no runtime changes |
+| 2 | **R1I-d.2B-I1c-X2** — QR directory runtime and contract canonicalisation | Runtime + contract (not contract-only) | 1 | B | d.1F foundation |
+| 3 | **R1I-d.2B-I1c-X3** — Agent listings runtime, security, and contract implementation | Runtime + contract | 3, 4 | B | May begin only after X2-D0 closes |
+| 4 | **R1I-d.2B-I1c-X4** — Webhook DLQ admin runtime and contract implementation | Runtime + contract | 2 | B (missing runtime) | admin auth review; new function; no edits to `admin-webhook-dlq-replay` |
+| 5 | **R1I-d.2B-I1c-X5-D0** — CEMAC endpoint disposition and boundedness decision | Read-only decision | 5 | B | Decides between bounded GET, paginated GET, or deprecation/retraction |
+| 6 | **R1I-d.2B-I1c-X5** — CEMAC implementation | Scope determined by X5-D0 | 5 | B | X5-D0 |
+| 7 | **R1I-d.2B-I1d** — complete d.2B isolated verification | Verification | — | — | Only after the coverage ratchet is green |
 
-Each slice must be authorised on its own; none is authorised by this document.
+Each slice must be authorised on its own; none is authorised by this
+document. In particular this audit does not authorise `X2-D0`, `X2`, `X3`,
+`X4`, `X5-D0`, `X5`, or `I1d`.
+
 
 ---
 
