@@ -229,10 +229,12 @@ must be present and verified in writing):
 9. explicit maximum enforcement in schema/seed (not derived from ISO 3166);
 10. a test proving the response can never exceed the proposed `max_items`.
 
-Until every item above is present and verified, `max_items=36` MUST NOT be
-claimed and `x-bounded-collection` MUST NOT be applied. Endpoint remains
-classified **B — RUNTIME_AND_CONTRACT_DEFECT**; disposition (bounded GET,
-paginated GET, or deprecation) is deferred to slice X5-D0.
+Until every item above is present and verified, no specific `max_items`
+value may be claimed and `x-bounded-collection` MUST NOT be applied.
+Endpoint remains classified **B — RUNTIME_AND_CONTRACT_DEFECT**; disposition
+(bounded GET, paginated GET, or deprecation/retraction) is deferred to slice
+X5-D0.
+
 
 
 ---
