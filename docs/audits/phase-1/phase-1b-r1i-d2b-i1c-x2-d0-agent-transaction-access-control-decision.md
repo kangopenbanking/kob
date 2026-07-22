@@ -305,13 +305,82 @@ evidence and are unaffected by this decision.
 - The runtime must never accept `X-User-Id`, `X-Agent-Id`, or any
   caller-supplied identity header.
 
-### 7.3 Role grants (no change required for Model B)
+### 7.3 Role grants on `agent_cash_transactions` (no change required for Model B)
 
 | Role | Current | Required |
 |------|---------|----------|
 | `anon` | no grant | no grant |
 | `authenticated` | `SELECT` on `agent_cash_transactions` | unchanged |
 | `service_role` | `ALL` | unchanged |
+
+Model B does not add, weaken, or remove any RLS policy on
+`public.agent_cash_transactions`. The `authenticated` `SELECT` grant is
+mediated exclusively by the existing RLS quoted in §1.5.
+
+### 7.4 Required X3 migrations (inventoried here; not implemented in D0)
+
+Model B requires the following two X3-scoped migrations. Neither is
+authored, staged, applied, or executed by D0. Exact filenames and
+timestamps are assigned only when X3 is authorised.
+
+**7.4.1 Audit-RPC privilege-hardening migration (X3, forward + rollback).**
+
+Target function (complete signature):
+
+```
+public.log_security_event(
+  UUID,
+  TEXT,
+  TEXT,
+  INET,
+  TEXT,
+  JSONB
+)
+```
+
+The forward migration MUST execute the equivalent of:
+
+```sql
+REVOKE EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+FROM anon;
+REVOKE EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+FROM authenticated;
+GRANT EXECUTE ON FUNCTION
+  public.log_security_event(UUID, TEXT, TEXT, INET, TEXT, JSONB)
+TO service_role;
+```
+
+Binding requirements:
+
+- Use the complete function signature above in every `REVOKE`/`GRANT`.
+- Fail loudly if the expected function does not exist.
+- Preserve `SECURITY DEFINER`; preserve the existing
+  `SET search_path = public`; do not alter the function body.
+- Do not grant execution to `PUBLIC`, `anon`, or `authenticated`.
+- Do not weaken `public.security_audit_logs` RLS.
+- Do not add a permissive client-facing audit RPC.
+
+The paired rollback MUST never restore execution to `PUBLIC`, `anon`, or
+`authenticated`. A rollback may remove the `service_role` grant only when
+paired with an explicitly documented operational recovery procedure; it
+must not restore the insecure public-execution state that existed prior
+to hardening.
+
+**7.4.2 Pagination index migration (X3, forward + rollback).**
+
+Composite index on:
+
+```
+public.agent_cash_transactions (agent_id, created_at DESC, id DESC)
+```
+
+Consistent with the d.2B canonical ordering
+`(created_at DESC, id DESC)`. Not implemented in D0.
 
 ---
 
