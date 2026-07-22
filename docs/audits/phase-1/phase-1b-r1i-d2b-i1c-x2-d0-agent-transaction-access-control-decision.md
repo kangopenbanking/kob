@@ -602,8 +602,16 @@ are outside the agent test scope. X3 must add tests covering at least:
     → masked `404`; no collection query.
 12. Institution staff / admin / API client callers → masked `404`
     (denied by §4); no collection query.
-13. Platform administrator → `200` for any agent (existing or not
-    existing per §7.1 step 7).
+13. Platform administrator + **existing** agent (any status) → `200`
+    with the canonical paginated response; the collection query is
+    executed exactly once, constrained by `agent_id = targetAgentId`;
+    exactly one `agent_transaction_list.read` audit event is emitted.
+13a. Platform administrator + **non-existent** valid `agentId` → masked
+    `404 AGENT_NOT_FOUND` with the identical body used in tests 8 and 9;
+    **no** `agent_cash_transactions` query is executed; exactly one
+    `agent_transaction_list.denied` audit event is emitted. Under no
+    circumstance may an administrator receive `200` for a non-existent
+    agent — administrators do not bypass resource existence validation.
 14. Failed admin resolution AND failed agent-self resolution → masked
     `404`; **no** `agent_cash_transactions` SELECT executed.
 15. Page-size contract: omitted `limit` → 25; `limit=100` accepted;
