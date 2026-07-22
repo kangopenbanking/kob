@@ -674,3 +674,223 @@ describe("R1I-d.2B-I1c-X2-A — adapter isolation", () => {
     expect(source).not.toMatch(/function\s+hashFilters\s*\(/);
   });
 });
+
+// -----------------------------------------------------------------------------
+// HMAC configuration coverage (X2-A-R1)
+//
+// The adapter must NEVER downgrade an HMAC-secret configuration failure to
+// a client-facing 400 Problem Details response. Missing / short secrets
+// must throw `PaginationConfigurationError` at every entry point:
+// `encodeQrDirectoryCursor`, `decodeQrDirectoryCursor`, and
+// `finalizeQrDirectoryPage` (whose limit-plus-one path signs a
+// continuation cursor).
+//
+// Env isolation: each test temporarily clears `KOB_CURSOR_HMAC_SECRET`
+// and restores its prior value in an afterEach guard, so the suite does
+// not rely on the developer machine having the variable unset.
+
+describe("R1I-d.2B-I1c-X2-A — HMAC configuration coverage", () => {
+  const ENV_KEY = "KOB_CURSOR_HMAC_SECRET";
+  const SHORT_SECRET = "x".repeat(8); // below MIN_SECRET_BYTES
+
+  let priorEnv: string | undefined;
+  let priorHad: boolean;
+
+  function clearEnv(): void {
+    priorHad = Object.prototype.hasOwnProperty.call(process.env, ENV_KEY);
+    priorEnv = process.env[ENV_KEY];
+    delete process.env[ENV_KEY];
+  }
+  function restoreEnv(): void {
+    if (priorHad) {
+      process.env[ENV_KEY] = priorEnv;
+    } else {
+      delete process.env[ENV_KEY];
+    }
+  }
+
+  afterEach(() => {
+    restoreEnv();
+  });
+
+  async function captureThrow(fn: () => Promise<unknown>): Promise<Error> {
+    try {
+      await fn();
+    } catch (e) {
+      return e as Error;
+    }
+    throw new Error("expected promise to reject but it resolved");
+  }
+
+  function expectNoSecretLeak(message: string): void {
+    expect(message).not.toContain(TEST_SECRET);
+    expect(message).not.toContain(ALT_SECRET);
+    expect(message).not.toContain(SHORT_SECRET);
+  }
+
+  it("encodeQrDirectoryCursor throws PaginationConfigurationError when no secret is configured", async () => {
+    clearEnv();
+    const err = await captureThrow(() =>
+      encodeQrDirectoryCursor({
+        environment: "sandbox",
+        filters: NO_FILTERS,
+        merchantId: UUID_A,
+        nowSeconds: 1_700_000_000,
+      }),
+    );
+    expect(err).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(err.message);
+  });
+
+  it("decodeQrDirectoryCursor throws PaginationConfigurationError when no secret is configured", async () => {
+    // First mint a valid cursor with an explicit secret.
+    const token = await encodeQrDirectoryCursor({
+      environment: "sandbox",
+      filters: NO_FILTERS,
+      merchantId: UUID_A,
+      nowSeconds: 1_700_000_000,
+      secretOptions: { secret: TEST_SECRET },
+    });
+
+    clearEnv();
+    const err = await captureThrow(() =>
+      decodeQrDirectoryCursor({
+        token,
+        environment: "sandbox",
+        filters: NO_FILTERS,
+      }),
+    );
+    expect(err).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(err.message);
+  });
+
+  it("decodeQrDirectoryCursor throws PaginationConfigurationError when the env secret is too short", async () => {
+    const token = await encodeQrDirectoryCursor({
+      environment: "sandbox",
+      filters: NO_FILTERS,
+      merchantId: UUID_A,
+      nowSeconds: 1_700_000_000,
+      secretOptions: { secret: TEST_SECRET },
+    });
+
+    clearEnv();
+    process.env[ENV_KEY] = SHORT_SECRET;
+    const err = await captureThrow(() =>
+      decodeQrDirectoryCursor({
+        token,
+        environment: "sandbox",
+        filters: NO_FILTERS,
+      }),
+    );
+    expect(err).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(err.message);
+  });
+
+  it("CONFIGURATION_ERROR is never returned as { ok: false, error: <400 Problem Details> }", async () => {
+    // Reach the decode path in a way that would ordinarily produce a 400
+    // failure result — but with a missing secret the CONFIGURATION_ERROR
+    // MUST be re-raised, not folded into a client Problem Details.
+    const token = await encodeQrDirectoryCursor({
+      environment: "sandbox",
+      filters: NO_FILTERS,
+      merchantId: UUID_A,
+      nowSeconds: 1_700_000_000,
+      secretOptions: { secret: TEST_SECRET },
+    });
+
+    clearEnv();
+
+    let resolved: unknown = undefined;
+    let threw: Error | undefined;
+    try {
+      resolved = await decodeQrDirectoryCursor({
+        token,
+        environment: "sandbox",
+        filters: NO_FILTERS,
+      });
+    } catch (e) {
+      threw = e as Error;
+    }
+
+    expect(resolved).toBeUndefined();
+    expect(threw).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(threw!.message);
+  });
+
+  it("finalizeQrDirectoryPage limit-plus-one throws PaginationConfigurationError when no secret is configured", async () => {
+    // limit=2 plus a third fetched row triggers continuation signing.
+    const rows = [
+      { merchant_id: UUID_A },
+      { merchant_id: UUID_B },
+      { merchant_id: UUID_C },
+    ];
+    clearEnv();
+    const err = await captureThrow(() =>
+      finalizeQrDirectoryPage({
+        environment: "sandbox",
+        filters: NO_FILTERS,
+        limit: 2,
+        fetchedItems: rows,
+        nowSeconds: 1_700_000_000,
+      }),
+    );
+    expect(err).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(err.message);
+  });
+
+  it("finalizeQrDirectoryPage limit-plus-one throws PaginationConfigurationError when the env secret is too short", async () => {
+    const rows = [
+      { merchant_id: UUID_A },
+      { merchant_id: UUID_B },
+      { merchant_id: UUID_C },
+      { merchant_id: UUID_D },
+    ];
+    clearEnv();
+    process.env[ENV_KEY] = SHORT_SECRET;
+    const err = await captureThrow(() =>
+      finalizeQrDirectoryPage({
+        environment: "sandbox",
+        filters: NO_FILTERS,
+        limit: 3,
+        fetchedItems: rows,
+        nowSeconds: 1_700_000_000,
+      }),
+    );
+    expect(err).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(err.message);
+  });
+
+  it("no thrown message from any configuration-error path echoes the secret value", async () => {
+    const rows = [
+      { merchant_id: UUID_A },
+      { merchant_id: UUID_B },
+    ];
+    // Encode path with a short explicit secret.
+    clearEnv();
+    const e1 = await captureThrow(() =>
+      encodeQrDirectoryCursor({
+        environment: "sandbox",
+        filters: NO_FILTERS,
+        merchantId: UUID_A,
+        nowSeconds: 1_700_000_000,
+        secretOptions: { secret: SHORT_SECRET },
+      }),
+    );
+    expect(e1).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(e1.message);
+
+    // Finalize path with a short explicit secret and limit-plus-one.
+    const e2 = await captureThrow(() =>
+      finalizeQrDirectoryPage({
+        environment: "sandbox",
+        filters: NO_FILTERS,
+        limit: 1,
+        fetchedItems: rows,
+        nowSeconds: 1_700_000_000,
+        secretOptions: { secret: SHORT_SECRET },
+      }),
+    );
+    expect(e2).toBeInstanceOf(PaginationConfigurationError);
+    expectNoSecretLeak(e2.message);
+  });
+});
