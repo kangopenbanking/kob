@@ -114,9 +114,9 @@ agent MUST NOT:
 | R1I-d.2A | CLOSED — PROTECTED |
 | R1I-d.2B-I1a | CLOSED — PROTECTED FOUNDATION (commit `aa8124e5ee03c87acdc3615cf85d78c36855882b`) |
 | R1I-d.2B-I1b | CLOSED — PROTECTED RUNTIME (commit `1485c5593d5b712043564ee68a7274eacb8f185d`) |
-| R1I-d.2B-I1c | CLOSED — PROTECTED CONTRACT |
+| R1I-d.2B-I1c | IN PROGRESS — CROSS-CUTTING PAGINATION-COVERAGE REMEDIATION |
 | R1I-d.2B-I1c-X2-D0 | CLOSED — PROTECTED SECURITY DECISION (D0 closure commit `9407e2292590f83ed85770cf93dc43f5eb46c2e8`) |
-| R1I-d.2B-I1c-X2-A | AUTHORISED FOR FOUNDATION IMPLEMENTATION (this turn) |
+| R1I-d.2B-I1c-X2-A | REPAIR IN PROGRESS (R1 — governance, atomic cutover, HMAC configuration-coverage) |
 | R1I-d.2B-I1c-X2-B | NOT AUTHORISED |
 | R1I-d.2B-I1c-X2-C | NOT AUTHORISED |
 | R1I-d.2B-I1c-X2-D | NOT AUTHORISED |
@@ -127,13 +127,27 @@ agent MUST NOT:
 | R1I-d.2E | NOT AUTHORISED |
 | R1I-d.2F | NOT AUTHORISED |
 
+**Parent I1c is not closed.** The three d.2B operation contract nodes
+(`gatewayListCustomers`, `gatewayListPaymentPlans`,
+`gatewayListSubscriptions`) are protected as ratified in the I1c contract
+turn, but I1c itself CANNOT close while
+`src/test/openapi-pagination-coverage.test.ts` continues to fail against
+five list operations. X2, X3, X4, X5-D0 and X5 all remain required, and
+I1d remains NOT AUTHORISED until the complete pagination-coverage ratchet
+is green.
+
 QR-directory compatibility decision (X2 programme, ratified in
 `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x2-compatibility-decision.md`):
-**DIRECT CANONICAL REPLACEMENT UNDER 4.53.1 UNRELEASED.** No new
-versioned endpoint, no dual legacy/canonical response, no raw-UUID
-cursor compatibility after X2 closes, no SDK publication, no deployment.
-X2-A establishes the isolated adapter only; it does not modify the QR
-directory runtime, OpenAPI, SDKs, or consumers.
+**DIRECT CANONICAL REPLACEMENT UNDER 4.53.1 UNRELEASED, EXECUTED AS AN
+ATOMIC X2-B CUTOVER.** No new versioned endpoint, no dual
+legacy/canonical response, no raw-UUID cursor compatibility, no API
+version bump, no SDK publication, and no deployment. Runtime, OpenAPI
+JSON/YAML, repository-owned SDK sources and every repository-owned
+consumer migrate together in the single X2-B slice; no partial X2-B
+component may be declared closed independently. X2-A establishes the
+isolated adapter only and MUST NOT be marked closed before independent
+R1 review. X2-C is disposable local-stack verification only. X2-D is
+independent evidence review and final X2 closure only.
 
 The R1I-d.2B-I1a closure is a **protected foundation**. Its protected artifacts include:
 
