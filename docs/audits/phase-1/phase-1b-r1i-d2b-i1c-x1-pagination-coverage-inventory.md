@@ -52,9 +52,20 @@ The `remittance-outbound` POST `get_corridors` action is **not** the runtime
 for `GET /v1/remittance/cemac/corridors`. It is recorded only as the nearest
 existing producer, never as endpoint runtime.
 
-The coverage ratchet must be resolved as **five independent slices**, none of
-which is authorised by this document. A contract-only OpenAPI change cannot
-close the ratchet for any of these endpoints.
+Six remediation checkpoints precede I1d, in strict order:
+
+1. **X2-D0** — agent transaction security decision (read-only).
+2. **X2** — QR runtime and contract canonicalisation.
+3. **X3** — agent listings runtime, security, and contract implementation.
+4. **X4** — webhook DLQ runtime and contract implementation.
+5. **X5-D0** — CEMAC disposition decision (read-only).
+6. **X5** — CEMAC implementation, scope determined by X5-D0.
+
+**I1d** is the seventh checkpoint and begins only when the pagination-coverage
+ratchet is green. A contract-only OpenAPI change cannot close the ratchet for
+any of these endpoints. None of these checkpoints is authorised by this
+document.
+
 
 **No new failure was introduced by I1c.** All five failures are present at
 the I1b baseline (commit `1485c559...`) and predate the d.2B program.
