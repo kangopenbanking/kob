@@ -1,11 +1,14 @@
 # Phase 1B — R1I-d.2B-I1c-X1 — Pagination-Coverage Forensic Inventory
 
-**Status:** READ-ONLY forensic inventory (corrected under R1I-d.2B-I1c-X1-R1).
-No implementation is authorised by this document. No OpenAPI, runtime,
-migration, SDK, workflow, or test file was modified.
+**Status:** READ-ONLY forensic inventory (internally repaired under
+R1I-d.2B-I1c-X1-R2). No implementation is authorised by this document. No
+OpenAPI, runtime, migration, SDK, workflow, or test file was modified.
 
 **Reviewed base commit (X1):** `d68c8b48ec17ce063280bc0520feef33374f16b8`
 **Correction base commit (X1-R1):** `215e9e7b1fa53e74b5c7bb981e54f8ca5f421ef7`
+**Internal-consistency repair base commit (X1-R2):** `8f8e12d13da835c3c6c51f8eeae1c50c548b4daa`
+
+
 
 
 **Scope (fixed):** the five endpoints currently failing
@@ -49,9 +52,20 @@ The `remittance-outbound` POST `get_corridors` action is **not** the runtime
 for `GET /v1/remittance/cemac/corridors`. It is recorded only as the nearest
 existing producer, never as endpoint runtime.
 
-The coverage ratchet must be resolved as **five independent slices**, none of
-which is authorised by this document. A contract-only OpenAPI change cannot
-close the ratchet for any of these endpoints.
+Six remediation checkpoints precede I1d, in strict order:
+
+1. **X2-D0** — agent transaction security decision (read-only).
+2. **X2** — QR runtime and contract canonicalisation.
+3. **X3** — agent listings runtime, security, and contract implementation.
+4. **X4** — webhook DLQ runtime and contract implementation.
+5. **X5-D0** — CEMAC disposition decision (read-only).
+6. **X5** — CEMAC implementation, scope determined by X5-D0.
+
+**I1d** is the seventh checkpoint and begins only when the pagination-coverage
+ratchet is green. A contract-only OpenAPI change cannot close the ratchet for
+any of these endpoints. None of these checkpoints is authorised by this
+document.
+
 
 **No new failure was introduced by I1c.** All five failures are present at
 the I1b baseline (commit `1485c559...`) and predate the d.2B program.
@@ -215,10 +229,12 @@ must be present and verified in writing):
 9. explicit maximum enforcement in schema/seed (not derived from ISO 3166);
 10. a test proving the response can never exceed the proposed `max_items`.
 
-Until every item above is present and verified, `max_items=36` MUST NOT be
-claimed and `x-bounded-collection` MUST NOT be applied. Endpoint remains
-classified **B — RUNTIME_AND_CONTRACT_DEFECT**; disposition (bounded GET,
-paginated GET, or deprecation) is deferred to slice X5-D0.
+Until every item above is present and verified, no specific `max_items`
+value may be claimed and `x-bounded-collection` MUST NOT be applied.
+Endpoint remains classified **B — RUNTIME_AND_CONTRACT_DEFECT**; disposition
+(bounded GET, paginated GET, or deprecation/retraction) is deferred to slice
+X5-D0.
+
 
 
 ---
@@ -231,7 +247,7 @@ paginated GET, or deprecation) is deferred to slice X5-D0.
 | webhooks/dlq | `bearerAuth` in spec, admin role required (per `admin-webhook-dlq-replay` precedent) | admin-only (workspace-wide) | `env` + `caller_id` + `role=admin` | `source`, `provider`, `event_type`, `dlq_reason`, `inserted_at` window |
 | agents | Anon today (should be at minimum bearer-scoped; admin/institution scope for non-active agents) | none today; MUST become tenant-scoped for merchant/institution callers | `env` + `caller_id` + `institution_id?` | `country_code`, `region`, `status` |
 | agents/{id}/transactions | Anon today (security defect) | must become `(caller ∈ agent owners OR admin)` | `env` + `caller_id` + `agent_id` | none currently exposed; add `type`, `from`, `to` if surfaced |
-| cemac/corridors | Anon (developer-facing reference data) | none — public reference | n/a (bounded) | n/a (bounded) |
+| cemac/corridors | Anon (developer-facing reference data) | UNRESOLVED — determined by X5-D0. Bounded GET: no cursor scope-hash required. Paginated GET: `env` + `caller_id?` scope-hash required. Deprecated/retracted GET: not applicable. | UNRESOLVED — determined by X5-D0. Bounded GET: no filter hash. Paginated GET: filter hash over any exposed filters (e.g. `origin_country`, `destination_country`, `active`). Deprecated/retracted GET: not applicable. |
 
 The **`agents/{id}/transactions` anon exposure** is a security finding
 independent of the pagination ratchet and should be raised through the
@@ -247,7 +263,7 @@ security workflow, not folded into a coverage patch.
 | 2 | webhooks/dlq | **cursor** | 25 | 100 | `(inserted_at DESC, id DESC)` | 1800 s | prohibited (per d.0 §6) |
 | 3 | agents | **cursor** | 25 | 100 | `(created_at DESC, id DESC)` (canonical d.2S profile) | 1800 s | prohibited; drop `count` |
 | 4 | agents/{id}/transactions | **cursor** | 25 | 100 | `(created_at DESC, id DESC)` | 1800 s | prohibited (financial listing per d.0 §6 forbidden-total list); drop `count` |
-| 5 | cemac/corridors | **cursor** (default until X5-D0 ratifies boundedness) | 25 | 100 | `(origin_country ASC, destination_country ASC, id ASC)` where `id` is the unique tie-breaker on `public.remittance_corridors` | 1800 s | prohibited until bounded-exemption evidence is present |
+| 5 | cemac/corridors | **cursor** — conservative default only, NOT ratified. Final model is UNRESOLVED and may be replaced by a bounded disposition or by deprecation/retraction through X5-D0. | 25 | 100 | `(origin_country ASC, destination_country ASC, id ASC)` where `id` is the unique tie-breaker on `public.remittance_corridors` — applies only if X5-D0 selects a paginated GET | 1800 s | prohibited unless X5-D0 selects a bounded GET |
 
 
 Response headers required by d.0 §7 on every non-bounded endpoint:
@@ -258,21 +274,25 @@ Response headers required by d.0 §7 on every non-bounded endpoint:
 
 ## 6. Required indexes and migrations
 
-Independent per endpoint; each must be delivered as an isolated concurrent
+A migration is required only where a new index or database constraint is
+actually needed to support the ratified ordering. Where an existing index
+already satisfies the deterministic ordering, no migration is proposed.
+Every migration proposed below must be delivered as an isolated concurrent
 migration under `supabase/pending-operations/phase-1/` following the d.2A /
 d.2B pattern (composite index, `indisvalid`/`indisready` guard, rollback
 file, README inventory entry).
 
-| Endpoint | Table | Required index | Rationale |
-|----------|-------|----------------|-----------|
-| qr-directory | `merchant_qr_directory` (view) — underlying table `merchants` | If retaining `merchant_id ASC`: existing PK is sufficient. If moving to `(created_at DESC, merchant_id DESC)`: `CREATE INDEX CONCURRENTLY idx_merchants_verified_created_id_desc ON public.merchants (verified, created_at DESC, id DESC) WHERE verified = true;` | Keyset scan |
-| webhooks/dlq | `webhook_inbox_dlq` | `CREATE INDEX CONCURRENTLY idx_webhook_inbox_dlq_inserted_id_desc ON public.webhook_inbox_dlq (inserted_at DESC, id DESC);` plus optional `(source, provider, event_type, inserted_at DESC, id DESC)` if filters land in the runtime | Keyset scan; admin listing |
-| agents | `agents` | `CREATE INDEX CONCURRENTLY idx_agents_status_created_id_desc ON public.agents (status, created_at DESC, id DESC);` (+ optional `(country_code, region, status, created_at DESC, id DESC)` if that filter combination dominates) | Filtered keyset scan |
-| agents/{id}/transactions | `agent_cash_transactions` | `CREATE INDEX CONCURRENTLY idx_agent_cash_tx_agent_created_id_desc ON public.agent_cash_transactions (agent_id, created_at DESC, id DESC);` | Per-agent keyset scan |
-| cemac/corridors | `remittance_corridors` | none required (bounded); optional `(origin_country, destination_country)` unique constraint to *enforce* the bound | Ratifies §9 (1)–(2) |
+| Endpoint | View / Table | Required index | Rationale |
+|----------|--------------|----------------|-----------|
+| qr-directory | View `public.merchant_qr_directory` over underlying table `public.gateway_merchants`; selected order `merchant_id ASC`. The existing PK index on `public.gateway_merchants(id)` is sufficient for this ordering. | **No migration currently proposed.** A migration would only be required if X2 verification proves the existing PK cannot support the view query, or if a different order is later ratified. | Existing PK supports keyset scan on `merchant_id ASC`. |
+| webhooks/dlq | Table `public.webhook_inbox_dlq` | `CREATE INDEX CONCURRENTLY idx_webhook_inbox_dlq_inserted_id_desc ON public.webhook_inbox_dlq (inserted_at DESC, id DESC);` plus optional `(source, provider, event_type, inserted_at DESC, id DESC)` if filters land in the runtime | Keyset scan; admin listing |
+| agents | Table `public.agents` | `CREATE INDEX CONCURRENTLY idx_agents_status_created_id_desc ON public.agents (status, created_at DESC, id DESC);` (+ optional `(country_code, region, status, created_at DESC, id DESC)` if that filter combination dominates) | Filtered keyset scan |
+| agents/{id}/transactions | Table `public.agent_cash_transactions` | `CREATE INDEX CONCURRENTLY idx_agent_cash_tx_agent_created_id_desc ON public.agent_cash_transactions (agent_id, created_at DESC, id DESC);` | Per-agent keyset scan |
+| cemac/corridors | Table `public.remittance_corridors` | **UNRESOLVED — X5-D0 determines requirements.** Three branches: (A) **Bounded GET** — requires enforceable database constraints (e.g. `CHECK` on origin/destination country codes, composite `UNIQUE(origin_country, destination_country)`, or an equivalent enum-backed constraint) AND documented proof of a hard maximum. A uniqueness constraint alone is not sufficient to ratify boundedness. (B) **Paginated GET** — requires a deterministic index matching the ratified order (e.g. `CREATE INDEX CONCURRENTLY idx_remittance_corridors_origin_dest_id ON public.remittance_corridors (origin_country ASC, destination_country ASC, id ASC);` plus any filter-appropriate composite). (C) **Deprecation / retraction** — no pagination index required. | Disposition-dependent |
 
-None of these indexes are created by this document. They are proposed for
-their respective future slices.
+None of these indexes or constraints are created by this document. They are
+proposed for their respective future slices.
+
 
 ---
 
@@ -280,15 +300,18 @@ their respective future slices.
 
 | Endpoint | Breaking? | Deprecation surface | SDK impact |
 |----------|-----------|---------------------|------------|
-| qr-directory | Non-breaking. Envelope shape is unchanged; only the OpenAPI `$ref` changes. If cursor moves from raw UUID to HMAC-signed opaque string, that IS breaking for any client that decoded the cursor — but no published SDK does (Node/Python/PHP SDKs treat it opaquely per `packages/sdk-php/src/Resources/QRDirectoryResource.php` line 65–71). Requires a 4.54.0 minor. | Node/Python/PHP: opaque cursor consumers only — no source change required |
+| qr-directory | **Response-envelope compatibility-sensitive.** Current wire shape is `{ object, data, has_more, next_cursor }`; the canonical wire shape is `{ data, pagination, meta }`. This is a response-envelope compatibility change, not a schema-only `$ref` swap. In addition, existing raw-UUID cursor tokens will not be valid signed KOB cursors under d.1F, so any client re-submitting a persisted legacy cursor will observe a `PAGINATION_CURSOR_INVALID` failure. A compatibility strategy MUST be ratified before X2 implementation. Candidate strategies (inventory only; none selected here): (1) breaking replacement under an explicitly authorised version decision; (2) temporary dual-response / compatibility mode; (3) new versioned endpoint retained alongside the legacy endpoint; (4) controlled deprecation window. Node/Python/PHP SDKs treat the cursor opaquely (per `packages/sdk-php/src/Resources/QRDirectoryResource.php` line 65–71) and would still require envelope-shape adaptation regardless of the cursor change. | SDK envelope adaptation required regardless of strategy |
 | webhooks/dlq | Non-breaking (endpoint is currently non-functional). Introducing a working runtime is additive. New OpenAPI must retain the declared 400/401/409/422/429 error surface. | No SDK exposure today |
 | agents | **Breaking on `count` field removal.** `count` is currently declared and returned. Removal is a MAJOR ratchet under Guardian Standing Order 6 unless retained as `count: page length` with an added `pagination` block, and clients are steered to `has_more`. Recommend the additive path: keep `count` marked `deprecated: true` for one minor. | SDK `AgentsResource.list` returns object with `data`/`count`; needs `pagination`/`has_more`/`next_cursor` fields added; `count` kept and marked deprecated |
 | agents/{id}/transactions | Same as agents. Plus a **security boundary change** (anon → bearer required) that is by itself a breaking change and must be gated on a separate authorisation. | SDK `AgentsResource.transactions` same treatment |
-| cemac/corridors | Non-breaking if the endpoint stays a plain array and adds only `x-bounded-collection` metadata and `Cache-Control`. Breaking if wrapped in an envelope. Ratchet exemption resolves without breaking clients. | None (endpoint is developer reference, low SDK usage) |
+| cemac/corridors | **Disposition-dependent — UNRESOLVED until X5-D0.** Three branches: (A) **Bounded GET** — the endpoint may preserve a plain-array response only after formal ratification of the bounded-exemption evidence in §3.5. (B) **Paginated GET** — moving from a plain array to a `PaginatedResponse` envelope is a breaking wire change. (C) **Deprecation / retraction** — the currently advertised operation is marked deprecated or removed only under explicit contract and version authority. No branch is selected by this document. | Disposition-dependent |
 
-Any breaking change requires a **minor or major `info.version` bump** and a
-CHANGELOG entry per Guardian Standing Orders 1, 6, and P10. This document
-does not authorise a version bump.
+The active API version remains **`4.53.1`**, release status **Unreleased**.
+**No `info.version` bump is authorised by this audit.** Any future
+compatibility or version decision (including any hypothetical minor or major
+bump) requires separate Chief Architect authority and a CHANGELOG entry per
+Guardian Standing Orders 1, 6, and P10.
+
 
 ---
 
@@ -320,19 +343,44 @@ document. In particular this audit does not authorise `X2-D0`, `X2`, `X3`,
 Only the files listed here would be in scope for that slice. All other paths
 would be prohibited. This section is a *proposal* only.
 
-### 9.1 R1I-d.2B-I1c-X2 (QR directory contract alignment)
+### 9.1 R1I-d.2B-I1c-X2 — QR directory runtime and contract canonicalisation
+
+X2 is a **runtime + contract** slice, not contract-only. Runtime edits to the
+QR directory function are explicitly required to migrate the wire envelope
+onto the canonical `{ data, pagination, meta }` shape, adopt signed cursors
+per d.1F, and emit the four `X-Pagination-*` headers.
 
 Permitted:
+- `supabase/functions/merchants-qr-directory/index.ts`
+- new isolated adapter
+  `supabase/functions/merchants-qr-directory/_pagination-qr-directory.ts`
 - `public/openapi.json`
 - `public/openapi.yaml`
-- `src/test/openapi-pagination-coverage.test.ts` (only if a targeted assertion
-  is added; the ratchet itself is unchanged)
+- new QR pagination runtime tests
+  (e.g. `src/test/pagination-qr-directory-runtime-*.test.ts`)
+- new QR pagination contract tests
+  (e.g. `src/test/pagination-qr-directory-contract-*.test.ts`)
+- protected-scope regression test asserting no d.2A / I1a / I1b / I1c
+  artifact drift
+- `src/test/openapi-pagination-coverage.test.ts` (only if a targeted
+  assertion is added; the ratchet itself is unchanged)
 - `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x2-*.md`
-- `CHANGELOG.md`, `public/CHANGELOG.md`, `public/changelog.json`
+- `AGENTS.md` — authority update recording the X2 closure only
+- `CHANGELOG.md`, `public/CHANGELOG.md`, `public/changelog.json` (only when
+  separately authorised)
+
+No SQL migration is proposed for the selected `merchant_id ASC` profile
+unless X2 verification proves the existing `gateway_merchants` PK cannot
+support the view query.
 
 Prohibited:
-- `supabase/functions/merchants-qr-directory/*` (runtime unchanged in X2)
-- every protected d.2A / d.2B / I1c artifact.
+- `supabase/functions/gateway-query/_pagination-d2b.ts`
+- `supabase/functions/_shared/pagination.ts` (d.1F foundation — import only)
+- d.2A runtime or d.2A tests
+- `supabase/functions/gateway-query/*`
+- `package.json`, `package-lock.json`, `bun.lockb`, or any dependency file
+- every protected d.2A / I1a / I1b / I1c artifact listed in AGENTS.md §5
+
 
 ### 9.2 R1I-d.2B-I1c-X3 (Agents runtime + contract)
 
@@ -363,19 +411,63 @@ Permitted:
 Prohibited: `admin-webhook-dlq-replay/*`, `webhook-inbox-retry-worker/*`,
 every protected baseline.
 
-### 9.4 R1I-d.2B-I1c-X5 (CEMAC bounded exemption)
+### 9.4 R1I-d.2B-I1c-X5 — CEMAC implementation determined by X5-D0
 
-Permitted (contingent on separate d.0 §9 ratification):
-- `public/openapi.json`, `public/openapi.yaml` — add
-  `x-bounded-collection: { max_items: 36, justification: "..." }` and
-  `Cache-Control` guidance.
-- `src/test/openapi-pagination-coverage.test.ts` — teach the ratchet to
-  respect `x-bounded-collection`.
+X5-D0 chooses **exactly one** of the three branches below. This section
+documents the conditional file scope for each. No `x-bounded-collection`
+metadata and no `max_items` value is prescribed by this audit.
+
+**Branch A — Bounded GET (only if X5-D0 ratifies the boundedness evidence
+in §3.5).** Permitted:
+- new dedicated GET runtime for `/v1/remittance/cemac/corridors`
+  under `supabase/functions/` (path chosen by X5-D0)
+- database constraint migration under
+  `supabase/pending-migrations/phase-1/` and the matching concurrent
+  operation under `supabase/pending-operations/phase-1/` enforcing the
+  bound (constraints and rollback)
+- `public/openapi.json`, `public/openapi.yaml` — bounded metadata as
+  ratified by X5-D0 (max value determined by X5-D0, not by this audit)
+- `src/test/openapi-pagination-coverage.test.ts` — ratchet support for
+  the bounded-exemption predicate ratified by X5-D0
+- boundedness tests
+  (e.g. `src/test/cemac-corridors-bounded-*.test.ts`)
 - `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x5-*.md`
-- CHANGELOG trio
+- `AGENTS.md` authority update; CHANGELOG artifacts only when separately
+  authorised.
 
-Prohibited: `remittance-outbound/*`, `remittance-engine/*`, every protected
-baseline.
+**Branch B — Paginated GET.** Permitted:
+- new dedicated GET runtime for `/v1/remittance/cemac/corridors`
+- new isolated pagination adapter alongside that runtime
+  (e.g. `_pagination-cemac-corridors.ts`)
+- index migration under `supabase/pending-migrations/phase-1/` and the
+  matching concurrent operation under `supabase/pending-operations/phase-1/`
+  (both with rollback)
+- `public/openapi.json`, `public/openapi.yaml` — pagination contract on the
+  operation (cursor param, `X-Pagination-*` headers, `PaginatedResponse`
+  envelope)
+- runtime tests
+  (e.g. `src/test/pagination-cemac-corridors-runtime-*.test.ts`)
+- contract tests
+  (e.g. `src/test/pagination-cemac-corridors-contract-*.test.ts`)
+- `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x5-*.md`
+- `AGENTS.md` authority update; CHANGELOG artifacts only when separately
+  authorised.
+
+**Branch C — Deprecation / retraction.** Permitted:
+- `public/openapi.json`, `public/openapi.yaml` — mark the operation
+  deprecated or remove it under explicit contract/version authority
+- CHANGELOG artifacts only when separately authorised
+- compatibility and regression tests documenting the deprecation surface
+- `docs/audits/phase-1/phase-1b-r1i-d2b-i1c-x5-*.md`
+- `AGENTS.md` authority update.
+
+No fabricated runtime may be added under Branch C.
+
+Prohibited (all three branches): `remittance-outbound/*`,
+`remittance-engine/*`, `_pagination-d2b.ts`, `_pagination.ts` foundation
+(import only), package/dependency files, and every protected d.2A / I1a /
+I1b / I1c artifact listed in AGENTS.md §5.
+
 
 ---
 
@@ -423,7 +515,7 @@ No OpenAPI, runtime, test, migration, workflow, SDK, changelog, package, or
 
 ## 12. Verdict
 
-**PHASE 1B-R1I-d.2B-I1c-X1-R1 INVENTORY CORRECTION READY FOR REVIEW.**
+**PHASE 1B-R1I-d.2B-I1c-X1-R2 INVENTORY READY FOR FINAL REVIEW.**
 
 The coverage ratchet is NOT fixed by this document. No implementation slice
 is begun. `X2-D0`, `X2`, `X3`, `X4`, `X5-D0`, `X5`, and `I1d` all remain
