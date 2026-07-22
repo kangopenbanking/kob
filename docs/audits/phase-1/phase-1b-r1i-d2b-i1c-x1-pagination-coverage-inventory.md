@@ -22,35 +22,38 @@ is touched.
 
 ## 1. Executive conclusion
 
-The five coverage failures are **not one homogeneous defect**. They fall into
-four distinct classifications, three of which have materially different
-security boundaries. Satisfying the ratchet by mechanically wrapping each 200
-schema in `PaginatedResponse` would produce an OpenAPI contract that does not
-match runtime behaviour and would in one case (`/v1/webhooks/dlq`) advertise
-a runtime that does not currently exist.
+**Corrected in R1I-d.2B-I1c-X1-R1.** All five endpoints are reclassified as
+**RUNTIME_AND_CONTRACT_DEFECT**. The prior draft's "contract-only" and
+"bounded-collection candidate" classifications were incorrect: neither the QR
+directory runtime envelope nor CEMAC's cardinality argument satisfy the
+canonical `PaginatedResponse` contract or d.0 §9's evidentiary bar.
 
-- 1 endpoint is a **CONTRACT_ONLY_DEFECT** — runtime already returns a
-  cursor-paginated envelope compatible with `PaginatedResponse`, but the
-  schema is inlined and does not `$ref` the canonical component.
-- 2 endpoints are **RUNTIME_AND_CONTRACT_DEFECT** — runtimes return
-  `{ data, count }` with a hard `limit` clamp, no cursor, no keyset ordering,
-  and no unique tie-breaker.
-- 1 endpoint is a **BOUNDED_COLLECTION_CANDIDATE** — CEMAC has 6 member
-  states, so origin×destination is provably ≤ 36 rows and the response is
-  today declared as a plain array. Bounded-exemption ratification is a
-  separate architectural decision under d.0 §9 and is **not** requested here.
-- 1 endpoint is not implemented at runtime at all (`/v1/webhooks/dlq`). The
-  OpenAPI operation `listWebhookDlq` declares cursor pagination against a
-  handler that does not exist in `supabase/functions`. This is both a runtime
-  gap and a contract defect and must **not** be closed by editing OpenAPI in
-  isolation.
+Corrected executive totals:
 
-The coverage ratchet must therefore be resolved as **three independent
-authorised slices** plus one bounded-exemption decision, not one cross-cutting
-patch. See §8.
+| Metric | Value |
+|--------|-------|
+| Endpoint inventory | 5/5 |
+| Operation IDs resolved | 5/5 |
+| Exact GET runtime handlers found | 3/5 |
+| Missing exact GET runtimes | 2/5 (`GET /v1/webhooks/dlq`, `GET /v1/remittance/cemac/corridors`) |
+| Exact runtime response shapes resolved | 3/5 |
+| Contract-only defects | 0 |
+| Runtime-and-contract defects | 5 |
+| Ratified bounded collections | 0 |
+| False-list classifications | 0 |
+| Security-blocked operations | 1 (`agentTransactionList`) |
+
+The `remittance-outbound` POST `get_corridors` action is **not** the runtime
+for `GET /v1/remittance/cemac/corridors`. It is recorded only as the nearest
+existing producer, never as endpoint runtime.
+
+The coverage ratchet must be resolved as **five independent slices**, none of
+which is authorised by this document. A contract-only OpenAPI change cannot
+close the ratchet for any of these endpoints.
 
 **No new failure was introduced by I1c.** All five failures are present at
 the I1b baseline (commit `1485c559...`) and predate the d.2B program.
+
 
 ---
 
@@ -58,20 +61,22 @@ the I1b baseline (commit `1485c559...`) and predate the d.2B program.
 
 | # | Path | operationId | Tags | Runtime function | Route in function | Data source | Auth | Current 200 shape | Ordering | Tie-breaker | Limit clamp | Cursor | Offset | Total | Class |
 |---|------|-------------|------|------------------|-------------------|-------------|------|-------------------|----------|-------------|-------------|--------|--------|-------|-------|
-| 1 | `/v1/merchants/qr-directory` | `merchantsQrDirectoryList` | Payments | `merchants-qr-directory` | `Deno.serve` root | view `public.merchant_qr_directory` (filtered by `verified=true`) | Public (anon key) | `{ object:'list', data:[...], has_more, next_cursor }` inline | `merchant_id ASC` | `merchant_id` (UUID, unique) | 1–100, default 25 | UUID token bound to `merchant_id` | none | absent | **A — CONTRACT_ONLY_DEFECT** |
-| 2 | `/v1/webhooks/dlq` | `listWebhookDlq` | Webhooks | **no matching handler** (no `Deno.serve` route implements `GET /v1/webhooks/dlq`) | — | table `public.webhook_inbox_dlq` (referenced only by `admin-webhook-dlq-replay` and `webhook-inbox-retry-worker`) | `bearerAuth` (spec) | Spec: `{ data:[{}], has_more }`. Runtime: N/A | N/A | N/A | spec: `limit` 1..? | spec: `cursor` | none | absent | **B — RUNTIME_AND_CONTRACT_DEFECT** (runtime missing) |
+| 1 | `/v1/merchants/qr-directory` | `merchantsQrDirectoryList` | Payments | `merchants-qr-directory` | `Deno.serve` root | view `public.merchant_qr_directory` (filtered by `verified=true`) | Public (anon key) | `{ object:'list', data:[...], has_more, next_cursor }` inline — **does not satisfy `{ data, pagination, meta }`** | `merchant_id ASC` | `merchant_id` (UUID, unique) | 1–100, default 25 | raw UUID token bound to `merchant_id` (not HMAC-signed) | none | absent | **B — RUNTIME_AND_CONTRACT_DEFECT** |
+| 2 | `/v1/webhooks/dlq` | `listWebhookDlq` | Webhooks | **no matching handler** (no `Deno.serve` route implements `GET /v1/webhooks/dlq`) | — | table `public.webhook_inbox_dlq` (referenced only by `admin-webhook-dlq-replay` and `webhook-inbox-retry-worker`) | `bearerAuth` (spec) | **N/A — advertised GET runtime absent** | N/A | N/A | spec: `limit` 1..? | spec: `cursor` | none | absent | **B — RUNTIME_AND_CONTRACT_DEFECT** (runtime missing) |
 | 3 | `/v1/agents` | `agentList` | Agents | `agent-banking` | `GET .../agents` (tail length 1) | table `public.agents` | Public (anon key; no `security` on op) | `{ data:[...], count }` | none (no `.order()` clause) | none | 1–200, default 50 | none (spec advertises `CursorParam`/`StartingAfter`/`EndingBefore` but runtime ignores them) | none | `count` = current page length (not exact total) | **B — RUNTIME_AND_CONTRACT_DEFECT** |
-| 4 | `/v1/agents/{agentId}/transactions` | `agentTransactionList` | Agents | `agent-banking` | `GET .../agents/:agentId/transactions` (tail length 3) | table `public.agent_cash_transactions` | Public (anon key on op; runtime does not enforce tenant scoping beyond `agent_id` filter) | `{ data:[...], count }` | `created_at DESC` | none (no `id` tie-breaker) | 1–200, default 50 | none | none | `count` = current page length | **B — RUNTIME_AND_CONTRACT_DEFECT** |
-| 5 | `/v1/remittance/cemac/corridors` | `cemacCorridorsList` | CEMAC Remittance | no dedicated function; closest is `remittance-outbound` `get_corridors` action returning `{ corridors:[...] }` from `public.remittance_corridors` | POST action, not a `GET /corridors` route | table `public.remittance_corridors` (filtered by partner status) | Public (no `security` on op) | Spec: plain `array` of `CemacCorridor` | not documented; runtime returns partner join order | none | not declared in spec | spec declares `CursorParam`/`StartingAfter`/`EndingBefore`/`LimitParam` but response is a bare array (envelope-less) | none | absent | **C — BOUNDED_COLLECTION_CANDIDATE** (max 6×6=36 rows by CEMAC membership) |
+| 4 | `/v1/agents/{agentId}/transactions` | `agentTransactionList` | Agents | `agent-banking` | `GET .../agents/:agentId/transactions` (tail length 3) | table `public.agent_cash_transactions` | Public (anon key on op; runtime does not enforce tenant scoping beyond `agent_id` filter) | `{ data:[...], count }` | `created_at DESC` | none (no `id` tie-breaker) | 1–200, default 50 | none | none | `count` = current page length | **B — RUNTIME_AND_CONTRACT_DEFECT — BLOCKED ON SECURITY-SCOPE RATIFICATION** |
+| 5 | `/v1/remittance/cemac/corridors` | `cemacCorridorsList` | CEMAC Remittance | **no dedicated GET runtime.** Nearest existing producer (not endpoint runtime): `remittance-outbound` POST action `get_corridors` returning `{ corridors:[...] }` from `public.remittance_corridors` | — | table `public.remittance_corridors` (filtered by partner status) | Public (no `security` on op) | **N/A — advertised GET runtime absent** | N/A | N/A | not declared in spec | spec declares `CursorParam`/`StartingAfter`/`EndingBefore`/`LimitParam` but response is a bare array (envelope-less) | none | absent | **B — RUNTIME_AND_CONTRACT_DEFECT** (bounded-exemption eligibility UNPROVEN) |
 
-Operation IDs resolved: **5/5**. Runtime handlers resolved: **5/5** (one
-resolved as *missing*). Actual response shapes resolved: **5/5**.
+Corrected totals: **operation IDs 5/5, exact GET runtime handlers 3/5,
+missing GET runtimes 2/5 (`/v1/webhooks/dlq`, `/v1/remittance/cemac/corridors`),
+exact runtime response shapes 3/5.**
+
 
 ---
 
 ## 3. Contract / runtime mismatch analysis
 
-### 3.1 `/v1/merchants/qr-directory` — A
+### 3.1 `/v1/merchants/qr-directory` — B (corrected)
 
 Runtime shape today:
 
@@ -79,23 +84,41 @@ Runtime shape today:
 { "object": "list", "data": [...], "has_more": true, "next_cursor": "<uuid>" }
 ```
 
-This is a valid cursor-paginated envelope. It fails the coverage ratchet only
-because the OpenAPI 200 schema is inlined (`type:object, properties:{data,has_more,next_cursor,object}`)
-instead of referencing `#/components/schemas/PaginatedResponse`. Runtime
-requires no change to satisfy §2 (limit 1..100, default 25), §5 (cursor is
-opaque, bound to primary sort column), §6 (`has_more` mandatory, no `total`).
+This envelope **does not satisfy** the canonical `{ data, pagination, meta }`
+contract required by d.0 §1 and the `PaginatedResponse` component. A
+contract-only `$ref` swap would produce an OpenAPI response schema that does
+not match the wire response. The prior draft's Class A classification is
+withdrawn.
 
-Remaining runtime debt independent of the coverage ratchet:
+Full list of runtime changes required by the eventual X2 slice:
 
-- cursor is a **raw `merchant_id` UUID**, not an HMAC-signed token per d.1F
-  invariant 2. It is not tamper-resistant.
-- ordering key is `merchant_id ASC`, not `(created_at DESC, id DESC)` per
-  d.2S §4. This is acceptable for a static-ish directory but inconsistent
-  with the d.2 program's universal ordering profile.
-- no `X-Pagination-*` response headers.
+- adopt the canonical `{ data, pagination, meta }` envelope;
+- emit `pagination.mode` (cursor);
+- emit `pagination.has_more`;
+- emit `pagination.next_cursor`;
+- emit `pagination.limit`;
+- emit `meta` object (observability data only, no authoritative totals);
+- emit all four `X-Pagination-*` response headers
+  (`Mode`, `Has-More`, `Next-Cursor`, `Limit`);
+- expose those headers via `Access-Control-Expose-Headers`;
+- replace the raw `merchant_id` UUID cursor with an HMAC-SHA-256 signed
+  cursor per d.1F foundation;
+- bind cursor to scope (`env`, `verified=true`) and filter hash
+  (`country`, `category`);
+- adopt deterministic keyset ordering with a unique final tie-breaker
+  (see §5 for the exact recommended tuple);
+- adopt limit+1 look-ahead finalisation for `has_more`;
+- honour `limit` bounds 1..100, default 25.
 
-Contract-only remediation closes the ratchet; runtime hardening (HMAC cursor,
-canonical ordering, response headers) is a separate d.2C-class slice.
+Contract-only remediation **cannot** close the ratchet for this endpoint.
+
+Available columns on `public.merchant_qr_directory` (from
+`supabase/migrations/20260506234614_*.sql` and the runtime `.select(...)`):
+`merchant_id`, `name`, `environment`, `status`, `mcc`, `country`, `logo_url`,
+`verified`, `created_at`, `kob_wallet_id`, `wallet_currency`. `merchant_id`
+is the underlying `gateway_merchants.id` (UUID, unique). `created_at` is
+inherited from `gateway_merchants` via `security_invoker` view.
+
 
 ### 3.2 `/v1/webhooks/dlq` — B (runtime missing)
 
