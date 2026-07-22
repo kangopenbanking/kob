@@ -10,7 +10,7 @@
  *   - Pure request parsing, scope + filter hashing, cursor decode /
  *     encode, page finalisation and header-value construction.
  *   - No database, Supabase client, HTTP `Request` / `Response`, logging,
- *     bearer / API-key handling, or environment configuration reads.
+ *     bearer or credential handling, or environment configuration reads.
  *
  * Runtime integration (`merchants-qr-directory/index.ts`), OpenAPI, SDKs
  * and any downstream consumers remain unchanged during X2-A. They are
