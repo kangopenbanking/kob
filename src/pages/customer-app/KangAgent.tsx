@@ -653,7 +653,7 @@ export default function KangAgent() {
       </div>
 
       {/* Composer */}
-      <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl px-3 py-2.5">
+      <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl px-3 py-2.5" style={{ paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))" }}>
         {blocked ? (
           <div className="mx-auto max-w-2xl">
             <button
