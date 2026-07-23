@@ -71,6 +71,7 @@ const developerItems: NavItem[] = [
 
 const resourceItems: NavItem[] = [
   { label: "Money Remittance", to: "/remittance", icon: Globe, desc: "Send & receive internationally" },
+  { label: "Giveting Fundraisers", to: "/giveting", icon: Heart, desc: "Start or donate to a cause" },
   { label: "Credit Score", to: "/crediq", icon: TrendingUp, desc: "Check your credit score" },
   { label: "Pricing & Fees", to: "/pricing", icon: Landmark, desc: "Transparent pricing" },
   { label: "Integration Guide", to: "/integration-workflow", icon: BookOpen, desc: "Step-by-step setup" },
