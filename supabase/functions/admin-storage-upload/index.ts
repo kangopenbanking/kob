@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 
   // Type/size limits (applied only to homepage-hero; other admin buckets
   // are small icons or branding assets — apply a generous 10 MB cap).
-  if (bucket === "homepage-hero") {
+  if (BUCKETS_ALLOWING_VIDEO.has(bucket)) {
     const isImage = HERO_IMAGE_TYPES.includes(contentType);
     const isVideo = HERO_VIDEO_TYPES.includes(contentType);
     if (!isImage && !isVideo) {
