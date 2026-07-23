@@ -28,6 +28,7 @@ import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } fr
 import { AdminStorefrontSlider } from "@/components/storefront/AdminStorefrontSlider";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { adminStorageUpload } from '@/lib/admin/adminStorageUpload';
 import { useHarvestedT } from '@/lib/i18n/useHarvestedT';
 
 // ─── Types ───
@@ -1602,10 +1603,14 @@ function TravelCardPanel({ institutionId, appConfig }: { institutionId: string; 
     try {
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `travel-card/${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('homepage-hero').upload(path, file, { upsert: true, contentType: file.type });
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('homepage-hero').getPublicUrl(path);
-      setConfig(prev => ({ ...prev, bg_image: urlData.publicUrl }));
+      const { publicUrl } = await adminStorageUpload({
+        bucket: 'homepage-hero',
+        path,
+        file,
+        contentType: file.type,
+        upsert: true,
+      });
+      setConfig(prev => ({ ...prev, bg_image: publicUrl }));
       toast.success("Image uploaded");
     } catch {
       toast.error("Upload failed — using fallback image");
