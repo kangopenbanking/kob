@@ -5,30 +5,70 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, ShieldCheck, FileText, Camera, MapPin, CheckCircle2, AlertCircle, ChevronRight, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  ShieldCheck,
+  FileText,
+  Camera,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  ChevronRight,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
-import { submitIdentityKyc } from "@/lib/kycGateway";
+import { submitIdentityKyc, openDiditVerification } from "@/lib/kycGateway";
 import { extractEdgeFunctionError } from "@/lib/edge-function-error";
 
-interface KycStatus {
-  level: number | null;
+interface KycRow {
+  id: string;
   status: string | null;
-  document_status?: string | null;
-  selfie_status?: string | null;
-  address_status?: string | null;
+  verification_method: string | null;
+  didit_session_id: string | null;
+  metadata: Record<string, unknown> | null;
+  updated_at: string | null;
+  verified_at: string | null;
 }
 
 const STEPS = [
-  { id: "document", label: "Identity document", desc: "National ID, passport or driver's license", icon: FileText, href: "/kyc-verification?step=document" },
-  { id: "selfie", label: "Selfie verification", desc: "Take a quick selfie to match your ID", icon: Camera, href: "/kyc-verification?step=selfie" },
-  { id: "address", label: "Proof of address", desc: "Utility bill or bank statement", icon: MapPin, href: "/kyc-verification?step=address" },
+  {
+    id: "document",
+    label: "Identity document",
+    desc: "National ID, passport or driver's licence — captured in the Didit hosted flow",
+    icon: FileText,
+  },
+  {
+    id: "selfie",
+    label: "Selfie & liveness",
+    desc: "Live selfie matched to your document by Didit",
+    icon: Camera,
+  },
+  {
+    id: "address",
+    label: "Proof of address",
+    desc: "Utility bill or bank statement uploaded inside Didit",
+    icon: MapPin,
+  },
 ];
 
 const statusBadge = (s?: string | null) => {
-  if (s === "approved" || s === "verified") return <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" />Verified</Badge>;
-  if (s === "pending" || s === "submitted") return <Badge variant="secondary">In review</Badge>;
-  if (s === "rejected") return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Rejected</Badge>;
+  if (s === "approved" || s === "verified")
+    return (
+      <Badge variant="default" className="gap-1">
+        <CheckCircle2 className="h-3 w-3" />
+        Verified
+      </Badge>
+    );
+  if (s === "pending" || s === "submitted" || s === "manual_review")
+    return <Badge variant="secondary">In review</Badge>;
+  if (s === "rejected" || s === "requires_resubmission")
+    return (
+      <Badge variant="destructive" className="gap-1">
+        <AlertCircle className="h-3 w-3" />
+        Action needed
+      </Badge>
+    );
   return <Badge variant="outline">Not started</Badge>;
 };
 
@@ -36,32 +76,100 @@ export default function CustomerKYCWizard() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(true);
   const [launching, setLaunching] = useState(false);
-  const [kyc, setKyc] = useState<KycStatus | null>(null);
+  const [kyc, setKyc] = useState<KycRow | null>(null);
 
-  const startDidit = async () => {
+  const load = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      nav("/app/auth", { replace: true });
+      return;
+    }
+    const { data } = await (supabase.from("kyc_verifications") as any)
+      .select(
+        "id, status, verification_method, didit_session_id, metadata, updated_at, verified_at",
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setKyc((data as KycRow) ?? null);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    let channel: any;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      channel = supabase
+        .channel(`kyc-wizard-${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "kyc_verifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => load(),
+        )
+        .subscribe();
+    })();
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isApproved =
+    kyc?.status === "approved" || kyc?.status === "verified";
+  const isInReview =
+    kyc?.status === "pending" ||
+    kyc?.status === "submitted" ||
+    kyc?.status === "manual_review";
+
+  const startOrResumeDidit = async () => {
+    if (isApproved) return;
     setLaunching(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("Please sign in first."); return; }
-      const fallbackExpiry = new Date();
-      fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in first.");
+        return;
+      }
+
+      // If a pending Didit session already exists, resume it instead of
+      // creating a new record — no re-collection of any document data.
+      if (isInReview && kyc?.didit_session_id) {
+        nav("/app/kyc/resume");
+        return;
+      }
+
+      // Delegate everything to Didit. Do NOT send placeholder document
+      // metadata — Didit collects it inside the hosted workflow.
       const resp = await submitIdentityKyc({
         verification_type: "identity",
-        document_type: "national_id",
-        document_number: "PENDING",
-        document_country: "CM",
-        document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
-        document_front_url: "",
-        selfie_url: "",
         source_app: "customer_app",
       });
-      if (resp.provider === "didit") {
-        toast.success("Verification launched — complete the steps in the Didit window.");
-      } else {
-        // Provider fell back to manual — send user to the manual upload flow.
-        toast.message("Redirecting to manual verification…");
-        nav("/kyc-verification");
+
+      if (resp.provider === "didit" && resp.verification_url) {
+        toast.success("Opening Didit verification…");
+        await openDiditVerification(resp.verification_url);
+        await load();
+        return;
       }
+
+      // Provider fell back — take the user to the manual upload page.
+      toast.message("Didit is unavailable — continuing with manual verification.");
+      nav("/kyc-verification");
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, "Could not start verification"));
     } finally {
@@ -69,54 +177,39 @@ export default function CustomerKYCWizard() {
     }
   };
 
-  useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      // Source of truth: kyc_verifications (latest identity record)
-      const { data: rows } = await (supabase.from("kyc_verifications") as any)
-        .select("status, verification_type, document_front_url, selfie_url, updated_at")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-        .limit(5);
-      const identity = (rows || []).find((r: any) => (r.verification_type ?? "identity") === "identity") || (rows || [])[0];
-      const st = identity?.status ?? null;
-      const approved = st === "approved" || st === "verified";
-      setKyc({
-        level: approved ? 2 : st ? 1 : 0,
-        status: st,
-        document_status: identity?.document_front_url ? st : null,
-        selfie_status: identity?.selfie_url ? st : null,
-        address_status: null,
-      });
-      setLoading(false);
-    };
-    load();
-    // Realtime refresh when admin approves/rejects
-    let channel: any;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      channel = supabase
-        .channel(`kyc-wizard-${user.id}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "kyc_verifications", filter: `user_id=eq.${user.id}` }, () => load())
-        .subscribe();
-    })();
-    return () => { if (channel) supabase.removeChannel(channel); };
-  }, []);
+  // A single Didit workflow covers every step in STEPS. Once approved, all
+  // three sub-steps inherit the "verified" status. In review = all pending.
+  const stepStatus = (_id: string) => {
+    if (isApproved) return "approved";
+    if (kyc?.status === "rejected" || kyc?.status === "requires_resubmission")
+      return kyc.status;
+    if (isInReview) return "pending";
+    return null;
+  };
 
-  const stepStatus = (id: string) =>
-    id === "document" ? kyc?.document_status : id === "selfie" ? kyc?.selfie_status : kyc?.address_status;
+  const primaryLabel = launching
+    ? "Launching…"
+    : isApproved
+      ? "Verification complete"
+      : isInReview
+        ? "Resume with Didit"
+        : "Start verification with Didit";
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <button onClick={() => nav(-1)} className="rounded-full p-2 hover:bg-muted" aria-label="Back">
+        <button
+          onClick={() => nav(-1)}
+          className="rounded-full p-2 hover:bg-muted"
+          aria-label="Back"
+        >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div>
+        <div className="min-w-0">
           <h1 className="text-lg font-bold text-foreground">Identity Verification</h1>
-          <p className="text-xs text-muted-foreground">Unlock higher limits and full features</p>
+          <p className="truncate text-xs text-muted-foreground">
+            Powered by Didit — one flow, no re-uploads
+          </p>
         </div>
       </header>
 
@@ -126,13 +219,17 @@ export default function CustomerKYCWizard() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
               <ShieldCheck className="h-5 w-5 text-primary" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="text-sm font-semibold text-foreground">Verification status</p>
                 {statusBadge(kyc?.status)}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Level {kyc?.level ?? 0} of 3 — complete all steps below to reach full verification.
+                {isApproved
+                  ? "You are fully verified. You will not be asked for these details again."
+                  : isInReview
+                    ? "Your verification is being processed by Didit. You can safely resume the session below."
+                    : "Complete a single Didit session to satisfy identity, selfie and address checks."}
               </p>
             </div>
           </div>
@@ -140,31 +237,41 @@ export default function CustomerKYCWizard() {
 
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+            ))}
           </div>
         ) : (
           <div className="space-y-3">
-            {STEPS.map(s => {
+            {STEPS.map((s) => {
               const Icon = s.icon;
               const st = stepStatus(s.id);
               return (
-                <Link key={s.id} to={s.href}>
-                  <Card className="border-border bg-card p-4 transition-colors hover:bg-muted/40">
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={startOrResumeDidit}
+                  disabled={isApproved || launching}
+                  className="block w-full text-left"
+                >
+                  <Card className="border-border bg-card p-4 transition-colors hover:bg-muted/40 disabled:opacity-70">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
                         <Icon className="h-5 w-5 text-foreground" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-foreground">{s.label}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {s.label}
+                          </p>
                           {statusBadge(st)}
                         </div>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.desc}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{s.desc}</p>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                     </div>
                   </Card>
-                </Link>
+                </button>
               );
             })}
           </div>
@@ -182,15 +289,21 @@ export default function CustomerKYCWizard() {
         <Button
           className="w-full"
           size="lg"
-          onClick={startDidit}
-          disabled={launching || kyc?.status === "approved" || kyc?.status === "verified"}
+          onClick={startOrResumeDidit}
+          disabled={launching || isApproved}
         >
           {launching ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />Launching…</>
-          ) : kyc?.status === "approved" || kyc?.status === "verified" ? (
-            "Verification complete"
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+              Launching…
+            </>
+          ) : isInReview ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} />
+              {primaryLabel}
+            </>
           ) : (
-            "Start verification"
+            primaryLabel
           )}
         </Button>
 

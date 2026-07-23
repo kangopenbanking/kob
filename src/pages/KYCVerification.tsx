@@ -24,7 +24,10 @@ interface KycRecord {
   document_number: string | null;
   document_country: string | null;
   document_expiry_date: string | null;
+  verification_method?: string | null;
+  didit_session_id?: string | null;
 }
+
 
 const ACCEPTED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -36,6 +39,7 @@ function validateFile(file: File): string | null {
 }
 
 export default function KYCVerification() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetchingStatus, setFetchingStatus] = useState(true);
   const [latest, setLatest] = useState<KycRecord | null>(null);
@@ -60,7 +64,7 @@ export default function KYCVerification() {
       if (!user) return;
       const { data } = await supabase
         .from("kyc_verifications")
-        .select("id, status, created_at, updated_at, verified_at, rejection_reason, verification_type, document_type, document_number, document_country, document_expiry_date")
+        .select("id, status, created_at, updated_at, verified_at, rejection_reason, verification_type, document_type, document_number, document_country, document_expiry_date, verification_method, didit_session_id")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -68,7 +72,22 @@ export default function KYCVerification() {
 
       if (data) {
         setLatest(data as KycRecord);
-        // Prefill on rejection so the user can resubmit easily
+        const method = (data as any).verification_method as string | null;
+        const hasDiditSession = !!(data as any).didit_session_id;
+
+        // Never re-collect information Didit already owns.
+        // - Approved users go to the wizard success screen.
+        // - Pending Didit sessions go to the dedicated resume page.
+        if (data.status === "approved") {
+          navigate("/app/kyc", { replace: true });
+          return;
+        }
+        if ((data.status === "pending" || data.status === "manual_review") && (method === "didit" || hasDiditSession)) {
+          navigate("/app/kyc/resume", { replace: true });
+          return;
+        }
+
+        // Prefill on rejection so the user can resubmit easily (manual fallback only).
         if (data.status === "rejected" || data.status === "info_requested") {
           setFormData({
             verification_type: data.verification_type || "identity",
@@ -86,7 +105,9 @@ export default function KYCVerification() {
 
   useEffect(() => {
     loadLatest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const uploadFile = async (file: File, type: string): Promise<string> => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -217,7 +238,8 @@ export default function KYCVerification() {
     return null;
   };
 
-  const navigate = useNavigate();
+
+
   const isMobileApp = useMemo(() => {
     if (typeof window === "undefined") return false;
     try {

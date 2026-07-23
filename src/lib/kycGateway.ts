@@ -78,16 +78,18 @@ export async function openDiditVerification(url: string): Promise<"completed" | 
 
 export interface IdentityKycPayload {
   verification_type?: "identity";
-  document_type: string;
-  document_number: string;
-  document_country: string;
-  document_expiry_date: string;
-  document_front_url: string;
+  /** Optional — Didit collects these itself during the hosted flow. */
+  document_type?: string;
+  document_number?: string;
+  document_country?: string;
+  document_expiry_date?: string;
+  document_front_url?: string;
   document_back_url?: string;
-  selfie_url: string;
+  selfie_url?: string;
   source_app?: string;
   [k: string]: unknown;
 }
+
 
 export interface BusinessKybPayload {
   account_id?: string;
