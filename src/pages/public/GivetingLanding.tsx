@@ -335,59 +335,6 @@ export default function GivetingLanding() {
         </div>
       </section>
 
-      {/* GIVETING FOOTER (page-scoped) */}
-      <footer className="border-t border-border/60 bg-background">
-        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <div className="inline-flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Heart className="h-4 w-4" strokeWidth={2.2} />
-              </span>
-              <span className="text-lg font-black tracking-tight text-foreground">Giveting</span>
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              A mobile-first fundraising module inside Kang. Built for Africa, ready for the world.
-            </p>
-          </div>
-          <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-foreground">Giveting</h4>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li><Link to="/app/giveting/discover" className="text-muted-foreground hover:text-primary">Discover fundraisers</Link></li>
-              <li><Link to="/app/giveting/new" className="text-muted-foreground hover:text-primary">Start a fundraiser</Link></li>
-              <li><Link to="/app/giveting" className="text-muted-foreground hover:text-primary">Open in Kang</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-foreground">Categories</h4>
-            <ul className="mt-3 grid grid-cols-2 gap-y-2 text-sm">
-              {GIVETING_CATEGORIES.slice(0, 8).map((c) => (
-                <li key={c.slug}>
-                  <button
-                    onClick={() => { setCategory(c.slug); window.scrollTo({ top: 700, behavior: 'smooth' }); }}
-                    className="text-muted-foreground hover:text-primary"
-                  >
-                    {c.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-foreground">Trust & safety</h4>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li><Link to="/faq" className="text-muted-foreground hover:text-primary">FAQ</Link></li>
-              <li><Link to="/contact" className="text-muted-foreground hover:text-primary">Contact support</Link></li>
-              <li><Link to="/privacy" className="text-muted-foreground hover:text-primary">Privacy</Link></li>
-              <li><Link to="/data-protection" className="text-muted-foreground hover:text-primary">Data protection</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-border/60 hidden">
-          <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Kang Open Banking. Giveting is a fundraising service operated by Kang.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
