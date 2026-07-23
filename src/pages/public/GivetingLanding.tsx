@@ -16,7 +16,7 @@ import {
   giveting, GIVETING_CATEGORIES, formatMoney, progressPct, categoryColor,
 } from '@/lib/giveting';
 
-const CAT_ICON: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
+const CAT_ICON: Record<string, React.ElementType> = {
   medical: HeartPulse, emergencies: LifeBuoy, memorial: Flower, education: GraduationCap,
   community: Users, animals: PawPrint, business: Briefcase, faith: Church,
   family: Home, sports: Trophy, travel: Plane, volunteer: HandHeart,
