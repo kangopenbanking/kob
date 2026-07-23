@@ -448,6 +448,7 @@ const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketp
 const AdminGiveting = lazy(() => import("./pages/admin/AdminGiveting"));
 const AdminGivetingFees = lazy(() => import("./pages/admin/AdminGivetingFees"));
 const GivetingPublicCampaign = lazy(() => import("./pages/public/GivetingPublicCampaign"));
+const GivetingLanding = lazy(() => import("./pages/public/GivetingLanding"));
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletOversight"));
