@@ -110,7 +110,7 @@ export default function GivetingPublicCampaign() {
         {campaign.cover_media_url && <meta name="twitter:image" content={campaign.cover_media_url} />}
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="giveting-theme min-h-screen bg-background">
         <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
           {/* Cover */}
           <Card className="overflow-hidden">
