@@ -72,6 +72,21 @@ export default function KangAgent() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+
+  // Track visualViewport so the composer stays visible when the mobile keyboard opens.
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    const update = () => setViewportHeight(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
 
 
 
