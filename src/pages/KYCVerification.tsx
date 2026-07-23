@@ -235,7 +235,8 @@ export default function KYCVerification() {
     return null;
   };
 
-  const navigate = useNavigate();
+
+
   const isMobileApp = useMemo(() => {
     if (typeof window === "undefined") return false;
     try {
