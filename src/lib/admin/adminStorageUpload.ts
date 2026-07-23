@@ -7,7 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export type AdminBucket = "homepage-hero" | "auth-branding" | "nav-icons";
+export type AdminBucket = "homepage-hero" | "auth-branding" | "nav-icons" | "institution-assets";
 
 async function fileToBase64(blob: Blob): Promise<string> {
   const buf = await blob.arrayBuffer();

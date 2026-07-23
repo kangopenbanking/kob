@@ -22,20 +22,23 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Only admin-gated buckets are permitted through this writer. Buckets
-// with per-user path RLS (pwa-media, storefront-assets, kyc-documents,
-// institution-assets) must continue to write from the browser so the
-// auth.uid() prefix constraint is preserved.
+// Admin-gated buckets writable through this service-role writer.
+// `institution-assets` is included because admins configure Consumer-app
+// hero backgrounds for institutions they do not personally own, so the
+// `auth.uid()`-prefixed storage RLS can reject their upload even though
+// they hold the `admin` role.
 const ALLOWED_BUCKETS = new Set([
   "homepage-hero",
   "auth-branding",
   "nav-icons",
+  "institution-assets",
 ]);
 
 const HERO_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const HERO_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 const MAX_IMAGE = 10 * 1024 * 1024;
 const MAX_VIDEO = 50 * 1024 * 1024;
+const BUCKETS_ALLOWING_VIDEO = new Set(["homepage-hero", "institution-assets"]);
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -114,7 +117,7 @@ Deno.serve(async (req) => {
 
   // Type/size limits (applied only to homepage-hero; other admin buckets
   // are small icons or branding assets — apply a generous 10 MB cap).
-  if (bucket === "homepage-hero") {
+  if (BUCKETS_ALLOWING_VIDEO.has(bucket)) {
     const isImage = HERO_IMAGE_TYPES.includes(contentType);
     const isVideo = HERO_VIDEO_TYPES.includes(contentType);
     if (!isImage && !isVideo) {
