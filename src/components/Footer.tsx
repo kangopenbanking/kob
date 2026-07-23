@@ -58,6 +58,7 @@ const footerSections = [
       { label: "KOB POS", to: "/kob-pos", title: "Point of sale terminal system" },
       { label: "Storefront", to: "/merchant/storefront", title: "Online storefront for merchants" },
       { label: "Money Remittance", to: "/remittance", title: "Send and receive money internationally" },
+      { label: "Giveting Fundraisers", to: "/giveting", title: "Start a fundraiser or donate to a cause" },
       { label: "Piggy Bank", to: "/piggybank", title: "Personal savings and rent plans" },
       { label: "Njangi (Money Pot)", to: "/njangi", title: "Group savings and rotating money pot" },
       { label: "Rent Reporting", to: "/rent-reporting", title: "Build credit through rent payments" },
