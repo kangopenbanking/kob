@@ -1119,14 +1119,14 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error('Please sign in.'); setUploading(false); return; }
       const fileName = `${user.id}/hero-bg-${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('institution-assets').upload(fileName, file, {
-        upsert: true,
+      const { publicUrl } = await adminStorageUpload({
+        bucket: 'institution-assets',
+        path: fileName,
+        file,
         contentType: file.type,
-        cacheControl: '3600',
+        upsert: true,
       });
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('institution-assets').getPublicUrl(fileName);
-      const newUrl = urlData.publicUrl;
+      const newUrl = publicUrl;
       const uploadedIsVideo = file.type.startsWith('video/');
       const newMediaType = uploadedIsVideo ? 'video' : 'image';
 
