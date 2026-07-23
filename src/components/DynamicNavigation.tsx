@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Shield, BookOpen, Globe, BarChart3, Server, Code, LayoutDashboard, Landmark, Scale, FlaskConical, Activity, Smartphone, TrendingUp } from "lucide-react";
+import { Menu, ChevronDown, Shield, BookOpen, Globe, BarChart3, Server, Code, LayoutDashboard, Landmark, Scale, FlaskConical, Activity, Smartphone, TrendingUp, Heart } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
