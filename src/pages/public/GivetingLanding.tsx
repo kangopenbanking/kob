@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import heroBgAsset from '@/assets/kang-giveting-2.png.asset.json';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
