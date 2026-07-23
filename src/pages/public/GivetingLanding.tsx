@@ -101,11 +101,12 @@ export default function GivetingLanding() {
 
           <div className="relative">
             <Card className="overflow-hidden border-border/70 shadow-xl">
-              <div className="h-64 bg-primary/10">
-                <div className="flex h-full w-full items-center justify-center">
-                  <Heart className="h-24 w-24 text-primary" strokeWidth={1.2} />
-                </div>
-              </div>
+              <div
+                className="h-64 w-full bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${heroBgAsset.url})` }}
+                aria-label="Giveting campaign cover"
+                role="img"
+              />
               <div className="space-y-4 p-6">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
                   <ShieldCheck className="h-3.5 w-3.5" /> Verified fundraiser
