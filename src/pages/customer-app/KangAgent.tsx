@@ -422,8 +422,8 @@ export default function KangAgent() {
 
   return (
     <div
-      className="relative flex flex-col bg-gradient-to-b from-background via-background to-muted/30"
-      style={{ height: "calc(100dvh - 5rem)" }}
+      className="relative flex flex-col bg-gradient-to-b from-background via-background to-muted/30 overflow-hidden"
+      style={{ height: viewportHeight ? `${Math.max(viewportHeight - 80, 240)}px` : "calc(100dvh - 5rem)" }}
     >
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border/50 bg-background/70 backdrop-blur-xl px-3 py-2.5">
