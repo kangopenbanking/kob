@@ -380,7 +380,7 @@ export default function GivetingLanding() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-border/60">
+        <div className="border-t border-border/60 hidden">
           <p className="mx-auto max-w-6xl px-5 py-5 text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Kang Open Banking. Giveting is a fundraising service operated by Kang.
           </p>
