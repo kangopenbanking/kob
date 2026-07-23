@@ -72,6 +72,21 @@ export default function KangAgent() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [workingStatus, setWorkingStatus] = useState<string>("Thinking");
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+
+  // Track visualViewport so the composer stays visible when the mobile keyboard opens.
+  useEffect(() => {
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    const update = () => setViewportHeight(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
 
 
 
@@ -407,8 +422,8 @@ export default function KangAgent() {
 
   return (
     <div
-      className="relative flex flex-col bg-gradient-to-b from-background via-background to-muted/30"
-      style={{ height: "calc(100dvh - 5rem)" }}
+      className="relative flex flex-col bg-gradient-to-b from-background via-background to-muted/30 overflow-hidden"
+      style={{ height: viewportHeight ? `${Math.max(viewportHeight - 80, 240)}px` : "calc(100dvh - 5rem)" }}
     >
       {/* Header */}
       <header className="flex items-center justify-between border-b border-border/50 bg-background/70 backdrop-blur-xl px-3 py-2.5">
@@ -486,30 +501,13 @@ export default function KangAgent() {
         <div className="mx-auto flex min-h-full max-w-2xl flex-col px-3 py-3">
           {empty ? (
             <div className="flex flex-1 flex-col items-center justify-center text-center py-8">
-              <div className="relative flex h-40 w-40 items-center justify-center">
-                {/* Pulse wave rings — travel across the page */}
-                <span className="kang-pulse-ring" style={{ animationDelay: "0s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "2.5s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "5s" }} />
-                <span className="kang-pulse-ring" style={{ animationDelay: "7.5s" }} />
-                {/* Orbiting particles */}
-                <span className="kang-orbit">
-                  <span className="kang-particle" style={{ background: "hsl(265 70% 60%)" }} />
-                </span>
-                <span className="kang-orbit" style={{ animationDelay: "-4s", animationDuration: "14s" }}>
-                  <span className="kang-particle" style={{ background: "hsl(210 90% 55%)" }} />
-                </span>
-                <span className="kang-orbit" style={{ animationDelay: "-8s", animationDuration: "18s" }}>
-                  <span className="kang-particle" style={{ background: "hsl(95 65% 55%)" }} />
-                </span>
-                {/* Ambient glow */}
-                <div className="absolute inset-6 rounded-full bg-primary/25 blur-2xl animate-pulse" />
+              <div className="relative flex h-32 w-32 items-center justify-center">
                 <motion.img
                   src={kangLogo.url}
                   alt=""
-                  className="relative h-24 w-24 object-contain drop-shadow-[0_8px_24px_hsl(var(--primary)/0.35)]"
-                  animate={{ y: [0, -6, 0], rotate: [0, 3, -3, 0] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative h-24 w-24 object-contain drop-shadow-[0_8px_24px_hsl(var(--primary)/0.25)]"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
               <h2 className="mt-5 text-lg font-semibold tracking-tight">Hi, I'm Kang Agent</h2>
@@ -655,7 +653,7 @@ export default function KangAgent() {
       </div>
 
       {/* Composer */}
-      <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl px-3 py-2.5">
+      <div className="border-t border-border/50 bg-background/80 backdrop-blur-xl px-3 py-2.5" style={{ paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom))" }}>
         {blocked ? (
           <div className="mx-auto max-w-2xl">
             <button
