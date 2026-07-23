@@ -11,7 +11,7 @@ import {
   Heart, Search, ShieldCheck, ArrowRight, HeartPulse, LifeBuoy, Flower,
   GraduationCap, Users, PawPrint, Briefcase, Church, Home, Trophy, Plane,
   HandHeart, Sparkles, Medal, Palette, Calendar, Leaf, MessageCircleHeart,
-  Globe2, Lock, TrendingUp,
+  Globe2, TrendingUp,
 } from 'lucide-react';
 import {
   giveting, GIVETING_CATEGORIES, formatMoney, progressPct, categoryColor,
