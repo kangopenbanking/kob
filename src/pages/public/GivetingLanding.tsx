@@ -94,7 +94,7 @@ export default function GivetingLanding() {
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> KYC-verified organisers</span>
-              <span className="inline-flex items-center gap-1.5"><Lock className="h-4 w-4 text-primary" /> PIN-secured donations</span>
+              <span className="inline-flex items-center gap-1.5"><Heart className="h-4 w-4 fill-red-500 text-red-500" /> PIN-secured donations</span>
               <span className="inline-flex items-center gap-1.5"><Globe2 className="h-4 w-4 text-primary" /> XAF, XOF, EUR, USD, GBP</span>
             </div>
           </div>
