@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Share2 } from 'lucide-react';
+import givetingCover from '@/assets/kang-giveting.png.asset.json';
 import { supabase } from '@/integrations/supabase/client';
 import { giveting } from '@/lib/giveting';
 import { CampaignCard } from '@/components/customer-app/giveting/CampaignCard';
@@ -31,7 +32,13 @@ export const GivetingProfile: React.FC = () => {
   return (
     <div className="pb-24">
       <div className="relative">
-        <div className="h-40 bg-accent/40" />
+        <div
+          className="h-40 w-full bg-accent/40 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${givetingCover.url})` }}
+          role="img"
+          aria-label="Giveting cover"
+        />
+
         <button onClick={() => nav('/app/settings')} className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 shadow">
           <Settings className="h-4 w-4" strokeWidth={1.7} />
         </button>
