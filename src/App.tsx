@@ -448,6 +448,7 @@ const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketp
 const AdminGiveting = lazy(() => import("./pages/admin/AdminGiveting"));
 const AdminGivetingFees = lazy(() => import("./pages/admin/AdminGivetingFees"));
 const GivetingPublicCampaign = lazy(() => import("./pages/public/GivetingPublicCampaign"));
+const GivetingLanding = lazy(() => import("./pages/public/GivetingLanding"));
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletOversight"));
@@ -1595,6 +1596,7 @@ function App() {
             <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/remittance" element={<Layout><RemittanceLanding /></Layout>} />
+            <Route path="/giveting" element={<Layout><GivetingLanding /></Layout>} />
             <Route path="/manual/:type" element={<Layout><ProductManual /></Layout>} />
             <Route path="/bank-integration-guide" element={<Layout><BankIntegrationGuide /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />

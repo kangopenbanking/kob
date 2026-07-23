@@ -18,7 +18,7 @@ export const GivetingLayout: React.FC = () => {
     /\/app\/giveting\/(c|new|manage|donate|withdraw|updates)/.test(location.pathname);
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col">
+    <div className="giveting-theme flex min-h-[calc(100vh-4rem)] flex-col">
       {!hideNav && (
         <div className="sticky top-0 z-30 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="mx-auto max-w-lg px-3 py-2.5">
