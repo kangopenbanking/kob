@@ -587,3 +587,23 @@ body::-webkit-scrollbar {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+/* Giveting fundraiser theme — #02a95c persistent brand accent.
+   Scoped by wrapping any Giveting surface with `.giveting-theme`.
+   Every semantic token that renders as blue in the base theme is
+   re-mapped to the Giveting green so buttons, links, rings, focus
+   states and icons all stay on-brand. */
+.giveting-theme {
+  --primary: 152 97% 34%;
+  --primary-foreground: 0 0% 100%;
+  --primary-light: 152 82% 44%;
+  --primary-dark: 152 97% 26%;
+  --ring: 152 97% 34%;
+  --accent: 152 97% 34%;
+  --accent-foreground: 0 0% 100%;
+  --secondary: 152 60% 96%;
+  --secondary-foreground: 152 97% 22%;
+}
+.giveting-theme a:not([class*="text-"]):not([class*="bg-"]) {
+  color: hsl(var(--primary));
+}
