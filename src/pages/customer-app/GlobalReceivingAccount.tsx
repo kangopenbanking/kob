@@ -490,21 +490,23 @@ export default function GlobalReceivingAccount() {
             ].map((u) => (
               <div
                 key={u.title}
-                className="snap-start shrink-0 basis-[78%] sm:basis-[45%] rounded-2xl p-5 shadow-sm transition-transform active:scale-[0.98]"
+                className="snap-start shrink-0 basis-[60%] sm:basis-[38%] aspect-[3/4] rounded-2xl p-5 shadow-sm transition-transform active:scale-[0.98] flex flex-col"
                 style={{ backgroundColor: u.bg, color: u.fg }}
               >
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-full"
+                  className="flex h-11 w-11 items-center justify-center rounded-full"
                   style={{ backgroundColor: u.soft }}
                 >
                   <u.icon className="h-5 w-5" strokeWidth={1.75} style={{ color: u.fg }} />
                 </div>
-                <div className="mt-4 text-base font-semibold" style={{ color: u.fg }}>
-                  {u.title}
+                <div className="mt-auto">
+                  <div className="text-base font-semibold" style={{ color: u.fg }}>
+                    {u.title}
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed" style={{ color: u.fg, opacity: 0.9 }}>
+                    {u.desc}
+                  </p>
                 </div>
-                <p className="mt-1.5 text-xs leading-relaxed" style={{ color: u.fg, opacity: 0.9 }}>
-                  {u.desc}
-                </p>
               </div>
             ))}
           </div>
