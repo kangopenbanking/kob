@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Settings, Share2 } from 'lucide-react';
+import givetingCover from '@/assets/kang-giveting.png.asset.json';
 import { supabase } from '@/integrations/supabase/client';
 import { giveting } from '@/lib/giveting';
 import { CampaignCard } from '@/components/customer-app/giveting/CampaignCard';
