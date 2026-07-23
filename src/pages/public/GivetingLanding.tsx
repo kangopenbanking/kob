@@ -71,12 +71,8 @@ export default function GivetingLanding() {
       </Helmet>
 
       {/* HERO */}
-      <section
-        className="relative overflow-hidden border-b border-border/60 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBgAsset.url})` }}
-      >
-        <div className="absolute inset-0 bg-secondary/70" aria-hidden="true" />
-        <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
+      <section className="relative overflow-hidden border-b border-border/60 bg-secondary/40">
+        <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background px-3 py-1.5 text-xs font-semibold text-primary">
               <Heart className="h-3.5 w-3.5" strokeWidth={2} /> Powered by Kang
