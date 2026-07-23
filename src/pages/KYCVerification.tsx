@@ -24,7 +24,10 @@ interface KycRecord {
   document_number: string | null;
   document_country: string | null;
   document_expiry_date: string | null;
+  verification_method?: string | null;
+  didit_session_id?: string | null;
 }
+
 
 const ACCEPTED_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
