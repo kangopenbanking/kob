@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Loader2, Upload, Image, Type, Save, Palette} from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { extractEdgeFunctionError } from '@/lib/edge-function-error';
+import { adminStorageUpload } from '@/lib/admin/adminStorageUpload';
 
 interface ConfigRow {
   id: string;
@@ -54,17 +55,15 @@ const AuthBrandingManager = () => {
       const ext = file.name.split('.').pop();
       const fileName = `${configKey}-${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('auth-branding')
-        .upload(fileName, file, { upsert: true });
+      const { publicUrl } = await adminStorageUpload({
+        bucket: 'auth-branding',
+        path: fileName,
+        file,
+        contentType: file.type,
+        upsert: true,
+      });
 
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from('auth-branding')
-        .getPublicUrl(fileName);
-
-      setEditedValues(prev => ({ ...prev, [configKey]: urlData.publicUrl }));
+      setEditedValues(prev => ({ ...prev, [configKey]: publicUrl }));
       toast.success('Image uploaded successfully');
     } catch (err: any) {
       toast.error(extractEdgeFunctionError(err, 'Upload failed'));

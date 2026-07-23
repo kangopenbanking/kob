@@ -15,6 +15,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { NAV_ICON_OPTIONS, parseNavIcon } from "@/lib/lucideIconMap";
 import { NavIcon } from "@/components/nav/NavIcon";
 import { cn } from "@/lib/utils";
+import { adminStorageUpload } from "@/lib/admin/adminStorageUpload";
 import type { BottomNavApp, BottomNavItem } from "@/hooks/useBottomNavItems";
 import { DEFAULT_NAV_ITEMS } from "@/hooks/useBottomNavItems";
 
@@ -367,9 +368,13 @@ function IconPicker({ value, onChange }: { value: string; onChange: (v: string) 
     try {
       const ext = file.name.split(".").pop() || "png";
       const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error } = await supabase.storage.from("nav-icons").upload(path, file, { upsert: false });
-      if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from("nav-icons").getPublicUrl(path);
+      const { publicUrl } = await adminStorageUpload({
+        bucket: "nav-icons",
+        path,
+        file,
+        contentType: file.type,
+        upsert: false,
+      });
       onChange(`url:${publicUrl}`);
       toast({ title: "Icon uploaded" });
     } catch (e: any) {
