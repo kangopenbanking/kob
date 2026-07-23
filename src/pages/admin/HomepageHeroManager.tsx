@@ -19,6 +19,7 @@ import {
   aspectWithinTolerance,
   HERO_TARGET_ASPECT,
 } from "@/lib/admin/hero-media-validation";
+import { adminStorageUpload } from "@/lib/admin/adminStorageUpload";
 import {
   DndContext,
   closestCenter,
@@ -80,38 +81,38 @@ export default function HomepageHeroManager() {
 
   const handleUpload = async (file: File) => {
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `slide-${Date.now()}.${ext}`;
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `slide-${Date.now()}.${ext}`;
+      const mediaType = file.type.startsWith("video/") ? "video" : "image";
 
-    const { error: uploadError } = await supabase.storage
-      .from("homepage-hero")
-      .upload(path, file, { contentType: file.type });
+      const { publicUrl } = await adminStorageUpload({
+        bucket: "homepage-hero",
+        path,
+        file,
+        contentType: file.type,
+      });
 
-    if (uploadError) {
-      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      const { error: insertError } = await supabase.from("homepage_hero_slides").insert({
+        media_url: publicUrl,
+        media_type: mediaType,
+        sort_order: slides.length,
+        title: "",
+        subtitle: "",
+        overlay_opacity: 0.4,
+      } as any);
+
+      if (insertError) {
+        toast({ title: "Error creating slide", description: insertError.message, variant: "destructive" });
+      } else {
+        toast({ title: "Slide added!" });
+        fetchSlides();
+      }
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e?.message ?? "Unknown error", variant: "destructive" });
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
-
-    const { error: insertError } = await supabase.from("homepage_hero_slides").insert({
-      media_url: publicUrl,
-      media_type: mediaType,
-      sort_order: slides.length,
-      title: "",
-      subtitle: "",
-      overlay_opacity: 0.4,
-    } as any);
-
-    if (insertError) {
-      toast({ title: "Error creating slide", description: insertError.message, variant: "destructive" });
-    } else {
-      toast({ title: "Slide added!" });
-      fetchSlides();
-    }
-    setUploading(false);
   };
 
   // Crop dialog state
@@ -161,15 +162,16 @@ export default function HomepageHeroManager() {
     try {
       const ext = (fileName.split(".").pop() || (mediaType === "image" ? "jpg" : "mp4")).toLowerCase();
       const path = `slide-${slideId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("homepage-hero")
-        .upload(path, blob, { contentType, upsert: true });
-      if (uploadError) {
-        toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
-        return;
-      }
-      const { data: { publicUrl } } = supabase.storage.from("homepage-hero").getPublicUrl(path);
+      const { publicUrl } = await adminStorageUpload({
+        bucket: "homepage-hero",
+        path,
+        file: blob,
+        contentType,
+        upsert: true,
+      });
       await persistReplacement(slideId, publicUrl, mediaType, dims);
+    } catch (e: any) {
+      toast({ title: "Upload failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     } finally {
       setUploading(false);
     }
