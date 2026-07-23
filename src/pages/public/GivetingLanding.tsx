@@ -75,7 +75,7 @@ export default function GivetingLanding() {
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background px-3 py-1.5 text-xs font-semibold text-primary">
-              <Heart className="h-3.5 w-3.5" strokeWidth={2} /> Powered by Kang
+              <Heart className="h-3.5 w-3.5" strokeWidth={2} /> Giveting
             </div>
             <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               Fundraising for what really matters.
