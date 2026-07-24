@@ -29,6 +29,7 @@ interface KycRow {
   metadata: Record<string, unknown> | null;
   updated_at: string | null;
   verified_at: string | null;
+  rejection_reason: string | null;
 }
 
 const STEPS = [
@@ -89,7 +90,7 @@ export default function CustomerKYCWizard() {
     }
     const { data } = await (supabase.from("kyc_verifications") as any)
       .select(
-        "id, status, verification_method, didit_session_id, metadata, updated_at, verified_at",
+        "id, status, verification_method, didit_session_id, metadata, updated_at, verified_at, rejection_reason",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
@@ -235,6 +236,35 @@ export default function CustomerKYCWizard() {
           </div>
         </Card>
 
+        {(kyc?.status === "rejected" || kyc?.status === "requires_resubmission") && kyc?.rejection_reason && (
+          <Card className="border-destructive/40 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Verification not approved</p>
+                <p className="mt-1 text-xs text-muted-foreground">{kyc.rejection_reason}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Retry with Didit below — no need to re-enter details we already have.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {isApproved && kyc?.verified_at && (
+          <Card className="border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">You are fully verified</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Approved on {new Date(kyc.verified_at).toLocaleDateString()}. All Didit checks passed.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -306,6 +336,18 @@ export default function CustomerKYCWizard() {
             primaryLabel
           )}
         </Button>
+
+        {!isApproved && (
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={() => load()}
+            disabled={loading}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} />
+            Refresh status
+          </Button>
+        )}
 
         <Button variant="outline" className="w-full" onClick={() => nav("/app/help")}>
           Need help with verification?
