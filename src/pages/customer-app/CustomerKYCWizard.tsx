@@ -236,6 +236,35 @@ export default function CustomerKYCWizard() {
           </div>
         </Card>
 
+        {(kyc?.status === "rejected" || kyc?.status === "requires_resubmission") && kyc?.rejection_reason && (
+          <Card className="border-destructive/40 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Verification not approved</p>
+                <p className="mt-1 text-xs text-muted-foreground">{kyc.rejection_reason}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Retry with Didit below — no need to re-enter details we already have.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {isApproved && kyc?.verified_at && (
+          <Card className="border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">You are fully verified</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Approved on {new Date(kyc.verified_at).toLocaleDateString()}. All Didit checks passed.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
