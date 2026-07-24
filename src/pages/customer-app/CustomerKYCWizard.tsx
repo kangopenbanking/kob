@@ -29,6 +29,7 @@ interface KycRow {
   metadata: Record<string, unknown> | null;
   updated_at: string | null;
   verified_at: string | null;
+  rejection_reason: string | null;
 }
 
 const STEPS = [
