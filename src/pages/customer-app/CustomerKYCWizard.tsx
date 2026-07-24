@@ -337,6 +337,18 @@ export default function CustomerKYCWizard() {
           )}
         </Button>
 
+        {!isApproved && (
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={() => load()}
+            disabled={loading}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} />
+            Refresh status
+          </Button>
+        )}
+
         <Button variant="outline" className="w-full" onClick={() => nav("/app/help")}>
           Need help with verification?
         </Button>
