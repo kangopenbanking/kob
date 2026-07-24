@@ -90,7 +90,7 @@ export default function CustomerKYCWizard() {
     }
     const { data } = await (supabase.from("kyc_verifications") as any)
       .select(
-        "id, status, verification_method, didit_session_id, metadata, updated_at, verified_at",
+        "id, status, verification_method, didit_session_id, metadata, updated_at, verified_at, rejection_reason",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
