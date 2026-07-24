@@ -71,18 +71,11 @@ export default function CustomerKYCResume() {
   const handleResume = async () => {
     setResuming(true);
     try {
-      const fallbackExpiry = new Date();
-      fallbackExpiry.setFullYear(fallbackExpiry.getFullYear() + 5);
       // Re-invoke the gateway. It re-uses an existing pending Didit session
-      // when possible and always routes through Didit-first policy.
+      // when possible. Do NOT send document metadata — Didit collects it
+      // inside its own hosted flow. This prevents any re-collection.
       const resp = await submitIdentityKyc({
         verification_type: "identity",
-        document_type: record?.document_type ?? "national_id",
-        document_number: "PENDING",
-        document_country: record?.document_country ?? "CM",
-        document_expiry_date: fallbackExpiry.toISOString().slice(0, 10),
-        document_front_url: "",
-        selfie_url: "",
         source_app: "customer_app_resume",
       });
       if (resp.verification_url) {
